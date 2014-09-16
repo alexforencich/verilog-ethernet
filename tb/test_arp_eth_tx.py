@@ -431,33 +431,6 @@ def bench():
 
         yield delay(100)
 
-        yield clk.posedge
-        print("test 7: bad header")
-        current_test.next = 7
-
-        test_frame = arp_ep.ARPFrame()
-        test_frame.eth_dest_mac = 0xFFFFFFFFFFFF
-        test_frame.eth_src_mac = 0x5A5152535455
-        test_frame.eth_type = 0x0806
-        test_frame.arp_htype = 0x0001
-        test_frame.arp_ptype = 0x0800
-        test_frame.arp_hlen = 6
-        test_frame.arp_plen = 4
-        test_frame.arp_oper = 1
-        test_frame.arp_sha = 0x5A5152535455
-        test_frame.arp_spa = 0xc0a80164
-        test_frame.arp_tha = 0xDAD1D2D3D4D5
-        test_frame.arp_tpa = 0xc0a80165
-        source_queue.put(test_frame)
-        yield clk.posedge
-
-        yield output_eth_payload_tlast.posedge
-        yield clk.posedge
-        yield clk.posedge
-        #assert frame_error
-
-        yield delay(100)
-
         raise StopSimulation
 
     return dut, source, sink, clkgen, check

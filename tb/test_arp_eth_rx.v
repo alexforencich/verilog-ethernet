@@ -61,6 +61,7 @@ wire [47:0] output_arp_tha;
 wire [31:0] output_arp_tpa;
 wire busy;
 wire error_header_early_termination;
+wire error_invalid_header;
 
 initial begin
     // myhdl integration
@@ -92,7 +93,8 @@ initial begin
               output_arp_tha,
               output_arp_tpa,
               busy,
-              error_header_early_termination);
+              error_header_early_termination,
+              error_invalid_header);
 
     // dump file
     $dumpfile("test_arp_eth_rx.lxt");
@@ -131,7 +133,8 @@ UUT (
     .output_arp_tpa(output_arp_tpa),
     // Status signals
     .busy(busy),
-    .error_header_early_termination(error_header_early_termination)
+    .error_header_early_termination(error_header_early_termination),
+    .error_invalid_header(error_invalid_header)
 );
 
 endmodule

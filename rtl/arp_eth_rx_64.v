@@ -71,7 +71,8 @@ module arp_eth_rx_64
      * Status signals
      */
     output wire        busy,
-    output wire        error_header_early_termination
+    output wire        error_header_early_termination,
+    output wire        error_invalid_header
 );
 
 /*
@@ -133,6 +134,7 @@ reg [31:0] output_arp_tpa_reg = 0;
 
 reg busy_reg = 0;
 reg error_header_early_termination_reg = 0, error_header_early_termination_next;
+reg error_invalid_header_reg = 0, error_invalid_header_next;
 
 assign input_eth_hdr_ready = input_eth_hdr_ready_reg;
 assign input_eth_payload_tready = input_eth_payload_tready_reg;
@@ -153,6 +155,7 @@ assign output_arp_tpa = output_arp_tpa_reg;
 
 assign busy = busy_reg;
 assign error_header_early_termination = error_header_early_termination_reg;
+assign error_invalid_header = error_invalid_header_reg;
 
 always @* begin
     state_next = 2'bz;
@@ -168,6 +171,7 @@ always @* begin
     output_frame_valid_next = output_frame_valid_reg & ~output_frame_ready;
 
     error_header_early_termination_next = 0;
+    error_invalid_header_next = 0;
 
     case (state_reg)
         STATE_IDLE: begin
@@ -194,7 +198,6 @@ always @* begin
                     8'h02: store_arp_hdr_word_2 = 1;
                     8'h03: begin
                         store_arp_hdr_word_3 = 1;
-                        output_frame_valid_next = 1;
                         state_next = STATE_WAIT_LAST;
                     end
                 endcase
@@ -202,6 +205,10 @@ always @* begin
                     state_next = STATE_IDLE;
                     if (frame_ptr_reg != 8'h03 | (input_eth_payload_tkeep & 8'h0F) != 8'h0F) begin
                         error_header_early_termination_next = 1;
+                    end else if (output_arp_hlen != 6 || output_arp_plen != 4) begin
+                        error_invalid_header_next = 1;
+                    end else begin
+                        output_frame_valid_next = ~input_eth_payload_tuser;
                     end
                 end
             end else begin
@@ -213,6 +220,11 @@ always @* begin
             if (input_eth_payload_tvalid) begin
                 // word transfer out - done
                 if (input_eth_payload_tlast) begin
+                    if (output_arp_hlen != 6 || output_arp_plen != 4) begin
+                        error_invalid_header_next = 1;
+                    end else begin
+                        output_frame_valid_next = ~input_eth_payload_tuser;
+                    end
                     state_next = STATE_IDLE;
                 end else begin
                     state_next = STATE_WAIT_LAST;
@@ -236,6 +248,7 @@ always @(posedge clk or posedge rst) begin
         output_eth_type_reg <= 0;
         busy_reg <= 0;
         error_header_early_termination_reg <= 0;
+        error_invalid_header_reg <= 0;
     end else begin
         state_reg <= state_next;
 
@@ -244,6 +257,7 @@ always @(posedge clk or posedge rst) begin
         output_frame_valid_reg <= output_frame_valid_next;
 
         error_header_early_termination_reg <= error_header_early_termination_next;
+        error_invalid_header_reg <= error_invalid_header_next;
 
         busy_reg <= state_next != STATE_IDLE;
 

@@ -72,7 +72,8 @@ def dut_arp_eth_rx(clk,
                     output_arp_tpa,
 
                     busy,
-                    error_header_early_termination):
+                    error_header_early_termination,
+                    error_invalid_header):
 
     if os.system(build_cmd):
         raise Exception("Error running build command")
@@ -108,7 +109,8 @@ def dut_arp_eth_rx(clk,
                 output_arp_tpa=output_arp_tpa,
 
                 busy=busy,
-                error_header_early_termination=error_header_early_termination)
+                error_header_early_termination=error_header_early_termination,
+                error_invalid_header=error_invalid_header)
 
 def bench():
 
@@ -145,6 +147,7 @@ def bench():
     output_arp_tpa = Signal(intbv(0)[32:])
     busy = Signal(bool(0))
     error_header_early_termination = Signal(bool(0))
+    error_invalid_header = Signal(bool(0))
 
     # sources and sinks
     source_queue = Queue()
@@ -220,7 +223,8 @@ def bench():
                           output_arp_tpa,
 
                           busy,
-                          error_header_early_termination)
+                          error_header_early_termination,
+                          error_invalid_header)
 
     @always(delay(4))
     def clkgen():
@@ -555,8 +559,35 @@ def bench():
         yield delay(100)
 
         yield clk.posedge
-        print("test 7: bad header")
-        current_test.next = 7
+        print("test 8: bad header")
+        current_test.next = 8
+
+        test_frame = arp_ep.ARPFrame()
+        test_frame.eth_dest_mac = 0xFFFFFFFFFFFF
+        test_frame.eth_src_mac = 0x5A5152535455
+        test_frame.eth_type = 0x0806
+        test_frame.arp_htype = 0x0001
+        test_frame.arp_ptype = 0x0800
+        test_frame.arp_hlen = 0
+        test_frame.arp_plen = 0
+        test_frame.arp_oper = 1
+        test_frame.arp_sha = 0x5A5152535455
+        test_frame.arp_spa = 0xc0a80164
+        test_frame.arp_tha = 0xDAD1D2D3D4D5
+        test_frame.arp_tpa = 0xc0a80165
+        source_queue.put(test_frame.build_eth())
+        yield clk.posedge
+
+        yield input_eth_payload_tlast.posedge
+        yield clk.posedge
+        yield clk.posedge
+        assert error_invalid_header
+
+        yield delay(100)
+
+        yield clk.posedge
+        print("test 9: assert tuser")
+        current_test.next = 9
 
         test_frame = arp_ep.ARPFrame()
         test_frame.eth_dest_mac = 0xFFFFFFFFFFFF
@@ -571,13 +602,15 @@ def bench():
         test_frame.arp_spa = 0xc0a80164
         test_frame.arp_tha = 0xDAD1D2D3D4D5
         test_frame.arp_tpa = 0xc0a80165
-        source_queue.put(test_frame.build_eth())
+        eth_frame = test_frame.build_eth()
+        eth_frame.payload.user = 1
+        source_queue.put(eth_frame)
         yield clk.posedge
 
         yield input_eth_payload_tlast.posedge
         yield clk.posedge
         yield clk.posedge
-        #assert error_header_early_termination
+        assert sink_queue.empty()
 
         yield delay(100)
 
