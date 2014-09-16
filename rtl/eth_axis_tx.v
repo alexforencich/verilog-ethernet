@@ -201,7 +201,7 @@ always @* begin
             end
         end
         STATE_WRITE_PAYLOAD_TRANSFER: begin
-            // read payload; data in output register
+            // write payload; data in output register
             if (input_eth_payload_tvalid & output_axis_tready) begin
                 // word transfer through - update output register
                 transfer_in_out = 1;
@@ -222,7 +222,7 @@ always @* begin
             end
         end
         STATE_WRITE_PAYLOAD_TRANSFER_WAIT: begin
-            // read payload; data in both output and temp registers
+            // write payload; data in both output and temp registers
             if (output_axis_tready) begin
                 // transfer out - move temp to output
                 transfer_temp_out = 1;
@@ -236,7 +236,7 @@ always @* begin
             end
         end
         STATE_WRITE_PAYLOAD_TRANSFER_LAST: begin
-            // read last payload word; data in output register; do not accept new data
+            // write last payload word; data in output register; do not accept new data
             if (output_axis_tready) begin
                 // word transfer out - done
                 state_next = STATE_IDLE;
@@ -280,31 +280,31 @@ always @(posedge clk or posedge rst) begin
                 output_axis_tvalid_reg <= 0;
             end
             STATE_WRITE_HEADER: begin
-                // read header; accept new data
+                // write header
                 input_eth_hdr_ready_reg <= 0;
                 input_eth_payload_tready_reg <= 0;
                 output_axis_tvalid_reg <= 1;
             end
             STATE_WRITE_PAYLOAD_IDLE: begin
-                // read payload; no data in registers; accept new data
+                // write payload; no data in registers; accept new data
                 input_eth_hdr_ready_reg <= 0;
                 input_eth_payload_tready_reg <= 1;
                 output_axis_tvalid_reg <= 0;
             end
             STATE_WRITE_PAYLOAD_TRANSFER: begin
-                // read payload; data in output register; accept new data
+                // write payload; data in output register; accept new data
                 input_eth_hdr_ready_reg <= 0;
                 input_eth_payload_tready_reg <= 1;
                 output_axis_tvalid_reg <= 1;
             end
             STATE_WRITE_PAYLOAD_TRANSFER_WAIT: begin
-                // read payload; data in output and temp registers; do not accept new data
+                // write payload; data in output and temp registers; do not accept new data
                 input_eth_hdr_ready_reg <= 0;
                 input_eth_payload_tready_reg <= 0;
                 output_axis_tvalid_reg <= 1;
             end
             STATE_WRITE_PAYLOAD_TRANSFER_LAST: begin
-                // read last payload word; data in output register; do not accept new data
+                // write last payload word; data in output register; do not accept new data
                 input_eth_hdr_ready_reg <= 0;
                 input_eth_payload_tready_reg <= 0;
                 output_axis_tvalid_reg <= 1;
