@@ -94,8 +94,6 @@ reg store_eth_hdr;
 reg [7:0] write_hdr_data;
 reg write_hdr_out;
 
-reg transfer_in_save;
-reg transfer_save_out;
 reg transfer_in_out;
 reg transfer_in_temp;
 reg transfer_temp_out;
