@@ -70,7 +70,7 @@ module arp_eth_rx
      * Status signals
      */
     output wire        busy,
-    output wire        frame_error
+    output wire        error_header_early_termination
 );
 
 /*
@@ -155,7 +155,7 @@ reg [47:0] output_arp_tha_reg = 0;
 reg [31:0] output_arp_tpa_reg = 0;
 
 reg busy_reg = 0;
-reg frame_error_reg = 0, frame_error_next;
+reg error_header_early_termination_reg = 0, error_header_early_termination_next;
 
 assign input_eth_hdr_ready = input_eth_hdr_ready_reg;
 assign input_eth_payload_tready = input_eth_payload_tready_reg;
@@ -175,7 +175,7 @@ assign output_arp_tha = output_arp_tha_reg;
 assign output_arp_tpa = output_arp_tpa_reg;
 
 assign busy = busy_reg;
-assign frame_error = frame_error_reg;
+assign error_header_early_termination = error_header_early_termination_reg;
 
 always @* begin
     state_next = 2'bz;
@@ -214,7 +214,7 @@ always @* begin
 
     output_frame_valid_next = output_frame_valid_reg & ~output_frame_ready;
 
-    frame_error_next = 0;
+    error_header_early_termination_next = 0;
 
     case (state_reg)
         STATE_IDLE: begin
@@ -272,7 +272,7 @@ always @* begin
                 if (input_eth_payload_tlast) begin
                     state_next = STATE_IDLE;
                     if (frame_ptr_reg != 8'h1B) begin
-                        frame_error_next = 1;
+                        error_header_early_termination_next = 1;
                     end
                 end
             end else begin
@@ -306,7 +306,7 @@ always @(posedge clk or posedge rst) begin
         output_eth_src_mac_reg <= 0;
         output_eth_type_reg <= 0;
         busy_reg <= 0;
-        frame_error_reg <= 0;
+        error_header_early_termination_reg <= 0;
     end else begin
         state_reg <= state_next;
 
@@ -314,7 +314,7 @@ always @(posedge clk or posedge rst) begin
 
         output_frame_valid_reg <= output_frame_valid_next;
 
-        frame_error_reg <= frame_error_next;
+        error_header_early_termination_reg <= error_header_early_termination_next;
 
         busy_reg <= state_next != STATE_IDLE;
 

@@ -61,7 +61,7 @@ wire [31:0] output_arp_spa;
 wire [47:0] output_arp_tha;
 wire [31:0] output_arp_tpa;
 wire busy;
-wire frame_error;
+wire error_header_early_termination;
 
 initial begin
     // myhdl integration
@@ -94,7 +94,7 @@ initial begin
               output_arp_tha,
               output_arp_tpa,
               busy,
-              frame_error);
+              error_header_early_termination);
 
     // dump file
     $dumpfile("test_arp_eth_rx_64.lxt");
@@ -134,7 +134,7 @@ UUT (
     .output_arp_tpa(output_arp_tpa),
     // Status signals
     .busy(busy),
-    .frame_error(frame_error)
+    .error_header_early_termination(error_header_early_termination)
 );
 
 endmodule

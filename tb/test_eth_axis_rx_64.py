@@ -65,7 +65,7 @@ def dut_eth_axis_rx_64(clk,
                        output_eth_payload_tuser,
 
                        busy,
-                       frame_error):
+                       error_header_early_termination):
 
     if os.system(build_cmd):
         raise Exception("Error running build command")
@@ -94,7 +94,7 @@ def dut_eth_axis_rx_64(clk,
                 output_eth_payload_tuser=output_eth_payload_tuser,
 
                 busy=busy,
-                frame_error=frame_error)
+                error_header_early_termination=error_header_early_termination)
 
 def bench():
 
@@ -123,7 +123,7 @@ def bench():
     output_eth_payload_tlast = Signal(bool(0))
     output_eth_payload_tuser = Signal(bool(0))
     busy = Signal(bool(0))
-    frame_error = Signal(bool(0))
+    error_header_early_termination = Signal(bool(0))
 
     # sources and sinks
     source_queue = Queue()
@@ -185,7 +185,7 @@ def bench():
                           output_eth_payload_tuser,
 
                           busy,
-                          frame_error)
+                          error_header_early_termination)
 
     @always(delay(4))
     def clkgen():
@@ -539,7 +539,7 @@ def bench():
         yield clk.posedge
         yield clk.posedge
 
-        assert frame_error
+        assert error_header_early_termination
 
         yield delay(100)
 

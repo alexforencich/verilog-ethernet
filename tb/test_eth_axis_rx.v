@@ -51,7 +51,7 @@ wire output_eth_payload_tvalid;
 wire output_eth_payload_tlast;
 wire output_eth_payload_tuser;
 wire busy;
-wire frame_error;
+wire error_header_early_termination;
 
 initial begin
     // myhdl integration
@@ -74,7 +74,7 @@ initial begin
               output_eth_payload_tlast,
               output_eth_payload_tuser,
               busy,
-              frame_error);
+              error_header_early_termination);
 
     // dump file
     $dumpfile("test_eth_axis_rx.lxt");
@@ -104,7 +104,7 @@ UUT (
     .output_eth_payload_tuser(output_eth_payload_tuser),
     // Status signals
     .busy(busy),
-    .frame_error(frame_error)
+    .error_header_early_termination(error_header_early_termination)
 );
 
 endmodule
