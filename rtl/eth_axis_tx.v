@@ -149,7 +149,7 @@ always @* begin
             // idle state - wait for data
             frame_ptr_next = 0;
 
-            if (input_eth_payload_tvalid) begin
+            if (input_eth_hdr_valid) begin
                 store_eth_hdr = 1;
                 write_hdr_out = 1;
                 write_hdr_data = input_eth_dest_mac[47:40];
