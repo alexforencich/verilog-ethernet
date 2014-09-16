@@ -202,9 +202,6 @@ def bench():
         yield delay(100)
         yield clk.posedge
 
-        output_eth_hdr_ready.next = True
-        yield clk.posedge
-
         yield clk.posedge
         print("test 1: test packet")
         current_test.next = 1
