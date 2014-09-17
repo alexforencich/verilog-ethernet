@@ -44,8 +44,6 @@ module arp_eth_tx_64
     input  wire [15:0] input_eth_type,
     input  wire [15:0] input_arp_htype,
     input  wire [15:0] input_arp_ptype,
-    input  wire [7:0]  input_arp_hlen,
-    input  wire [7:0]  input_arp_plen,
     input  wire [15:0] input_arp_oper,
     input  wire [47:0] input_arp_sha,
     input  wire [31:0] input_arp_spa,
@@ -119,8 +117,6 @@ reg [47:0] output_eth_src_mac_reg = 0;
 reg [15:0] output_eth_type_reg = 0;
 reg [15:0] arp_htype_reg = 0;
 reg [15:0] arp_ptype_reg = 0;
-reg [7:0]  arp_hlen_reg = 0;
-reg [7:0]  arp_plen_reg = 0;
 reg [15:0] arp_oper_reg = 0;
 reg [47:0] arp_sha_reg = 0;
 reg [31:0] arp_spa_reg = 0;
@@ -178,8 +174,8 @@ always @* begin
                 write_hdr_data[15: 8] = input_arp_htype[ 7: 0];
                 write_hdr_data[23:16] = input_arp_ptype[15: 8];
                 write_hdr_data[31:24] = input_arp_ptype[ 7: 0];
-                write_hdr_data[39:32] = input_arp_hlen;
-                write_hdr_data[47:40] = input_arp_plen;
+                write_hdr_data[39:32] = 6; // hlen
+                write_hdr_data[47:40] = 4; // plen
                 write_hdr_data[55:48] = input_arp_oper[15: 8];
                 write_hdr_data[63:56] = input_arp_oper[ 7: 0];
                 write_hdr_keep = 8'hff;
@@ -260,8 +256,6 @@ always @(posedge clk or posedge rst) begin
         output_eth_type_reg <= 0;
         arp_htype_reg <= 0;
         arp_ptype_reg <= 0;
-        arp_hlen_reg <= 0;
-        arp_plen_reg <= 0;
         arp_oper_reg <= 0;
         arp_sha_reg <= 0;
         arp_spa_reg <= 0;
@@ -307,8 +301,6 @@ always @(posedge clk or posedge rst) begin
             output_eth_type_reg <= input_eth_type;
             arp_htype_reg <= input_arp_htype;
             arp_ptype_reg <= input_arp_ptype;
-            arp_hlen_reg <= input_arp_hlen;
-            arp_plen_reg <= input_arp_plen;
             arp_oper_reg <= input_arp_oper;
             arp_sha_reg <= input_arp_sha;
             arp_spa_reg <= input_arp_spa;

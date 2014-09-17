@@ -39,8 +39,6 @@ reg [47:0] input_eth_src_mac = 0;
 reg [15:0] input_eth_type = 0;
 reg [15:0] input_arp_htype = 0;
 reg [15:0] input_arp_ptype = 0;
-reg [7:0]  input_arp_hlen = 0;
-reg [7:0]  input_arp_plen = 0;
 reg [15:0] input_arp_oper = 0;
 reg [47:0] input_arp_sha = 0;
 reg [31:0] input_arp_spa = 0;
@@ -73,8 +71,6 @@ initial begin
                 input_eth_type,
                 input_arp_htype,
                 input_arp_ptype,
-                input_arp_hlen,
-                input_arp_plen,
                 input_arp_oper,
                 input_arp_sha,
                 input_arp_spa,
@@ -111,8 +107,6 @@ UUT (
     .input_eth_type(input_eth_type),
     .input_arp_htype(input_arp_htype),
     .input_arp_ptype(input_arp_ptype),
-    .input_arp_hlen(input_arp_hlen),
-    .input_arp_plen(input_arp_plen),
     .input_arp_oper(input_arp_oper),
     .input_arp_sha(input_arp_sha),
     .input_arp_spa(input_arp_spa),

@@ -53,8 +53,6 @@ def dut_arp_eth_tx(clk,
                    input_eth_type,
                    input_arp_htype,
                    input_arp_ptype,
-                   input_arp_hlen,
-                   input_arp_plen,
                    input_arp_oper,
                    input_arp_sha,
                    input_arp_spa,
@@ -88,8 +86,6 @@ def dut_arp_eth_tx(clk,
                 input_eth_type=input_eth_type,
                 input_arp_htype=input_arp_htype,
                 input_arp_ptype=input_arp_ptype,
-                input_arp_hlen=input_arp_hlen,
-                input_arp_plen=input_arp_plen,
                 input_arp_oper=input_arp_oper,
                 input_arp_sha=input_arp_sha,
                 input_arp_spa=input_arp_spa,
@@ -122,8 +118,6 @@ def bench():
     input_eth_type = Signal(intbv(0)[16:])
     input_arp_htype = Signal(intbv(0)[16:])
     input_arp_ptype = Signal(intbv(0)[16:])
-    input_arp_hlen = Signal(intbv(0)[8:])
-    input_arp_plen = Signal(intbv(0)[8:])
     input_arp_oper = Signal(intbv(0)[16:])
     input_arp_sha = Signal(intbv(0)[48:])
     input_arp_spa = Signal(intbv(0)[32:])
@@ -159,8 +153,6 @@ def bench():
                                    eth_type=input_eth_type,
                                    arp_htype=input_arp_htype,
                                    arp_ptype=input_arp_ptype,
-                                   arp_hlen=input_arp_hlen,
-                                   arp_plen=input_arp_plen,
                                    arp_oper=input_arp_oper,
                                    arp_sha=input_arp_sha,
                                    arp_spa=input_arp_spa,
@@ -198,8 +190,6 @@ def bench():
                           input_eth_type,
                           input_arp_htype,
                           input_arp_ptype,
-                          input_arp_hlen,
-                          input_arp_plen,
                           input_arp_oper,
                           input_arp_sha,
                           input_arp_spa,

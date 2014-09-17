@@ -44,8 +44,6 @@ module arp_eth_tx
     input  wire [15:0] input_eth_type,
     input  wire [15:0] input_arp_htype,
     input  wire [15:0] input_arp_ptype,
-    input  wire [7:0]  input_arp_hlen,
-    input  wire [7:0]  input_arp_plen,
     input  wire [15:0] input_arp_oper,
     input  wire [47:0] input_arp_sha,
     input  wire [31:0] input_arp_spa,
@@ -117,8 +115,6 @@ reg [47:0] output_eth_src_mac_reg = 0;
 reg [15:0] output_eth_type_reg = 0;
 reg [15:0] arp_htype_reg = 0;
 reg [15:0] arp_ptype_reg = 0;
-reg [7:0]  arp_hlen_reg = 0;
-reg [7:0]  arp_plen_reg = 0;
 reg [15:0] arp_oper_reg = 0;
 reg [47:0] arp_sha_reg = 0;
 reg [31:0] arp_spa_reg = 0;
@@ -188,8 +184,8 @@ always @* begin
                     8'h01: write_hdr_data = arp_htype_reg[ 7: 0];
                     8'h02: write_hdr_data = arp_ptype_reg[15: 8];
                     8'h03: write_hdr_data = arp_ptype_reg[ 7: 0];
-                    8'h04: write_hdr_data = arp_hlen_reg;
-                    8'h05: write_hdr_data = arp_plen_reg;
+                    8'h04: write_hdr_data = 6; // hlen
+                    8'h05: write_hdr_data = 4; // plen
                     8'h06: write_hdr_data = arp_oper_reg[15: 8];
                     8'h07: write_hdr_data = arp_oper_reg[ 7: 0];
                     8'h08: write_hdr_data = arp_sha_reg[47:40];
@@ -243,8 +239,6 @@ always @(posedge clk or posedge rst) begin
         output_eth_type_reg <= 0;
         arp_htype_reg <= 0;
         arp_ptype_reg <= 0;
-        arp_hlen_reg <= 0;
-        arp_plen_reg <= 0;
         arp_oper_reg <= 0;
         arp_sha_reg <= 0;
         arp_spa_reg <= 0;
@@ -289,8 +283,6 @@ always @(posedge clk or posedge rst) begin
             output_eth_type_reg <= input_eth_type;
             arp_htype_reg <= input_arp_htype;
             arp_ptype_reg <= input_arp_ptype;
-            arp_hlen_reg <= input_arp_hlen;
-            arp_plen_reg <= input_arp_plen;
             arp_oper_reg <= input_arp_oper;
             arp_sha_reg <= input_arp_sha;
             arp_spa_reg <= input_arp_spa;
