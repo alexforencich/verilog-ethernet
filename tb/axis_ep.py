@@ -33,14 +33,12 @@ class AXIStreamFrame(object):
         self.keep = None
         self.user = None
 
-        if type(data) is bytes:
-            data = bytearray(data)
-        if type(data) is bytearray:
-            self.data = data
+        if type(data) is bytes or type(data) is bytearray:
+            self.data = bytearray(data)
         if type(data) is AXIStreamFrame:
             self.N = data.N
             self.WL = data.WL
-            self.data = data.data
+            self.data = bytearray(data.data)
             if data.keep is not None:
                 self.keep = list(data.keep)
             if data.user is not None:
