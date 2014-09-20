@@ -273,12 +273,16 @@ always @* begin
                     end
                 endcase
                 if (input_eth_payload_tlast) begin
+                    // end of frame
                     state_next = STATE_IDLE;
                     if (frame_ptr_reg != 8'h1B) begin
+                        // don't have the whole header
                         error_header_early_termination_next = 1;
                     end else if (output_arp_hlen != 6 || output_arp_plen != 4) begin
+                        // lengths not valid
                         error_invalid_header_next = 1;
                     end else begin
+                        // otherwise, transfer tuser
                         output_frame_valid_next = ~input_eth_payload_tuser;
                     end
                 end
@@ -287,13 +291,14 @@ always @* begin
             end
         end
         STATE_WAIT_LAST: begin
-            // read last payload word; data in output register; do not accept new data
+            // wait for end of frame; read and discard
             if (input_eth_payload_tvalid) begin
-                // word transfer out - done
                 if (input_eth_payload_tlast) begin
                     if (output_arp_hlen != 6 || output_arp_plen != 4) begin
+                        // lengths not valid
                         error_invalid_header_next = 1;
                     end else begin
+                        // otherwise, transfer tuser
                         output_frame_valid_next = ~input_eth_payload_tuser;
                     end
                     state_next = STATE_IDLE;
@@ -301,7 +306,6 @@ always @* begin
                     state_next = STATE_WAIT_LAST;
                 end
             end else begin
-                // wait for end of frame; read and discard
                 state_next = STATE_WAIT_LAST;
             end
         end
