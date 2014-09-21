@@ -256,6 +256,35 @@ def bench():
     def clkgen():
         clk.next = not clk
 
+    error_payload_early_termination_asserted = Signal(bool(0))
+
+    @always(clk.posedge)
+    def monitor():
+        if (error_payload_early_termination):
+            error_payload_early_termination_asserted.next = 1
+
+    def wait_normal():
+        while input_ip_payload_tvalid or output_eth_payload_tvalid or input_ip_hdr_valid:
+            yield clk.posedge
+
+    def wait_pause_source():
+        while input_ip_payload_tvalid or output_eth_payload_tvalid or input_ip_hdr_valid:
+            source_pause.next = True
+            yield clk.posedge
+            yield clk.posedge
+            yield clk.posedge
+            source_pause.next = False
+            yield clk.posedge
+
+    def wait_pause_sink():
+        while input_ip_payload_tvalid or output_eth_payload_tvalid or input_ip_hdr_valid:
+            sink_pause.next = True
+            yield clk.posedge
+            yield clk.posedge
+            yield clk.posedge
+            sink_pause.next = False
+            yield clk.posedge
+
     @instance
     def check():
         yield delay(100)
@@ -267,673 +296,656 @@ def bench():
         yield delay(100)
         yield clk.posedge
 
-        output_eth_hdr_ready.next = True
-        yield clk.posedge
-
-        yield clk.posedge
-        print("test 1: test packet")
-        current_test.next = 1
-
-        test_frame = ip_ep.IPFrame()
-        test_frame.eth_dest_mac = 0xDAD1D2D3D4D5
-        test_frame.eth_src_mac = 0x5A5152535455
-        test_frame.eth_type = 0x0800
-        test_frame.ip_version = 4
-        test_frame.ip_ihl = 5
-        test_frame.ip_length = None
-        test_frame.ip_identification = 0
-        test_frame.ip_flags = 2
-        test_frame.ip_fragment_offset = 0
-        test_frame.ip_ttl = 64
-        test_frame.ip_protocol = 0x11
-        test_frame.ip_header_checksum = None
-        test_frame.ip_source_ip = 0xc0a80164
-        test_frame.ip_dest_ip = 0xc0a80165
-        test_frame.payload = '\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C'
-        test_frame.build()
-        source_queue.put(test_frame)
-        yield clk.posedge
-
-        yield output_eth_payload_tlast.posedge
-        yield clk.posedge
-        yield clk.posedge
-
-        rx_frame = None
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
-
-        check_frame = ip_ep.IPFrame()
-        check_frame.parse_eth(rx_frame)
-
-        assert check_frame == test_frame
-
-        yield delay(100)
-
-        yield clk.posedge
-        print("test 2: longer packet")
-        current_test.next = 2
-
-        test_frame = ip_ep.IPFrame()
-        test_frame.eth_dest_mac = 0xDAD1D2D3D4D5
-        test_frame.eth_src_mac = 0x5A5152535455
-        test_frame.eth_type = 0x0800
-        test_frame.ip_version = 4
-        test_frame.ip_ihl = 5
-        test_frame.ip_length = None
-        test_frame.ip_identification = 0
-        test_frame.ip_flags = 2
-        test_frame.ip_fragment_offset = 0
-        test_frame.ip_ttl = 64
-        test_frame.ip_protocol = 0x11
-        test_frame.ip_header_checksum = None
-        test_frame.ip_source_ip = 0xc0a80164
-        test_frame.ip_dest_ip = 0xc0a80165
-        test_frame.payload = bytearray(range(256))
-        test_frame.build()
-        source_queue.put(test_frame)
-        yield clk.posedge
-
-        yield output_eth_payload_tlast.posedge
-        yield clk.posedge
-        yield clk.posedge
-
-        rx_frame = None
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
-
-        check_frame = ip_ep.IPFrame()
-        check_frame.parse_eth(rx_frame)
-
-        assert check_frame == test_frame
-
-        yield delay(100)
-
-        yield clk.posedge
-        print("test 3: test packet with pauses")
-        current_test.next = 3
-
-        test_frame = ip_ep.IPFrame()
-        test_frame.eth_dest_mac = 0xDAD1D2D3D4D5
-        test_frame.eth_src_mac = 0x5A5152535455
-        test_frame.eth_type = 0x0800
-        test_frame.ip_version = 4
-        test_frame.ip_ihl = 5
-        test_frame.ip_length = None
-        test_frame.ip_identification = 0
-        test_frame.ip_flags = 2
-        test_frame.ip_fragment_offset = 0
-        test_frame.ip_ttl = 64
-        test_frame.ip_protocol = 0x11
-        test_frame.ip_header_checksum = None
-        test_frame.ip_source_ip = 0xc0a80164
-        test_frame.ip_dest_ip = 0xc0a80165
-        test_frame.payload = bytearray(range(256))
-        test_frame.build()
-        source_queue.put(test_frame)
-        yield clk.posedge
-
-        yield delay(64)
-        yield clk.posedge
-        source_pause.next = True
-        yield delay(32)
-        yield clk.posedge
-        source_pause.next = False
-
-        yield delay(64)
-        yield clk.posedge
-        sink_pause.next = True
-        yield delay(32)
-        yield clk.posedge
-        sink_pause.next = False
-
-        yield output_eth_payload_tlast.posedge
-        yield clk.posedge
-        yield clk.posedge
-
-        rx_frame = None
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
-
-        check_frame = ip_ep.IPFrame()
-        check_frame.parse_eth(rx_frame)
-
-        assert check_frame == test_frame
-
-        yield delay(100)
-
-        yield clk.posedge
-        print("test 4: back-to-back packets")
-        current_test.next = 4
-
-        test_frame1 = ip_ep.IPFrame()
-        test_frame1.eth_dest_mac = 0xDAD1D2D3D4D5
-        test_frame1.eth_src_mac = 0x5A5152535455
-        test_frame1.eth_type = 0x0800
-        test_frame1.ip_version = 4
-        test_frame1.ip_ihl = 5
-        test_frame1.ip_length = None
-        test_frame1.ip_identification = 0
-        test_frame1.ip_flags = 2
-        test_frame1.ip_fragment_offset = 0
-        test_frame1.ip_ttl = 64
-        test_frame1.ip_protocol = 0x11
-        test_frame1.ip_header_checksum = None
-        test_frame1.ip_source_ip = 0xc0a80164
-        test_frame1.ip_dest_ip = 0xc0a80165
-        test_frame1.payload = '\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C'
-        test_frame1.build()
-        test_frame2 = ip_ep.IPFrame()
-        test_frame2.eth_dest_mac = 0xDAD1D2D3D4D5
-        test_frame2.eth_src_mac = 0x5A5152535455
-        test_frame2.eth_type = 0x0800
-        test_frame2.ip_version = 4
-        test_frame2.ip_ihl = 5
-        test_frame2.ip_length = None
-        test_frame2.ip_identification = 0
-        test_frame2.ip_flags = 2
-        test_frame2.ip_fragment_offset = 0
-        test_frame2.ip_ttl = 64
-        test_frame2.ip_protocol = 0x11
-        test_frame2.ip_header_checksum = None
-        test_frame2.ip_source_ip = 0xc0a80164
-        test_frame2.ip_dest_ip = 0xc0a80165
-        test_frame2.payload = '\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C'
-        test_frame2.build()
-        source_queue.put(test_frame1)
-        source_queue.put(test_frame2)
-        yield clk.posedge
-
-        yield output_eth_payload_tlast.posedge
-        yield clk.posedge
-        yield output_eth_payload_tlast.posedge
-        yield clk.posedge
-        yield clk.posedge
-
-        rx_frame = None
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
-
-        check_frame = ip_ep.IPFrame()
-        check_frame.parse_eth(rx_frame)
-
-        assert check_frame == test_frame1
-
-        rx_frame = None
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
-
-        check_frame = ip_ep.IPFrame()
-        check_frame.parse_eth(rx_frame)
-
-        assert check_frame == test_frame2
-
-        yield delay(100)
-
-        yield clk.posedge
-        print("test 5: alternate pause source")
-        current_test.next = 5
-
-        test_frame1 = ip_ep.IPFrame()
-        test_frame1.eth_dest_mac = 0xDAD1D2D3D4D5
-        test_frame1.eth_src_mac = 0x5A5152535455
-        test_frame1.eth_type = 0x0800
-        test_frame1.ip_version = 4
-        test_frame1.ip_ihl = 5
-        test_frame1.ip_length = None
-        test_frame1.ip_identification = 0
-        test_frame1.ip_flags = 2
-        test_frame1.ip_fragment_offset = 0
-        test_frame1.ip_ttl = 64
-        test_frame1.ip_protocol = 0x11
-        test_frame1.ip_header_checksum = None
-        test_frame1.ip_source_ip = 0xc0a80164
-        test_frame1.ip_dest_ip = 0xc0a80165
-        test_frame1.payload = bytearray(range(32))
-        test_frame1.build()
-        test_frame2 = ip_ep.IPFrame()
-        test_frame2.eth_dest_mac = 0xDAD1D2D3D4D5
-        test_frame2.eth_src_mac = 0x5A5152535455
-        test_frame2.eth_type = 0x0800
-        test_frame2.ip_version = 4
-        test_frame2.ip_ihl = 5
-        test_frame2.ip_length = None
-        test_frame2.ip_identification = 0
-        test_frame2.ip_flags = 2
-        test_frame2.ip_fragment_offset = 0
-        test_frame2.ip_ttl = 64
-        test_frame2.ip_protocol = 0x11
-        test_frame2.ip_header_checksum = None
-        test_frame2.ip_source_ip = 0xc0a80164
-        test_frame2.ip_dest_ip = 0xc0a80165
-        test_frame2.payload = bytearray(range(32))
-        test_frame2.build()
-        source_queue.put(test_frame1)
-        source_queue.put(test_frame2)
-        yield clk.posedge
-        yield clk.posedge
-
-        while input_ip_payload_tvalid or output_eth_payload_tvalid:
-            source_pause.next = True
+        for payload_len in range(1,18):
             yield clk.posedge
+            print("test 1: test packet, length %d" % payload_len)
+            current_test.next = 1
+
+            test_frame = ip_ep.IPFrame()
+            test_frame.eth_dest_mac = 0xDAD1D2D3D4D5
+            test_frame.eth_src_mac = 0x5A5152535455
+            test_frame.eth_type = 0x0800
+            test_frame.ip_version = 4
+            test_frame.ip_ihl = 5
+            test_frame.ip_length = None
+            test_frame.ip_identification = 0
+            test_frame.ip_flags = 2
+            test_frame.ip_fragment_offset = 0
+            test_frame.ip_ttl = 64
+            test_frame.ip_protocol = 0x11
+            test_frame.ip_header_checksum = None
+            test_frame.ip_source_ip = 0xc0a80164
+            test_frame.ip_dest_ip = 0xc0a80165
+            test_frame.payload = bytearray(range(payload_len))
+            test_frame.build()
+
+            for wait in wait_normal, wait_pause_source, wait_pause_sink:
+                source_queue.put(test_frame)
+                yield clk.posedge
+                yield clk.posedge
+
+                yield wait()
+
+                yield clk.posedge
+                yield clk.posedge
+
+                rx_frame = None
+                if not sink_queue.empty():
+                    rx_frame = sink_queue.get()
+
+                check_frame = ip_ep.IPFrame()
+                check_frame.parse_eth(rx_frame)
+
+                assert check_frame == test_frame
+
+                assert sink_queue.empty()
+
+                yield delay(100)
+
             yield clk.posedge
+            print("test 2: back-to-back packets, length %d" % payload_len)
+            current_test.next = 2
+
+            test_frame1 = ip_ep.IPFrame()
+            test_frame1.eth_dest_mac = 0xDAD1D2D3D4D5
+            test_frame1.eth_src_mac = 0x5A5152535455
+            test_frame1.eth_type = 0x0800
+            test_frame1.ip_version = 4
+            test_frame1.ip_ihl = 5
+            test_frame1.ip_length = None
+            test_frame1.ip_identification = 0
+            test_frame1.ip_flags = 2
+            test_frame1.ip_fragment_offset = 0
+            test_frame1.ip_ttl = 64
+            test_frame1.ip_protocol = 0x11
+            test_frame1.ip_header_checksum = None
+            test_frame1.ip_source_ip = 0xc0a80164
+            test_frame1.ip_dest_ip = 0xc0a80165
+            test_frame1.payload = bytearray(range(payload_len))
+            test_frame1.build()
+            test_frame2 = ip_ep.IPFrame()
+            test_frame2.eth_dest_mac = 0xDAD1D2D3D4D5
+            test_frame2.eth_src_mac = 0x5A5152535455
+            test_frame2.eth_type = 0x0800
+            test_frame2.ip_version = 4
+            test_frame2.ip_ihl = 5
+            test_frame2.ip_length = None
+            test_frame2.ip_identification = 0
+            test_frame2.ip_flags = 2
+            test_frame2.ip_fragment_offset = 0
+            test_frame2.ip_ttl = 64
+            test_frame2.ip_protocol = 0x11
+            test_frame2.ip_header_checksum = None
+            test_frame2.ip_source_ip = 0xc0a80164
+            test_frame2.ip_dest_ip = 0xc0a80166
+            test_frame2.payload = bytearray(range(payload_len))
+            test_frame2.build()
+
+            for wait in wait_normal, wait_pause_source, wait_pause_sink:
+                source_queue.put(test_frame1)
+                source_queue.put(test_frame2)
+                yield clk.posedge
+                yield clk.posedge
+
+                yield wait()
+
+                yield clk.posedge
+                yield clk.posedge
+
+                rx_frame = None
+                if not sink_queue.empty():
+                    rx_frame = sink_queue.get()
+
+                check_frame = ip_ep.IPFrame()
+                check_frame.parse_eth(rx_frame)
+
+                assert check_frame == test_frame1
+
+                rx_frame = None
+                if not sink_queue.empty():
+                    rx_frame = sink_queue.get()
+
+                check_frame = ip_ep.IPFrame()
+                check_frame.parse_eth(rx_frame)
+
+                assert check_frame == test_frame2
+
+                assert sink_queue.empty()
+
+                yield delay(100)
+
             yield clk.posedge
-            source_pause.next = False
+            print("test 3: tuser assert, length %d" % payload_len)
+            current_test.next = 3
+
+            test_frame1 = ip_ep.IPFrame()
+            test_frame1.eth_dest_mac = 0xDAD1D2D3D4D5
+            test_frame1.eth_src_mac = 0x5A5152535455
+            test_frame1.eth_type = 0x0800
+            test_frame1.ip_version = 4
+            test_frame1.ip_ihl = 5
+            test_frame1.ip_length = None
+            test_frame1.ip_identification = 0
+            test_frame1.ip_flags = 2
+            test_frame1.ip_fragment_offset = 0
+            test_frame1.ip_ttl = 64
+            test_frame1.ip_protocol = 0x11
+            test_frame1.ip_header_checksum = None
+            test_frame1.ip_source_ip = 0xc0a80164
+            test_frame1.ip_dest_ip = 0xc0a80165
+            test_frame1.payload = bytearray(range(payload_len))
+            test_frame1.build()
+            test_frame2 = ip_ep.IPFrame()
+            test_frame2.eth_dest_mac = 0xDAD1D2D3D4D5
+            test_frame2.eth_src_mac = 0x5A5152535455
+            test_frame2.eth_type = 0x0800
+            test_frame2.ip_version = 4
+            test_frame2.ip_ihl = 5
+            test_frame2.ip_length = None
+            test_frame2.ip_identification = 0
+            test_frame2.ip_flags = 2
+            test_frame2.ip_fragment_offset = 0
+            test_frame2.ip_ttl = 64
+            test_frame2.ip_protocol = 0x11
+            test_frame2.ip_header_checksum = None
+            test_frame2.ip_source_ip = 0xc0a80164
+            test_frame2.ip_dest_ip = 0xc0a80166
+            test_frame2.payload = bytearray(range(payload_len))
+            test_frame2.build()
+
+            test_frame1.payload.user = 1
+
+            for wait in wait_normal, wait_pause_source, wait_pause_sink:
+                source_queue.put(test_frame1)
+                source_queue.put(test_frame2)
+                yield clk.posedge
+                yield clk.posedge
+
+                yield wait()
+
+                yield clk.posedge
+                yield clk.posedge
+
+                rx_frame = None
+                if not sink_queue.empty():
+                    rx_frame = sink_queue.get()
+
+                check_frame = ip_ep.IPFrame()
+                check_frame.parse_eth(rx_frame)
+
+                assert check_frame == test_frame1
+                assert rx_frame.payload.user[-1]
+
+                rx_frame = None
+                if not sink_queue.empty():
+                    rx_frame = sink_queue.get()
+
+                check_frame = ip_ep.IPFrame()
+                check_frame.parse_eth(rx_frame)
+
+                assert check_frame == test_frame2
+
+                assert sink_queue.empty()
+
+                yield delay(100)
+
             yield clk.posedge
+            print("test 4: trailing bytes (1), length %d" % payload_len)
+            current_test.next = 4
 
-        yield clk.posedge
-        yield clk.posedge
+            test_frame1 = ip_ep.IPFrame()
+            test_frame1.eth_dest_mac = 0xDAD1D2D3D4D5
+            test_frame1.eth_src_mac = 0x5A5152535455
+            test_frame1.eth_type = 0x0800
+            test_frame1.ip_version = 4
+            test_frame1.ip_ihl = 5
+            test_frame1.ip_length = None
+            test_frame1.ip_identification = 0
+            test_frame1.ip_flags = 2
+            test_frame1.ip_fragment_offset = 0
+            test_frame1.ip_ttl = 64
+            test_frame1.ip_protocol = 0x11
+            test_frame1.ip_header_checksum = None
+            test_frame1.ip_source_ip = 0xc0a80164
+            test_frame1.ip_dest_ip = 0xc0a80165
+            test_frame1.payload = bytearray(range(payload_len))
+            test_frame1.build()
+            test_frame2 = ip_ep.IPFrame()
+            test_frame2.eth_dest_mac = 0xDAD1D2D3D4D5
+            test_frame2.eth_src_mac = 0x5A5152535455
+            test_frame2.eth_type = 0x0800
+            test_frame2.ip_version = 4
+            test_frame2.ip_ihl = 5
+            test_frame2.ip_length = None
+            test_frame2.ip_identification = 0
+            test_frame2.ip_flags = 2
+            test_frame2.ip_fragment_offset = 0
+            test_frame2.ip_ttl = 64
+            test_frame2.ip_protocol = 0x11
+            test_frame2.ip_header_checksum = None
+            test_frame2.ip_source_ip = 0xc0a80164
+            test_frame2.ip_dest_ip = 0xc0a80166
+            test_frame2.payload = bytearray(range(payload_len))
+            test_frame2.build()
 
-        rx_frame = None
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+            test_frame1a = ip_ep.IPFrame(test_frame1)
+            test_frame1a.payload.data += bytearray(b'\x00')
 
-        check_frame = ip_ep.IPFrame()
-        check_frame.parse_eth(rx_frame)
+            for wait in wait_normal, wait_pause_source, wait_pause_sink:
+                source_queue.put(test_frame1a)
+                source_queue.put(test_frame2)
+                yield clk.posedge
+                yield clk.posedge
 
-        assert check_frame == test_frame1
+                yield wait()
 
-        rx_frame = None
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+                yield clk.posedge
+                yield clk.posedge
 
-        check_frame = ip_ep.IPFrame()
-        check_frame.parse_eth(rx_frame)
+                rx_frame = None
+                if not sink_queue.empty():
+                    rx_frame = sink_queue.get()
 
-        assert check_frame == test_frame2
+                check_frame = ip_ep.IPFrame()
+                check_frame.parse_eth(rx_frame)
 
-        yield delay(100)
+                assert check_frame == test_frame1
 
-        yield clk.posedge
-        print("test 6: alternate pause sink")
-        current_test.next = 6
+                rx_frame = None
+                if not sink_queue.empty():
+                    rx_frame = sink_queue.get()
 
-        test_frame1 = ip_ep.IPFrame()
-        test_frame1.eth_dest_mac = 0xDAD1D2D3D4D5
-        test_frame1.eth_src_mac = 0x5A5152535455
-        test_frame1.eth_type = 0x0800
-        test_frame1.ip_version = 4
-        test_frame1.ip_ihl = 5
-        test_frame1.ip_length = None
-        test_frame1.ip_identification = 0
-        test_frame1.ip_flags = 2
-        test_frame1.ip_fragment_offset = 0
-        test_frame1.ip_ttl = 64
-        test_frame1.ip_protocol = 0x11
-        test_frame1.ip_header_checksum = None
-        test_frame1.ip_source_ip = 0xc0a80164
-        test_frame1.ip_dest_ip = 0xc0a80165
-        test_frame1.payload = bytearray(range(32))
-        test_frame1.build()
-        test_frame2 = ip_ep.IPFrame()
-        test_frame2.eth_dest_mac = 0xDAD1D2D3D4D5
-        test_frame2.eth_src_mac = 0x5A5152535455
-        test_frame2.eth_type = 0x0800
-        test_frame2.ip_version = 4
-        test_frame2.ip_ihl = 5
-        test_frame2.ip_length = None
-        test_frame2.ip_identification = 0
-        test_frame2.ip_flags = 2
-        test_frame2.ip_fragment_offset = 0
-        test_frame2.ip_ttl = 64
-        test_frame2.ip_protocol = 0x11
-        test_frame2.ip_header_checksum = None
-        test_frame2.ip_source_ip = 0xc0a80164
-        test_frame2.ip_dest_ip = 0xc0a80165
-        test_frame2.payload = bytearray(range(32))
-        test_frame2.build()
-        source_queue.put(test_frame1)
-        source_queue.put(test_frame2)
-        yield clk.posedge
-        yield clk.posedge
+                check_frame = ip_ep.IPFrame()
+                check_frame.parse_eth(rx_frame)
 
-        while input_ip_payload_tvalid or output_eth_payload_tvalid:
-            sink_pause.next = True
+                assert check_frame == test_frame2
+
+                assert sink_queue.empty()
+
+                yield delay(100)
+
             yield clk.posedge
+            print("test 5: trailing bytes (10), length %d" % payload_len)
+            current_test.next = 5
+
+            test_frame1 = ip_ep.IPFrame()
+            test_frame1.eth_dest_mac = 0xDAD1D2D3D4D5
+            test_frame1.eth_src_mac = 0x5A5152535455
+            test_frame1.eth_type = 0x0800
+            test_frame1.ip_version = 4
+            test_frame1.ip_ihl = 5
+            test_frame1.ip_length = None
+            test_frame1.ip_identification = 0
+            test_frame1.ip_flags = 2
+            test_frame1.ip_fragment_offset = 0
+            test_frame1.ip_ttl = 64
+            test_frame1.ip_protocol = 0x11
+            test_frame1.ip_header_checksum = None
+            test_frame1.ip_source_ip = 0xc0a80164
+            test_frame1.ip_dest_ip = 0xc0a80165
+            test_frame1.payload = bytearray(range(payload_len))
+            test_frame1.build()
+            test_frame2 = ip_ep.IPFrame()
+            test_frame2.eth_dest_mac = 0xDAD1D2D3D4D5
+            test_frame2.eth_src_mac = 0x5A5152535455
+            test_frame2.eth_type = 0x0800
+            test_frame2.ip_version = 4
+            test_frame2.ip_ihl = 5
+            test_frame2.ip_length = None
+            test_frame2.ip_identification = 0
+            test_frame2.ip_flags = 2
+            test_frame2.ip_fragment_offset = 0
+            test_frame2.ip_ttl = 64
+            test_frame2.ip_protocol = 0x11
+            test_frame2.ip_header_checksum = None
+            test_frame2.ip_source_ip = 0xc0a80164
+            test_frame2.ip_dest_ip = 0xc0a80166
+            test_frame2.payload = bytearray(range(payload_len))
+            test_frame2.build()
+
+            test_frame1a = ip_ep.IPFrame(test_frame1)
+            test_frame1a.payload.data += bytearray(b'\x00'*10)
+
+            for wait in wait_normal, wait_pause_source, wait_pause_sink:
+                source_queue.put(test_frame1a)
+                source_queue.put(test_frame2)
+                yield clk.posedge
+                yield clk.posedge
+
+                yield wait()
+
+                yield clk.posedge
+                yield clk.posedge
+
+                rx_frame = None
+                if not sink_queue.empty():
+                    rx_frame = sink_queue.get()
+
+                check_frame = ip_ep.IPFrame()
+                check_frame.parse_eth(rx_frame)
+
+                assert check_frame == test_frame1
+
+                rx_frame = None
+                if not sink_queue.empty():
+                    rx_frame = sink_queue.get()
+
+                check_frame = ip_ep.IPFrame()
+                check_frame.parse_eth(rx_frame)
+
+                assert check_frame == test_frame2
+
+                assert sink_queue.empty()
+
+                yield delay(100)
+
             yield clk.posedge
+            print("test 6: trailing bytes with tuser assert (1), length %d" % payload_len)
+            current_test.next = 6
+
+            test_frame1 = ip_ep.IPFrame()
+            test_frame1.eth_dest_mac = 0xDAD1D2D3D4D5
+            test_frame1.eth_src_mac = 0x5A5152535455
+            test_frame1.eth_type = 0x0800
+            test_frame1.ip_version = 4
+            test_frame1.ip_ihl = 5
+            test_frame1.ip_length = None
+            test_frame1.ip_identification = 0
+            test_frame1.ip_flags = 2
+            test_frame1.ip_fragment_offset = 0
+            test_frame1.ip_ttl = 64
+            test_frame1.ip_protocol = 0x11
+            test_frame1.ip_header_checksum = None
+            test_frame1.ip_source_ip = 0xc0a80164
+            test_frame1.ip_dest_ip = 0xc0a80165
+            test_frame1.payload = bytearray(range(payload_len))
+            test_frame1.build()
+            test_frame2 = ip_ep.IPFrame()
+            test_frame2.eth_dest_mac = 0xDAD1D2D3D4D5
+            test_frame2.eth_src_mac = 0x5A5152535455
+            test_frame2.eth_type = 0x0800
+            test_frame2.ip_version = 4
+            test_frame2.ip_ihl = 5
+            test_frame2.ip_length = None
+            test_frame2.ip_identification = 0
+            test_frame2.ip_flags = 2
+            test_frame2.ip_fragment_offset = 0
+            test_frame2.ip_ttl = 64
+            test_frame2.ip_protocol = 0x11
+            test_frame2.ip_header_checksum = None
+            test_frame2.ip_source_ip = 0xc0a80164
+            test_frame2.ip_dest_ip = 0xc0a80166
+            test_frame2.payload = bytearray(range(payload_len))
+            test_frame2.build()
+
+            test_frame1a = ip_ep.IPFrame(test_frame1)
+            test_frame1a.payload.data += bytearray(b'\x00')
+            test_frame1a.payload.user = 1
+
+            for wait in wait_normal, wait_pause_source, wait_pause_sink:
+                source_queue.put(test_frame1a)
+                source_queue.put(test_frame2)
+                yield clk.posedge
+                yield clk.posedge
+
+                yield wait()
+
+                yield clk.posedge
+                yield clk.posedge
+
+                rx_frame = None
+                if not sink_queue.empty():
+                    rx_frame = sink_queue.get()
+
+                check_frame = ip_ep.IPFrame()
+                check_frame.parse_eth(rx_frame)
+
+                assert check_frame == test_frame1
+                assert rx_frame.payload.user[-1]
+
+                rx_frame = None
+                if not sink_queue.empty():
+                    rx_frame = sink_queue.get()
+
+                check_frame = ip_ep.IPFrame()
+                check_frame.parse_eth(rx_frame)
+
+                assert check_frame == test_frame2
+
+                assert sink_queue.empty()
+
+                yield delay(100)
+
             yield clk.posedge
-            sink_pause.next = False
+            print("test 7: trailing bytes with tuser assert (10), length %d" % payload_len)
+            current_test.next = 7
+
+            test_frame1 = ip_ep.IPFrame()
+            test_frame1.eth_dest_mac = 0xDAD1D2D3D4D5
+            test_frame1.eth_src_mac = 0x5A5152535455
+            test_frame1.eth_type = 0x0800
+            test_frame1.ip_version = 4
+            test_frame1.ip_ihl = 5
+            test_frame1.ip_length = None
+            test_frame1.ip_identification = 0
+            test_frame1.ip_flags = 2
+            test_frame1.ip_fragment_offset = 0
+            test_frame1.ip_ttl = 64
+            test_frame1.ip_protocol = 0x11
+            test_frame1.ip_header_checksum = None
+            test_frame1.ip_source_ip = 0xc0a80164
+            test_frame1.ip_dest_ip = 0xc0a80165
+            test_frame1.payload = bytearray(range(payload_len))
+            test_frame1.build()
+            test_frame2 = ip_ep.IPFrame()
+            test_frame2.eth_dest_mac = 0xDAD1D2D3D4D5
+            test_frame2.eth_src_mac = 0x5A5152535455
+            test_frame2.eth_type = 0x0800
+            test_frame2.ip_version = 4
+            test_frame2.ip_ihl = 5
+            test_frame2.ip_length = None
+            test_frame2.ip_identification = 0
+            test_frame2.ip_flags = 2
+            test_frame2.ip_fragment_offset = 0
+            test_frame2.ip_ttl = 64
+            test_frame2.ip_protocol = 0x11
+            test_frame2.ip_header_checksum = None
+            test_frame2.ip_source_ip = 0xc0a80164
+            test_frame2.ip_dest_ip = 0xc0a80166
+            test_frame2.payload = bytearray(range(payload_len))
+            test_frame2.build()
+
+            test_frame1a = ip_ep.IPFrame(test_frame1)
+            test_frame1a.payload.data += bytearray(b'\x00'*10)
+            test_frame1a.payload.user = 1
+
+            for wait in wait_normal, wait_pause_source, wait_pause_sink:
+                source_queue.put(test_frame1a)
+                source_queue.put(test_frame2)
+                yield clk.posedge
+                yield clk.posedge
+
+                yield wait()
+
+                yield clk.posedge
+                yield clk.posedge
+
+                rx_frame = None
+                if not sink_queue.empty():
+                    rx_frame = sink_queue.get()
+
+                check_frame = ip_ep.IPFrame()
+                check_frame.parse_eth(rx_frame)
+
+                assert check_frame == test_frame1
+                assert rx_frame.payload.user[-1]
+
+                rx_frame = None
+                if not sink_queue.empty():
+                    rx_frame = sink_queue.get()
+
+                check_frame = ip_ep.IPFrame()
+                check_frame.parse_eth(rx_frame)
+
+                assert check_frame == test_frame2
+
+                assert sink_queue.empty()
+
+                yield delay(100)
+
             yield clk.posedge
+            print("test 8: truncated payload (1), length %d" % payload_len)
+            current_test.next = 8
 
-        yield clk.posedge
-        yield clk.posedge
+            test_frame1 = ip_ep.IPFrame()
+            test_frame1.eth_dest_mac = 0xDAD1D2D3D4D5
+            test_frame1.eth_src_mac = 0x5A5152535455
+            test_frame1.eth_type = 0x0800
+            test_frame1.ip_version = 4
+            test_frame1.ip_ihl = 5
+            test_frame1.ip_length = None
+            test_frame1.ip_identification = 0
+            test_frame1.ip_flags = 2
+            test_frame1.ip_fragment_offset = 0
+            test_frame1.ip_ttl = 64
+            test_frame1.ip_protocol = 0x11
+            test_frame1.ip_header_checksum = None
+            test_frame1.ip_source_ip = 0xc0a80164
+            test_frame1.ip_dest_ip = 0xc0a80165
+            test_frame1.payload = bytearray(range(payload_len+1))
+            test_frame1.build()
+            test_frame2 = ip_ep.IPFrame()
+            test_frame2.eth_dest_mac = 0xDAD1D2D3D4D5
+            test_frame2.eth_src_mac = 0x5A5152535455
+            test_frame2.eth_type = 0x0800
+            test_frame2.ip_version = 4
+            test_frame2.ip_ihl = 5
+            test_frame2.ip_length = None
+            test_frame2.ip_identification = 0
+            test_frame2.ip_flags = 2
+            test_frame2.ip_fragment_offset = 0
+            test_frame2.ip_ttl = 64
+            test_frame2.ip_protocol = 0x11
+            test_frame2.ip_header_checksum = None
+            test_frame2.ip_source_ip = 0xc0a80164
+            test_frame2.ip_dest_ip = 0xc0a80166
+            test_frame2.payload = bytearray(range(payload_len))
+            test_frame2.build()
 
-        rx_frame = None
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+            test_frame1a = ip_ep.IPFrame(test_frame1)
+            test_frame1a.payload.data = test_frame1a.payload.data[:-1]
 
-        check_frame = ip_ep.IPFrame()
-        check_frame.parse_eth(rx_frame)
+            for wait in wait_normal, wait_pause_source, wait_pause_sink:
+                error_payload_early_termination_asserted.next = 0
 
-        assert check_frame == test_frame1
+                source_queue.put(test_frame1a)
+                source_queue.put(test_frame2)
+                yield clk.posedge
+                yield clk.posedge
 
-        rx_frame = None
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+                yield wait()
 
-        check_frame = ip_ep.IPFrame()
-        check_frame.parse_eth(rx_frame)
+                yield clk.posedge
+                yield clk.posedge
 
-        assert check_frame == test_frame2
+                rx_frame = None
+                if not sink_queue.empty():
+                    rx_frame = sink_queue.get()
 
-        yield delay(100)
+                assert rx_frame.payload.user[-1]
+                assert error_payload_early_termination_asserted
 
-        yield clk.posedge
-        print("test 7: alternate pause source 2")
-        current_test.next = 7
+                rx_frame = None
+                if not sink_queue.empty():
+                    rx_frame = sink_queue.get()
 
-        test_frame1 = ip_ep.IPFrame()
-        test_frame1.eth_dest_mac = 0xDAD1D2D3D4D5
-        test_frame1.eth_src_mac = 0x5A5152535455
-        test_frame1.eth_type = 0x0800
-        test_frame1.ip_version = 4
-        test_frame1.ip_ihl = 5
-        test_frame1.ip_length = None
-        test_frame1.ip_identification = 0
-        test_frame1.ip_flags = 2
-        test_frame1.ip_fragment_offset = 0
-        test_frame1.ip_ttl = 64
-        test_frame1.ip_protocol = 0x11
-        test_frame1.ip_header_checksum = None
-        test_frame1.ip_source_ip = 0xc0a80164
-        test_frame1.ip_dest_ip = 0xc0a80165
-        test_frame1.payload = bytearray(range(33))
-        test_frame1.build()
-        test_frame2 = ip_ep.IPFrame()
-        test_frame2.eth_dest_mac = 0xDAD1D2D3D4D5
-        test_frame2.eth_src_mac = 0x5A5152535455
-        test_frame2.eth_type = 0x0800
-        test_frame2.ip_version = 4
-        test_frame2.ip_ihl = 5
-        test_frame2.ip_length = None
-        test_frame2.ip_identification = 0
-        test_frame2.ip_flags = 2
-        test_frame2.ip_fragment_offset = 0
-        test_frame2.ip_ttl = 64
-        test_frame2.ip_protocol = 0x11
-        test_frame2.ip_header_checksum = None
-        test_frame2.ip_source_ip = 0xc0a80164
-        test_frame2.ip_dest_ip = 0xc0a80165
-        test_frame2.payload = bytearray(range(33))
-        test_frame2.build()
-        source_queue.put(test_frame1)
-        source_queue.put(test_frame2)
-        yield clk.posedge
-        yield clk.posedge
+                check_frame = ip_ep.IPFrame()
+                check_frame.parse_eth(rx_frame)
 
-        while input_ip_payload_tvalid or output_eth_payload_tvalid:
-            source_pause.next = True
+                assert check_frame == test_frame2
+
+                assert sink_queue.empty()
+
+                yield delay(100)
+
             yield clk.posedge
-            yield clk.posedge
-            yield clk.posedge
-            source_pause.next = False
-            yield clk.posedge
+            print("test 9: truncated payload (10), length %d" % payload_len)
+            current_test.next = 9
 
-        yield clk.posedge
-        yield clk.posedge
+            test_frame1 = ip_ep.IPFrame()
+            test_frame1.eth_dest_mac = 0xDAD1D2D3D4D5
+            test_frame1.eth_src_mac = 0x5A5152535455
+            test_frame1.eth_type = 0x0800
+            test_frame1.ip_version = 4
+            test_frame1.ip_ihl = 5
+            test_frame1.ip_length = None
+            test_frame1.ip_identification = 0
+            test_frame1.ip_flags = 2
+            test_frame1.ip_fragment_offset = 0
+            test_frame1.ip_ttl = 64
+            test_frame1.ip_protocol = 0x11
+            test_frame1.ip_header_checksum = None
+            test_frame1.ip_source_ip = 0xc0a80164
+            test_frame1.ip_dest_ip = 0xc0a80165
+            test_frame1.payload = bytearray(range(payload_len+10))
+            test_frame1.build()
+            test_frame2 = ip_ep.IPFrame()
+            test_frame2.eth_dest_mac = 0xDAD1D2D3D4D5
+            test_frame2.eth_src_mac = 0x5A5152535455
+            test_frame2.eth_type = 0x0800
+            test_frame2.ip_version = 4
+            test_frame2.ip_ihl = 5
+            test_frame2.ip_length = None
+            test_frame2.ip_identification = 0
+            test_frame2.ip_flags = 2
+            test_frame2.ip_fragment_offset = 0
+            test_frame2.ip_ttl = 64
+            test_frame2.ip_protocol = 0x11
+            test_frame2.ip_header_checksum = None
+            test_frame2.ip_source_ip = 0xc0a80164
+            test_frame2.ip_dest_ip = 0xc0a80166
+            test_frame2.payload = bytearray(range(payload_len))
+            test_frame2.build()
 
-        rx_frame = None
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+            test_frame1a = ip_ep.IPFrame(test_frame1)
+            test_frame1a.payload.data = test_frame1a.payload.data[:-10]
 
-        check_frame = ip_ep.IPFrame()
-        check_frame.parse_eth(rx_frame)
+            for wait in wait_normal, wait_pause_source, wait_pause_sink:
+                error_payload_early_termination_asserted.next = 0
 
-        assert check_frame == test_frame1
+                source_queue.put(test_frame1a)
+                source_queue.put(test_frame2)
+                yield clk.posedge
+                yield clk.posedge
 
-        rx_frame = None
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+                yield wait()
 
-        check_frame = ip_ep.IPFrame()
-        check_frame.parse_eth(rx_frame)
+                yield clk.posedge
+                yield clk.posedge
 
-        assert check_frame == test_frame2
+                rx_frame = None
+                if not sink_queue.empty():
+                    rx_frame = sink_queue.get()
 
-        yield delay(100)
+                assert rx_frame.payload.user[-1]
+                assert error_payload_early_termination_asserted
 
-        yield clk.posedge
-        print("test 8: alternate pause sink 2")
-        current_test.next = 8
+                rx_frame = None
+                if not sink_queue.empty():
+                    rx_frame = sink_queue.get()
 
-        test_frame1 = ip_ep.IPFrame()
-        test_frame1.eth_dest_mac = 0xDAD1D2D3D4D5
-        test_frame1.eth_src_mac = 0x5A5152535455
-        test_frame1.eth_type = 0x0800
-        test_frame1.ip_version = 4
-        test_frame1.ip_ihl = 5
-        test_frame1.ip_length = None
-        test_frame1.ip_identification = 0
-        test_frame1.ip_flags = 2
-        test_frame1.ip_fragment_offset = 0
-        test_frame1.ip_ttl = 64
-        test_frame1.ip_protocol = 0x11
-        test_frame1.ip_header_checksum = None
-        test_frame1.ip_source_ip = 0xc0a80164
-        test_frame1.ip_dest_ip = 0xc0a80165
-        test_frame1.payload = bytearray(range(33))
-        test_frame1.build()
-        test_frame2 = ip_ep.IPFrame()
-        test_frame2.eth_dest_mac = 0xDAD1D2D3D4D5
-        test_frame2.eth_src_mac = 0x5A5152535455
-        test_frame2.eth_type = 0x0800
-        test_frame2.ip_version = 4
-        test_frame2.ip_ihl = 5
-        test_frame2.ip_length = None
-        test_frame2.ip_identification = 0
-        test_frame2.ip_flags = 2
-        test_frame2.ip_fragment_offset = 0
-        test_frame2.ip_ttl = 64
-        test_frame2.ip_protocol = 0x11
-        test_frame2.ip_header_checksum = None
-        test_frame2.ip_source_ip = 0xc0a80164
-        test_frame2.ip_dest_ip = 0xc0a80165
-        test_frame2.payload = bytearray(range(33))
-        test_frame2.build()
-        source_queue.put(test_frame1)
-        source_queue.put(test_frame2)
-        yield clk.posedge
-        yield clk.posedge
+                check_frame = ip_ep.IPFrame()
+                check_frame.parse_eth(rx_frame)
 
-        while input_ip_payload_tvalid or output_eth_payload_tvalid:
-            sink_pause.next = True
-            yield clk.posedge
-            yield clk.posedge
-            yield clk.posedge
-            sink_pause.next = False
-            yield clk.posedge
+                assert check_frame == test_frame2
 
-        yield clk.posedge
-        yield clk.posedge
+                assert sink_queue.empty()
 
-        rx_frame = None
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
-
-        check_frame = ip_ep.IPFrame()
-        check_frame.parse_eth(rx_frame)
-
-        assert check_frame == test_frame1
-
-        rx_frame = None
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
-
-        check_frame = ip_ep.IPFrame()
-        check_frame.parse_eth(rx_frame)
-
-        assert check_frame == test_frame2
-
-        yield delay(100)
-
-        yield clk.posedge
-        print("test 9: tuser assert")
-        current_test.next = 9
-
-        test_frame = ip_ep.IPFrame()
-        test_frame.eth_dest_mac = 0xDAD1D2D3D4D5
-        test_frame.eth_src_mac = 0x5A5152535455
-        test_frame.eth_type = 0x0800
-        test_frame.ip_version = 4
-        test_frame.ip_ihl = 5
-        test_frame.ip_length = None
-        test_frame.ip_identification = 0
-        test_frame.ip_flags = 2
-        test_frame.ip_fragment_offset = 0
-        test_frame.ip_ttl = 64
-        test_frame.ip_protocol = 0x11
-        test_frame.ip_header_checksum = None
-        test_frame.ip_source_ip = 0xc0a80164
-        test_frame.ip_dest_ip = 0xc0a80165
-        test_frame.payload = '\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C'
-        test_frame.payload.user = 1
-        test_frame.build()
-        source_queue.put(test_frame)
-        yield clk.posedge
-
-        yield output_eth_payload_tlast.posedge
-        yield clk.posedge
-        yield clk.posedge
-
-        rx_frame = None
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
-
-        check_frame = ip_ep.IPFrame()
-        check_frame.parse_eth(rx_frame)
-
-        assert check_frame == test_frame
-        assert rx_frame.payload.user[-1]
-
-        yield delay(100)
-
-        yield clk.posedge
-        print("test 10: trailing bytes")
-        current_test.next = 10
-
-        test_frame = ip_ep.IPFrame()
-        test_frame.eth_dest_mac = 0xDAD1D2D3D4D5
-        test_frame.eth_src_mac = 0x5A5152535455
-        test_frame.eth_type = 0x0800
-        test_frame.ip_version = 4
-        test_frame.ip_ihl = 5
-        test_frame.ip_length = None
-        test_frame.ip_identification = 0
-        test_frame.ip_flags = 2
-        test_frame.ip_fragment_offset = 0
-        test_frame.ip_ttl = 64
-        test_frame.ip_protocol = 0x11
-        test_frame.ip_header_checksum = None
-        test_frame.ip_source_ip = 0xc0a80164
-        test_frame.ip_dest_ip = 0xc0a80165
-        test_frame.payload = '\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C'
-        test_frame.build()
-        test_frame2 = ip_ep.IPFrame(test_frame)
-        test_frame2.payload.data += '\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
-
-        source_queue.put(test_frame2)
-        yield clk.posedge
-
-        yield output_eth_payload_tlast.posedge
-        yield clk.posedge
-        yield clk.posedge
-
-        rx_frame = None
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
-
-        check_frame = ip_ep.IPFrame()
-        check_frame.parse_eth(rx_frame)
-
-        assert check_frame == test_frame
-
-        yield clk.posedge
-        print("test 11: trailing bytes with tuser assert")
-        current_test.next = 11
-
-        test_frame = ip_ep.IPFrame()
-        test_frame.eth_dest_mac = 0xDAD1D2D3D4D5
-        test_frame.eth_src_mac = 0x5A5152535455
-        test_frame.eth_type = 0x0800
-        test_frame.ip_version = 4
-        test_frame.ip_ihl = 5
-        test_frame.ip_length = None
-        test_frame.ip_identification = 0
-        test_frame.ip_flags = 2
-        test_frame.ip_fragment_offset = 0
-        test_frame.ip_ttl = 64
-        test_frame.ip_protocol = 0x11
-        test_frame.ip_header_checksum = None
-        test_frame.ip_source_ip = 0xc0a80164
-        test_frame.ip_dest_ip = 0xc0a80165
-        test_frame.payload = '\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C'
-        test_frame.build()
-        test_frame2 = ip_ep.IPFrame(test_frame)
-        test_frame2.payload.data += '\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
-        test_frame2.payload.user = 1
-
-        source_queue.put(test_frame2)
-        yield clk.posedge
-
-        yield output_eth_payload_tlast.posedge
-        yield clk.posedge
-        yield clk.posedge
-
-        rx_frame = None
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
-
-        check_frame = ip_ep.IPFrame()
-        check_frame.parse_eth(rx_frame)
-
-        assert check_frame == test_frame
-        assert rx_frame.payload.user[-1]
-
-        yield delay(100)
-
-        yield clk.posedge
-        print("test 13: truncated payload")
-        current_test.next = 13
-
-        test_frame = ip_ep.IPFrame()
-        test_frame.eth_dest_mac = 0xDAD1D2D3D4D5
-        test_frame.eth_src_mac = 0x5A5152535455
-        test_frame.eth_type = 0x0800
-        test_frame.ip_version = 4
-        test_frame.ip_ihl = 5
-        test_frame.ip_length = 32
-        test_frame.ip_identification = 0
-        test_frame.ip_flags = 2
-        test_frame.ip_fragment_offset = 0
-        test_frame.ip_ttl = 64
-        test_frame.ip_protocol = 0x11
-        test_frame.ip_header_checksum = None
-        test_frame.ip_source_ip = 0xc0a80164
-        test_frame.ip_dest_ip = 0xc0a80165
-        test_frame.payload = '\x01\x02'
-        test_frame.build()
-        source_queue.put(test_frame)
-        yield clk.posedge
-
-        yield output_eth_payload_tlast.posedge
-        yield clk.posedge
-        assert error_payload_early_termination
-        yield clk.posedge
-
-        rx_frame = None
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
-
-        check_frame = ip_ep.IPFrame()
-        check_frame.parse_eth(rx_frame)
-
-        #assert check_frame == test_frame
-        assert rx_frame.payload.user[-1]
-
-        yield delay(100)
+                yield delay(100)
 
         raise StopSimulation
 
-    return dut, source, sink, clkgen, check
+    return dut, source, sink, clkgen, monitor, check
 
 def test_bench():
     sim = Simulation(bench())
