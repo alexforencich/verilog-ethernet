@@ -234,7 +234,7 @@ always @* begin
             end
         end
         STATE_WRITE_HEADER: begin
-            // read header state
+            // write header state
             if (output_eth_payload_tready) begin
                 // word transfer out
                 frame_ptr_next = frame_ptr_reg+1;
