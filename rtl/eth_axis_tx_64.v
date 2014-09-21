@@ -331,12 +331,18 @@ always @(posedge clk or posedge rst) begin
         eth_src_mac_reg <= 0;
         eth_type_reg <= 0;
         output_axis_tdata_reg <= 0;
+        output_axis_tkeep_reg <= 0;
         output_axis_tvalid_reg <= 0;
         output_axis_tlast_reg <= 0;
         output_axis_tuser_reg <= 0;
         temp_axis_tdata_reg <= 0;
+        temp_axis_tkeep_reg <= 0;
         temp_axis_tlast_reg <= 0;
         temp_axis_tuser_reg <= 0;
+        save_eth_payload_tdata_reg <= 0;
+        save_eth_payload_tkeep_reg <= 0;
+        save_eth_payload_tlast_reg <= 0;
+        save_eth_payload_tuser_reg <= 0;
         busy_reg <= 0;
     end else begin
         state_reg <= state_next;
