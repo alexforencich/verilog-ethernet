@@ -185,7 +185,6 @@ assign busy = busy_reg;
 assign error_payload_early_termination = error_payload_early_termination_reg;
 
 function [15:0] add1c16b;
-    parameter WIDTH = 16;
     input [15:0] a, b;
     reg [16:0] t;
     begin

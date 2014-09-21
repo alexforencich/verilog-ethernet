@@ -228,7 +228,6 @@ assign error_invalid_header = error_invalid_header_reg;
 assign error_invalid_checksum = error_invalid_checksum_reg;
 
 function [15:0] add1c16b;
-    parameter WIDTH = 16;
     input [15:0] a, b;
     reg [16:0] t;
     begin
