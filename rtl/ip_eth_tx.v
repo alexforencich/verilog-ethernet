@@ -137,7 +137,6 @@ reg assert_tuser;
 reg [15:0] frame_ptr_reg = 0, frame_ptr_next;
 
 reg [15:0] hdr_sum_reg = 0, hdr_sum_next;
-reg [15:0] payload_len_reg = 0, payload_len_next;
 
 reg [5:0] ip_dscp_reg = 0;
 reg [1:0] ip_ecn_reg = 0;
@@ -211,7 +210,6 @@ always @* begin
     frame_ptr_next = frame_ptr_reg;
 
     hdr_sum_next = hdr_sum_reg;
-    payload_len_next = payload_len_reg;
 
     output_eth_hdr_valid_next = output_eth_hdr_valid_reg & ~output_eth_hdr_ready;
 
@@ -421,7 +419,6 @@ always @(posedge clk or posedge rst) begin
         state_reg <= STATE_IDLE;
         frame_ptr_reg <= 0;
         hdr_sum_reg <= 0;
-        payload_len_reg <= 0;
         input_ip_hdr_ready_reg <= 0;
         input_ip_payload_tready_reg <= 0;
         ip_dscp_reg <= 0;
@@ -453,7 +450,6 @@ always @(posedge clk or posedge rst) begin
         frame_ptr_reg <= frame_ptr_next;
 
         hdr_sum_reg <= hdr_sum_next;
-        payload_len_reg <= payload_len_next;
 
         output_eth_hdr_valid_reg <= output_eth_hdr_valid_next;
 
