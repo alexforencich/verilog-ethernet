@@ -117,7 +117,7 @@ class IPFrame(object):
     def update_length(self):
         self.ip_length = len(self.payload.data) + 20
 
-    def checksum(self):
+    def calc_checksum(self):
         cksum = self.ip_version << 12 | self.ip_ihl << 8 | self.ip_dscp << 2 | self.ip_ecn
         cksum += self.ip_length
         cksum += self.ip_identification
@@ -132,7 +132,7 @@ class IPFrame(object):
         return ~cksum & 0xffff
 
     def update_checksum(self):
-        self.ip_header_checksum = self.checksum()
+        self.ip_header_checksum = self.calc_checksum()
 
     def build(self):
         if self.ip_length is None:
