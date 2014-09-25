@@ -343,6 +343,7 @@ always @* begin
 
                 if (input_eth_payload_tlast) begin
                     state_next = STATE_IDLE;
+                    output_ip_hdr_valid_next = 0;
                     error_header_early_termination_next = 1;
                 end
 
