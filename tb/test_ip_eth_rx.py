@@ -1115,7 +1115,7 @@ def bench():
             test_frame1.ip_fragment_offset = 0
             test_frame1.ip_ttl = 64
             test_frame1.ip_protocol = 0x11
-            test_frame1.ip_header_checksum = 0x1234
+            test_frame1.ip_header_checksum = None
             test_frame1.ip_source_ip = 0xc0a80164
             test_frame1.ip_dest_ip = 0xc0a80165
             test_frame1.payload = bytearray(range(16))
