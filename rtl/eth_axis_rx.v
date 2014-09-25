@@ -180,6 +180,10 @@ always @* begin
                 frame_ptr_next = 1;
                 store_eth_dest_mac_5 = 1;
                 state_next = STATE_READ_HEADER;
+                if (input_axis_tlast) begin
+                    state_next = STATE_IDLE;
+                    error_header_early_termination_next = 1;
+                end
             end else begin
                 state_next = STATE_IDLE;
             end
