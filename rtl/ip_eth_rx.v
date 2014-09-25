@@ -199,10 +199,10 @@ reg temp_ip_payload_tuser_reg = 0;
 assign input_eth_hdr_ready = input_eth_hdr_ready_reg;
 assign input_eth_payload_tready = input_eth_payload_tready_reg;
 
+assign output_ip_hdr_valid = output_ip_hdr_valid_reg;
 assign output_eth_dest_mac = output_eth_dest_mac_reg;
 assign output_eth_src_mac = output_eth_src_mac_reg;
 assign output_eth_type = output_eth_type_reg;
-assign output_ip_hdr_valid = output_ip_hdr_valid_reg;
 assign output_ip_version = output_ip_version_reg;
 assign output_ip_ihl = output_ip_ihl_reg;
 assign output_ip_dscp = output_ip_dscp_reg;
