@@ -365,6 +365,7 @@ def bench():
 
                 yield clk.posedge
                 yield clk.posedge
+                yield clk.posedge
 
                 rx_frame = None
                 if not sink_queue.empty():
@@ -426,6 +427,7 @@ def bench():
 
                 yield wait()
 
+                yield clk.posedge
                 yield clk.posedge
                 yield clk.posedge
 
@@ -497,6 +499,7 @@ def bench():
 
                 yield wait()
 
+                yield clk.posedge
                 yield clk.posedge
                 yield clk.posedge
 
@@ -571,6 +574,7 @@ def bench():
 
                 yield clk.posedge
                 yield clk.posedge
+                yield clk.posedge
 
                 rx_frame = None
                 if not sink_queue.empty():
@@ -640,6 +644,7 @@ def bench():
 
                 yield wait()
 
+                yield clk.posedge
                 yield clk.posedge
                 yield clk.posedge
 
@@ -714,6 +719,7 @@ def bench():
 
                 yield clk.posedge
                 yield clk.posedge
+                yield clk.posedge
 
                 rx_frame = None
                 if not sink_queue.empty():
@@ -785,6 +791,7 @@ def bench():
 
                 yield wait()
 
+                yield clk.posedge
                 yield clk.posedge
                 yield clk.posedge
 
@@ -861,6 +868,7 @@ def bench():
 
                 yield clk.posedge
                 yield clk.posedge
+                yield clk.posedge
 
                 rx_frame = None
                 if not sink_queue.empty():
@@ -935,6 +943,7 @@ def bench():
 
                 yield clk.posedge
                 yield clk.posedge
+                yield clk.posedge
 
                 rx_frame = None
                 if not sink_queue.empty():
@@ -1007,6 +1016,7 @@ def bench():
 
                 yield clk.posedge
                 yield clk.posedge
+                yield clk.posedge
 
                 assert error_invalid_header_asserted
 
@@ -1074,6 +1084,7 @@ def bench():
 
                 yield clk.posedge
                 yield clk.posedge
+                yield clk.posedge
 
                 assert error_invalid_checksum_asserted
 
@@ -1087,7 +1098,7 @@ def bench():
 
                 yield delay(100)
 
-        for length in range(1,20):
+        for length in range(1,21):
             yield clk.posedge
             print("test 12: truncated header, length %d" % length)
             current_test.next = 12
@@ -1142,6 +1153,7 @@ def bench():
 
                 yield wait()
 
+                yield clk.posedge
                 yield clk.posedge
                 yield clk.posedge
 
