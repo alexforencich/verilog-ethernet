@@ -31,7 +31,7 @@ THE SOFTWARE.
  */
 module axis_register_64 #
 (
-    parameter DATA_WIDTH = 8,
+    parameter DATA_WIDTH = 64,
     parameter KEEP_WIDTH = (DATA_WIDTH/8)
 )
 (
