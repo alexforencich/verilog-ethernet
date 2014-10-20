@@ -56,19 +56,6 @@ module axis_register #
     output wire                   output_axis_tuser
 );
 
-// state register
-localparam [1:0]
-    STATE_IDLE = 2'd0,
-    STATE_TRANSFER = 2'd1,
-    STATE_TRANSFER_WAIT = 2'd2;
-
-reg [1:0] state_reg = STATE_IDLE, state_next;
-
-// datapath control signals
-reg transfer_in_out;
-reg transfer_in_temp;
-reg transfer_temp_out;
-
 // datapath registers
 reg                  input_axis_tready_reg = 0;
 
@@ -78,6 +65,7 @@ reg                  output_axis_tlast_reg = 0;
 reg                  output_axis_tuser_reg = 0;
 
 reg [DATA_WIDTH-1:0] temp_axis_tdata_reg = 0;
+reg                  temp_axis_tvalid_reg = 0;
 reg                  temp_axis_tlast_reg = 0;
 reg                  temp_axis_tuser_reg = 0;
 
@@ -88,98 +76,41 @@ assign output_axis_tvalid = output_axis_tvalid_reg;
 assign output_axis_tlast = output_axis_tlast_reg;
 assign output_axis_tuser = output_axis_tuser_reg;
 
-always @* begin
-    state_next = 2'bz;
-
-    transfer_in_out = 0;
-    transfer_in_temp = 0;
-    transfer_temp_out = 0;
-
-    case (state_reg)
-        STATE_IDLE: begin
-            // idle state - no data in registers
-            if (input_axis_tvalid) begin
-                // word transfer in - store it in output register
-                transfer_in_out = 1;
-                state_next = STATE_TRANSFER;
-            end else begin
-                state_next = STATE_IDLE;
-            end
-        end
-        STATE_TRANSFER: begin
-            // transfer state - data in output register
-            if (input_axis_tvalid & output_axis_tready) begin
-                // word transfer through - update output register
-                transfer_in_out = 1;
-                state_next = STATE_TRANSFER;
-            end else if (~input_axis_tvalid & output_axis_tready) begin
-                // word transfer out - go back to idle
-                state_next = STATE_IDLE;
-            end else if (input_axis_tvalid & ~output_axis_tready) begin
-                // word transfer in - store in temp
-                transfer_in_temp = 1;
-                state_next = STATE_TRANSFER_WAIT;
-            end else begin
-                state_next = STATE_TRANSFER;
-            end
-        end
-        STATE_TRANSFER_WAIT: begin
-            // transfer wait state - data in both output and temp registers
-            if (output_axis_tready) begin
-                // transfer out - move temp to output
-                transfer_temp_out = 1;
-                state_next = STATE_TRANSFER;
-            end else begin
-                state_next = STATE_TRANSFER_WAIT;
-            end
-        end
-    endcase
-end
-
 always @(posedge clk or posedge rst) begin
     if (rst) begin
-        state_reg <= STATE_IDLE;
         input_axis_tready_reg <= 0;
         output_axis_tdata_reg <= 0;
         output_axis_tvalid_reg <= 0;
         output_axis_tlast_reg <= 0;
         output_axis_tuser_reg <= 0;
         temp_axis_tdata_reg <= 0;
+        temp_axis_tvalid_reg <= 0;
         temp_axis_tlast_reg <= 0;
         temp_axis_tuser_reg <= 0;
     end else begin
-        state_reg <= state_next;
+        // transfer sink ready state to source
+        // also enable ready input next cycle if output is currently not valid and will not become valid next cycle
+        input_axis_tready_reg <= output_axis_tready | (~output_axis_tvalid_reg & ~input_axis_tvalid);
 
-        // generate valid outputs
-        case (state_next)
-            STATE_IDLE: begin
-                // idle state - no data in registers; accept new data
-                input_axis_tready_reg <= 1;
-                output_axis_tvalid_reg <= 0;
+        if (input_axis_tready_reg) begin
+            // input is ready
+            if (output_axis_tready | ~output_axis_tvalid_reg) begin
+                // output is ready or currently not valid, transfer data to output
+                output_axis_tdata_reg <= input_axis_tdata;
+                output_axis_tvalid_reg <= input_axis_tvalid;
+                output_axis_tlast_reg <= input_axis_tlast;
+                output_axis_tuser_reg <= input_axis_tuser;
+            end else begin
+                // output is not ready, store input in temp
+                temp_axis_tdata_reg <= input_axis_tdata;
+                temp_axis_tvalid_reg <= input_axis_tvalid;
+                temp_axis_tlast_reg <= input_axis_tlast;
+                temp_axis_tuser_reg <= input_axis_tuser;
             end
-            STATE_TRANSFER: begin
-                // transfer state - data in output register; accept new data
-                input_axis_tready_reg <= 1;
-                output_axis_tvalid_reg <= 1;
-            end
-            STATE_TRANSFER_WAIT: begin
-                // transfer wait state - data in output and temp registers; do not accept new data
-                input_axis_tready_reg <= 0;
-                output_axis_tvalid_reg <= 1;
-            end
-        endcase
-
-        // datapath
-        if (transfer_in_out) begin
-            output_axis_tdata_reg <= input_axis_tdata;
-            output_axis_tlast_reg <= input_axis_tlast;
-            output_axis_tuser_reg <= input_axis_tuser;
-        end else if (transfer_in_temp) begin
-            temp_axis_tdata_reg <= input_axis_tdata;
-            temp_axis_tlast_reg <= input_axis_tlast;
-            temp_axis_tuser_reg <= input_axis_tuser;
-        end else if (transfer_temp_out) begin
+        end else if (output_axis_tready) begin
+            // input is not ready, but output is ready
             output_axis_tdata_reg <= temp_axis_tdata_reg;
+            output_axis_tvalid_reg <= temp_axis_tvalid_reg;
             output_axis_tlast_reg <= temp_axis_tlast_reg;
             output_axis_tuser_reg <= temp_axis_tuser_reg;
         end
