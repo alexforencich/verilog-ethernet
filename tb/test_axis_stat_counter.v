@@ -48,6 +48,7 @@ wire [7:0] output_axis_tdata;
 wire output_axis_tvalid;
 wire output_axis_tlast;
 wire output_axis_tuser;
+wire busy;
 
 initial begin
     // myhdl integration
@@ -66,7 +67,8 @@ initial begin
     $to_myhdl(output_axis_tdata,
                 output_axis_tvalid,
                 output_axis_tlast,
-                output_axis_tuser);
+                output_axis_tuser,
+                busy);
 
     // dump file
     $dumpfile("test_axis_stat_counter.lxt");
@@ -92,7 +94,9 @@ UUT (
     .output_axis_tuser(output_axis_tuser),
     // configuration
     .tag(tag),
-    .trigger(trigger)
+    .trigger(trigger),
+    // status
+    .busy(busy)
 );
 
 endmodule
