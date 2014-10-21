@@ -59,7 +59,8 @@ def dut_axis_stat_counter(clk,
                  output_axis_tuser,
 
                  tag,
-                 trigger):
+                 trigger,
+                 busy):
 
     if os.system(build_cmd):
         raise Exception("Error running build command")
@@ -82,7 +83,8 @@ def dut_axis_stat_counter(clk,
                 output_axis_tuser=output_axis_tuser,
 
                 tag=tag,
-                trigger=trigger)
+                trigger=trigger,
+                busy=busy)
 
 def bench():
 
@@ -107,6 +109,7 @@ def bench():
     output_axis_tvalid = Signal(bool(0))
     output_axis_tlast = Signal(bool(0))
     output_axis_tuser = Signal(bool(0))
+    busy = Signal(bool(0))
 
     # sources and sinks
     source_queue = Queue()
@@ -170,7 +173,8 @@ def bench():
                            output_axis_tuser,
 
                            tag,
-                           trigger)
+                           trigger,
+                           busy)
 
     @always(delay(4))
     def clkgen():

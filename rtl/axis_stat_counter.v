@@ -59,7 +59,12 @@ module axis_stat_counter #
      * Configuration
      */
     input  wire [15:0] tag,
-    input  wire        trigger
+    input  wire        trigger,
+
+    /*
+     * Status
+     */
+    output wire        busy
 );
 
 // state register
@@ -81,6 +86,8 @@ reg [31:0] tick_count_output_reg = 0;
 reg [31:0] byte_count_output_reg = 0;
 reg [31:0] frame_count_output_reg = 0;
 
+reg busy_reg = 0;
+
 // internal datapath
 reg [7:0]  output_axis_tdata_int;
 reg        output_axis_tvalid_int;
@@ -88,6 +95,8 @@ reg        output_axis_tready_int = 0;
 reg        output_axis_tlast_int;
 reg        output_axis_tuser_int;
 wire       output_axis_tready_int_early = output_axis_tready;
+
+assign busy = busy_reg;
 
 function [3:0] keep2count;
     input [7:0] k;
@@ -220,6 +229,7 @@ always @(posedge clk or posedge rst) begin
         frame_count_reg <= 0;
         frame_reg <= 0;
         frame_ptr_reg <= 0;
+        busy_reg <= 0;
         tick_count_output_reg <= 0;
         byte_count_output_reg <= 0;
         frame_count_output_reg <= 0;
@@ -230,6 +240,8 @@ always @(posedge clk or posedge rst) begin
         frame_count_reg <= frame_count_next;
         frame_reg <= frame_next;
         frame_ptr_reg <= frame_ptr_next;
+
+        busy_reg <= state_next != STATE_IDLE;
 
         if (store_output) begin
             tick_count_output_reg <= tick_count_reg;
