@@ -94,7 +94,7 @@ reg        output_axis_tvalid_int;
 reg        output_axis_tready_int = 0;
 reg        output_axis_tlast_int;
 reg        output_axis_tuser_int;
-wire       output_axis_tready_int_early = output_axis_tready;
+wire       output_axis_tready_int_early;
 
 assign busy = busy_reg;
 
@@ -267,6 +267,9 @@ assign output_axis_tvalid = output_axis_tvalid_reg;
 assign output_axis_tlast = output_axis_tlast_reg;
 assign output_axis_tuser = output_axis_tuser_reg;
 
+// enable ready input next cycle if output is ready or if there is space in both output registers or if there is space in the temp register that will not be filled next cycle
+assign output_axis_tready_int_early = output_axis_tready | (~temp_axis_tvalid_reg & ~output_axis_tvalid_reg) | (~temp_axis_tvalid_reg & ~output_axis_tvalid_int);
+
 always @(posedge clk or posedge rst) begin
     if (rst) begin
         output_axis_tdata_reg <= 0;
@@ -280,8 +283,7 @@ always @(posedge clk or posedge rst) begin
         temp_axis_tuser_reg <= 0;
     end else begin
         // transfer sink ready state to source
-        // also enable ready input next cycle if output is currently not valid and will not become valid next cycle
-        output_axis_tready_int <= output_axis_tready | (~output_axis_tvalid_reg & ~output_axis_tvalid_int);
+        output_axis_tready_int <= output_axis_tready_int_early;
 
         if (output_axis_tready_int) begin
             // input is ready
@@ -304,6 +306,10 @@ always @(posedge clk or posedge rst) begin
             output_axis_tvalid_reg <= temp_axis_tvalid_reg;
             output_axis_tlast_reg <= temp_axis_tlast_reg;
             output_axis_tuser_reg <= temp_axis_tuser_reg;
+            temp_axis_tdata_reg <= 0;
+            temp_axis_tvalid_reg <= 0;
+            temp_axis_tlast_reg <= 0;
+            temp_axis_tuser_reg <= 0;
         end
     end
 end
