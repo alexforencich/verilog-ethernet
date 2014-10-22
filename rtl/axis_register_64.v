@@ -97,8 +97,8 @@ always @(posedge clk or posedge rst) begin
         temp_axis_tuser_reg <= 0;
     end else begin
         // transfer sink ready state to source
-        // also enable ready input next cycle even if output is not ready if output is currently not valid and will not become valid next cycle
-        input_axis_tready_reg <= output_axis_tready | (~output_axis_tvalid_reg & ~input_axis_tvalid);
+        // enable ready input next cycle if output is ready or if there is space in both output registers or if there is space in the temp register that will not be filled next cycle
+        input_axis_tready_reg <= output_axis_tready | (~temp_axis_tvalid_reg & ~output_axis_tvalid_reg) | (~temp_axis_tvalid_reg & ~input_axis_tvalid);
 
         if (input_axis_tready_reg) begin
             // input is ready
@@ -124,6 +124,11 @@ always @(posedge clk or posedge rst) begin
             output_axis_tvalid_reg <= temp_axis_tvalid_reg;
             output_axis_tlast_reg <= temp_axis_tlast_reg;
             output_axis_tuser_reg <= temp_axis_tuser_reg;
+            temp_axis_tdata_reg <= 0;
+            temp_axis_tkeep_reg <= 0;
+            temp_axis_tvalid_reg <= 0;
+            temp_axis_tlast_reg <= 0;
+            temp_axis_tuser_reg <= 0;
         end
     end
 end
