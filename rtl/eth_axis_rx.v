@@ -104,12 +104,12 @@ reg store_eth_type_1;
 
 reg [7:0] frame_ptr_reg = 0, frame_ptr_next;
 
+reg input_axis_tready_reg = 0, input_axis_tready_next;
+
 reg output_eth_hdr_valid_reg = 0, output_eth_hdr_valid_next;
 reg [47:0] output_eth_dest_mac_reg = 0;
 reg [47:0] output_eth_src_mac_reg = 0;
 reg [15:0] output_eth_type_reg = 0;
-
-reg input_axis_tready_reg = 0, input_axis_tready_next;
 
 reg busy_reg = 0;
 reg error_header_early_termination_reg = 0, error_header_early_termination_next;
@@ -228,7 +228,7 @@ always @* begin
             input_axis_tready_next = output_eth_payload_tready_int_early;
 
             output_eth_payload_tdata_int = input_axis_tdata;
-            output_eth_payload_tvalid_int = input_axis_tvalid & input_axis_tready;
+            output_eth_payload_tvalid_int = input_axis_tvalid;
             output_eth_payload_tlast_int = input_axis_tlast;
             output_eth_payload_tuser_int = input_axis_tuser;
 

@@ -133,14 +133,12 @@ always @* begin
             frame_ptr_next = 0;
             input_eth_hdr_ready_next = 1;
 
-            if (input_eth_hdr_valid) begin
+            if (input_eth_hdr_ready & input_eth_hdr_valid) begin
                 store_eth_hdr = 1;
                 input_eth_hdr_ready_next = 0;
                 if (output_axis_tready_int) begin
                     output_axis_tvalid_int = 1;
                     output_axis_tdata_int = input_eth_dest_mac[47:40];
-                    output_axis_tlast_int = 0;
-                    output_axis_tuser_int = 0;
                     frame_ptr_next = 1;
                 end
                 state_next = STATE_WRITE_HEADER;

@@ -84,8 +84,7 @@ localparam [2:0]
     STATE_IDLE = 3'd0,
     STATE_WRITE_HEADER = 3'd1,
     STATE_WRITE_HEADER_LAST = 3'd2,
-    STATE_WRITE_PAYLOAD = 3'd3,
-    STATE_WRITE_PAYLOAD_LAST = 3'd4;
+    STATE_WRITE_PAYLOAD = 3'd3;
 
 reg [2:0] state_reg = STATE_IDLE, state_next;
 
@@ -108,9 +107,16 @@ reg busy_reg = 0;
 
 reg [63:0] save_eth_payload_tdata_reg = 0;
 reg [7:0] save_eth_payload_tkeep_reg = 0;
-reg save_eth_payload_tvalid_reg = 0;
 reg save_eth_payload_tlast_reg = 0;
 reg save_eth_payload_tuser_reg = 0;
+
+reg [63:0] shift_eth_payload_tdata;
+reg [7:0] shift_eth_payload_tkeep;
+reg shift_eth_payload_tvalid;
+reg shift_eth_payload_tlast;
+reg shift_eth_payload_tuser;
+reg shift_eth_payload_input_tready;
+reg shift_eth_payload_extra_cycle;
 
 // internal datapath
 reg [63:0] output_axis_tdata_int;
@@ -125,6 +131,28 @@ assign input_eth_hdr_ready = input_eth_hdr_ready_reg;
 assign input_eth_payload_tready = input_eth_payload_tready_reg;
 
 assign busy = busy_reg;
+
+always @* begin
+    shift_eth_payload_tdata[47:0] = save_eth_payload_tdata_reg[63:16];
+    shift_eth_payload_tkeep[5:0] = save_eth_payload_tkeep_reg[7:2];
+    shift_eth_payload_extra_cycle = save_eth_payload_tlast_reg & (save_eth_payload_tkeep_reg[7:2] != 0);
+
+    if (shift_eth_payload_extra_cycle) begin
+        shift_eth_payload_tdata[63:48] = 0;
+        shift_eth_payload_tkeep[7:6] = 0;
+        shift_eth_payload_tvalid = 1;
+        shift_eth_payload_tlast = save_eth_payload_tlast_reg;
+        shift_eth_payload_tuser = save_eth_payload_tuser_reg;
+        shift_eth_payload_input_tready = flush_save;
+    end else begin
+        shift_eth_payload_tdata[63:48] = input_eth_payload_tdata[15:0];
+        shift_eth_payload_tkeep[7:6] = input_eth_payload_tkeep[1:0];
+        shift_eth_payload_tvalid = input_eth_payload_tvalid;
+        shift_eth_payload_tlast = (input_eth_payload_tlast & (input_eth_payload_tkeep[7:2] == 0));
+        shift_eth_payload_tuser = (input_eth_payload_tuser & (input_eth_payload_tkeep[7:2] == 0));
+        shift_eth_payload_input_tready = ~(input_eth_payload_tlast & input_eth_payload_tvalid & transfer_in_save);
+    end
+end
 
 always @* begin
     state_next = 2'bz;
@@ -152,7 +180,7 @@ always @* begin
             flush_save = 1;
             input_eth_hdr_ready_next = 1;
 
-            if (input_eth_hdr_valid) begin
+            if (input_eth_hdr_ready & input_eth_hdr_valid) begin
                 store_eth_hdr = 1;
                 input_eth_hdr_ready_next = 0;
                 state_next = STATE_WRITE_HEADER;
@@ -167,8 +195,6 @@ always @* begin
                     output_axis_tdata_int[55:48] = input_eth_src_mac[47:40];
                     output_axis_tdata_int[63:56] = input_eth_src_mac[39:32];
                     output_axis_tkeep_int = 8'hff;
-                    output_axis_tlast_int = 0;
-                    output_axis_tuser_int = 0;
                     frame_ptr_next = 8;
                     input_eth_payload_tready_next = output_axis_tready_int_early;
                     state_next = STATE_WRITE_HEADER_LAST;
@@ -194,9 +220,7 @@ always @* begin
                         output_axis_tdata_int[55:48] = input_eth_src_mac[47:40];
                         output_axis_tdata_int[63:56] = input_eth_src_mac[39:32];
                         output_axis_tkeep_int = 8'hff;
-                        output_axis_tlast_int = 0;
-                        output_axis_tuser_int = 0;
-                        input_eth_payload_tready_next = output_axis_tready_int_early;
+                        input_eth_payload_tready_next = output_axis_tready_int_early & shift_eth_payload_input_tready;
                         state_next = STATE_WRITE_HEADER_LAST;
                     end
                 endcase
@@ -206,9 +230,9 @@ always @* begin
         end
         STATE_WRITE_HEADER_LAST: begin
             // last header word requires first payload word; process accordingly
-            input_eth_payload_tready_next = output_axis_tready_int_early;
+            input_eth_payload_tready_next = output_axis_tready_int_early & shift_eth_payload_input_tready;
 
-            if (input_eth_payload_tready & input_eth_payload_tvalid) begin
+            if (input_eth_payload_tready & shift_eth_payload_tvalid) begin
                 frame_ptr_next = frame_ptr_reg + 8;
                 output_axis_tvalid_int = 1;
                 transfer_in_save = 1;   
@@ -219,21 +243,17 @@ always @* begin
                 output_axis_tdata_int[31:24] = eth_src_mac_reg[ 7: 0];
                 output_axis_tdata_int[39:32] = eth_type_reg[15: 8];
                 output_axis_tdata_int[47:40] = eth_type_reg[ 7: 0];
-                output_axis_tdata_int[55:48] = input_eth_payload_tdata[ 7: 0];
-                output_axis_tdata_int[63:56] = input_eth_payload_tdata[15: 8];
-                output_axis_tkeep_int = {input_eth_payload_tkeep[1:0], 6'h3F};
-                output_axis_tlast_int = (input_eth_payload_tlast & (input_eth_payload_tkeep[7:2] == 0));
-                output_axis_tuser_int = (input_eth_payload_tuser & (input_eth_payload_tkeep[7:2] == 0));
+                output_axis_tdata_int[55:48] = shift_eth_payload_tdata[55:48];
+                output_axis_tdata_int[63:56] = shift_eth_payload_tdata[63:56];
+                output_axis_tkeep_int = {shift_eth_payload_tkeep[7:6], 6'h3F};
+                output_axis_tlast_int = shift_eth_payload_tlast;
+                output_axis_tuser_int = shift_eth_payload_tuser;
 
-                if (input_eth_payload_tlast) begin
+                if (shift_eth_payload_tlast) begin
                     input_eth_payload_tready_next = 0;
-                    if (input_eth_payload_tkeep[7:2] != 0) begin
-                        state_next = STATE_WRITE_PAYLOAD_LAST;
-                    end else begin
-                        flush_save = 1;
-                        input_eth_hdr_ready_next = 1;
-                        state_next = STATE_IDLE;
-                    end
+                    flush_save = 1;
+                    input_eth_hdr_ready_next = 1;
+                    state_next = STATE_IDLE;
                 end else begin
                     state_next = STATE_WRITE_PAYLOAD;
                 end
@@ -243,55 +263,27 @@ always @* begin
         end
         STATE_WRITE_PAYLOAD: begin
             // write payload
-            input_eth_payload_tready_next = output_axis_tready_int_early;
+            input_eth_payload_tready_next = output_axis_tready_int_early & shift_eth_payload_input_tready;
 
-            output_axis_tdata_int[47:0] = save_eth_payload_tdata_reg[63:16];
-            output_axis_tkeep_int[5:0] = save_eth_payload_tkeep_reg[7:2];
+            output_axis_tdata_int = shift_eth_payload_tdata;
+            output_axis_tkeep_int = shift_eth_payload_tkeep;
+            output_axis_tvalid_int = shift_eth_payload_tvalid;
+            output_axis_tlast_int = shift_eth_payload_tlast;
+            output_axis_tuser_int = shift_eth_payload_tuser;
 
-            output_axis_tdata_int[63:48] = input_eth_payload_tdata[15:0];
-            output_axis_tkeep_int[7:6] = input_eth_payload_tkeep[1:0];
-            output_axis_tvalid_int = input_eth_payload_tvalid;
-            output_axis_tlast_int = (input_eth_payload_tlast & (input_eth_payload_tkeep[7:2] == 0));
-            output_axis_tuser_int = (input_eth_payload_tuser & (input_eth_payload_tkeep[7:2] == 0));
-
-            if (input_eth_payload_tready & input_eth_payload_tvalid) begin
+            if (output_axis_tready_int & shift_eth_payload_tvalid) begin
                 // word transfer through
                 transfer_in_save = 1;
-                if (input_eth_payload_tlast) begin
+                if (shift_eth_payload_tlast) begin
                     input_eth_payload_tready_next = 0;
-                    if (input_eth_payload_tkeep[7:2] != 0) begin
-                        state_next = STATE_WRITE_PAYLOAD_LAST;
-                    end else begin
-                        flush_save = 1;
-                        input_eth_hdr_ready_next = 1;
-                        state_next = STATE_IDLE;
-                    end
+                    flush_save = 1;
+                    input_eth_hdr_ready_next = 1;
+                    state_next = STATE_IDLE;
                 end else begin
                     state_next = STATE_WRITE_PAYLOAD;
                 end
             end else begin
                 state_next = STATE_WRITE_PAYLOAD;
-            end
-        end
-        STATE_WRITE_PAYLOAD_LAST: begin
-            // read last payload word from save reg
-            input_eth_payload_tready_next = 0;
-
-            output_axis_tdata_int[47:0] = save_eth_payload_tdata_reg[63:16];
-            output_axis_tkeep_int[5:0] = save_eth_payload_tkeep_reg[7:2];
-
-            output_axis_tdata_int[63:48] = 0;
-            output_axis_tkeep_int[7:6] = 0;
-            output_axis_tvalid_int = 1;
-            output_axis_tlast_int = 1;
-            output_axis_tuser_int = save_eth_payload_tuser_reg;
-
-            if (output_axis_tready_int) begin
-                flush_save = 1;
-                input_eth_hdr_ready_next = 1;
-                state_next = STATE_IDLE;
-            end else begin
-                state_next = STATE_WRITE_PAYLOAD_LAST;
             end
         end
     endcase
@@ -308,7 +300,6 @@ always @(posedge clk or posedge rst) begin
         eth_type_reg <= 0;
         save_eth_payload_tdata_reg <= 0;
         save_eth_payload_tkeep_reg <= 0;
-        save_eth_payload_tvalid_reg <= 0;
         save_eth_payload_tlast_reg <= 0;
         save_eth_payload_tuser_reg <= 0;
         busy_reg <= 0;
@@ -333,13 +324,11 @@ always @(posedge clk or posedge rst) begin
         if (flush_save) begin
             save_eth_payload_tdata_reg <= 0;
             save_eth_payload_tkeep_reg <= 0;
-            save_eth_payload_tvalid_reg <= 0;
             save_eth_payload_tlast_reg <= 0;
             save_eth_payload_tuser_reg <= 0;
         end else if (transfer_in_save) begin
             save_eth_payload_tdata_reg <= input_eth_payload_tdata;
             save_eth_payload_tkeep_reg <= input_eth_payload_tkeep;
-            save_eth_payload_tvalid_reg <= input_eth_payload_tvalid;
             save_eth_payload_tlast_reg <= input_eth_payload_tlast;
             save_eth_payload_tuser_reg <= input_eth_payload_tuser;
         end

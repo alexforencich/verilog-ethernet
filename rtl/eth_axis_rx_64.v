@@ -84,8 +84,7 @@ with the payload in a separate AXI stream.
 localparam [2:0]
     STATE_IDLE = 3'd0,
     STATE_READ_HEADER = 3'd1,
-    STATE_READ_PAYLOAD = 3'd2,
-    STATE_READ_PAYLOAD_LAST = 3'd3;
+    STATE_READ_PAYLOAD = 3'd2;
 
 reg [2:0] state_reg = STATE_IDLE, state_next;
 
@@ -98,21 +97,28 @@ reg transfer_in_save;
 
 reg [7:0] frame_ptr_reg = 0, frame_ptr_next;
 
+reg input_axis_tready_reg = 0, input_axis_tready_next;
+
 reg output_eth_hdr_valid_reg = 0, output_eth_hdr_valid_next;
 reg [47:0] output_eth_dest_mac_reg = 0;
 reg [47:0] output_eth_src_mac_reg = 0;
 reg [15:0] output_eth_type_reg = 0;
-
-reg input_axis_tready_reg = 0, input_axis_tready_next;
 
 reg busy_reg = 0;
 reg error_header_early_termination_reg = 0, error_header_early_termination_next;
 
 reg [63:0] save_axis_tdata_reg = 0;
 reg [7:0] save_axis_tkeep_reg = 0;
-reg save_axis_tvalid_reg = 0;
 reg save_axis_tlast_reg = 0;
 reg save_axis_tuser_reg = 0;
+
+reg [63:0] shift_axis_tdata;
+reg [7:0] shift_axis_tkeep;
+reg shift_axis_tvalid;
+reg shift_axis_tlast;
+reg shift_axis_tuser;
+reg shift_axis_input_tready;
+reg shift_axis_extra_cycle;
 
 // internal datapath
 reg [63:0] output_eth_payload_tdata_int;
@@ -132,6 +138,28 @@ assign output_eth_type = output_eth_type_reg;
 
 assign busy = busy_reg;
 assign error_header_early_termination = error_header_early_termination_reg;
+
+always @* begin
+    shift_axis_tdata[15:0] = save_axis_tdata_reg[63:48];
+    shift_axis_tkeep[1:0] = save_axis_tkeep_reg[7:6];
+    shift_axis_extra_cycle = save_axis_tlast_reg & (save_axis_tkeep_reg[7:6] != 0);
+
+    if (shift_axis_extra_cycle) begin
+        shift_axis_tdata[63:16] = 0;
+        shift_axis_tkeep[7:2] = 0;
+        shift_axis_tvalid = 1;
+        shift_axis_tlast = save_axis_tlast_reg;
+        shift_axis_tuser = save_axis_tuser_reg;
+        shift_axis_input_tready = flush_save;
+    end else begin
+        shift_axis_tdata[63:16] = input_axis_tdata[47:0];
+        shift_axis_tkeep[7:2] = input_axis_tkeep[5:0];
+        shift_axis_tvalid = input_axis_tvalid;
+        shift_axis_tlast = (input_axis_tlast & (input_axis_tkeep[7:6] == 0));
+        shift_axis_tuser = (input_axis_tuser & (input_axis_tkeep[7:6] == 0));
+        shift_axis_input_tready = ~(input_axis_tlast & input_axis_tvalid & transfer_in_save);
+    end
+end
 
 always @* begin
     state_next = 2'bz;
@@ -201,7 +229,7 @@ always @* begin
                 if (input_axis_tlast) begin
                     if (input_axis_tkeep[7:6] != 0) begin
                         input_axis_tready_next = 0;
-                        state_next = STATE_READ_PAYLOAD_LAST;
+                        state_next = STATE_READ_PAYLOAD;
                     end else begin
                         flush_save = 1;
                         output_eth_hdr_valid_next = 0;
@@ -216,55 +244,26 @@ always @* begin
         end
         STATE_READ_PAYLOAD: begin
             // read payload
-            input_axis_tready_next = output_eth_payload_tready_int_early;
+            input_axis_tready_next = output_eth_payload_tready_int_early & shift_axis_input_tready;
 
-            output_eth_payload_tdata_int[15:0] = save_axis_tdata_reg[63:48];
-            output_eth_payload_tkeep_int[1:0] = save_axis_tkeep_reg[7:6];
+            output_eth_payload_tdata_int = shift_axis_tdata;
+            output_eth_payload_tkeep_int = shift_axis_tkeep;
+            output_eth_payload_tvalid_int = shift_axis_tvalid;
+            output_eth_payload_tlast_int = shift_axis_tlast;
+            output_eth_payload_tuser_int = shift_axis_tuser;
 
-            output_eth_payload_tdata_int[63:16] = input_axis_tdata[47:0];
-            output_eth_payload_tkeep_int[7:2] = input_axis_tkeep[5:0];
-            output_eth_payload_tvalid_int = save_axis_tvalid_reg & input_axis_tvalid & input_axis_tready;
-            output_eth_payload_tlast_int = (input_axis_tlast & (input_axis_tkeep[7:6] == 0));
-            output_eth_payload_tuser_int = (input_axis_tuser & (input_axis_tkeep[7:6] == 0));
-
-            if (input_axis_tready & input_axis_tvalid) begin
+            if (output_eth_payload_tready_int & shift_axis_tvalid) begin
                 // word transfer through
                 transfer_in_save = 1;
-                if (input_axis_tlast) begin
-                    if (input_axis_tkeep[7:6] != 0) begin
-                        input_axis_tready_next = 0;
-                        state_next = STATE_READ_PAYLOAD_LAST;
-                    end else begin
-                        flush_save = 1;
-                        input_axis_tready_next = ~output_eth_hdr_valid_reg;
-                        state_next = STATE_IDLE;
-                    end
+                if (shift_axis_tlast) begin
+                    flush_save = 1;
+                    input_axis_tready_next = ~output_eth_hdr_valid_reg;
+                    state_next = STATE_IDLE;
                 end else begin
                     state_next = STATE_READ_PAYLOAD;
                 end
             end else begin
                 state_next = STATE_READ_PAYLOAD;
-            end
-        end
-        STATE_READ_PAYLOAD_LAST: begin
-            // read last payload word from save reg
-            input_axis_tready_next = 0;
-
-            output_eth_payload_tdata_int[15:0] = save_axis_tdata_reg[63:48];
-            output_eth_payload_tkeep_int[1:0] = save_axis_tkeep_reg[7:6];
-
-            output_eth_payload_tdata_int[63:16] = 0;
-            output_eth_payload_tkeep_int[7:2] = 0;
-            output_eth_payload_tvalid_int = 1;
-            output_eth_payload_tlast_int = 1;
-            output_eth_payload_tuser_int = save_axis_tuser_reg;
-
-            if (output_eth_payload_tready_int) begin
-                flush_save = 1;
-                input_axis_tready_next = ~output_eth_hdr_valid_reg;
-                state_next = STATE_IDLE;
-            end else begin
-                state_next = STATE_READ_PAYLOAD_LAST;
             end
         end
     endcase
@@ -281,7 +280,6 @@ always @(posedge clk or posedge rst) begin
         output_eth_type_reg <= 0;
         save_axis_tdata_reg <= 0;
         save_axis_tkeep_reg <= 0;
-        save_axis_tvalid_reg <= 0;
         save_axis_tlast_reg <= 0;
         save_axis_tuser_reg <= 0;
         busy_reg <= 0;
@@ -322,13 +320,11 @@ always @(posedge clk or posedge rst) begin
         if (flush_save) begin
             save_axis_tdata_reg <= 0;
             save_axis_tkeep_reg <= 0;
-            save_axis_tvalid_reg <= 0;
             save_axis_tlast_reg <= 0;
             save_axis_tuser_reg <= 0;
         end else if (transfer_in_save) begin
             save_axis_tdata_reg <= input_axis_tdata;
             save_axis_tkeep_reg <= input_axis_tkeep;
-            save_axis_tvalid_reg <= input_axis_tvalid;
             save_axis_tlast_reg <= input_axis_tlast;
             save_axis_tuser_reg <= input_axis_tuser;
         end
