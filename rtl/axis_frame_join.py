@@ -156,6 +156,9 @@ reg input_tlast;
 reg input_tuser;
 
 reg output_tuser_reg = 0, output_tuser_next;
+{% for p in ports %}
+reg input_{{p}}_axis_tready_reg = 0, input_{{p}}_axis_tready_next;
+{%- endfor %}
 
 // internal datapath
 reg [7:0] output_axis_tdata_int;
@@ -165,13 +168,24 @@ reg       output_axis_tlast_int;
 reg       output_axis_tuser_int;
 wire      output_axis_tready_int_early;
 {% for p in ports %}
-reg input_{{p}}_axis_tready_reg = 0, input_{{p}}_axis_tready_next;
-{%- endfor %}
-{% for p in ports %}
 assign input_{{p}}_axis_tready = input_{{p}}_axis_tready_reg;
 {%- endfor %}
 
 assign busy = busy_reg;
+
+always @* begin
+    // input port mux
+    case (port_sel_reg)
+{%- for p in ports %}
+        {{w}}'d{{p}}: begin
+            input_tdata = input_{{p}}_axis_tdata;
+            input_tvalid = input_{{p}}_axis_tvalid;
+            input_tlast = input_{{p}}_axis_tlast;
+            input_tuser = input_{{p}}_axis_tuser;
+        end
+{%- endfor %}
+    endcase
+end
 
 always @* begin
     state_next = 2'bz;
@@ -252,16 +266,10 @@ always @* begin
         STATE_TRANSFER: begin
             // transfer input data
 
-            // grab correct input lines, set ready line correctly
+            // set ready for current input
             case (port_sel_reg)
 {%- for p in ports %}
-                {{w}}'d{{p}}: begin
-                    input_tdata = input_{{p}}_axis_tdata;
-                    input_tvalid = input_{{p}}_axis_tvalid;
-                    input_tlast = input_{{p}}_axis_tlast;
-                    input_tuser = input_{{p}}_axis_tuser;
-                    input_{{p}}_axis_tready_next = output_axis_tready_int_early;
-                end
+                {{w}}'d{{p}}: input_{{p}}_axis_tready_next = output_axis_tready_int_early;
 {%- endfor %}
             endcase
 

@@ -104,6 +104,11 @@ reg input_tuser;
 
 reg output_tuser_reg = 0, output_tuser_next;
 
+reg input_0_axis_tready_reg = 0, input_0_axis_tready_next;
+reg input_1_axis_tready_reg = 0, input_1_axis_tready_next;
+reg input_2_axis_tready_reg = 0, input_2_axis_tready_next;
+reg input_3_axis_tready_reg = 0, input_3_axis_tready_next;
+
 // internal datapath
 reg [7:0] output_axis_tdata_int;
 reg       output_axis_tvalid_int;
@@ -112,17 +117,42 @@ reg       output_axis_tlast_int;
 reg       output_axis_tuser_int;
 wire      output_axis_tready_int_early;
 
-reg input_0_axis_tready_reg = 0, input_0_axis_tready_next;
-reg input_1_axis_tready_reg = 0, input_1_axis_tready_next;
-reg input_2_axis_tready_reg = 0, input_2_axis_tready_next;
-reg input_3_axis_tready_reg = 0, input_3_axis_tready_next;
-
 assign input_0_axis_tready = input_0_axis_tready_reg;
 assign input_1_axis_tready = input_1_axis_tready_reg;
 assign input_2_axis_tready = input_2_axis_tready_reg;
 assign input_3_axis_tready = input_3_axis_tready_reg;
 
 assign busy = busy_reg;
+
+always @* begin
+    // input port mux
+    case (port_sel_reg)
+        2'd0: begin
+            input_tdata = input_0_axis_tdata;
+            input_tvalid = input_0_axis_tvalid;
+            input_tlast = input_0_axis_tlast;
+            input_tuser = input_0_axis_tuser;
+        end
+        2'd1: begin
+            input_tdata = input_1_axis_tdata;
+            input_tvalid = input_1_axis_tvalid;
+            input_tlast = input_1_axis_tlast;
+            input_tuser = input_1_axis_tuser;
+        end
+        2'd2: begin
+            input_tdata = input_2_axis_tdata;
+            input_tvalid = input_2_axis_tvalid;
+            input_tlast = input_2_axis_tlast;
+            input_tuser = input_2_axis_tuser;
+        end
+        2'd3: begin
+            input_tdata = input_3_axis_tdata;
+            input_tvalid = input_3_axis_tvalid;
+            input_tlast = input_3_axis_tlast;
+            input_tuser = input_3_axis_tuser;
+        end
+    endcase
+end
 
 always @* begin
     state_next = 2'bz;
@@ -205,36 +235,12 @@ always @* begin
         STATE_TRANSFER: begin
             // transfer input data
 
-            // grab correct input lines, set ready line correctly
+            // set ready for current input
             case (port_sel_reg)
-                2'd0: begin
-                    input_tdata = input_0_axis_tdata;
-                    input_tvalid = input_0_axis_tvalid;
-                    input_tlast = input_0_axis_tlast;
-                    input_tuser = input_0_axis_tuser;
-                    input_0_axis_tready_next = output_axis_tready_int_early;
-                end
-                2'd1: begin
-                    input_tdata = input_1_axis_tdata;
-                    input_tvalid = input_1_axis_tvalid;
-                    input_tlast = input_1_axis_tlast;
-                    input_tuser = input_1_axis_tuser;
-                    input_1_axis_tready_next = output_axis_tready_int_early;
-                end
-                2'd2: begin
-                    input_tdata = input_2_axis_tdata;
-                    input_tvalid = input_2_axis_tvalid;
-                    input_tlast = input_2_axis_tlast;
-                    input_tuser = input_2_axis_tuser;
-                    input_2_axis_tready_next = output_axis_tready_int_early;
-                end
-                2'd3: begin
-                    input_tdata = input_3_axis_tdata;
-                    input_tvalid = input_3_axis_tvalid;
-                    input_tlast = input_3_axis_tlast;
-                    input_tuser = input_3_axis_tuser;
-                    input_3_axis_tready_next = output_axis_tready_int_early;
-                end
+                2'd0: input_0_axis_tready_next = output_axis_tready_int_early;
+                2'd1: input_1_axis_tready_next = output_axis_tready_int_early;
+                2'd2: input_2_axis_tready_next = output_axis_tready_int_early;
+                2'd3: input_3_axis_tready_next = output_axis_tready_int_early;
             endcase
 
             if (input_tvalid & output_axis_tready_int) begin
