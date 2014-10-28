@@ -93,9 +93,9 @@ ARP Frame
  THA Target MAC              6 octets
  TPA Target IP               4 octets
 
-This module receives an Ethernet frame with decoded fields and decodes
-the ARP packet format.  If the Ethertype does not match, the packet is
-discarded.
+This module receives an Ethernet frame with header fields in parallel and
+payload on an AXI stream interface, decodes the ARP packet fields, and
+produces the frame fields in parallel.  
 
 */
 
@@ -115,8 +115,8 @@ reg store_arp_hdr_word_3;
 
 reg [7:0] frame_ptr_reg = 0, frame_ptr_next;
 
-reg input_eth_hdr_ready_reg = 0;
-reg input_eth_payload_tready_reg = 0;
+reg input_eth_hdr_ready_reg = 0, input_eth_hdr_ready_next;
+reg input_eth_payload_tready_reg = 0, input_eth_payload_tready_next;
 
 reg output_frame_valid_reg = 0, output_frame_valid_next;
 reg [47:0] output_eth_dest_mac_reg = 0;
@@ -160,6 +160,9 @@ assign error_invalid_header = error_invalid_header_reg;
 always @* begin
     state_next = 2'bz;
 
+    input_eth_hdr_ready_next = 0;
+    input_eth_payload_tready_next = 0;
+
     store_eth_hdr = 0;
     store_arp_hdr_word_0 = 0;
     store_arp_hdr_word_1 = 0;
@@ -177,9 +180,11 @@ always @* begin
         STATE_IDLE: begin
             // idle state - wait for data
             frame_ptr_next = 0;
+            input_eth_hdr_ready_next = ~output_frame_valid_reg;
 
             if (input_eth_hdr_ready & input_eth_hdr_valid) begin
-                frame_ptr_next = 0;
+                input_eth_hdr_ready_next = 0;
+                input_eth_payload_tready_next = 1;
                 store_eth_hdr = 1;
                 state_next = STATE_READ_HEADER;
             end else begin
@@ -188,6 +193,8 @@ always @* begin
         end
         STATE_READ_HEADER: begin
             // read header state
+            input_eth_payload_tready_next = 1;
+
             if (input_eth_payload_tvalid) begin
                 // word transfer in - store it
                 frame_ptr_next = frame_ptr_reg+1;
@@ -202,7 +209,6 @@ always @* begin
                     end
                 endcase
                 if (input_eth_payload_tlast) begin
-                    state_next = STATE_IDLE;
                     if (frame_ptr_reg != 8'h03 | (input_eth_payload_tkeep & 8'h0F) != 8'h0F) begin
                         error_header_early_termination_next = 1;
                     end else if (output_arp_hlen != 6 || output_arp_plen != 4) begin
@@ -210,21 +216,29 @@ always @* begin
                     end else begin
                         output_frame_valid_next = ~input_eth_payload_tuser;
                     end
+                    input_eth_hdr_ready_next = ~output_frame_valid_reg;
+                    input_eth_payload_tready_next = 0;
+                    state_next = STATE_IDLE;
                 end
             end else begin
                 state_next = STATE_READ_HEADER;
             end
         end
         STATE_WAIT_LAST: begin
-            // read last payload word; data in output register; do not accept new data
+            // wait for end of frame; read and discard
+            input_eth_payload_tready_next = 1;
+
             if (input_eth_payload_tvalid) begin
-                // word transfer out - done
                 if (input_eth_payload_tlast) begin
                     if (output_arp_hlen != 6 || output_arp_plen != 4) begin
+                        // lengths not valid
                         error_invalid_header_next = 1;
                     end else begin
+                        // otherwise, transfer tuser
                         output_frame_valid_next = ~input_eth_payload_tuser;
                     end
+                    input_eth_hdr_ready_next = ~output_frame_valid_reg;
+                    input_eth_payload_tready_next = 0;
                     state_next = STATE_IDLE;
                 end else begin
                     state_next = STATE_WAIT_LAST;
@@ -252,6 +266,9 @@ always @(posedge clk or posedge rst) begin
     end else begin
         state_reg <= state_next;
 
+        input_eth_hdr_ready_reg <= input_eth_hdr_ready_next;
+        input_eth_payload_tready_reg <= input_eth_payload_tready_next;
+
         frame_ptr_reg <= frame_ptr_next;
 
         output_frame_valid_reg <= output_frame_valid_next;
@@ -260,25 +277,6 @@ always @(posedge clk or posedge rst) begin
         error_invalid_header_reg <= error_invalid_header_next;
 
         busy_reg <= state_next != STATE_IDLE;
-
-        // generate valid outputs
-        case (state_next)
-            STATE_IDLE: begin
-                // idle; accept new data
-                input_eth_hdr_ready_reg <= ~output_frame_valid;
-                input_eth_payload_tready_reg <= 0;
-            end
-            STATE_READ_HEADER: begin
-                // read header; accept new data
-                input_eth_hdr_ready_reg <= 0;
-                input_eth_payload_tready_reg <= 1;
-            end
-            STATE_WAIT_LAST: begin
-                // wait for end of frame; read and discard
-                input_eth_hdr_ready_reg <= 0;
-                input_eth_payload_tready_reg <= 1;
-            end
-        endcase
 
         // datapath
         if (store_eth_hdr) begin
