@@ -132,41 +132,31 @@ UDP Frame
 
  payload                     length octets
 
-This module receives an IP frame with decoded fields and decodes
-the AXI packet format.  If the Ethertype does not match, the packet is
-discarded.
+This module receives an IP frame with header fields in parallel and payload on
+an AXI stream interface, decodes and strips the UDP header fields, then
+produces the header fields in parallel along with the UDP payload in a
+separate AXI stream.
 
 */
 
-localparam [3:0]
-    STATE_IDLE = 4'd0,
-    STATE_READ_HEADER = 4'd1,
-    STATE_READ_PAYLOAD_IDLE = 4'd2,
-    STATE_READ_PAYLOAD_TRANSFER = 4'd3,
-    STATE_READ_PAYLOAD_TRANSFER_WAIT = 4'd4,
-    STATE_READ_PAYLOAD_TRANSFER_LAST = 4'd5,
-    STATE_READ_PAYLOAD_TRANSFER_WAIT_LAST = 4'd6,
-    STATE_READ_PAYLOAD_TRANSFER_WAIT_LAST_WAIT = 4'd7,
-    STATE_WAIT_LAST = 4'd8;
+localparam [2:0]
+    STATE_IDLE = 3'd0,
+    STATE_READ_HEADER = 3'd1,
+    STATE_READ_PAYLOAD = 3'd2,
+    STATE_READ_PAYLOAD_LAST = 3'd3,
+    STATE_WAIT_LAST = 3'd4;
 
-reg [3:0] state_reg = STATE_IDLE, state_next;
+reg [2:0] state_reg = STATE_IDLE, state_next;
 
 // datapath control signals
 reg store_ip_hdr;
 reg store_hdr_word_0;
-
-reg transfer_in_out;
-reg transfer_in_temp;
-reg transfer_temp_out;
-
-reg assert_tlast;
-reg assert_tuser;
-reg [7:0] tkeep_mask;
+reg store_last_word;
 
 reg [15:0] frame_ptr_reg = 0, frame_ptr_next;
 
-reg input_ip_hdr_ready_reg = 0;
-reg input_ip_payload_tready_reg = 0;
+reg [63:0] last_word_data_reg = 0;
+reg [7:0] last_word_keep_reg = 0;
 
 reg output_udp_hdr_valid_reg = 0, output_udp_hdr_valid_next;
 reg [47:0] output_eth_dest_mac_reg = 0;
@@ -189,20 +179,22 @@ reg [15:0] output_udp_source_port_reg = 0;
 reg [15:0] output_udp_dest_port_reg = 0;
 reg [15:0] output_udp_length_reg = 0;
 reg [15:0] output_udp_checksum_reg = 0;
-reg [63:0] output_udp_payload_tdata_reg = 0;
-reg [7:0] output_udp_payload_tkeep_reg = 0;
-reg output_udp_payload_tvalid_reg = 0;
-reg output_udp_payload_tlast_reg = 0;
-reg output_udp_payload_tuser_reg = 0;
+
+reg input_ip_hdr_ready_reg = 0, input_ip_hdr_ready_next;
+reg input_ip_payload_tready_reg = 0, input_ip_payload_tready_next;
 
 reg busy_reg = 0;
 reg error_header_early_termination_reg = 0, error_header_early_termination_next;
 reg error_payload_early_termination_reg = 0, error_payload_early_termination_next;
 
-reg [63:0] temp_udp_payload_tdata_reg = 0;
-reg [7:0] temp_udp_payload_tkeep_reg = 0;
-reg temp_udp_payload_tlast_reg = 0;
-reg temp_udp_payload_tuser_reg = 0;
+// internal datapath
+reg [63:0] output_udp_payload_tdata_int;
+reg [7:0]  output_udp_payload_tkeep_int;
+reg        output_udp_payload_tvalid_int;
+reg        output_udp_payload_tready_int = 0;
+reg        output_udp_payload_tlast_int;
+reg        output_udp_payload_tuser_int;
+wire       output_udp_payload_tready_int_early;
 
 assign input_ip_hdr_ready = input_ip_hdr_ready_reg;
 assign input_ip_payload_tready = input_ip_payload_tready_reg;
@@ -228,11 +220,6 @@ assign output_udp_source_port = output_udp_source_port_reg;
 assign output_udp_dest_port = output_udp_dest_port_reg;
 assign output_udp_length = output_udp_length_reg;
 assign output_udp_checksum = output_udp_checksum_reg;
-assign output_udp_payload_tdata = output_udp_payload_tdata_reg;
-assign output_udp_payload_tkeep = output_udp_payload_tkeep_reg;
-assign output_udp_payload_tvalid = output_udp_payload_tvalid_reg;
-assign output_udp_payload_tlast = output_udp_payload_tlast_reg;
-assign output_udp_payload_tuser = output_udp_payload_tuser_reg;
 
 assign busy = busy_reg;
 assign error_header_early_termination = error_header_early_termination_reg;
@@ -271,16 +258,13 @@ endfunction
 always @* begin
     state_next = 2'bz;
 
-    transfer_in_out = 0;
-    transfer_in_temp = 0;
-    transfer_temp_out = 0;
-
-    assert_tlast = 0;
-    assert_tuser = 0;
-    tkeep_mask = 8'hff;
+    input_ip_hdr_ready_next = 0;
+    input_ip_payload_tready_next = 0;
 
     store_ip_hdr = 0;
     store_hdr_word_0 = 0;
+
+    store_last_word = 0;
 
     frame_ptr_next = frame_ptr_reg;
 
@@ -289,13 +273,21 @@ always @* begin
     error_header_early_termination_next = 0;
     error_payload_early_termination_next = 0;
 
+    output_udp_payload_tdata_int = 0;
+    output_udp_payload_tkeep_int = 0;
+    output_udp_payload_tvalid_int = 0;
+    output_udp_payload_tlast_int = 0;
+    output_udp_payload_tuser_int = 0;
+
     case (state_reg)
         STATE_IDLE: begin
             // idle state - wait for header
             frame_ptr_next = 0;
+            input_ip_hdr_ready_next = ~output_udp_hdr_valid_reg;
 
             if (input_ip_hdr_ready & input_ip_hdr_valid) begin
-                frame_ptr_next = 0;
+                input_ip_hdr_ready_next = 0;
+                input_ip_payload_tready_next = 1;
                 store_ip_hdr = 1;
                 state_next = STATE_READ_HEADER;
             end else begin
@@ -304,7 +296,9 @@ always @* begin
         end
         STATE_READ_HEADER: begin
             // read header state
-            if (input_ip_payload_tvalid) begin
+            input_ip_payload_tready_next = 1;
+
+            if (input_ip_payload_tready & input_ip_payload_tvalid) begin
                 // word transfer in - store it
                 frame_ptr_next = frame_ptr_reg+8;
                 state_next = STATE_READ_HEADER;
@@ -313,159 +307,95 @@ always @* begin
                     8'h00: begin
                         store_hdr_word_0 = 1;
                         output_udp_hdr_valid_next = 1;
-                        state_next = STATE_READ_PAYLOAD_IDLE;
+                        input_ip_payload_tready_next = output_udp_payload_tready_int_early;
+                        state_next = STATE_READ_PAYLOAD;
                     end
                 endcase
 
                 if (input_ip_payload_tlast) begin
-                    state_next = STATE_IDLE;
-                    output_udp_hdr_valid_next = 0;
                     error_header_early_termination_next = 1;
+                    output_udp_hdr_valid_next = 0;
+                    input_ip_hdr_ready_next = ~output_udp_hdr_valid_reg;
+                    input_ip_payload_tready_next = 0;
+                    state_next = STATE_IDLE;
                 end
 
             end else begin
                 state_next = STATE_READ_HEADER;
             end
         end
-        STATE_READ_PAYLOAD_IDLE: begin
-            // idle; no data in registers
-            if (input_ip_payload_tvalid) begin
-                // word transfer in - store it in output register
-                transfer_in_out = 1;
+        STATE_READ_PAYLOAD: begin
+            // read payload
+            input_ip_payload_tready_next = output_udp_payload_tready_int_early;
+
+            output_udp_payload_tdata_int = input_ip_payload_tdata;
+            output_udp_payload_tkeep_int = input_ip_payload_tkeep;
+            output_udp_payload_tvalid_int = input_ip_payload_tvalid;
+            output_udp_payload_tlast_int = input_ip_payload_tlast;
+            output_udp_payload_tuser_int = input_ip_payload_tuser;
+
+            if (input_ip_payload_tready & input_ip_payload_tvalid) begin
+                // word transfer through
                 frame_ptr_next = frame_ptr_reg+keep2count(input_ip_payload_tkeep);
                 if (frame_ptr_next >= output_udp_length_reg) begin
                     // have entire payload
                     frame_ptr_next = output_udp_length_reg;
-                    tkeep_mask = count2keep(output_udp_length_reg - frame_ptr_reg);
+                    output_udp_payload_tkeep_int = input_ip_payload_tkeep & count2keep(output_udp_length_reg - frame_ptr_reg);
                     if (input_ip_payload_tlast) begin
-                        state_next = STATE_READ_PAYLOAD_TRANSFER_LAST;
+                        input_ip_payload_tready_next = 0;
+                        input_ip_hdr_ready_next = ~output_udp_hdr_valid_reg;
+                        state_next = STATE_IDLE;
                     end else begin
-                        state_next = STATE_READ_PAYLOAD_TRANSFER_WAIT_LAST;
+                        store_last_word = 1;
+                        output_udp_payload_tvalid_int = 0;
+                        state_next = STATE_READ_PAYLOAD_LAST;
                     end
                 end else begin
                     if (input_ip_payload_tlast) begin
                         // end of frame, but length does not match
-                        assert_tuser = 1;
-                        assert_tlast = 1;
                         error_payload_early_termination_next = 1;
-                        state_next = STATE_READ_PAYLOAD_TRANSFER_LAST;
+                        output_udp_payload_tuser_int = 1;
+                        input_ip_payload_tready_next = 0;
+                        input_ip_hdr_ready_next = ~output_udp_hdr_valid_reg;
+                        state_next = STATE_IDLE;
                     end else begin
-                        state_next = STATE_READ_PAYLOAD_TRANSFER;
+                        state_next = STATE_READ_PAYLOAD;
                     end
                 end
             end else begin
-                state_next = STATE_READ_PAYLOAD_IDLE;
+                state_next = STATE_READ_PAYLOAD;
             end
         end
-        STATE_READ_PAYLOAD_TRANSFER: begin
-            // read payload; data in output register
-            if (input_ip_payload_tvalid & output_udp_payload_tready) begin
-                // word transfer through - update output register
-                transfer_in_out = 1;
-                frame_ptr_next = frame_ptr_reg+keep2count(input_ip_payload_tkeep);
-                if (frame_ptr_next >= output_udp_length_reg) begin
-                    // have entire payload
-                    frame_ptr_next = output_udp_length_reg;
-                    tkeep_mask = count2keep(output_udp_length_reg - frame_ptr_reg);
-                    if (input_ip_payload_tlast) begin
-                        state_next = STATE_READ_PAYLOAD_TRANSFER_LAST;
-                    end else begin
-                        state_next = STATE_READ_PAYLOAD_TRANSFER_WAIT_LAST;
-                    end
-                end else begin
-                    if (input_ip_payload_tlast) begin
-                        // end of frame, but length does not match
-                        assert_tuser = 1;
-                        assert_tlast = 1;
-                        error_payload_early_termination_next = 1;
-                        state_next = STATE_READ_PAYLOAD_TRANSFER_LAST;
-                    end else begin
-                        state_next = STATE_READ_PAYLOAD_TRANSFER;
-                    end
-                end
-            end else if (~input_ip_payload_tvalid & output_udp_payload_tready) begin
-                // word transfer out - go back to idle
-                state_next = STATE_READ_PAYLOAD_IDLE;
-            end else if (input_ip_payload_tvalid & ~output_udp_payload_tready) begin
-                // word transfer in - store in temp
-                transfer_in_temp = 1;
-                frame_ptr_next = frame_ptr_reg+keep2count(input_ip_payload_tkeep);
-                state_next = STATE_READ_PAYLOAD_TRANSFER_WAIT;
-                if (frame_ptr_next >= output_udp_length_reg) begin
-                    // have entire payload
-                    frame_ptr_next = output_udp_length_reg;
-                    tkeep_mask = count2keep(output_udp_length_reg - frame_ptr_reg);
-                    if (~input_ip_payload_tlast) begin
-                        state_next = STATE_READ_PAYLOAD_TRANSFER_WAIT_LAST_WAIT;
-                    end
-                end
-            end else begin
-                state_next = STATE_READ_PAYLOAD_TRANSFER;
-            end
-        end
-        STATE_READ_PAYLOAD_TRANSFER_WAIT: begin
-            // read payload; data in both output and temp registers
-            if (output_udp_payload_tready) begin
-                // transfer out - move temp to output
-                transfer_temp_out = 1;
-                if (temp_udp_payload_tlast_reg) begin
-                    if (frame_ptr_next <= output_udp_length_reg) begin
-                        // end of frame, but length does not match
-                        assert_tuser = 1;
-                        assert_tlast = 1;
-                        error_payload_early_termination_next = 1;
-                    end
-                    state_next = STATE_READ_PAYLOAD_TRANSFER_LAST;
-                end else begin
-                    if (frame_ptr_next >= output_udp_length_reg) begin
-                        // not end of frame, but we have the entire payload
-                        state_next = STATE_READ_PAYLOAD_TRANSFER_WAIT_LAST;
-                    end else begin
-                        state_next = STATE_READ_PAYLOAD_TRANSFER;
-                    end
-                end
-            end else begin
-                state_next = STATE_READ_PAYLOAD_TRANSFER_WAIT;
-            end
-        end
-        STATE_READ_PAYLOAD_TRANSFER_LAST: begin
-            // read last payload word; data in output register; do not accept new data
-            if (output_udp_payload_tready) begin
-                // word transfer out - done
-                state_next = STATE_IDLE;
-            end else begin
-                state_next = STATE_READ_PAYLOAD_TRANSFER_LAST;
-            end
-        end
-        STATE_READ_PAYLOAD_TRANSFER_WAIT_LAST: begin
-            // wait for end of frame; data in output register; read and discard
-            if (input_ip_payload_tvalid) begin
+        STATE_READ_PAYLOAD_LAST: begin
+            // read and discard until end of frame
+            input_ip_payload_tready_next = output_udp_payload_tready_int_early;
+
+            output_udp_payload_tdata_int = last_word_data_reg;
+            output_udp_payload_tkeep_int = last_word_keep_reg;
+            output_udp_payload_tvalid_int = input_ip_payload_tvalid & input_ip_payload_tlast;
+            output_udp_payload_tlast_int = input_ip_payload_tlast;
+            output_udp_payload_tuser_int = input_ip_payload_tuser;
+
+            if (input_ip_payload_tready & input_ip_payload_tvalid) begin
                 if (input_ip_payload_tlast) begin
-                    // assert tlast and transfer tuser
-                    assert_tlast = 1;
-                    assert_tuser = input_ip_payload_tuser;
-                    state_next = STATE_READ_PAYLOAD_TRANSFER_LAST;
+                    input_ip_hdr_ready_next = ~output_udp_hdr_valid_reg;
+                    input_ip_payload_tready_next = 0;
+                    state_next = STATE_IDLE;
                 end else begin
-                    state_next = STATE_READ_PAYLOAD_TRANSFER_WAIT_LAST;
+                    state_next = STATE_READ_PAYLOAD_LAST;
                 end
             end else begin
-                state_next = STATE_READ_PAYLOAD_TRANSFER_WAIT_LAST;
-            end
-        end
-        STATE_READ_PAYLOAD_TRANSFER_WAIT_LAST_WAIT: begin
-            // wait for end of frame; data in both output and temp registers; read and discard
-            if (output_udp_payload_tready) begin
-                // transfer out - move temp to output
-                transfer_temp_out = 1;
-                state_next = STATE_READ_PAYLOAD_TRANSFER_WAIT_LAST;
-            end else begin
-                state_next = STATE_READ_PAYLOAD_TRANSFER_WAIT_LAST_WAIT;
+                state_next = STATE_READ_PAYLOAD_LAST;
             end
         end
         STATE_WAIT_LAST: begin
             // wait for end of frame; read and discard
-            if (input_ip_payload_tvalid) begin
+            input_ip_payload_tready_next = 1;
+
+            if (input_ip_payload_tready & input_ip_payload_tvalid) begin
                 if (input_ip_payload_tlast) begin
+                    input_ip_hdr_ready_next = ~output_udp_hdr_valid_reg;
+                    input_ip_payload_tready_next = 0;
                     state_next = STATE_IDLE;
                 end else begin
                     state_next = STATE_WAIT_LAST;
@@ -481,6 +411,7 @@ always @(posedge clk or posedge rst) begin
     if (rst) begin
         state_reg <= STATE_IDLE;
         frame_ptr_reg <= 0;
+        last_word_data_reg <= 0;
         input_ip_hdr_ready_reg <= 0;
         input_ip_payload_tready_reg <= 0;
         output_udp_hdr_valid_reg <= 0;
@@ -504,15 +435,6 @@ always @(posedge clk or posedge rst) begin
         output_udp_dest_port_reg <= 0;
         output_udp_length_reg <= 0;
         output_udp_checksum_reg <= 0;
-        output_udp_payload_tdata_reg <= 0;
-        output_udp_payload_tkeep_reg <= 0;
-        output_udp_payload_tvalid_reg <= 0;
-        output_udp_payload_tlast_reg <= 0;
-        output_udp_payload_tuser_reg <= 0;
-        temp_udp_payload_tdata_reg <= 0;
-        temp_udp_payload_tkeep_reg <= 0;
-        temp_udp_payload_tlast_reg <= 0;
-        temp_udp_payload_tuser_reg <= 0;
         busy_reg <= 0;
         error_header_early_termination_reg <= 0;
         error_payload_early_termination_reg <= 0;
@@ -521,70 +443,15 @@ always @(posedge clk or posedge rst) begin
 
         frame_ptr_reg <= frame_ptr_next;
 
+        input_ip_hdr_ready_reg <= input_ip_hdr_ready_next;
+        input_ip_payload_tready_reg <= input_ip_payload_tready_next;
+
         output_udp_hdr_valid_reg <= output_udp_hdr_valid_next;
 
         error_header_early_termination_reg <= error_header_early_termination_next;
         error_payload_early_termination_reg <= error_payload_early_termination_next;
 
         busy_reg <= state_next != STATE_IDLE;
-
-        // generate valid outputs
-        case (state_next)
-            STATE_IDLE: begin
-                // idle; accept new data
-                input_ip_hdr_ready_reg <= ~output_udp_hdr_valid;
-                input_ip_payload_tready_reg <= 0;
-                output_udp_payload_tvalid_reg <= 0;
-            end
-            STATE_READ_HEADER: begin
-                // read header; accept new data
-                input_ip_hdr_ready_reg <= 0;
-                input_ip_payload_tready_reg <= 1;
-                output_udp_payload_tvalid_reg <= 0;
-            end
-            STATE_READ_PAYLOAD_IDLE: begin
-                // read payload; no data in registers; accept new data
-                input_ip_hdr_ready_reg <= 0;
-                input_ip_payload_tready_reg <= 1;
-                output_udp_payload_tvalid_reg <= 0;
-            end
-            STATE_READ_PAYLOAD_TRANSFER: begin
-                // read payload; data in output register; accept new data
-                input_ip_hdr_ready_reg <= 0;
-                input_ip_payload_tready_reg <= 1;
-                output_udp_payload_tvalid_reg <= 1;
-            end
-            STATE_READ_PAYLOAD_TRANSFER_WAIT: begin
-                // read payload; data in output and temp registers; do not accept new data
-                input_ip_hdr_ready_reg <= 0;
-                input_ip_payload_tready_reg <= 0;
-                output_udp_payload_tvalid_reg <= 1;
-            end
-            STATE_READ_PAYLOAD_TRANSFER_LAST: begin
-                // read last payload word; data in output register; do not accept new data
-                input_ip_hdr_ready_reg <= 0;
-                input_ip_payload_tready_reg <= 0;
-                output_udp_payload_tvalid_reg <= 1;
-            end
-            STATE_READ_PAYLOAD_TRANSFER_WAIT_LAST: begin
-                // wait for end of frame; data in output register; read and discard
-                input_ip_hdr_ready_reg <= 0;
-                input_ip_payload_tready_reg <= 1;
-                output_udp_payload_tvalid_reg <= 0;
-            end
-            STATE_READ_PAYLOAD_TRANSFER_WAIT_LAST_WAIT: begin
-                // wait for end of frame; data in output and temp registers; do not accept new data
-                input_ip_hdr_ready_reg <= 0;
-                input_ip_payload_tready_reg <= 0;
-                output_udp_payload_tvalid_reg <= 1;
-            end
-            STATE_WAIT_LAST: begin
-                // wait for end of frame; read and discard
-                input_ip_hdr_ready_reg <= 0;
-                input_ip_payload_tready_reg <= 1;
-                output_udp_payload_tvalid_reg <= 0;
-            end
-        endcase
 
         // datapath
         if (store_ip_hdr) begin
@@ -606,6 +473,11 @@ always @(posedge clk or posedge rst) begin
             output_ip_dest_ip_reg <= input_ip_dest_ip;
         end
 
+        if (store_last_word) begin
+            last_word_data_reg <= output_udp_payload_tdata_int;
+            last_word_keep_reg <= output_udp_payload_tkeep_int;
+        end
+
         if (store_hdr_word_0) begin
             output_udp_source_port_reg[15: 8] <= input_ip_payload_tdata[ 7: 0];
             output_udp_source_port_reg[ 7: 0] <= input_ip_payload_tdata[15: 8];
@@ -616,26 +488,78 @@ always @(posedge clk or posedge rst) begin
             output_udp_checksum_reg[15: 8] <= input_ip_payload_tdata[55:48];
             output_udp_checksum_reg[ 7: 0] <= input_ip_payload_tdata[63:56];
         end
+    end
+end
 
-        if (transfer_in_out) begin
-            output_udp_payload_tdata_reg <= input_ip_payload_tdata;
-            output_udp_payload_tkeep_reg <= input_ip_payload_tkeep & tkeep_mask;
-            output_udp_payload_tlast_reg <= input_ip_payload_tlast;
-            output_udp_payload_tuser_reg <= input_ip_payload_tuser;
-        end else if (transfer_in_temp) begin
-            temp_udp_payload_tdata_reg <= input_ip_payload_tdata;
-            temp_udp_payload_tkeep_reg <= input_ip_payload_tkeep & tkeep_mask;
-            temp_udp_payload_tlast_reg <= input_ip_payload_tlast;
-            temp_udp_payload_tuser_reg <= input_ip_payload_tuser;
-        end else if (transfer_temp_out) begin
+// output datapath logic
+reg [63:0] output_udp_payload_tdata_reg = 0;
+reg [7:0]  output_udp_payload_tkeep_reg = 0;
+reg        output_udp_payload_tvalid_reg = 0;
+reg        output_udp_payload_tlast_reg = 0;
+reg        output_udp_payload_tuser_reg = 0;
+
+reg [63:0] temp_udp_payload_tdata_reg = 0;
+reg [7:0]  temp_udp_payload_tkeep_reg = 0;
+reg        temp_udp_payload_tvalid_reg = 0;
+reg        temp_udp_payload_tlast_reg = 0;
+reg        temp_udp_payload_tuser_reg = 0;
+
+// enable ready input next cycle if output is ready or if there is space in both output registers or if there is space in the temp register that will not be filled next cycle
+assign output_udp_payload_tready_int_early = output_udp_payload_tready | (~temp_udp_payload_tvalid_reg & ~output_udp_payload_tvalid_reg) | (~temp_udp_payload_tvalid_reg & ~output_udp_payload_tvalid_int);
+
+assign output_udp_payload_tdata = output_udp_payload_tdata_reg;
+assign output_udp_payload_tkeep = output_udp_payload_tkeep_reg;
+assign output_udp_payload_tvalid = output_udp_payload_tvalid_reg;
+assign output_udp_payload_tlast = output_udp_payload_tlast_reg;
+assign output_udp_payload_tuser = output_udp_payload_tuser_reg;
+
+always @(posedge clk or posedge rst) begin
+    if (rst) begin
+        output_udp_payload_tdata_reg <= 0;
+        output_udp_payload_tkeep_reg <= 0;
+        output_udp_payload_tvalid_reg <= 0;
+        output_udp_payload_tlast_reg <= 0;
+        output_udp_payload_tuser_reg <= 0;
+        output_udp_payload_tready_int <= 0;
+        temp_udp_payload_tdata_reg <= 0;
+        temp_udp_payload_tkeep_reg <= 0;
+        temp_udp_payload_tvalid_reg <= 0;
+        temp_udp_payload_tlast_reg <= 0;
+        temp_udp_payload_tuser_reg <= 0;
+    end else begin
+        // transfer sink ready state to source
+        output_udp_payload_tready_int <= output_udp_payload_tready_int_early;
+
+        if (output_udp_payload_tready_int) begin
+            // input is ready
+            if (output_udp_payload_tready | ~output_udp_payload_tvalid_reg) begin
+                // output is ready or currently not valid, transfer data to output
+                output_udp_payload_tdata_reg <= output_udp_payload_tdata_int;
+                output_udp_payload_tkeep_reg <= output_udp_payload_tkeep_int;
+                output_udp_payload_tvalid_reg <= output_udp_payload_tvalid_int;
+                output_udp_payload_tlast_reg <= output_udp_payload_tlast_int;
+                output_udp_payload_tuser_reg <= output_udp_payload_tuser_int;
+            end else begin
+                // output is not ready and currently valid, store input in temp
+                temp_udp_payload_tdata_reg <= output_udp_payload_tdata_int;
+                temp_udp_payload_tkeep_reg <= output_udp_payload_tkeep_int;
+                temp_udp_payload_tvalid_reg <= output_udp_payload_tvalid_int;
+                temp_udp_payload_tlast_reg <= output_udp_payload_tlast_int;
+                temp_udp_payload_tuser_reg <= output_udp_payload_tuser_int;
+            end
+        end else if (output_udp_payload_tready) begin
+            // input is not ready, but output is ready
             output_udp_payload_tdata_reg <= temp_udp_payload_tdata_reg;
             output_udp_payload_tkeep_reg <= temp_udp_payload_tkeep_reg;
+            output_udp_payload_tvalid_reg <= temp_udp_payload_tvalid_reg;
             output_udp_payload_tlast_reg <= temp_udp_payload_tlast_reg;
             output_udp_payload_tuser_reg <= temp_udp_payload_tuser_reg;
+            temp_udp_payload_tdata_reg <= 0;
+            temp_udp_payload_tkeep_reg <= 0;
+            temp_udp_payload_tvalid_reg <= 0;
+            temp_udp_payload_tlast_reg <= 0;
+            temp_udp_payload_tuser_reg <= 0;
         end
-
-        if (assert_tlast) output_udp_payload_tlast_reg <= 1;
-        if (assert_tuser) output_udp_payload_tuser_reg <= 1;
     end
 end
 
