@@ -105,52 +105,37 @@ IP Frame
  options                     (IHL-5)*4 octets
  payload                     length octets
 
-This module receives an Ethernet frame with decoded fields and decodes
-the AXI packet format.  If the Ethertype does not match, the packet is
-discarded.
+This module receives an IP frame with header fields in parallel along with the
+payload in an AXI stream, combines the header with the payload, passes through
+the Ethernet headers, and transmits the complete Ethernet payload on an AXI
+interface.
 
 */
 
-localparam [3:0]
-    STATE_IDLE = 4'd0,
-    STATE_WRITE_HEADER = 4'd1,
-    STATE_WRITE_HEADER_LAST = 4'd2,
-    STATE_WRITE_HEADER_LAST_WAIT = 4'd3,
-    STATE_WRITE_PAYLOAD_IDLE = 4'd4,
-    STATE_WRITE_PAYLOAD_TRANSFER = 4'd5,
-    STATE_WRITE_PAYLOAD_TRANSFER_WAIT = 4'd6,
-    STATE_WRITE_PAYLOAD_TRANSFER_LAST = 4'd7,
-    STATE_WRITE_PAYLOAD_TRANSFER_WAIT_LAST = 4'd8,
-    STATE_WRITE_PAYLOAD_TRANSFER_WAIT_LAST_WAIT = 4'd9,
-    STATE_WAIT_LAST = 4'd10;
+localparam [2:0]
+    STATE_IDLE = 3'd0,
+    STATE_WRITE_HEADER = 3'd1,
+    STATE_WRITE_HEADER_LAST = 3'd2,
+    STATE_WRITE_PAYLOAD = 3'd3,
+    STATE_WRITE_PAYLOAD_LAST = 3'd4,
+    STATE_WAIT_LAST = 3'd5;
 
-reg [3:0] state_reg = STATE_IDLE, state_next;
+reg [2:0] state_reg = STATE_IDLE, state_next;
 
 // datapath control signals
 reg store_ip_hdr;
+reg store_last_word;
 
-reg [63:0] write_hdr_data;
-reg [7:0] write_hdr_keep;
-reg write_hdr_last;
-reg write_hdr_user;
-reg write_hdr_out;
-reg write_hdr_temp;
+reg [7:0] frame_ptr_reg = 0, frame_ptr_next;
 
 reg flush_save;
 reg transfer_in_save;
-reg transfer_save_out;
-reg transfer_in_out;
-reg transfer_in_temp;
-reg transfer_temp_out;
-
-reg assert_tlast;
-reg assert_tuser;
-reg [7:0] tkeep_mask;
-
-reg [15:0] frame_ptr_reg = 0, frame_ptr_next;
 
 reg [31:0] hdr_sum_temp;
 reg [15:0] hdr_sum_reg = 0, hdr_sum_next;
+
+reg [63:0] last_word_data_reg = 0;
+reg [7:0] last_word_keep_reg = 0;
 
 reg [5:0] ip_dscp_reg = 0;
 reg [1:0] ip_ecn_reg = 0;
@@ -163,26 +148,16 @@ reg [7:0] ip_protocol_reg = 0;
 reg [31:0] ip_source_ip_reg = 0;
 reg [31:0] ip_dest_ip_reg = 0;
 
-reg input_ip_hdr_ready_reg = 0;
-reg input_ip_payload_tready_reg = 0;
+reg input_ip_hdr_ready_reg = 0, input_ip_hdr_ready_next;
+reg input_ip_payload_tready_reg = 0, input_ip_payload_tready_next;
 
 reg output_eth_hdr_valid_reg = 0, output_eth_hdr_valid_next;
 reg [47:0] output_eth_dest_mac_reg = 0;
 reg [47:0] output_eth_src_mac_reg = 0;
 reg [15:0] output_eth_type_reg = 0;
-reg [63:0] output_eth_payload_tdata_reg = 0;
-reg [7:0] output_eth_payload_tkeep_reg = 0;
-reg output_eth_payload_tvalid_reg = 0;
-reg output_eth_payload_tlast_reg = 0;
-reg output_eth_payload_tuser_reg = 0;
 
 reg busy_reg = 0;
 reg error_payload_early_termination_reg = 0, error_payload_early_termination_next;
-
-reg [63:0] temp_eth_payload_tdata_reg = 0;
-reg [7:0] temp_eth_payload_tkeep_reg = 0;
-reg temp_eth_payload_tlast_reg = 0;
-reg temp_eth_payload_tuser_reg = 0;
 
 reg [63:0] save_ip_payload_tdata_reg = 0;
 reg [7:0] save_ip_payload_tkeep_reg = 0;
@@ -197,6 +172,15 @@ reg shift_ip_payload_tuser;
 reg shift_ip_payload_input_tready;
 reg shift_ip_payload_extra_cycle;
 
+// internal datapath
+reg [63:0] output_eth_payload_tdata_int;
+reg [7:0]  output_eth_payload_tkeep_int;
+reg        output_eth_payload_tvalid_int;
+reg        output_eth_payload_tready_int = 0;
+reg        output_eth_payload_tlast_int;
+reg        output_eth_payload_tuser_int;
+wire       output_eth_payload_tready_int_early;
+
 assign input_ip_hdr_ready = input_ip_hdr_ready_reg;
 assign input_ip_payload_tready = input_ip_payload_tready_reg;
 
@@ -204,11 +188,6 @@ assign output_eth_hdr_valid = output_eth_hdr_valid_reg;
 assign output_eth_dest_mac = output_eth_dest_mac_reg;
 assign output_eth_src_mac = output_eth_src_mac_reg;
 assign output_eth_type = output_eth_type_reg;
-assign output_eth_payload_tdata = output_eth_payload_tdata_reg;
-assign output_eth_payload_tkeep = output_eth_payload_tkeep_reg;
-assign output_eth_payload_tvalid = output_eth_payload_tvalid_reg;
-assign output_eth_payload_tlast = output_eth_payload_tlast_reg;
-assign output_eth_payload_tuser = output_eth_payload_tuser_reg;
 
 assign busy = busy_reg;
 assign error_payload_early_termination = error_payload_early_termination_reg;
@@ -261,32 +240,22 @@ always @* begin
         shift_ip_payload_tvalid = input_ip_payload_tvalid;
         shift_ip_payload_tlast = (input_ip_payload_tlast & (input_ip_payload_tkeep[7:4] == 0));
         shift_ip_payload_tuser = (input_ip_payload_tuser & (input_ip_payload_tkeep[7:4] == 0));
-        shift_ip_payload_input_tready = ~(input_ip_payload_tlast & input_ip_payload_tvalid & transfer_in_save);
+        shift_ip_payload_input_tready = ~(input_ip_payload_tlast & input_ip_payload_tvalid & transfer_in_save) & ~save_ip_payload_tlast_reg;
     end
 end
 
 always @* begin
     state_next = 2'bz;
 
+    input_ip_hdr_ready_next = 0;
+    input_ip_payload_tready_next = 0;
+
     store_ip_hdr = 0;
 
-    write_hdr_data = 0;
-    write_hdr_keep = 0;
-    write_hdr_last = 0;
-    write_hdr_user = 0;
-    write_hdr_out = 0;
-    write_hdr_temp = 0;
+    store_last_word = 0;
 
     flush_save = 0;
     transfer_in_save = 0;
-    transfer_save_out = 0;
-    transfer_in_out = 0;
-    transfer_in_temp = 0;
-    transfer_temp_out = 0;
-
-    assert_tlast = 0;
-    assert_tuser = 0;
-    tkeep_mask = 8'hff;
 
     frame_ptr_next = frame_ptr_reg;
 
@@ -297,13 +266,20 @@ always @* begin
 
     error_payload_early_termination_next = 0;
 
+    output_eth_payload_tdata_int = 0;
+    output_eth_payload_tkeep_int = 0;
+    output_eth_payload_tvalid_int = 0;
+    output_eth_payload_tlast_int = 0;
+    output_eth_payload_tuser_int = 0;
+
     case (state_reg)
         STATE_IDLE: begin
             // idle state - wait for data
             frame_ptr_next = 0;
             flush_save = 1;
+            input_ip_hdr_ready_next = ~output_eth_hdr_valid_reg;
 
-            if (input_ip_hdr_valid & input_ip_hdr_ready) begin
+            if (input_ip_hdr_ready & input_ip_hdr_valid) begin
                 store_ip_hdr = 1;
                 hdr_sum_temp = {4'd4, 4'd5, input_ip_dscp, input_ip_ecn} +
                                input_ip_length +
@@ -312,31 +288,44 @@ always @* begin
                                {input_ip_ttl, input_ip_protocol};
                 hdr_sum_temp = hdr_sum_temp[15:0] + hdr_sum_temp[31:16];
                 hdr_sum_next = hdr_sum_temp[15:0] + hdr_sum_temp[16];
-                write_hdr_out = 1;
-                write_hdr_data[ 7: 0] = {4'd4, 4'd5}; // ip_version, ip_ihl
-                write_hdr_data[15: 8] = {input_ip_dscp, input_ip_ecn};
-                write_hdr_data[23:16] = input_ip_length[15: 8];
-                write_hdr_data[31:24] = input_ip_length[ 7: 0];
-                write_hdr_data[39:32] = input_ip_identification[15: 8];
-                write_hdr_data[47:40] = input_ip_identification[ 7: 0];
-                write_hdr_data[55:48] = {input_ip_flags, input_ip_fragment_offset[12: 8]};
-                write_hdr_data[63:56] = input_ip_fragment_offset[ 7: 0];
-                write_hdr_keep = 8'hff;
+                input_ip_hdr_ready_next = 0;
                 output_eth_hdr_valid_next = 1;
-                frame_ptr_next = 8;
+                if (output_eth_payload_tready_int) begin
+                    output_eth_payload_tvalid_int = 1;
+                    output_eth_payload_tdata_int[ 7: 0] = {4'd4, 4'd5}; // ip_version, ip_ihl
+                    output_eth_payload_tdata_int[15: 8] = {input_ip_dscp, input_ip_ecn};
+                    output_eth_payload_tdata_int[23:16] = input_ip_length[15: 8];
+                    output_eth_payload_tdata_int[31:24] = input_ip_length[ 7: 0];
+                    output_eth_payload_tdata_int[39:32] = input_ip_identification[15: 8];
+                    output_eth_payload_tdata_int[47:40] = input_ip_identification[ 7: 0];
+                    output_eth_payload_tdata_int[55:48] = {input_ip_flags, input_ip_fragment_offset[12: 8]};
+                    output_eth_payload_tdata_int[63:56] = input_ip_fragment_offset[ 7: 0];
+                    output_eth_payload_tkeep_int = 8'hff;
+                    frame_ptr_next = 8;
+                end
                 state_next = STATE_WRITE_HEADER;
             end else begin
                 state_next = STATE_IDLE;
             end
         end
         STATE_WRITE_HEADER: begin
-            // write header state
-            if (output_eth_payload_tready) begin
-                // word transfer out
+            // write header
+            if (output_eth_payload_tready_int) begin
                 frame_ptr_next = frame_ptr_reg+8;
+                output_eth_payload_tvalid_int = 1;
                 state_next = STATE_WRITE_HEADER;
-                write_hdr_out = 1;
                 case (frame_ptr_reg)
+                    8'h00: begin
+                        output_eth_payload_tdata_int[ 7: 0] = {4'd4, 4'd5}; // ip_version, ip_ihl
+                        output_eth_payload_tdata_int[15: 8] = {input_ip_dscp, input_ip_ecn};
+                        output_eth_payload_tdata_int[23:16] = input_ip_length[15: 8];
+                        output_eth_payload_tdata_int[31:24] = input_ip_length[ 7: 0];
+                        output_eth_payload_tdata_int[39:32] = input_ip_identification[15: 8];
+                        output_eth_payload_tdata_int[47:40] = input_ip_identification[ 7: 0];
+                        output_eth_payload_tdata_int[55:48] = {input_ip_flags, input_ip_fragment_offset[12: 8]};
+                        output_eth_payload_tdata_int[63:56] = input_ip_fragment_offset[ 7: 0];
+                        output_eth_payload_tkeep_int = 8'hff;
+                    end
                     8'h08: begin
                         hdr_sum_temp = hdr_sum_reg +
                                     ip_source_ip_reg[31:16] +
@@ -345,15 +334,16 @@ always @* begin
                                     ip_dest_ip_reg[15: 0];
                         hdr_sum_temp = hdr_sum_temp[15:0] + hdr_sum_temp[31:16];
                         hdr_sum_next = hdr_sum_temp[15:0] + hdr_sum_temp[16];
-                        write_hdr_data[ 7: 0] = ip_ttl_reg;
-                        write_hdr_data[15: 8] = ip_protocol_reg;
-                        write_hdr_data[23:16] = ~hdr_sum_next[15: 8];
-                        write_hdr_data[31:24] = ~hdr_sum_next[ 7: 0];
-                        write_hdr_data[39:32] = ip_source_ip_reg[31:24];
-                        write_hdr_data[47:40] = ip_source_ip_reg[23:16];
-                        write_hdr_data[55:48] = ip_source_ip_reg[15: 8];
-                        write_hdr_data[63:56] = ip_source_ip_reg[ 7: 0];
-                        write_hdr_keep = 8'hff;
+                        output_eth_payload_tdata_int[ 7: 0] = ip_ttl_reg;
+                        output_eth_payload_tdata_int[15: 8] = ip_protocol_reg;
+                        output_eth_payload_tdata_int[23:16] = ~hdr_sum_next[15: 8];
+                        output_eth_payload_tdata_int[31:24] = ~hdr_sum_next[ 7: 0];
+                        output_eth_payload_tdata_int[39:32] = ip_source_ip_reg[31:24];
+                        output_eth_payload_tdata_int[47:40] = ip_source_ip_reg[23:16];
+                        output_eth_payload_tdata_int[55:48] = ip_source_ip_reg[15: 8];
+                        output_eth_payload_tdata_int[63:56] = ip_source_ip_reg[ 7: 0];
+                        output_eth_payload_tkeep_int = 8'hff;
+                        input_ip_payload_tready_next = output_eth_payload_tready_int_early;
                         state_next = STATE_WRITE_HEADER_LAST;
                     end
                 endcase
@@ -363,272 +353,131 @@ always @* begin
         end
         STATE_WRITE_HEADER_LAST: begin
             // last header word requires first payload word; process accordingly
-            if (shift_ip_payload_tvalid & output_eth_payload_tready) begin
-                // word transfer through - update output register
+            input_ip_payload_tready_next = output_eth_payload_tready_int_early & shift_ip_payload_input_tready;
+
+            if (input_ip_payload_tready & input_ip_payload_tvalid) begin
+                output_eth_payload_tvalid_int = 1;
                 transfer_in_save = 1;
-                write_hdr_out = 1;
-                write_hdr_data[ 7: 0] = ip_dest_ip_reg[31:24];
-                write_hdr_data[15: 8] = ip_dest_ip_reg[23:16];
-                write_hdr_data[23:16] = ip_dest_ip_reg[15: 8];
-                write_hdr_data[31:24] = ip_dest_ip_reg[ 7: 0];
-                write_hdr_data[39:32] = shift_ip_payload_tdata[39:32];
-                write_hdr_data[47:40] = shift_ip_payload_tdata[47:40];
-                write_hdr_data[55:48] = shift_ip_payload_tdata[55:48];
-                write_hdr_data[63:56] = shift_ip_payload_tdata[63:56];
-                write_hdr_keep = {shift_ip_payload_tkeep[7:4], 4'hF};
-                frame_ptr_next = frame_ptr_reg+keep2count(write_hdr_keep);
+
+                output_eth_payload_tdata_int[ 7: 0] = ip_dest_ip_reg[31:24];
+                output_eth_payload_tdata_int[15: 8] = ip_dest_ip_reg[23:16];
+                output_eth_payload_tdata_int[23:16] = ip_dest_ip_reg[15: 8];
+                output_eth_payload_tdata_int[31:24] = ip_dest_ip_reg[ 7: 0];
+                output_eth_payload_tdata_int[39:32] = shift_ip_payload_tdata[39:32];
+                output_eth_payload_tdata_int[47:40] = shift_ip_payload_tdata[47:40];
+                output_eth_payload_tdata_int[55:48] = shift_ip_payload_tdata[55:48];
+                output_eth_payload_tdata_int[63:56] = shift_ip_payload_tdata[63:56];
+                output_eth_payload_tkeep_int = {shift_ip_payload_tkeep[7:4], 4'hF};
+                output_eth_payload_tlast_int = shift_ip_payload_tlast;
+                output_eth_payload_tuser_int = shift_ip_payload_tuser;
+                frame_ptr_next = frame_ptr_reg+keep2count(output_eth_payload_tkeep_int);
+
                 if (frame_ptr_next >= ip_length_reg) begin
                     // have entire payload
                     frame_ptr_next = ip_length_reg;
-                    tkeep_mask = count2keep(ip_length_reg - frame_ptr_reg);
-                    write_hdr_keep = tkeep_mask;
-                    assert_tlast = 1;
-                    assert_tuser = input_ip_payload_tuser;
+                    output_eth_payload_tkeep_int = count2keep(ip_length_reg - frame_ptr_reg);
                     if (shift_ip_payload_tlast) begin
-                        state_next = STATE_WRITE_PAYLOAD_TRANSFER_LAST;
+                        input_ip_hdr_ready_next = ~output_eth_hdr_valid_reg;
+                        input_ip_payload_tready_next = 0;
+                        state_next = STATE_IDLE;
                     end else begin
-                        state_next = STATE_WRITE_PAYLOAD_TRANSFER_WAIT_LAST;
+                        store_last_word = 1;
+                        input_ip_payload_tready_next = shift_ip_payload_input_tready;
+                        output_eth_payload_tvalid_int = 0;
+                        state_next = STATE_WRITE_PAYLOAD_LAST;
                     end
                 end else begin
                     if (shift_ip_payload_tlast) begin
                         // end of frame, but length does not match
-                        assert_tuser = 1;
-                        assert_tlast = 1;
                         error_payload_early_termination_next = 1;
-                        state_next = STATE_WRITE_PAYLOAD_TRANSFER_LAST;
+                        input_ip_payload_tready_next = shift_ip_payload_input_tready;
+                        output_eth_payload_tuser_int = 1;
+                        state_next = STATE_WAIT_LAST;
                     end else begin
-                        state_next = STATE_WRITE_PAYLOAD_TRANSFER;
-                    end
-                end
-            end else if (~shift_ip_payload_tvalid & output_eth_payload_tready) begin
-                // word transfer out - go back to idle
-                state_next = STATE_WRITE_HEADER_LAST_WAIT;
-            end else if (shift_ip_payload_tvalid & ~output_eth_payload_tready) begin
-                // word transfer in - store in temp
-                transfer_in_save = 1;
-                write_hdr_temp = 1;
-                write_hdr_data[ 7: 0] = ip_dest_ip_reg[31:24];
-                write_hdr_data[15: 8] = ip_dest_ip_reg[23:16];
-                write_hdr_data[23:16] = ip_dest_ip_reg[15: 8];
-                write_hdr_data[31:24] = ip_dest_ip_reg[ 7: 0];
-                write_hdr_data[39:32] = shift_ip_payload_tdata[39:32];
-                write_hdr_data[47:40] = shift_ip_payload_tdata[47:40];
-                write_hdr_data[55:48] = shift_ip_payload_tdata[55:48];
-                write_hdr_data[63:56] = shift_ip_payload_tdata[63:56];
-                write_hdr_keep = {shift_ip_payload_tkeep[7:4], 4'hF};
-                frame_ptr_next = frame_ptr_reg+keep2count(write_hdr_keep);
-                state_next = STATE_WRITE_PAYLOAD_TRANSFER_WAIT;
-                if (frame_ptr_next >= ip_length_reg) begin
-                    // have entire payload
-                    frame_ptr_next = ip_length_reg;
-                    tkeep_mask = count2keep(ip_length_reg - frame_ptr_reg);
-                    write_hdr_keep = tkeep_mask;
-                    write_hdr_last = 1;
-                    write_hdr_user = shift_ip_payload_tuser;
-                    if (shift_ip_payload_tlast) begin
-                        state_next = STATE_WRITE_PAYLOAD_TRANSFER_WAIT;
-                    end else begin
-                        state_next = STATE_WRITE_PAYLOAD_TRANSFER_WAIT_LAST_WAIT;
-                    end
-                end else begin
-                    if (shift_ip_payload_tlast) begin
-                        // end of frame, but length does not match
-                        write_hdr_last = 1;
-                        write_hdr_user = 1;
-                        error_payload_early_termination_next = 1;
-                    end
-                    state_next = STATE_WRITE_PAYLOAD_TRANSFER_WAIT;
-                end
-            end else begin
-                state_next = STATE_WRITE_PAYLOAD_TRANSFER;
-            end
-        end
-        STATE_WRITE_HEADER_LAST_WAIT: begin
-            // last header word requires first payload word; no data in registers
-            if (shift_ip_payload_tvalid) begin
-                // word transfer in - store it in output register
-                transfer_in_save = 1;
-                write_hdr_out = 1;
-                write_hdr_data[ 7: 0] = ip_dest_ip_reg[31:24];
-                write_hdr_data[15: 8] = ip_dest_ip_reg[23:16];
-                write_hdr_data[23:16] = ip_dest_ip_reg[15: 8];
-                write_hdr_data[31:24] = ip_dest_ip_reg[ 7: 0];
-                write_hdr_data[39:32] = shift_ip_payload_tdata[39:32];
-                write_hdr_data[47:40] = shift_ip_payload_tdata[47:40];
-                write_hdr_data[55:48] = shift_ip_payload_tdata[55:48];
-                write_hdr_data[63:56] = shift_ip_payload_tdata[63:56];
-                write_hdr_keep = {shift_ip_payload_tkeep[7:4], 4'hF};
-                frame_ptr_next = frame_ptr_reg+keep2count(write_hdr_keep);
-                if (frame_ptr_next >= ip_length_reg) begin
-                    // have entire payload
-                    frame_ptr_next = ip_length_reg;
-                    tkeep_mask = count2keep(ip_length_reg - frame_ptr_reg);
-                    write_hdr_keep = tkeep_mask;
-                    assert_tlast = 1;
-                    assert_tuser = shift_ip_payload_tuser;
-                    if (shift_ip_payload_tlast) begin
-                        state_next = STATE_WRITE_PAYLOAD_TRANSFER_LAST;
-                    end else begin
-                        state_next = STATE_WRITE_PAYLOAD_TRANSFER_WAIT_LAST;
-                    end
-                end else begin
-                    if (shift_ip_payload_tlast) begin
-                        // end of frame, but length does not match
-                        assert_tuser = 1;
-                        assert_tlast = 1;
-                        error_payload_early_termination_next = 1;
-                        state_next = STATE_WRITE_PAYLOAD_TRANSFER_LAST;
-                    end else begin
-                        state_next = STATE_WRITE_PAYLOAD_TRANSFER;
+                        state_next = STATE_WRITE_PAYLOAD;
                     end
                 end
             end else begin
-                state_next = STATE_WRITE_HEADER_LAST_WAIT;
+                state_next = STATE_WRITE_HEADER_LAST;
             end
         end
-        STATE_WRITE_PAYLOAD_IDLE: begin
-            // idle; no data in registers
-            if (shift_ip_payload_tvalid) begin
-                // word transfer in - store it in output register
-                transfer_in_save = 1;
-                transfer_in_out = 1;
+        STATE_WRITE_PAYLOAD: begin
+            // write payload
+            input_ip_payload_tready_next = output_eth_payload_tready_int_early & shift_ip_payload_input_tready;
+
+            output_eth_payload_tdata_int = shift_ip_payload_tdata;
+            output_eth_payload_tkeep_int = shift_ip_payload_tkeep;
+            output_eth_payload_tvalid_int = shift_ip_payload_tvalid;
+            output_eth_payload_tlast_int = shift_ip_payload_tlast;
+            output_eth_payload_tuser_int = shift_ip_payload_tuser;
+
+            if (output_eth_payload_tready_int & shift_ip_payload_tvalid) begin
+                // word transfer through
                 frame_ptr_next = frame_ptr_reg+keep2count(shift_ip_payload_tkeep);
-                if (frame_ptr_next >= ip_length_reg) begin
-                    // have entire payload
-                    frame_ptr_next = ip_length_reg;
-                    tkeep_mask = count2keep(ip_length_reg - frame_ptr_reg);
-                    if (shift_ip_payload_tlast) begin
-                        state_next = STATE_WRITE_PAYLOAD_TRANSFER_LAST;
-                    end else begin
-                        state_next = STATE_WRITE_PAYLOAD_TRANSFER_WAIT_LAST;
-                    end
-                end else begin
-                    if (shift_ip_payload_tlast) begin
-                        // end of frame, but length does not match
-                        assert_tuser = 1;
-                        assert_tlast = 1;
-                        error_payload_early_termination_next = 1;
-                        state_next = STATE_WRITE_PAYLOAD_TRANSFER_LAST;
-                    end else begin
-                        state_next = STATE_WRITE_PAYLOAD_TRANSFER;
-                    end
-                end
-            end else begin
-                state_next = STATE_WRITE_PAYLOAD_IDLE;
-            end
-        end
-        STATE_WRITE_PAYLOAD_TRANSFER: begin
-            // write payload; data in output register
-            if (shift_ip_payload_tvalid & output_eth_payload_tready) begin
-                // word transfer through - update output register
                 transfer_in_save = 1;
-                transfer_in_out = 1;
-                frame_ptr_next = frame_ptr_reg+keep2count(shift_ip_payload_tkeep);
                 if (frame_ptr_next >= ip_length_reg) begin
                     // have entire payload
                     frame_ptr_next = ip_length_reg;
-                    tkeep_mask = count2keep(ip_length_reg - frame_ptr_reg);
+                    output_eth_payload_tkeep_int = count2keep(ip_length_reg - frame_ptr_reg);
                     if (shift_ip_payload_tlast) begin
-                        state_next = STATE_WRITE_PAYLOAD_TRANSFER_LAST;
+                        input_ip_payload_tready_next = 0;
+                        flush_save = 1;
+                        input_ip_hdr_ready_next = ~output_eth_hdr_valid_reg;
+                        state_next = STATE_IDLE;
                     end else begin
-                        state_next = STATE_WRITE_PAYLOAD_TRANSFER_WAIT_LAST;
+                        store_last_word = 1;
+                        output_eth_payload_tvalid_int = 0;
+                        state_next = STATE_WRITE_PAYLOAD_LAST;
                     end
                 end else begin
                     if (shift_ip_payload_tlast) begin
                         // end of frame, but length does not match
-                        assert_tuser = 1;
-                        assert_tlast = 1;
                         error_payload_early_termination_next = 1;
-                        state_next = STATE_WRITE_PAYLOAD_TRANSFER_LAST;
+                        output_eth_payload_tuser_int = 1;
+                        input_ip_payload_tready_next = 0;
+                        flush_save = 1;
+                        input_ip_hdr_ready_next = ~output_eth_hdr_valid_reg;
+                        state_next = STATE_IDLE;
                     end else begin
-                        state_next = STATE_WRITE_PAYLOAD_TRANSFER;
-                    end
-                end
-            end else if (~shift_ip_payload_tvalid & output_eth_payload_tready) begin
-                // word transfer out - go back to idle
-                state_next = STATE_WRITE_PAYLOAD_IDLE;
-            end else if (shift_ip_payload_tvalid & ~output_eth_payload_tready) begin
-                // word transfer in - store in temp
-                transfer_in_save = 1;
-                transfer_in_temp = 1;
-                frame_ptr_next = frame_ptr_reg+keep2count(shift_ip_payload_tkeep);
-                state_next = STATE_WRITE_PAYLOAD_TRANSFER_WAIT;
-                if (frame_ptr_next >= ip_length_reg) begin
-                    // have entire payload
-                    frame_ptr_next = ip_length_reg;
-                    tkeep_mask = count2keep(ip_length_reg - frame_ptr_reg);
-                    if (~shift_ip_payload_tlast) begin
-                        state_next = STATE_WRITE_PAYLOAD_TRANSFER_WAIT_LAST_WAIT;
+                        state_next = STATE_WRITE_PAYLOAD;
                     end
                 end
             end else begin
-                state_next = STATE_WRITE_PAYLOAD_TRANSFER;
+                state_next = STATE_WRITE_PAYLOAD;
             end
         end
-        STATE_WRITE_PAYLOAD_TRANSFER_WAIT: begin
-            // write payload; data in both output and temp registers
-            if (output_eth_payload_tready) begin
-                // transfer out - move temp to output
-                transfer_temp_out = 1;
-                if (temp_eth_payload_tlast_reg) begin
-                    if (frame_ptr_next < ip_length_reg) begin
-                        // end of frame, but length does not match
-                        assert_tuser = 1;
-                        assert_tlast = 1;
-                        error_payload_early_termination_next = 1;
-                    end
-                    state_next = STATE_WRITE_PAYLOAD_TRANSFER_LAST;
-                end else begin
-                    if (frame_ptr_next >= ip_length_reg) begin
-                        // not end of frame, but we have the entire payload
-                        state_next = STATE_WRITE_PAYLOAD_TRANSFER_WAIT_LAST;
-                    end else begin
-                        state_next = STATE_WRITE_PAYLOAD_TRANSFER;
-                    end
-                end
-            end else begin
-                state_next = STATE_WRITE_PAYLOAD_TRANSFER_WAIT;
-            end
-        end
-        STATE_WRITE_PAYLOAD_TRANSFER_LAST: begin
-            // write last payload word; data in output register; do not accept new data
-            if (output_eth_payload_tready) begin
-                state_next = STATE_IDLE;
-            end else begin
-                state_next = STATE_WRITE_PAYLOAD_TRANSFER_LAST;
-            end
-        end
-        STATE_WRITE_PAYLOAD_TRANSFER_WAIT_LAST: begin
-            // wait for end of frame; data in output register; read and discard
-            if (shift_ip_payload_tvalid) begin
+        STATE_WRITE_PAYLOAD_LAST: begin
+            // read and discard until end of frame
+            input_ip_payload_tready_next = output_eth_payload_tready_int_early & shift_ip_payload_input_tready;
+
+            output_eth_payload_tdata_int = last_word_data_reg;
+            output_eth_payload_tkeep_int = last_word_keep_reg;
+            output_eth_payload_tvalid_int = shift_ip_payload_tvalid & shift_ip_payload_tlast;
+            output_eth_payload_tlast_int = shift_ip_payload_tlast;
+            output_eth_payload_tuser_int = shift_ip_payload_tuser;
+
+            if (output_eth_payload_tready_int & shift_ip_payload_tvalid) begin
                 transfer_in_save = 1;
                 if (shift_ip_payload_tlast) begin
-                    // assert tlast and transfer tuser
-                    assert_tlast = 1;
-                    assert_tuser = shift_ip_payload_tuser;
-                    state_next = STATE_WRITE_PAYLOAD_TRANSFER_LAST;
+                    input_ip_hdr_ready_next = ~output_eth_hdr_valid_reg;
+                    input_ip_payload_tready_next = 0;
+                    state_next = STATE_IDLE;
                 end else begin
-                    state_next = STATE_WRITE_PAYLOAD_TRANSFER_WAIT_LAST;
+                    state_next = STATE_WRITE_PAYLOAD_LAST;
                 end
             end else begin
-                state_next = STATE_WRITE_PAYLOAD_TRANSFER_WAIT_LAST;
-            end
-        end
-        STATE_WRITE_PAYLOAD_TRANSFER_WAIT_LAST_WAIT: begin
-            // wait for end of frame; data in both output and temp registers; read and discard
-            if (output_eth_payload_tready) begin
-                // transfer out - move temp to output
-                transfer_temp_out = 1;
-                state_next = STATE_WRITE_PAYLOAD_TRANSFER_WAIT_LAST;
-            end else begin
-                state_next = STATE_WRITE_PAYLOAD_TRANSFER_WAIT_LAST_WAIT;
+                state_next = STATE_WRITE_PAYLOAD_LAST;
             end
         end
         STATE_WAIT_LAST: begin
-            // wait for end of frame; read and discard
+            // read and discard until end of frame
+            input_ip_payload_tready_next = shift_ip_payload_input_tready;
+
             if (shift_ip_payload_tvalid) begin
                 transfer_in_save = 1;
                 if (shift_ip_payload_tlast) begin
+                    input_ip_hdr_ready_next = ~output_eth_hdr_valid_reg;
+                    input_ip_payload_tready_next = 0;
                     state_next = STATE_IDLE;
                 end else begin
                     state_next = STATE_WAIT_LAST;
@@ -645,6 +494,8 @@ always @(posedge clk or posedge rst) begin
         state_reg <= STATE_IDLE;
         frame_ptr_reg <= 0;
         hdr_sum_reg <= 0;
+        last_word_data_reg <= 0;
+        last_word_keep_reg <= 0;
         input_ip_hdr_ready_reg <= 0;
         input_ip_payload_tready_reg <= 0;
         ip_dscp_reg <= 0;
@@ -661,18 +512,6 @@ always @(posedge clk or posedge rst) begin
         output_eth_dest_mac_reg <= 0;
         output_eth_src_mac_reg <= 0;
         output_eth_type_reg <= 0;
-        output_eth_payload_tdata_reg <= 0;
-        output_eth_payload_tvalid_reg <= 0;
-        output_eth_payload_tlast_reg <= 0;
-        output_eth_payload_tuser_reg <= 0;
-        temp_eth_payload_tdata_reg <= 0;
-        temp_eth_payload_tkeep_reg <= 0;
-        temp_eth_payload_tlast_reg <= 0;
-        temp_eth_payload_tuser_reg <= 0;
-        save_ip_payload_tdata_reg <= 0;
-        save_ip_payload_tkeep_reg <= 0;
-        save_ip_payload_tlast_reg <= 0;
-        save_ip_payload_tuser_reg <= 0;
         busy_reg <= 0;
         error_payload_early_termination_reg <= 0;
     end else begin
@@ -682,82 +521,16 @@ always @(posedge clk or posedge rst) begin
 
         hdr_sum_reg <= hdr_sum_next;
 
+        input_ip_hdr_ready_reg <= input_ip_hdr_ready_next;
+        input_ip_payload_tready_reg <= input_ip_payload_tready_next;
+
         output_eth_hdr_valid_reg <= output_eth_hdr_valid_next;
 
         busy_reg <= state_next != STATE_IDLE;
 
         error_payload_early_termination_reg <= error_payload_early_termination_next;
 
-        // generate valid outputs
-        case (state_next)
-            STATE_IDLE: begin
-                // idle; accept new data
-                input_ip_hdr_ready_reg <= 1;
-                input_ip_payload_tready_reg <= 0;
-                output_eth_payload_tvalid_reg <= 0;
-            end
-            STATE_WRITE_HEADER: begin
-                // write header
-                input_ip_hdr_ready_reg <= 0;
-                input_ip_payload_tready_reg <= 0;
-                output_eth_payload_tvalid_reg <= 1;
-            end
-            STATE_WRITE_HEADER_LAST: begin
-                // write last header word; need first data word
-                input_ip_hdr_ready_reg <= 0;
-                input_ip_payload_tready_reg <= shift_ip_payload_input_tready;
-                output_eth_payload_tvalid_reg <= 1;
-            end
-            STATE_WRITE_HEADER_LAST_WAIT: begin
-                // last header word requires first payload word; no data in registers
-                input_ip_hdr_ready_reg <= 0;
-                input_ip_payload_tready_reg <= shift_ip_payload_input_tready;
-                output_eth_payload_tvalid_reg <= 0;
-            end
-            STATE_WRITE_PAYLOAD_IDLE: begin
-                // write payload; no data in registers; accept new data
-                input_ip_hdr_ready_reg <= 0;
-                input_ip_payload_tready_reg <= shift_ip_payload_input_tready;
-                output_eth_payload_tvalid_reg <= 0;
-            end
-            STATE_WRITE_PAYLOAD_TRANSFER: begin
-                // write payload; data in output register; accept new data
-                input_ip_hdr_ready_reg <= 0;
-                input_ip_payload_tready_reg <= shift_ip_payload_input_tready;
-                output_eth_payload_tvalid_reg <= 1;
-            end
-            STATE_WRITE_PAYLOAD_TRANSFER_WAIT: begin
-                // write payload; data in output and temp registers; do not accept new data
-                input_ip_hdr_ready_reg <= 0;
-                input_ip_payload_tready_reg <= 0;
-                output_eth_payload_tvalid_reg <= 1;
-            end
-            STATE_WRITE_PAYLOAD_TRANSFER_LAST: begin
-                // write last payload word; data in output register; do not accept new data
-                input_ip_hdr_ready_reg <= 0;
-                input_ip_payload_tready_reg <= 0;
-                output_eth_payload_tvalid_reg <= 1;
-            end
-            STATE_WRITE_PAYLOAD_TRANSFER_WAIT_LAST: begin
-                // wait for end of frame; data in output register; read and discard
-                input_ip_hdr_ready_reg <= 0;
-                input_ip_payload_tready_reg <= shift_ip_payload_input_tready;
-                output_eth_payload_tvalid_reg <= 0;
-            end
-            STATE_WRITE_PAYLOAD_TRANSFER_WAIT_LAST_WAIT: begin
-                // wait for end of frame; data in output and temp registers; do not accept new data
-                input_ip_hdr_ready_reg <= 0;
-                input_ip_payload_tready_reg <= 0;
-                output_eth_payload_tvalid_reg <= 1;
-            end
-            STATE_WAIT_LAST: begin
-                // wait for end of frame; read and discard
-                input_ip_hdr_ready_reg <= 0;
-                input_ip_payload_tready_reg <= shift_ip_payload_input_tready;
-                output_eth_payload_tvalid_reg <= 0;
-            end
-        endcase
-
+        // datapath
         if (store_ip_hdr) begin
             output_eth_dest_mac_reg <= input_eth_dest_mac;
             output_eth_src_mac_reg <= input_eth_src_mac;
@@ -774,31 +547,9 @@ always @(posedge clk or posedge rst) begin
             ip_dest_ip_reg <= input_ip_dest_ip;
         end
 
-        if (write_hdr_out) begin
-            output_eth_payload_tdata_reg <= write_hdr_data;
-            output_eth_payload_tkeep_reg <= write_hdr_keep & tkeep_mask;
-            output_eth_payload_tlast_reg <= write_hdr_last;
-            output_eth_payload_tuser_reg <= write_hdr_user;
-        end else if (write_hdr_temp) begin
-            temp_eth_payload_tdata_reg <= write_hdr_data;
-            temp_eth_payload_tkeep_reg <= write_hdr_keep & tkeep_mask;
-            temp_eth_payload_tlast_reg <= write_hdr_last;
-            temp_eth_payload_tuser_reg <= write_hdr_user;
-        end else if (transfer_in_out) begin
-            output_eth_payload_tdata_reg <= shift_ip_payload_tdata;
-            output_eth_payload_tkeep_reg <= shift_ip_payload_tkeep & tkeep_mask;
-            output_eth_payload_tlast_reg <= shift_ip_payload_tlast;
-            output_eth_payload_tuser_reg <= shift_ip_payload_tuser;
-        end else if (transfer_in_temp) begin
-            temp_eth_payload_tdata_reg <= shift_ip_payload_tdata;
-            temp_eth_payload_tkeep_reg <= shift_ip_payload_tkeep & tkeep_mask;
-            temp_eth_payload_tlast_reg <= shift_ip_payload_tlast;
-            temp_eth_payload_tuser_reg <= shift_ip_payload_tuser;
-        end else if (transfer_temp_out) begin
-            output_eth_payload_tdata_reg <= temp_eth_payload_tdata_reg;
-            output_eth_payload_tkeep_reg <= temp_eth_payload_tkeep_reg;
-            output_eth_payload_tlast_reg <= temp_eth_payload_tlast_reg;
-            output_eth_payload_tuser_reg <= temp_eth_payload_tuser_reg;
+        if (store_last_word) begin
+            last_word_data_reg <= output_eth_payload_tdata_int;
+            last_word_keep_reg <= output_eth_payload_tkeep_int;
         end
 
         if (flush_save) begin
@@ -806,15 +557,84 @@ always @(posedge clk or posedge rst) begin
             save_ip_payload_tkeep_reg <= 0;
             save_ip_payload_tlast_reg <= 0;
             save_ip_payload_tuser_reg <= 0;
-        end else if (transfer_in_save & ~shift_ip_payload_extra_cycle) begin
+        end else if (transfer_in_save) begin
             save_ip_payload_tdata_reg <= input_ip_payload_tdata;
             save_ip_payload_tkeep_reg <= input_ip_payload_tkeep;
             save_ip_payload_tlast_reg <= input_ip_payload_tlast;
             save_ip_payload_tuser_reg <= input_ip_payload_tuser;
         end
+    end
+end
 
-        if (assert_tlast) output_eth_payload_tlast_reg <= 1;
-        if (assert_tuser) output_eth_payload_tuser_reg <= 1;
+// output datapath logic
+reg [63:0] output_eth_payload_tdata_reg = 0;
+reg [7:0]  output_eth_payload_tkeep_reg = 0;
+reg        output_eth_payload_tvalid_reg = 0;
+reg        output_eth_payload_tlast_reg = 0;
+reg        output_eth_payload_tuser_reg = 0;
+
+reg [63:0] temp_eth_payload_tdata_reg = 0;
+reg [7:0]  temp_eth_payload_tkeep_reg = 0;
+reg        temp_eth_payload_tvalid_reg = 0;
+reg        temp_eth_payload_tlast_reg = 0;
+reg        temp_eth_payload_tuser_reg = 0;
+
+// enable ready input next cycle if output is ready or if there is space in both output registers or if there is space in the temp register that will not be filled next cycle
+assign output_eth_payload_tready_int_early = output_eth_payload_tready | (~temp_eth_payload_tvalid_reg & ~output_eth_payload_tvalid_reg) | (~temp_eth_payload_tvalid_reg & ~output_eth_payload_tvalid_int);
+
+assign output_eth_payload_tdata = output_eth_payload_tdata_reg;
+assign output_eth_payload_tkeep = output_eth_payload_tkeep_reg;
+assign output_eth_payload_tvalid = output_eth_payload_tvalid_reg;
+assign output_eth_payload_tlast = output_eth_payload_tlast_reg;
+assign output_eth_payload_tuser = output_eth_payload_tuser_reg;
+
+always @(posedge clk or posedge rst) begin
+    if (rst) begin
+        output_eth_payload_tdata_reg <= 0;
+        output_eth_payload_tkeep_reg <= 0;
+        output_eth_payload_tvalid_reg <= 0;
+        output_eth_payload_tlast_reg <= 0;
+        output_eth_payload_tuser_reg <= 0;
+        output_eth_payload_tready_int <= 0;
+        temp_eth_payload_tdata_reg <= 0;
+        temp_eth_payload_tkeep_reg <= 0;
+        temp_eth_payload_tvalid_reg <= 0;
+        temp_eth_payload_tlast_reg <= 0;
+        temp_eth_payload_tuser_reg <= 0;
+    end else begin
+        // transfer sink ready state to source
+        output_eth_payload_tready_int <= output_eth_payload_tready_int_early;
+
+        if (output_eth_payload_tready_int) begin
+            // input is ready
+            if (output_eth_payload_tready | ~output_eth_payload_tvalid_reg) begin
+                // output is ready or currently not valid, transfer data to output
+                output_eth_payload_tdata_reg <= output_eth_payload_tdata_int;
+                output_eth_payload_tkeep_reg <= output_eth_payload_tkeep_int;
+                output_eth_payload_tvalid_reg <= output_eth_payload_tvalid_int;
+                output_eth_payload_tlast_reg <= output_eth_payload_tlast_int;
+                output_eth_payload_tuser_reg <= output_eth_payload_tuser_int;
+            end else begin
+                // output is not ready and currently valid, store input in temp
+                temp_eth_payload_tdata_reg <= output_eth_payload_tdata_int;
+                temp_eth_payload_tkeep_reg <= output_eth_payload_tkeep_int;
+                temp_eth_payload_tvalid_reg <= output_eth_payload_tvalid_int;
+                temp_eth_payload_tlast_reg <= output_eth_payload_tlast_int;
+                temp_eth_payload_tuser_reg <= output_eth_payload_tuser_int;
+            end
+        end else if (output_eth_payload_tready) begin
+            // input is not ready, but output is ready
+            output_eth_payload_tdata_reg <= temp_eth_payload_tdata_reg;
+            output_eth_payload_tkeep_reg <= temp_eth_payload_tkeep_reg;
+            output_eth_payload_tvalid_reg <= temp_eth_payload_tvalid_reg;
+            output_eth_payload_tlast_reg <= temp_eth_payload_tlast_reg;
+            output_eth_payload_tuser_reg <= temp_eth_payload_tuser_reg;
+            temp_eth_payload_tdata_reg <= 0;
+            temp_eth_payload_tkeep_reg <= 0;
+            temp_eth_payload_tvalid_reg <= 0;
+            temp_eth_payload_tlast_reg <= 0;
+            temp_eth_payload_tuser_reg <= 0;
+        end
     end
 end
 
