@@ -226,7 +226,7 @@ def bench():
         if not sink_queue.empty():
             rx_frame = sink_queue.get()
 
-        rx_frame_values = struct.unpack(">HLLL", rx_frame.data)
+        rx_frame_values = struct.unpack(">HLLL", bytes(rx_frame.data))
         cycles = (stop_time - start_time) / 8
         print(rx_frame_values)
 
@@ -273,7 +273,7 @@ def bench():
         if not sink_queue.empty():
             rx_frame = sink_queue.get()
 
-        rx_frame_values = struct.unpack(">HLLL", rx_frame.data)
+        rx_frame_values = struct.unpack(">HLLL", bytes(rx_frame.data))
         cycles = (stop_time - start_time) / 8
         print(rx_frame_values)
 
@@ -326,7 +326,7 @@ def bench():
         if not sink_queue.empty():
             rx_frame = sink_queue.get()
 
-        rx_frame_values = struct.unpack(">HLLL", rx_frame.data)
+        rx_frame_values = struct.unpack(">HLLL", bytes(rx_frame.data))
         cycles = (stop_time - start_time) / 8
         print(rx_frame_values)
 
@@ -380,7 +380,7 @@ def bench():
         if not sink_queue.empty():
             rx_frame = sink_queue.get()
 
-        rx_frame_values = struct.unpack(">HLLL", rx_frame.data)
+        rx_frame_values = struct.unpack(">HLLL", bytes(rx_frame.data))
         cycles = (stop_time - start_time) / 8
         print(rx_frame_values)
 
@@ -448,7 +448,7 @@ def bench():
         if not sink_queue.empty():
             rx_frame = sink_queue.get()
 
-        rx_frame_values = struct.unpack(">HLLL", rx_frame.data)
+        rx_frame_values = struct.unpack(">HLLL", bytes(rx_frame.data))
         cycles = (stop_time - start_time) / 8
         print(rx_frame_values)
 
@@ -507,7 +507,7 @@ def bench():
         if not sink_queue.empty():
             rx_frame = sink_queue.get()
 
-        rx_frame_values = struct.unpack(">HLLL", rx_frame.data)
+        rx_frame_values = struct.unpack(">HLLL", bytes(rx_frame.data))
         cycles = (stop_time - start_time) / 8
         print(rx_frame_values)
 
@@ -566,7 +566,7 @@ def bench():
         if not sink_queue.empty():
             rx_frame = sink_queue.get()
 
-        rx_frame_values = struct.unpack(">HLLL", rx_frame.data)
+        rx_frame_values = struct.unpack(">HLLL", bytes(rx_frame.data))
         cycles = (stop_time - start_time) / 8
         print(rx_frame_values)
 
@@ -625,7 +625,7 @@ def bench():
         if not sink_queue.empty():
             rx_frame = sink_queue.get()
 
-        rx_frame_values = struct.unpack(">HLLL", rx_frame.data)
+        rx_frame_values = struct.unpack(">HLLL", bytes(rx_frame.data))
         cycles = (stop_time - start_time) / 8
         print(rx_frame_values)
 
@@ -685,7 +685,7 @@ def bench():
         if not sink_queue.empty():
             rx_frame = sink_queue.get()
 
-        rx_frame_values = struct.unpack(">HLLL", rx_frame.data)
+        rx_frame_values = struct.unpack(">HLLL", bytes(rx_frame.data))
         cycles = (stop_time - start_time) / 8
         print(rx_frame_values)
 
@@ -758,12 +758,12 @@ def bench():
         if not sink_queue.empty():
             rx_frame2 = sink_queue.get()
 
-        rx_frame_values = struct.unpack(">HLLL", rx_frame.data)
+        rx_frame_values = struct.unpack(">HLLL", bytes(rx_frame.data))
         cycles = (stop_time - start_time) / 8
         cycles1 = (trigger_time - start_time) / 8
         print(rx_frame_values)
 
-        rx_frame2_values = struct.unpack(">HLLL", rx_frame2.data)
+        rx_frame2_values = struct.unpack(">HLLL", bytes(rx_frame2.data))
         cycles2 = (stop_time - trigger_time) / 8
         print(rx_frame2_values)
 
