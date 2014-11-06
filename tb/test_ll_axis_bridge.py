@@ -156,10 +156,10 @@ def bench():
         print("test 1: test packet")
         current_test.next = 1
 
-        source_queue.put(bytearray(b'\xDA\xD1\xD2\xD3\xD4\xD5' +
-                                   b'\x5A\x51\x52\x53\x54\x55' +
-                                   b'\x80\x00' +
-                                   b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10'))
+        source_queue.put(bytearray('\xDA\xD1\xD2\xD3\xD4\xD5' +
+                                   '\x5A\x51\x52\x53\x54\x55' +
+                                   '\x80\x00' +
+                                   '\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10'))
         yield clk.posedge
 
         yield axis_tlast.negedge
@@ -170,10 +170,10 @@ def bench():
         if not sink_queue.empty():
             rx_frame = sink_queue.get()
 
-        assert bytearray(rx_frame) == (b'\xDA\xD1\xD2\xD3\xD4\xD5' +
-                                   b'\x5A\x51\x52\x53\x54\x55' +
-                                   b'\x80\x00' +
-                                   b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
+        assert bytearray(rx_frame) == ('\xDA\xD1\xD2\xD3\xD4\xD5' +
+                                   '\x5A\x51\x52\x53\x54\x55' +
+                                   '\x80\x00' +
+                                   '\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
 
         yield delay(100)
 
@@ -181,10 +181,10 @@ def bench():
         print("test 2: test packet with pauses")
         current_test.next = 2
 
-        source_queue.put(bytearray(b'\xDA\xD1\xD2\xD3\xD4\xD5' +
-                                   b'\x5A\x51\x52\x53\x54\x55' +
-                                   b'\x80\x00' +
-                                   b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10'))
+        source_queue.put(bytearray('\xDA\xD1\xD2\xD3\xD4\xD5' +
+                                   '\x5A\x51\x52\x53\x54\x55' +
+                                   '\x80\x00' +
+                                   '\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10'))
         yield clk.posedge
 
         yield delay(64)
@@ -209,10 +209,10 @@ def bench():
         if not sink_queue.empty():
             rx_frame = sink_queue.get()
 
-        assert bytearray(rx_frame) == (b'\xDA\xD1\xD2\xD3\xD4\xD5' +
-                                   b'\x5A\x51\x52\x53\x54\x55' +
-                                   b'\x80\x00' +
-                                   b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
+        assert bytearray(rx_frame) == ('\xDA\xD1\xD2\xD3\xD4\xD5' +
+                                   '\x5A\x51\x52\x53\x54\x55' +
+                                   '\x80\x00' +
+                                   '\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
 
         yield delay(100)
 
