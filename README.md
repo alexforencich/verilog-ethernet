@@ -82,9 +82,22 @@ Frame joiner with optional tag.  8 bit data path only.
 
 Can be generated with arbitrary port counts with axis_frame_join.py.
 
-### axis_ll_bringe module
+### axis_ll_bridge module
 
 AXI stream to LocalLink bridge.
+
+### axis_mux_N module
+
+Frame-aware AXI stream muliplexer with parametrizable data width.
+
+Can be generated with arbitrary port counts with axis_mux.py.
+
+### axis_mux_64_N module
+
+Frame-aware AXI stream muliplexer with tkeep signal and parametrizable data
+width.
+
+Can be generated with arbitrary port counts with axis_mux_64.py.
 
 ### axis_rate_limit module
 
@@ -147,6 +160,10 @@ LocalLink to AXI stream bridge.
     rtl/axis_frame_join.py          : Frame joiner generator
     rtl/axis_frame_join_4.v         : 4 port frame joiner
     rtl/axis_ll_bridge.v            : AXI stream to LocalLink bridge
+    rtl/axis_mux.py                 : Multiplexer generator
+    rtl/axis_mux_4.v                : 4 port multiplexer
+    rtl/axis_mux_64.py              : Multiplexer generator (64 bit)
+    rtl/axis_mux_64_4.v             : 4 port multiplexer (64 bit)
     rtl/axis_rate_limit.v           : Fractional rate limiter
     rtl/axis_rate_limit_64.v        : Fractional rate limiter (64 bit)
     rtl/axis_register.v             : AXI Stream register
