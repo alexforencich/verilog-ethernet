@@ -57,9 +57,8 @@ module axis_fifo #
     output wire                   output_axis_tuser
 );
 
-reg [ADDR_WIDTH-1:0] wr_ptr = {ADDR_WIDTH{1'b0}};
-reg [ADDR_WIDTH-1:0] rd_ptr = {ADDR_WIDTH{1'b0}};
-reg [ADDR_WIDTH-1:0] counter = {ADDR_WIDTH{1'b0}};
+reg [ADDR_WIDTH:0] wr_ptr = {ADDR_WIDTH+1{1'b0}};
+reg [ADDR_WIDTH:0] rd_ptr = {ADDR_WIDTH+1{1'b0}};
 
 reg [DATA_WIDTH+2-1:0] data_out_reg = {1'b0, 1'b0, {DATA_WIDTH{1'b0}}};
 
@@ -72,8 +71,11 @@ reg output_axis_tvalid_reg = 1'b0;
 
 wire [DATA_WIDTH+2-1:0] data_in = {input_axis_tlast, input_axis_tuser, input_axis_tdata};
 
-wire full = (counter == (2**ADDR_WIDTH)-1);
-wire empty = (counter == 0);
+// full when first MSB different but rest same
+wire full = ((wr_ptr[ADDR_WIDTH] != rd_ptr[ADDR_WIDTH]) &&
+             (wr_ptr[ADDR_WIDTH-1:0] == rd_ptr[ADDR_WIDTH-1:0]));
+// empty when pointers match exactly
+wire empty = wr_ptr == rd_ptr;
 
 wire write = input_axis_tvalid & ~full;
 wire read = (output_axis_tready | ~output_axis_tvalid_reg) & ~empty;
@@ -88,7 +90,7 @@ always @(posedge clk or posedge rst) begin
     if (rst) begin
         wr_ptr <= 0;
     end else if (write) begin
-        mem[wr_ptr] <= data_in;
+        mem[wr_ptr[ADDR_WIDTH-1:0]] <= data_in;
         wr_ptr <= wr_ptr + 1;
     end
 end
@@ -98,19 +100,8 @@ always @(posedge clk or posedge rst) begin
     if (rst) begin
         rd_ptr <= 0;
     end else if (read) begin
-        data_out_reg <= mem[rd_ptr];
+        data_out_reg <= mem[rd_ptr[ADDR_WIDTH-1:0]];
         rd_ptr <= rd_ptr + 1;
-    end
-end
-
-// counter
-always @(posedge clk or posedge rst) begin
-    if (rst) begin
-        counter <= 0;
-    end else if (~read & write) begin
-        counter <= counter + 1;
-    end else if (read & ~write) begin
-        counter <= counter - 1;
     end
 end
 
