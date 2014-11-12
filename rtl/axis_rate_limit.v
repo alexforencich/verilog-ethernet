@@ -31,8 +31,7 @@ THE SOFTWARE.
  */
 module axis_rate_limit #
 (
-    parameter DATA_WIDTH = 64,
-    parameter KEEP_WIDTH = (DATA_WIDTH/8)
+    parameter DATA_WIDTH = 8
 )
 (
     input  wire                   clk,
