@@ -42,6 +42,20 @@ Supports power of two depths only.
 Basic frame-based asynchronous FIFO with tkeep signal and parametrizable data
 width and depth.  Supports power of two depths only.
 
+### axis_crosspoint module
+
+Basic crosspoint switch.  tready signal not supported.  Parametrizable data
+width.  
+
+Can be generated with arbitrary port counts with axis_crosspoint.py.
+
+### axis_crosspoint_64 module
+
+Basic crosspoint switch with tkeep.  tready signal not supported.
+Parametrizable data width.  
+
+Can be generated with arbitrary port counts with axis_crosspoint_64.py.
+
 ### axis_fifo module
 
 Basic word-based synchronous FIFO with parametrizable data width and depth.
@@ -122,6 +136,10 @@ LocalLink to AXI stream bridge.
     rtl/axis_async_fifo_64.v        : Asynchronous FIFO (64 bit)
     rtl/axis_async_frame_fifo.v     : Asynchronous frame FIFO
     rtl/axis_async_frame_fifo_64.v  : Asynchronous frame FIFO (64 bit)
+    rtl/axis_crosspoint.py          : Crosspoint switch generator
+    rtl/axis_crosspoint_4x4.v       : 4x4 crosspoint switch
+    rtl/axis_crosspoint_64.py       : Crosspoint switch generator (64 bit)
+    rtl/axis_crosspoint_64_4x4.v    : 4x4 crosspoint switch (64 bit)
     rtl/axis_fifo.v                 : Synchronous FIFO
     rtl/axis_fifo_64.v              : Synchronous FIFO (64 bit)
     rtl/axis_frame_fifo.v           : Synchronous frame FIFO
