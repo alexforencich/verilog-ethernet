@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """axis_crosspoint_64_64
 
-Generates an AXI Stream crosspoint switch with a specific number of ports
+Generates an AXI Stream crosspoint switch with the specified number of ports
 
 Usage: axis_crosspoint_64 [OPTION]...
   -?, --help     display this help and exit
@@ -107,31 +107,31 @@ module {{name}} #
 (
     input  wire        clk,
     input  wire        rst,
-    
+
     /*
      * AXI Stream inputs
      */
-    {%- for p in ports %}
+{%- for p in ports %}
     input  wire [DATA_WIDTH-1:0]  input_{{p}}_axis_tdata,
     input  wire [KEEP_WIDTH-1:0]  input_{{p}}_axis_tkeep,
     input  wire                   input_{{p}}_axis_tvalid,
     input  wire                   input_{{p}}_axis_tlast,
-    {% endfor %}
+{% endfor %}
     /*
      * AXI Stream outputs
      */
-    {%- for p in ports %}
+{%- for p in ports %}
     output wire [DATA_WIDTH-1:0]  output_{{p}}_axis_tdata,
     output wire [KEEP_WIDTH-1:0]  output_{{p}}_axis_tkeep,
     output wire                   output_{{p}}_axis_tvalid,
     output wire                   output_{{p}}_axis_tlast,
-    {% endfor %}
+{% endfor %}
     /*
      * Control
      */
-    {%- for p in ports %}
+{%- for p in ports %}
     input  wire [{{w-1}}:0]             output_{{p}}_select{% if not loop.last %},{% endif %}
-    {%- endfor %}
+{%- endfor %}
 );
 {% for p in ports %}
 reg [DATA_WIDTH-1:0]  input_{{p}}_axis_tdata_reg = 0;
@@ -159,40 +159,40 @@ assign output_{{p}}_axis_tlast = output_{{p}}_axis_tlast_reg;
 
 always @(posedge clk or posedge rst) begin
     if (rst) begin
-        {%- for p in ports %}
+{%- for p in ports %}
         output_{{p}}_select_reg <= 0;
-        {%- endfor %}
-        {% for p in ports %}
+{%- endfor %}
+{% for p in ports %}
         input_{{p}}_axis_tvalid_reg <= 0;
         input_{{p}}_axis_tlast_reg <= 0;
-        {%- endfor %}
-        {% for p in ports %}
+{%- endfor %}
+{% for p in ports %}
         output_{{p}}_axis_tvalid_reg <= 0;
         output_{{p}}_axis_tlast_reg <= 0;
-        {%- endfor %}
+{%- endfor %}
     end else begin
-        {%- for p in ports %}
+{%- for p in ports %}
         input_{{p}}_axis_tdata_reg <= input_{{p}}_axis_tdata;
         input_{{p}}_axis_tkeep_reg <= input_{{p}}_axis_tkeep;
         input_{{p}}_axis_tvalid_reg <= input_{{p}}_axis_tvalid;
         input_{{p}}_axis_tlast_reg <= input_{{p}}_axis_tlast;
-        {% endfor %}
-        {%- for p in ports %}
+{% endfor %}
+{%- for p in ports %}
         output_{{p}}_select_reg <= output_{{p}}_select;
-        {%- endfor %}
-        {%- for p in ports %}
-        
+{%- endfor %}
+{%- for p in ports %}
+
         case (output_{{p}}_select_reg)
-            {%- for q in ports %}
+{%- for q in ports %}
             {{w}}'d{{q}}: begin
                 output_{{p}}_axis_tdata_reg <= input_{{q}}_axis_tdata_reg;
                 output_{{p}}_axis_tkeep_reg <= input_{{q}}_axis_tkeep_reg;
                 output_{{p}}_axis_tvalid_reg <= input_{{q}}_axis_tvalid_reg;
                 output_{{p}}_axis_tlast_reg <= input_{{q}}_axis_tlast_reg;
             end
-            {%- endfor %}
+{%- endfor %}
         endcase
-        {%- endfor %}
+{%- endfor %}
     end
 end
 

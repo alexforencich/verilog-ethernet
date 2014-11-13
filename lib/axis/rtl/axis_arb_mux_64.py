@@ -1,7 +1,7 @@
 #!/usr/bin/env python
-"""axis_crosspoint
+"""axis_mux
 
-Generates an AXI Stream crosspoint switch with the specified number of ports
+Generates an arbitrated AXI Stream mux with the specified number of ports
 
 Usage: axis_crosspoint [OPTION]...
   -?, --help     display this help and exit
@@ -51,7 +51,7 @@ def main(argv=None):
             out_name = a
 
     if name is None:
-        name = "axis_crosspoint_{0}x{0}".format(ports)
+        name = "axis_arb_mux_64_{0}".format(ports)
 
     if out_name is None:
         out_name = name + ".v"
@@ -64,7 +64,7 @@ def main(argv=None):
         print("Error opening \"%s\": %s" %(out_name, ex.strerror), file=sys.stderr)
         exit(1)
 
-    print("Generating {0} port AXI Stream crosspoint {1}...".format(ports, name))
+    print("Generating {0} port AXI Stream arbitrated mux {1}...".format(ports, name))
 
     select_width = ceil(log2(ports))
 
@@ -97,96 +97,88 @@ THE SOFTWARE.
 `timescale 1ns / 1ps
 
 /*
- * AXI4-Stream {{n}}x{{n}} crosspoint
+ * AXI4-Stream {{n}} port arbitrated multiplexer (64 bit datapath)
  */
 module {{name}} #
 (
-    parameter DATA_WIDTH = 8
+    parameter DATA_WIDTH = 64,
+    parameter KEEP_WIDTH = (DATA_WIDTH/8),
+    // arbitration type: "PRIORITY" or "ROUND_ROBIN"
+    parameter ARB_TYPE = "PRIORITY"
 )
 (
-    input  wire        clk,
-    input  wire        rst,
-
+    input  wire                   clk,
+    input  wire                   rst,
+    
     /*
-     * AXI Stream inputs
+     * AXI inputs
      */
 {%- for p in ports %}
     input  wire [DATA_WIDTH-1:0]  input_{{p}}_axis_tdata,
+    input  wire [KEEP_WIDTH-1:0]  input_{{p}}_axis_tkeep,
     input  wire                   input_{{p}}_axis_tvalid,
+    output wire                   input_{{p}}_axis_tready,
     input  wire                   input_{{p}}_axis_tlast,
+    input  wire                   input_{{p}}_axis_tuser,
 {% endfor %}
     /*
-     * AXI Stream outputs
+     * AXI output
      */
-{%- for p in ports %}
-    output wire [DATA_WIDTH-1:0]  output_{{p}}_axis_tdata,
-    output wire                   output_{{p}}_axis_tvalid,
-    output wire                   output_{{p}}_axis_tlast,
-{% endfor %}
-    /*
-     * Control
-     */
-{%- for p in ports %}
-    input  wire [{{w-1}}:0]             output_{{p}}_select{% if not loop.last %},{% endif %}
-{%- endfor %}
+    output wire [DATA_WIDTH-1:0]  output_axis_tdata,
+    output wire [KEEP_WIDTH-1:0]  output_axis_tkeep,
+    output wire                   output_axis_tvalid,
+    input  wire                   output_axis_tready,
+    output wire                   output_axis_tlast,
+    output wire                   output_axis_tuser
 );
-{% for p in ports %}
-reg [DATA_WIDTH-1:0]  input_{{p}}_axis_tdata_reg = 0;
-reg                   input_{{p}}_axis_tvalid_reg = 0;
-reg                   input_{{p}}_axis_tlast_reg = 0;
-{% endfor %}
 
-{%- for p in ports %}
-reg [DATA_WIDTH-1:0]  output_{{p}}_axis_tdata_reg = 0;
-reg                   output_{{p}}_axis_tvalid_reg = 0;
-reg                   output_{{p}}_axis_tlast_reg = 0;
-{% endfor %}
-
-{%- for p in ports %}
-reg [{{w-1}}:0]             output_{{p}}_select_reg = 0;
-{%- endfor %}
+wire [{{n-1}}:0] request;
+wire [{{n-1}}:0] acknowledge;
+wire [{{n-1}}:0] grant;
+wire [{{w-1}}:0] grant_encoded;
 {% for p in ports %}
-assign output_{{p}}_axis_tdata = output_{{p}}_axis_tdata_reg;
-assign output_{{p}}_axis_tvalid = output_{{p}}_axis_tvalid_reg;
-assign output_{{p}}_axis_tlast = output_{{p}}_axis_tlast_reg;
-{% endfor %}
+assign acknowledge[{{p}}] = input_{{p}}_axis_tvalid & input_{{p}}_axis_tready & input_{{p}}_axis_tlast;
+assign request[{{p}}] = input_{{p}}_axis_tvalid & ~acknowledge[{{p}}];
+{%- endfor %}
 
-always @(posedge clk or posedge rst) begin
-    if (rst) begin
+// mux instance
+axis_mux_64_{{n}} #(
+    .DATA_WIDTH(DATA_WIDTH)
+)
+mux_inst (
+    .clk(clk),
+    .rst(rst),
 {%- for p in ports %}
-        output_{{p}}_select_reg <= 0;
+    .input_{{p}}_axis_tdata(input_{{p}}_axis_tdata),
+    .input_{{p}}_axis_tkeep(input_{{p}}_axis_tkeep),
+    .input_{{p}}_axis_tvalid(input_{{p}}_axis_tvalid & grant[{{p}}]),
+    .input_{{p}}_axis_tready(input_{{p}}_axis_tready),
+    .input_{{p}}_axis_tlast(input_{{p}}_axis_tlast),
+    .input_{{p}}_axis_tuser(input_{{p}}_axis_tuser),
 {%- endfor %}
-{% for p in ports %}
-        input_{{p}}_axis_tvalid_reg <= 0;
-        input_{{p}}_axis_tlast_reg <= 0;
-{%- endfor %}
-{% for p in ports %}
-        output_{{p}}_axis_tvalid_reg <= 0;
-        output_{{p}}_axis_tlast_reg <= 0;
-{%- endfor %}
-    end else begin
-{%- for p in ports %}
-        input_{{p}}_axis_tdata_reg <= input_{{p}}_axis_tdata;
-        input_{{p}}_axis_tvalid_reg <= input_{{p}}_axis_tvalid;
-        input_{{p}}_axis_tlast_reg <= input_{{p}}_axis_tlast;
-{% endfor %}
-{%- for p in ports %}
-        output_{{p}}_select_reg <= output_{{p}}_select;
-{%- endfor %}
-{%- for p in ports %}
+    .output_axis_tdata(output_axis_tdata),
+    .output_axis_tkeep(output_axis_tkeep),
+    .output_axis_tvalid(output_axis_tvalid),
+    .output_axis_tready(output_axis_tready),
+    .output_axis_tlast(output_axis_tlast),
+    .output_axis_tuser(output_axis_tuser),
+    .select(grant_encoded)
+);
 
-        case (output_{{p}}_select_reg)
-{%- for q in ports %}
-            {{w}}'d{{q}}: begin
-                output_{{p}}_axis_tdata_reg <= input_{{q}}_axis_tdata_reg;
-                output_{{p}}_axis_tvalid_reg <= input_{{q}}_axis_tvalid_reg;
-                output_{{p}}_axis_tlast_reg <= input_{{q}}_axis_tlast_reg;
-            end
-{%- endfor %}
-        endcase
-{%- endfor %}
-    end
-end
+// arbiter instance
+arbiter #(
+    .PORTS({{n}}),
+    .TYPE(ARB_TYPE),
+    .BLOCK("ACKNOWLEDGE")
+)
+arb_inst (
+    .clk(clk),
+    .rst(rst),
+    .request(request),
+    .acknowledge(acknowledge),
+    .grant(grant),
+    .grant_encoded(grant_encoded)
+);
 
 endmodule
 

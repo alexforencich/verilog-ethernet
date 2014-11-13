@@ -1,4 +1,74 @@
-/*
+#!/usr/bin/env python
+"""axis_mux
+
+Generates an AXI Stream mux with the specified number of ports
+
+Usage: axis_crosspoint [OPTION]...
+  -?, --help     display this help and exit
+  -p, --ports    specify number of ports
+  -n, --name     specify module name
+  -o, --output   specify output file name
+"""
+
+import io
+import sys
+import getopt
+from math import *
+from jinja2 import Template
+
+class Usage(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
+    try:
+        try:
+            opts, args = getopt.getopt(argv[1:], "?n:p:o:", ["help", "name=", "ports=", "output="])
+        except getopt.error as msg:
+             raise Usage(msg)
+        # more code, unchanged  
+    except Usage as err:
+        print(err.msg, file=sys.stderr)
+        print("for help use --help", file=sys.stderr)
+        return 2
+
+    ports = 4
+    name = None
+    out_name = None
+
+    # process options
+    for o, a in opts:
+        if o in ('-?', '--help'):
+            print(__doc__)
+            sys.exit(0)
+        if o in ('-p', '--ports'):
+            ports = int(a)
+        if o in ('-n', '--name'):
+            name = a
+        if o in ('-o', '--output'):
+            out_name = a
+
+    if name is None:
+        name = "axis_mux_{0}".format(ports)
+
+    if out_name is None:
+        out_name = name + ".v"
+
+    print("Opening file '%s'..." % out_name)
+
+    try:
+        out_file = open(out_name, 'w')
+    except Exception as ex:
+        print("Error opening \"%s\": %s" %(out_name, ex.strerror), file=sys.stderr)
+        exit(1)
+
+    print("Generating {0} port AXI Stream mux {1}...".format(ports, name))
+
+    select_width = ceil(log2(ports))
+
+    t = Template(u"""/*
 
 Copyright (c) 2014 Alex Forencich
 
@@ -27,25 +97,26 @@ THE SOFTWARE.
 `timescale 1ns / 1ps
 
 /*
- * AXI4-Stream rate limiter
+ * AXI4-Stream {{n}} port multiplexer
  */
-module axis_rate_limit #
+module {{name}} #
 (
     parameter DATA_WIDTH = 8
 )
 (
     input  wire                   clk,
     input  wire                   rst,
-
+    
     /*
-     * AXI input
+     * AXI inputs
      */
-    input  wire [DATA_WIDTH-1:0]  input_axis_tdata,
-    input  wire                   input_axis_tvalid,
-    output wire                   input_axis_tready,
-    input  wire                   input_axis_tlast,
-    input  wire                   input_axis_tuser,
-
+{%- for p in ports %}
+    input  wire [DATA_WIDTH-1:0]  input_{{p}}_axis_tdata,
+    input  wire                   input_{{p}}_axis_tvalid,
+    output wire                   input_{{p}}_axis_tready,
+    input  wire                   input_{{p}}_axis_tlast,
+    input  wire                   input_{{p}}_axis_tuser,
+{% endfor %}
     /*
      * AXI output
      */
@@ -56,11 +127,9 @@ module axis_rate_limit #
     output wire                   output_axis_tuser,
 
     /*
-     * Configuration
+     * Control
      */
-    input  wire [7:0]             rate_num,
-    input  wire [7:0]             rate_denom,
-    input  wire                   rate_by_frame
+    input  wire [{{w-1}}:0]             select
 );
 
 // internal datapath
@@ -71,53 +140,90 @@ reg                  output_axis_tlast_int;
 reg                  output_axis_tuser_int;
 wire                 output_axis_tready_int_early;
 
-reg [23:0] acc_reg = 0, acc_next;
-reg pause;
+reg [{{w-1}}:0] select_reg = 0, select_next;
 reg frame_reg = 0, frame_next;
+{% for p in ports %}
+reg input_{{p}}_axis_tready_reg = 0, input_{{p}}_axis_tready_next;
+{%- endfor %}
+{% for p in ports %}
+assign input_{{p}}_axis_tready = input_{{p}}_axis_tready_reg;
+{%- endfor %}
 
-reg input_axis_tready_reg = 0, input_axis_tready_next;
-assign input_axis_tready = input_axis_tready_reg;
+// mux for start of packet detection
+reg selected_input_tvalid;
+always @* begin
+    case (select)
+{%- for p in ports %}
+        {{w}}'d{{p}}: selected_input_tvalid = input_{{p}}_axis_tvalid;
+{%- endfor %}
+    endcase
+end
+
+// mux for incoming packet
+reg [DATA_WIDTH-1:0] current_input_tdata;
+reg current_input_tvalid;
+reg current_input_tready;
+reg current_input_tlast;
+reg current_input_tuser;
+always @* begin
+    case (select_reg)
+{%- for p in ports %}
+        {{w}}'d{{p}}: begin
+            current_input_tdata = input_{{p}}_axis_tdata;
+            current_input_tvalid = input_{{p}}_axis_tvalid;
+            current_input_tready = input_{{p}}_axis_tready;
+            current_input_tlast = input_{{p}}_axis_tlast;
+            current_input_tuser = input_{{p}}_axis_tuser;
+        end
+{%- endfor %}
+    endcase
+end
 
 always @* begin
-    acc_next = acc_reg;
-    pause = 0;
-    frame_next = frame_reg & ~input_axis_tlast;
+    select_next = select_reg;
+    frame_next = frame_reg;
+{% for p in ports %}
+    input_{{p}}_axis_tready_next = 0;
+{%- endfor %}
 
-    if (acc_reg >= rate_num) begin
-        acc_next = acc_reg - rate_num;
-    end
-
-    if (input_axis_tready & input_axis_tvalid) begin
-        // read input
-        frame_next = ~input_axis_tlast;
-        acc_next = acc_reg + (rate_denom - rate_num);
-    end
-
-    if (acc_next >= rate_num) begin
-        if (rate_by_frame) begin
-            pause = ~frame_next;
-        end else begin
-            pause = 1;
+    if (frame_reg) begin
+        if (current_input_tvalid & current_input_tready) begin
+            // end of frame detection
+            frame_next = ~current_input_tlast;
         end
+    end else if (selected_input_tvalid) begin
+        // start of frame, grab select value
+        frame_next = 1;
+        select_next = select;
     end
 
-    input_axis_tready_next = output_axis_tready_int_early & ~pause;
+    // generate ready signal on selected port
+    case (select_next)
+{%- for p in ports %}
+        {{w}}'d{{p}}: input_{{p}}_axis_tready_next = output_axis_tready_int_early & frame_next;
+{%- endfor %}
+    endcase
 
-    output_axis_tdata_int = input_axis_tdata;
-    output_axis_tvalid_int = input_axis_tvalid & input_axis_tready;
-    output_axis_tlast_int = input_axis_tlast;
-    output_axis_tuser_int = input_axis_tuser;
+    // pass through selected packet data
+    output_axis_tdata_int = current_input_tdata;
+    output_axis_tvalid_int = current_input_tvalid & current_input_tready & frame_reg;
+    output_axis_tlast_int = current_input_tlast;
+    output_axis_tuser_int = current_input_tuser;
 end
 
 always @(posedge clk or posedge rst) begin
     if (rst) begin
-        acc_reg <= 0;
+        select_reg <= 0;
         frame_reg <= 0;
-        input_axis_tready_reg <= 0;
+{%- for p in ports %}
+        input_{{p}}_axis_tready_reg <= 0;
+{%- endfor %}
     end else begin
-        acc_reg <= acc_next;
+        select_reg <= select_next;
         frame_reg <= frame_next;
-        input_axis_tready_reg <= input_axis_tready_next;
+{%- for p in ports %}
+        input_{{p}}_axis_tready_reg <= input_{{p}}_axis_tready_next;
+{%- endfor %}
     end
 end
 
@@ -185,3 +291,18 @@ always @(posedge clk or posedge rst) begin
 end
 
 endmodule
+
+""")
+    
+    out_file.write(t.render(
+        n=ports,
+        w=select_width,
+        name=name,
+        ports=range(ports)
+    ))
+    
+    print("Done")
+
+if __name__ == "__main__":
+    sys.exit(main())
+

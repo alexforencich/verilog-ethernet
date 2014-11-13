@@ -37,7 +37,7 @@ module axis_crosspoint_64_4x4 #
 (
     input  wire        clk,
     input  wire        rst,
-    
+
     /*
      * AXI Stream inputs
      */
@@ -45,22 +45,22 @@ module axis_crosspoint_64_4x4 #
     input  wire [KEEP_WIDTH-1:0]  input_0_axis_tkeep,
     input  wire                   input_0_axis_tvalid,
     input  wire                   input_0_axis_tlast,
-    
+
     input  wire [DATA_WIDTH-1:0]  input_1_axis_tdata,
     input  wire [KEEP_WIDTH-1:0]  input_1_axis_tkeep,
     input  wire                   input_1_axis_tvalid,
     input  wire                   input_1_axis_tlast,
-    
+
     input  wire [DATA_WIDTH-1:0]  input_2_axis_tdata,
     input  wire [KEEP_WIDTH-1:0]  input_2_axis_tkeep,
     input  wire                   input_2_axis_tvalid,
     input  wire                   input_2_axis_tlast,
-    
+
     input  wire [DATA_WIDTH-1:0]  input_3_axis_tdata,
     input  wire [KEEP_WIDTH-1:0]  input_3_axis_tkeep,
     input  wire                   input_3_axis_tvalid,
     input  wire                   input_3_axis_tlast,
-    
+
     /*
      * AXI Stream outputs
      */
@@ -68,22 +68,22 @@ module axis_crosspoint_64_4x4 #
     output wire [KEEP_WIDTH-1:0]  output_0_axis_tkeep,
     output wire                   output_0_axis_tvalid,
     output wire                   output_0_axis_tlast,
-    
+
     output wire [DATA_WIDTH-1:0]  output_1_axis_tdata,
     output wire [KEEP_WIDTH-1:0]  output_1_axis_tkeep,
     output wire                   output_1_axis_tvalid,
     output wire                   output_1_axis_tlast,
-    
+
     output wire [DATA_WIDTH-1:0]  output_2_axis_tdata,
     output wire [KEEP_WIDTH-1:0]  output_2_axis_tkeep,
     output wire                   output_2_axis_tvalid,
     output wire                   output_2_axis_tlast,
-    
+
     output wire [DATA_WIDTH-1:0]  output_3_axis_tdata,
     output wire [KEEP_WIDTH-1:0]  output_3_axis_tkeep,
     output wire                   output_3_axis_tvalid,
     output wire                   output_3_axis_tlast,
-    
+
     /*
      * Control
      */
@@ -165,7 +165,7 @@ always @(posedge clk or posedge rst) begin
         output_1_select_reg <= 0;
         output_2_select_reg <= 0;
         output_3_select_reg <= 0;
-        
+
         input_0_axis_tvalid_reg <= 0;
         input_0_axis_tlast_reg <= 0;
         input_1_axis_tvalid_reg <= 0;
@@ -174,7 +174,7 @@ always @(posedge clk or posedge rst) begin
         input_2_axis_tlast_reg <= 0;
         input_3_axis_tvalid_reg <= 0;
         input_3_axis_tlast_reg <= 0;
-        
+
         output_0_axis_tvalid_reg <= 0;
         output_0_axis_tlast_reg <= 0;
         output_1_axis_tvalid_reg <= 0;
@@ -188,27 +188,27 @@ always @(posedge clk or posedge rst) begin
         input_0_axis_tkeep_reg <= input_0_axis_tkeep;
         input_0_axis_tvalid_reg <= input_0_axis_tvalid;
         input_0_axis_tlast_reg <= input_0_axis_tlast;
-        
+
         input_1_axis_tdata_reg <= input_1_axis_tdata;
         input_1_axis_tkeep_reg <= input_1_axis_tkeep;
         input_1_axis_tvalid_reg <= input_1_axis_tvalid;
         input_1_axis_tlast_reg <= input_1_axis_tlast;
-        
+
         input_2_axis_tdata_reg <= input_2_axis_tdata;
         input_2_axis_tkeep_reg <= input_2_axis_tkeep;
         input_2_axis_tvalid_reg <= input_2_axis_tvalid;
         input_2_axis_tlast_reg <= input_2_axis_tlast;
-        
+
         input_3_axis_tdata_reg <= input_3_axis_tdata;
         input_3_axis_tkeep_reg <= input_3_axis_tkeep;
         input_3_axis_tvalid_reg <= input_3_axis_tvalid;
         input_3_axis_tlast_reg <= input_3_axis_tlast;
-        
+
         output_0_select_reg <= output_0_select;
         output_1_select_reg <= output_1_select;
         output_2_select_reg <= output_2_select;
         output_3_select_reg <= output_3_select;
-        
+
         case (output_0_select_reg)
             2'd0: begin
                 output_0_axis_tdata_reg <= input_0_axis_tdata_reg;
@@ -235,7 +235,7 @@ always @(posedge clk or posedge rst) begin
                 output_0_axis_tlast_reg <= input_3_axis_tlast_reg;
             end
         endcase
-        
+
         case (output_1_select_reg)
             2'd0: begin
                 output_1_axis_tdata_reg <= input_0_axis_tdata_reg;
@@ -262,7 +262,7 @@ always @(posedge clk or posedge rst) begin
                 output_1_axis_tlast_reg <= input_3_axis_tlast_reg;
             end
         endcase
-        
+
         case (output_2_select_reg)
             2'd0: begin
                 output_2_axis_tdata_reg <= input_0_axis_tdata_reg;
@@ -289,7 +289,7 @@ always @(posedge clk or posedge rst) begin
                 output_2_axis_tlast_reg <= input_3_axis_tlast_reg;
             end
         endcase
-        
+
         case (output_3_select_reg)
             2'd0: begin
                 output_3_axis_tdata_reg <= input_0_axis_tdata_reg;
