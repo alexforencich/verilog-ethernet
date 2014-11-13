@@ -1,9 +1,9 @@
 #!/usr/bin/env python
-"""axis_mux
+"""axis_demux_64
 
 Generates an AXI Stream demux with the specified number of ports
 
-Usage: axis_crosspoint [OPTION]...
+Usage: axis_demux_64 [OPTION]...
   -?, --help     display this help and exit
   -p, --ports    specify number of ports
   -n, --name     specify module name
