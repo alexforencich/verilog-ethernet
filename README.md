@@ -103,7 +103,7 @@ width and depth.  Supports power of two depths only.
 Basic frame-based synchronous FIFO with parametrizable data width and depth.
 Supports power of two depths only.
 
-### axis_fifo_64 module
+### axis_frame_fifo_64 module
 
 Basic frame-based synchronous FIFO with tkeep signal and parametrizable data
 width and depth.  Supports power of two depths only.
