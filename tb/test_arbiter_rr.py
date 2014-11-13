@@ -43,6 +43,7 @@ def dut_arbiter_rr(clk,
                    current_test,
 
                    request,
+                   acknowledge,
 
                    grant,
                    grant_valid,
@@ -56,6 +57,7 @@ def dut_arbiter_rr(clk,
                 current_test=current_test,
 
                 request=request,
+                acknowledge=acknowledge,
 
                 grant=grant,
                 grant_valid=grant_valid,
@@ -69,6 +71,7 @@ def bench():
     current_test = Signal(intbv(0)[8:])
 
     request = Signal(intbv(0)[32:])
+    acknowledge = Signal(intbv(0)[32:])
 
     # Outputs
     grant = Signal(intbv(0)[32:])
@@ -81,6 +84,7 @@ def bench():
                          current_test,
 
                          request,
+                         acknowledge,
 
                          grant,
                          grant_valid,

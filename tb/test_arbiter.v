@@ -31,7 +31,7 @@ module test_arbiter;
 // parameters
 localparam PORTS = 32;
 localparam TYPE = "PRIORITY";
-localparam BLOCK = "TRUE";
+localparam BLOCK = "REQUEST";
 
 // Inputs
 reg clk = 0;
@@ -39,6 +39,7 @@ reg rst = 0;
 reg [7:0] current_test = 0;
 
 reg [PORTS-1:0] request = 0;
+reg [PORTS-1:0] acknowledge = 0;
 
 // Outputs
 wire [PORTS-1:0] grant;
@@ -50,7 +51,8 @@ initial begin
     $from_myhdl(clk,
                 rst,
                 current_test,
-                request);
+                request,
+                acknowledge);
     $to_myhdl(grant,
               grant_valid,
               grant_encoded);
@@ -69,6 +71,7 @@ UUT (
     .clk(clk),
     .rst(rst),
     .request(request),
+    .acknowledge(acknowledge),
     .grant(grant),
     .grant_valid(grant_valid),
     .grant_encoded(grant_encoded)

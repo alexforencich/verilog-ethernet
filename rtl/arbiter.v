@@ -34,7 +34,7 @@ module arbiter #
     parameter PORTS = 4,
     // arbitration type: "PRIORITY" or "ROUND_ROBIN"
     parameter TYPE = "PRIORITY",
-    // block until request deassert: "TRUE" or "FALSE"
+    // block type: "NONE", "REQUEST", "ACKNOWLEDGE"
     parameter BLOCK = "TRUE"
 )
 (
@@ -42,6 +42,7 @@ module arbiter #
     input  wire                     rst,
     
     input  wire [PORTS-1:0]         request,
+    input  wire [PORTS-1:0]         acknowledge,
 
     output wire [PORTS-1:0]         grant,
     output wire                     grant_valid,
@@ -92,8 +93,13 @@ always @* begin
     grant_encoded_next = 0;
     mask_next = mask_reg;
 
-    if (BLOCK == "TRUE" && grant_reg & request) begin
+    if (BLOCK == "REQUEST" && grant_reg & request) begin
         // granted request still asserted; hold it
+        grant_valid_next = grant_valid_reg;
+        grant_next = grant_reg;
+        grant_encoded_next = grant_encoded_reg;
+    end else if (BLOCK == "ACKNOWLEDGE" && grant_valid && !(grant_reg & acknowledge)) begin
+        // granted request not yet acknowledged; hold it
         grant_valid_next = grant_valid_reg;
         grant_next = grant_reg;
         grant_encoded_next = grant_encoded_reg;
