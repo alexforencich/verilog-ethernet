@@ -35,7 +35,7 @@ module arbiter #
     // arbitration type: "PRIORITY" or "ROUND_ROBIN"
     parameter TYPE = "PRIORITY",
     // block type: "NONE", "REQUEST", "ACKNOWLEDGE"
-    parameter BLOCK = "TRUE"
+    parameter BLOCK = "NONE"
 )
 (
     input  wire                     clk,
