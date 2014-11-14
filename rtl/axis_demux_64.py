@@ -135,7 +135,12 @@ module {{name}} #
     input  wire [{{w-1}}:0]             select
 );
 
-// // internal datapath
+reg [{{w-1}}:0] select_reg = 0, select_next;
+reg frame_reg = 0, frame_next;
+
+reg input_axis_tready_reg = 0, input_axis_tready_next;
+
+// internal datapath
 reg [DATA_WIDTH-1:0] output_axis_tdata_int;
 reg [KEEP_WIDTH-1:0] output_axis_tkeep_int;
 reg                  output_axis_tvalid_int;
@@ -144,10 +149,6 @@ reg                  output_axis_tlast_int;
 reg                  output_axis_tuser_int;
 wire                 output_axis_tready_int_early;
 
-reg [{{w-1}}:0] select_reg = 0, select_next;
-reg frame_reg = 0, frame_next;
-
-reg input_axis_tready_reg = 0, input_axis_tready_next;
 assign input_axis_tready = input_axis_tready_reg;
 
 // mux for output control signals

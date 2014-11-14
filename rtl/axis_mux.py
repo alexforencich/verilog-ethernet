@@ -132,6 +132,12 @@ module {{name}} #
     input  wire [{{w-1}}:0]             select
 );
 
+reg [{{w-1}}:0] select_reg = 0, select_next;
+reg frame_reg = 0, frame_next;
+{% for p in ports %}
+reg input_{{p}}_axis_tready_reg = 0, input_{{p}}_axis_tready_next;
+{%- endfor %}
+
 // internal datapath
 reg [DATA_WIDTH-1:0] output_axis_tdata_int;
 reg                  output_axis_tvalid_int;
@@ -139,12 +145,6 @@ reg                  output_axis_tready_int = 0;
 reg                  output_axis_tlast_int;
 reg                  output_axis_tuser_int;
 wire                 output_axis_tready_int_early;
-
-reg [{{w-1}}:0] select_reg = 0, select_next;
-reg frame_reg = 0, frame_next;
-{% for p in ports %}
-reg input_{{p}}_axis_tready_reg = 0, input_{{p}}_axis_tready_next;
-{%- endfor %}
 {% for p in ports %}
 assign input_{{p}}_axis_tready = input_{{p}}_axis_tready_reg;
 {%- endfor %}

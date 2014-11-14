@@ -79,14 +79,6 @@ module axis_mux_4 #
     input  wire [1:0]             select
 );
 
-// internal datapath
-reg [DATA_WIDTH-1:0] output_axis_tdata_int;
-reg                  output_axis_tvalid_int;
-reg                  output_axis_tready_int = 0;
-reg                  output_axis_tlast_int;
-reg                  output_axis_tuser_int;
-wire                 output_axis_tready_int_early;
-
 reg [1:0] select_reg = 0, select_next;
 reg frame_reg = 0, frame_next;
 
@@ -94,6 +86,14 @@ reg input_0_axis_tready_reg = 0, input_0_axis_tready_next;
 reg input_1_axis_tready_reg = 0, input_1_axis_tready_next;
 reg input_2_axis_tready_reg = 0, input_2_axis_tready_next;
 reg input_3_axis_tready_reg = 0, input_3_axis_tready_next;
+
+// internal datapath
+reg [DATA_WIDTH-1:0] output_axis_tdata_int;
+reg                  output_axis_tvalid_int;
+reg                  output_axis_tready_int = 0;
+reg                  output_axis_tlast_int;
+reg                  output_axis_tuser_int;
+wire                 output_axis_tready_int_early;
 
 assign input_0_axis_tready = input_0_axis_tready_reg;
 assign input_1_axis_tready = input_1_axis_tready_reg;
