@@ -12,6 +12,11 @@ intelligent bus cosimulation endpoints.
 
 ## Documentation
 
+### arbiter module
+
+General-purpose parametrizable arbiter.  Supports priority and round-robin
+arbitration.  Supports blocking until request release or acknowledge.  
+
 ### axis_adapter module
 
 The axis_adapter module bridges AXI stream busses of differing widths.  The
@@ -21,6 +26,20 @@ not one 16-bit lane and one 32-bit lane).  Second, the bus widths must be
 related by an integer multiple (e.g. 2 words and 6 words, but not 4 words
 and 6 words).  Wait states will be inserted on the wider bus side when
 necessary.
+
+### axis_arb_mux_N module
+
+Frame-aware AXI stream arbitrated muliplexer with parametrizable data width.
+Supports priority and round-robin arbitration.
+
+Can be generated with arbitrary port counts with axis_arb_mux.py.
+
+### axis_arb_mux_64_N module
+
+Frame-aware AXI stream arbitrated muliplexer with tkeep signal and
+parametrizable data width.  Supports priority and round-robin arbitration.
+
+Can be generated with arbitrary port counts with axis_arb_mux_64.py.
 
 ### axis_async_fifo module
 
@@ -55,6 +74,19 @@ Basic crosspoint switch with tkeep.  tready signal not supported.
 Parametrizable data width.  
 
 Can be generated with arbitrary port counts with axis_crosspoint_64.py.
+
+### axis_demux_N module
+
+Frame-aware AXI stream demuliplexer with parametrizable data width.
+
+Can be generated with arbitrary port counts with axis_demux.py.
+
+### axis_demux_64_N module
+
+Frame-aware AXI stream demuliplexer with tkeep signal and parametrizable data
+width.
+
+Can be generated with arbitrary port counts with axis_demux_64.py.
 
 ### axis_fifo module
 
@@ -133,6 +165,10 @@ monolithic frame from multiple monitored points with the same trigger.
 
 LocalLink to AXI stream bridge.
 
+### priority_encoder module
+
+Parametrizable priority encoder.
+
 ### Common signals
 
     tdata   : Data (width generally DATA_WIDTH)
@@ -144,7 +180,12 @@ LocalLink to AXI stream bridge.
 
 ### Source Files
 
+    rtl/arbiter.v                   : General-purpose parametrizable arbiter
     rtl/axis_adapter.v              : Parametrizable bus width adapter
+    rtl/axis_arb_mux.py             : Arbitrated multiplexer generator
+    rtl/axis_arb_mux_4.v            : 4 port arbitrated multiplexer
+    rtl/axis_arb_mux_64.py          : Arbitrated multiplexer generator (64 bit)
+    rtl/axis_arb_mux_64_4.v         : 4 port arbitrated multiplexer (64 bit)
     rtl/axis_async_fifo.v           : Asynchronous FIFO
     rtl/axis_async_fifo_64.v        : Asynchronous FIFO (64 bit)
     rtl/axis_async_frame_fifo.v     : Asynchronous frame FIFO
@@ -153,6 +194,10 @@ LocalLink to AXI stream bridge.
     rtl/axis_crosspoint_4x4.v       : 4x4 crosspoint switch
     rtl/axis_crosspoint_64.py       : Crosspoint switch generator (64 bit)
     rtl/axis_crosspoint_64_4x4.v    : 4x4 crosspoint switch (64 bit)
+    rtl/axis_demux.py               : Demultiplexer generator
+    rtl/axis_demux_4.v              : 4 port demultiplexer
+    rtl/axis_demux_64.py            : Demultiplexer generator (64 bit)
+    rtl/axis_demux_64_4.v           : 4 port demultiplexer (64 bit)
     rtl/axis_fifo.v                 : Synchronous FIFO
     rtl/axis_fifo_64.v              : Synchronous FIFO (64 bit)
     rtl/axis_frame_fifo.v           : Synchronous frame FIFO
@@ -170,6 +215,7 @@ LocalLink to AXI stream bridge.
     rtl/axis_register_64.v          : AXI Stream register (64 bit)
     rtl/axis_stat_counter.v         : Statistics counter
     rtl/ll_axis_bridge.v            : LocalLink to AXI stream bridge
+    rtl/priority_encoder.v          : Parametrizable priority encoder
 
 ### AXI Stream Interface Example
 
