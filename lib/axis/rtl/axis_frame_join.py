@@ -47,7 +47,7 @@ def main(argv=None):
             ports = int(a)
         if o in ('-n', '--name'):
             name = a
-        if o in ('-o', '--outputs'):
+        if o in ('-o', '--output'):
             out_name = a
     
     if name is None:

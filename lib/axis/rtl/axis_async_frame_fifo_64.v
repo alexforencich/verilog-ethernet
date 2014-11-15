@@ -27,7 +27,7 @@ THE SOFTWARE.
 `timescale 1ns / 1ps
 
 /*
- * AXI4-Stream asynchronous FIFO (64 bit datapath)
+ * AXI4-Stream asynchronous frame FIFO (64 bit datapath)
  */
 module axis_async_frame_fifo_64 #
 (

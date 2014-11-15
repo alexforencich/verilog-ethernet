@@ -1,9 +1,9 @@
 #!/usr/bin/env python
-"""axis_mux
+"""axis_arb_mux
 
 Generates an arbitrated AXI Stream mux with the specified number of ports
 
-Usage: axis_crosspoint [OPTION]...
+Usage: axis_arb_mux [OPTION]...
   -?, --help     display this help and exit
   -p, --ports    specify number of ports
   -n, --name     specify module name

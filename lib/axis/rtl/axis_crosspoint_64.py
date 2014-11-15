@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""axis_crosspoint_64_64
+"""axis_crosspoint_64
 
 Generates an AXI Stream crosspoint switch with the specified number of ports
 
