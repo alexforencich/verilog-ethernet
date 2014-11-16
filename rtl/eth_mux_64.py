@@ -138,6 +138,7 @@ module {{name}}
     /*
      * Control
      */
+    input  wire        enable,
     input  wire [{{w-1}}:0]  select
 );
 
@@ -235,7 +236,7 @@ always @* begin
             // end of frame detection
             frame_next = ~current_input_tlast;
         end
-    end else if (selected_input_eth_hdr_valid) begin
+    end else if (enable & selected_input_eth_hdr_valid) begin
         // start of frame, grab select value
         frame_next = 1;
         select_next = select;

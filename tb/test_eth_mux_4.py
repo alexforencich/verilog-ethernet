@@ -96,6 +96,7 @@ def dut_eth_mux_4(clk,
                  output_eth_payload_tlast,
                  output_eth_payload_tuser,
 
+                 enable,
                  select):
 
     if os.system(build_cmd):
@@ -157,6 +158,7 @@ def dut_eth_mux_4(clk,
                 output_eth_payload_tlast=output_eth_payload_tlast,
                 output_eth_payload_tuser=output_eth_payload_tuser,
 
+                enable=enable,
                 select=select)
 
 def bench():
@@ -202,6 +204,7 @@ def bench():
     output_eth_payload_tready = Signal(bool(0))
     output_eth_hdr_ready = Signal(bool(0))
 
+    enable = Signal(bool(0))
     select = Signal(intbv(0)[2:])
 
     # Outputs
@@ -372,6 +375,7 @@ def bench():
                        output_eth_payload_tlast,
                        output_eth_payload_tuser,
 
+                       enable,
                        select)
 
     @always(delay(4))
@@ -390,6 +394,7 @@ def bench():
         yield clk.posedge
 
         yield clk.posedge
+        enable.next = True
 
         yield clk.posedge
         print("test 1: select port 0")

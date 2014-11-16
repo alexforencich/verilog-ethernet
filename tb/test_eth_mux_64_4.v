@@ -73,6 +73,7 @@ reg input_3_eth_payload_tuser = 0;
 reg output_eth_hdr_ready = 0;
 reg output_eth_payload_tready = 0;
 
+reg enable = 0;
 reg [1:0] select = 0;
 
 // Outputs
@@ -138,6 +139,7 @@ initial begin
                 input_3_eth_payload_tuser,
                 output_eth_hdr_ready,
                 output_eth_payload_tready,
+                enable,
                 select);
     $to_myhdl(input_0_eth_hdr_ready,
               input_0_eth_payload_tready,
@@ -224,6 +226,7 @@ UUT (
     .output_eth_payload_tlast(output_eth_payload_tlast),
     .output_eth_payload_tuser(output_eth_payload_tuser),
     // Control
+    .enable(enable),
     .select(select)
 );
 

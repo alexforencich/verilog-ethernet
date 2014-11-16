@@ -141,6 +141,7 @@ module {{name}} #
 wire [{{n-1}}:0] request;
 wire [{{n-1}}:0] acknowledge;
 wire [{{n-1}}:0] grant;
+wire grant_valid;
 wire [{{w-1}}:0] grant_encoded;
 {% for p in ports %}
 assign acknowledge[{{p}}] = input_{{p}}_eth_payload_tvalid & input_{{p}}_eth_payload_tready & input_{{p}}_eth_payload_tlast;
@@ -174,6 +175,7 @@ mux_inst (
     .output_eth_payload_tready(output_eth_payload_tready),
     .output_eth_payload_tlast(output_eth_payload_tlast),
     .output_eth_payload_tuser(output_eth_payload_tuser),
+    .enable(grant_valid),
     .select(grant_encoded)
 );
 
@@ -189,6 +191,7 @@ arb_inst (
     .request(request),
     .acknowledge(acknowledge),
     .grant(grant),
+    .grant_valid(grant_valid),
     .grant_encoded(grant_encoded)
 );
 
