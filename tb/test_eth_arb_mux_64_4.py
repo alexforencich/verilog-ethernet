@@ -533,13 +533,13 @@ def bench():
         if not sink_queue.empty():
             rx_frame = sink_queue.get()
 
-        assert rx_frame == test_frame2
+        assert rx_frame == test_frame1
 
         rx_frame = None
         if not sink_queue.empty():
             rx_frame = sink_queue.get()
 
-        assert rx_frame == test_frame1
+        assert rx_frame == test_frame2
 
         yield delay(100)
 
@@ -583,13 +583,13 @@ def bench():
         if not sink_queue.empty():
             rx_frame = sink_queue.get()
 
-        assert rx_frame == test_frame2
+        assert rx_frame == test_frame1
 
         rx_frame = None
         if not sink_queue.empty():
             rx_frame = sink_queue.get()
 
-        assert rx_frame == test_frame1
+        assert rx_frame == test_frame2
 
         yield delay(100)
 
@@ -628,13 +628,13 @@ def bench():
         if not sink_queue.empty():
             rx_frame = sink_queue.get()
 
-        assert rx_frame == test_frame2
+        assert rx_frame == test_frame1
 
         rx_frame = None
         if not sink_queue.empty():
             rx_frame = sink_queue.get()
 
-        assert rx_frame == test_frame1
+        assert rx_frame == test_frame2
 
         yield delay(100)
 
@@ -655,15 +655,15 @@ def bench():
 
         source_1_queue.put(test_frame1)
         source_2_queue.put(test_frame2)
-        source_1_queue.put(test_frame1)
-        source_1_queue.put(test_frame1)
-        source_1_queue.put(test_frame1)
-        source_1_queue.put(test_frame1)
+        source_2_queue.put(test_frame2)
+        source_2_queue.put(test_frame2)
+        source_2_queue.put(test_frame2)
+        source_2_queue.put(test_frame2)
         yield clk.posedge
 
         yield delay(150)
         yield clk.posedge
-        source_2_queue.put(test_frame2)
+        source_1_queue.put(test_frame1)
 
         while input_0_eth_payload_tvalid or input_1_eth_payload_tvalid or input_2_eth_payload_tvalid or input_3_eth_payload_tvalid:
             yield clk.posedge
@@ -674,24 +674,6 @@ def bench():
         if not sink_queue.empty():
             rx_frame = sink_queue.get()
 
-        assert rx_frame == test_frame2
-
-        rx_frame = None
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
-
-        assert rx_frame == test_frame1
-
-        rx_frame = None
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
-
-        assert rx_frame == test_frame1
-
-        rx_frame = None
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
-
         assert rx_frame == test_frame1
 
         rx_frame = None
@@ -704,7 +686,25 @@ def bench():
         if not sink_queue.empty():
             rx_frame = sink_queue.get()
 
+        assert rx_frame == test_frame2
+
+        rx_frame = None
+        if not sink_queue.empty():
+            rx_frame = sink_queue.get()
+
+        assert rx_frame == test_frame2
+
+        rx_frame = None
+        if not sink_queue.empty():
+            rx_frame = sink_queue.get()
+
         assert rx_frame == test_frame1
+
+        rx_frame = None
+        if not sink_queue.empty():
+            rx_frame = sink_queue.get()
+
+        assert rx_frame == test_frame2
 
         yield delay(100)
 

@@ -32,7 +32,9 @@ THE SOFTWARE.
 module eth_arb_mux_64_4 #
 (
     // arbitration type: "PRIORITY" or "ROUND_ROBIN"
-    parameter ARB_TYPE = "PRIORITY"
+    parameter ARB_TYPE = "PRIORITY",
+    // LSB priority: "LOW", "HIGH"
+    parameter LSB_PRIORITY = "HIGH"
 )
 (
     input  wire        clk,
@@ -188,7 +190,8 @@ mux_inst (
 arbiter #(
     .PORTS(4),
     .TYPE(ARB_TYPE),
-    .BLOCK("ACKNOWLEDGE")
+    .BLOCK("ACKNOWLEDGE"),
+    .LSB_PRIORITY(LSB_PRIORITY)
 )
 arb_inst (
     .clk(clk),
