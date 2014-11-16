@@ -33,7 +33,9 @@ module axis_arb_mux_4 #
 (
     parameter DATA_WIDTH = 8,
     // arbitration type: "PRIORITY" or "ROUND_ROBIN"
-    parameter ARB_TYPE = "PRIORITY"
+    parameter ARB_TYPE = "PRIORITY",
+    // LSB priority: "LOW", "HIGH"
+    parameter LSB_PRIORITY = "HIGH"
 )
 (
     input  wire                   clk,
@@ -131,7 +133,8 @@ mux_inst (
 arbiter #(
     .PORTS(4),
     .TYPE(ARB_TYPE),
-    .BLOCK("ACKNOWLEDGE")
+    .BLOCK("ACKNOWLEDGE"),
+    .LSB_PRIORITY(LSB_PRIORITY)
 )
 arb_inst (
     .clk(clk),

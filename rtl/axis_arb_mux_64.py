@@ -104,7 +104,9 @@ module {{name}} #
     parameter DATA_WIDTH = 64,
     parameter KEEP_WIDTH = (DATA_WIDTH/8),
     // arbitration type: "PRIORITY" or "ROUND_ROBIN"
-    parameter ARB_TYPE = "PRIORITY"
+    parameter ARB_TYPE = "PRIORITY",
+    // LSB priority: "LOW", "HIGH"
+    parameter LSB_PRIORITY = "HIGH"
 )
 (
     input  wire                   clk,
@@ -171,7 +173,8 @@ mux_inst (
 arbiter #(
     .PORTS({{n}}),
     .TYPE(ARB_TYPE),
-    .BLOCK("ACKNOWLEDGE")
+    .BLOCK("ACKNOWLEDGE"),
+    .LSB_PRIORITY(LSB_PRIORITY)
 )
 arb_inst (
     .clk(clk),
