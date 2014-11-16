@@ -103,7 +103,9 @@ module {{name}} #
 (
     parameter DATA_WIDTH = 8,
     // arbitration type: "PRIORITY" or "ROUND_ROBIN"
-    parameter ARB_TYPE = "PRIORITY"
+    parameter ARB_TYPE = "PRIORITY",
+    // LSB priority: "LOW", "HIGH"
+    parameter LSB_PRIORITY = "HIGH"
 )
 (
     input  wire                   clk,
@@ -132,6 +134,7 @@ module {{name}} #
 wire [{{n-1}}:0] request;
 wire [{{n-1}}:0] acknowledge;
 wire [{{n-1}}:0] grant;
+wire grant_valid;
 wire [{{w-1}}:0] grant_encoded;
 {% for p in ports %}
 assign acknowledge[{{p}}] = input_{{p}}_axis_tvalid & input_{{p}}_axis_tready & input_{{p}}_axis_tlast;
@@ -157,6 +160,7 @@ mux_inst (
     .output_axis_tready(output_axis_tready),
     .output_axis_tlast(output_axis_tlast),
     .output_axis_tuser(output_axis_tuser),
+    .enable(grant_valid),
     .select(grant_encoded)
 );
 
@@ -164,7 +168,8 @@ mux_inst (
 arbiter #(
     .PORTS({{n}}),
     .TYPE(ARB_TYPE),
-    .BLOCK("ACKNOWLEDGE")
+    .BLOCK("ACKNOWLEDGE"),
+    .LSB_PRIORITY(LSB_PRIORITY)
 )
 arb_inst (
     .clk(clk),
@@ -172,6 +177,7 @@ arb_inst (
     .request(request),
     .acknowledge(acknowledge),
     .grant(grant),
+    .grant_valid(grant_valid),
     .grant_encoded(grant_encoded)
 );
 

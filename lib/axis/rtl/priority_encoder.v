@@ -31,7 +31,9 @@ THE SOFTWARE.
  */
 module priority_encoder #
 (
-    parameter WIDTH = 4
+    parameter WIDTH = 4,
+    // LSB priority: "LOW", "HIGH"
+    parameter LSB_PRIORITY = "LOW"
 )
 (
     input  wire [WIDTH-1:0]         input_unencoded,
@@ -48,14 +50,19 @@ generate
     if (WIDTH == 2) begin
         // two inputs - just an OR gate
         assign output_valid = |input_unencoded;
-        assign output_encoded = input_unencoded[1];
+        if (LSB_PRIORITY == "LOW") begin
+            assign output_encoded = input_unencoded[1];
+        end else begin
+            assign output_encoded = ~input_unencoded[0];
+        end
     end else begin
         // more than two inputs - split into two parts and recurse
         // also pad input to correct power-of-two width
         wire [$clog2(W2)-1:0] out1, out2;
         wire valid1, valid2;
         priority_encoder #(
-            .WIDTH(W2)
+            .WIDTH(W2),
+            .LSB_PRIORITY(LSB_PRIORITY)
         )
         priority_encoder_inst1 (
             .input_unencoded(input_unencoded[W2-1:0]),
@@ -63,7 +70,8 @@ generate
             .output_encoded(out1)
         );
         priority_encoder #(
-            .WIDTH(W2)
+            .WIDTH(W2),
+            .LSB_PRIORITY(LSB_PRIORITY)
         )
         priority_encoder_inst2 (
             .input_unencoded({{W1-WIDTH{1'b0}}, input_unencoded[WIDTH-1:W2]}),
@@ -72,7 +80,11 @@ generate
         );
         // multiplexer to select part
         assign output_valid = valid1 | valid2;
-        assign output_encoded = valid2 ? {1'b1, out2} : {1'b0, out1};
+        if (LSB_PRIORITY == "LOW") begin
+            assign output_encoded = valid2 ? {1'b1, out2} : {1'b0, out1};
+        end else begin
+            assign output_encoded = valid1 ? {1'b0, out1} : {1'b1, out2};
+        end
     end
 endgenerate
 

@@ -391,13 +391,13 @@ def bench():
         if not sink_queue.empty():
             rx_frame = sink_queue.get()
 
-        assert rx_frame == test_frame2
+        assert rx_frame == test_frame1
 
         rx_frame = None
         if not sink_queue.empty():
             rx_frame = sink_queue.get()
 
-        assert rx_frame == test_frame1
+        assert rx_frame == test_frame2
 
         yield delay(100)
 
@@ -437,13 +437,13 @@ def bench():
         if not sink_queue.empty():
             rx_frame = sink_queue.get()
 
-        assert rx_frame == test_frame2
+        assert rx_frame == test_frame1
 
         rx_frame = None
         if not sink_queue.empty():
             rx_frame = sink_queue.get()
 
-        assert rx_frame == test_frame1
+        assert rx_frame == test_frame2
 
         yield delay(100)
 
@@ -477,13 +477,13 @@ def bench():
         if not sink_queue.empty():
             rx_frame = sink_queue.get()
 
-        assert rx_frame == test_frame2
+        assert rx_frame == test_frame1
 
         rx_frame = None
         if not sink_queue.empty():
             rx_frame = sink_queue.get()
 
-        assert rx_frame == test_frame1
+        assert rx_frame == test_frame2
 
         yield delay(100)
 
@@ -501,15 +501,15 @@ def bench():
                                             '\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
         source_1_queue.put(test_frame1)
         source_2_queue.put(test_frame2)
-        source_1_queue.put(test_frame1)
-        source_1_queue.put(test_frame1)
-        source_1_queue.put(test_frame1)
-        source_1_queue.put(test_frame1)
+        source_2_queue.put(test_frame2)
+        source_2_queue.put(test_frame2)
+        source_2_queue.put(test_frame2)
+        source_2_queue.put(test_frame2)
         yield clk.posedge
 
         yield delay(150)
         yield clk.posedge
-        source_2_queue.put(test_frame2)
+        source_1_queue.put(test_frame1)
         
         while input_0_axis_tvalid or input_1_axis_tvalid or input_2_axis_tvalid or input_3_axis_tvalid:
             yield clk.posedge
@@ -520,24 +520,6 @@ def bench():
         if not sink_queue.empty():
             rx_frame = sink_queue.get()
 
-        assert rx_frame == test_frame2
-
-        rx_frame = None
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
-
-        assert rx_frame == test_frame1
-
-        rx_frame = None
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
-
-        assert rx_frame == test_frame1
-
-        rx_frame = None
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
-
         assert rx_frame == test_frame1
 
         rx_frame = None
@@ -550,7 +532,25 @@ def bench():
         if not sink_queue.empty():
             rx_frame = sink_queue.get()
 
+        assert rx_frame == test_frame2
+
+        rx_frame = None
+        if not sink_queue.empty():
+            rx_frame = sink_queue.get()
+
+        assert rx_frame == test_frame2
+
+        rx_frame = None
+        if not sink_queue.empty():
+            rx_frame = sink_queue.get()
+
         assert rx_frame == test_frame1
+
+        rx_frame = None
+        if not sink_queue.empty():
+            rx_frame = sink_queue.get()
+
+        assert rx_frame == test_frame2
 
         yield delay(100)
 

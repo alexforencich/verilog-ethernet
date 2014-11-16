@@ -33,7 +33,9 @@ module axis_arb_mux_4 #
 (
     parameter DATA_WIDTH = 8,
     // arbitration type: "PRIORITY" or "ROUND_ROBIN"
-    parameter ARB_TYPE = "PRIORITY"
+    parameter ARB_TYPE = "PRIORITY",
+    // LSB priority: "LOW", "HIGH"
+    parameter LSB_PRIORITY = "HIGH"
 )
 (
     input  wire                   clk,
@@ -79,6 +81,7 @@ module axis_arb_mux_4 #
 wire [3:0] request;
 wire [3:0] acknowledge;
 wire [3:0] grant;
+wire grant_valid;
 wire [1:0] grant_encoded;
 
 assign acknowledge[0] = input_0_axis_tvalid & input_0_axis_tready & input_0_axis_tlast;
@@ -122,6 +125,7 @@ mux_inst (
     .output_axis_tready(output_axis_tready),
     .output_axis_tlast(output_axis_tlast),
     .output_axis_tuser(output_axis_tuser),
+    .enable(grant_valid),
     .select(grant_encoded)
 );
 
@@ -129,7 +133,8 @@ mux_inst (
 arbiter #(
     .PORTS(4),
     .TYPE(ARB_TYPE),
-    .BLOCK("ACKNOWLEDGE")
+    .BLOCK("ACKNOWLEDGE"),
+    .LSB_PRIORITY(LSB_PRIORITY)
 )
 arb_inst (
     .clk(clk),
@@ -137,6 +142,7 @@ arb_inst (
     .request(request),
     .acknowledge(acknowledge),
     .grant(grant),
+    .grant_valid(grant_valid),
     .grant_encoded(grant_encoded)
 );
 

@@ -132,6 +132,7 @@ module {{name}} #
     /*
      * Control
      */
+    input  wire                   enable,
     input  wire [{{w-1}}:0]             select
 );
 
@@ -176,7 +177,7 @@ always @* begin
             // end of frame detection
             frame_next = ~input_axis_tlast;
         end
-    end else if (input_axis_tvalid & ~current_output_tvalid) begin
+    end else if (enable & input_axis_tvalid & ~current_output_tvalid) begin
         // start of frame, grab select value
         frame_next = 1;
         select_next = select;
