@@ -35,7 +35,9 @@ module arbiter #
     // arbitration type: "PRIORITY" or "ROUND_ROBIN"
     parameter TYPE = "PRIORITY",
     // block type: "NONE", "REQUEST", "ACKNOWLEDGE"
-    parameter BLOCK = "NONE"
+    parameter BLOCK = "NONE",
+    // LSB priority: "LOW", "HIGH"
+    parameter LSB_PRIORITY = "LOW"
 )
 (
     input  wire                     clk,
@@ -62,7 +64,8 @@ wire [$clog2(PORTS)-1:0] request_index;
 wire [PORTS-1:0] request_mask;
 
 priority_encoder #(
-    .WIDTH(PORTS)
+    .WIDTH(PORTS),
+    .LSB_PRIORITY(LSB_PRIORITY)
 )
 priority_encoder_inst (
     .input_unencoded(request),
@@ -78,7 +81,8 @@ wire [$clog2(PORTS)-1:0] masked_request_index;
 wire [PORTS-1:0] masked_request_mask;
 
 priority_encoder #(
-    .WIDTH(PORTS)
+    .WIDTH(PORTS),
+    .LSB_PRIORITY(LSB_PRIORITY)
 )
 priority_encoder_masked (
     .input_unencoded(request & mask_reg),
@@ -113,12 +117,20 @@ always @* begin
                 grant_valid_next = 1;
                 grant_next = masked_request_mask;
                 grant_encoded_next = masked_request_index;
-                mask_next = {PORTS{1'b1}} >> (PORTS - masked_request_index);
+                if (LSB_PRIORITY == "LOW") begin
+                    mask_next = {PORTS{1'b1}} >> (PORTS - masked_request_index);
+                end else begin
+                    mask_next = {PORTS{1'b1}} << (masked_request_index + 1);
+                end
             end else begin
                 grant_valid_next = 1;
                 grant_next = request_mask;
                 grant_encoded_next = request_index;
-                mask_next = {PORTS{1'b1}} >> (PORTS - request_index);
+                if (LSB_PRIORITY == "LOW") begin
+                    mask_next = {PORTS{1'b1}} >> (PORTS - request_index);
+                end else begin
+                    mask_next = {PORTS{1'b1}} << (request_index + 1);
+                end
             end
         end
     end
