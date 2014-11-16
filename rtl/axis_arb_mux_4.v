@@ -79,6 +79,7 @@ module axis_arb_mux_4 #
 wire [3:0] request;
 wire [3:0] acknowledge;
 wire [3:0] grant;
+wire grant_valid;
 wire [1:0] grant_encoded;
 
 assign acknowledge[0] = input_0_axis_tvalid & input_0_axis_tready & input_0_axis_tlast;
@@ -122,6 +123,7 @@ mux_inst (
     .output_axis_tready(output_axis_tready),
     .output_axis_tlast(output_axis_tlast),
     .output_axis_tuser(output_axis_tuser),
+    .enable(grant_valid),
     .select(grant_encoded)
 );
 
@@ -137,6 +139,7 @@ arb_inst (
     .request(request),
     .acknowledge(acknowledge),
     .grant(grant),
+    .grant_valid(grant_valid),
     .grant_encoded(grant_encoded)
 );
 

@@ -56,6 +56,7 @@ reg input_3_axis_tuser = 0;
 
 reg output_axis_tready = 0;
 
+reg enable = 0;
 reg [1:0] select = 0;
 
 // Outputs
@@ -96,6 +97,7 @@ initial begin
                 input_3_axis_tlast,
                 input_3_axis_tuser,
                 output_axis_tready,
+                enable,
                 select);
     $to_myhdl(input_0_axis_tready,
               input_1_axis_tready,
@@ -151,6 +153,7 @@ UUT (
     .output_axis_tlast(output_axis_tlast),
     .output_axis_tuser(output_axis_tuser),
     // Control
+    .enable(enable),
     .select(select)
 );
 
