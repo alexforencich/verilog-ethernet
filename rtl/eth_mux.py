@@ -235,6 +235,13 @@ always @* begin
         // start of frame, grab select value
         frame_next = 1;
         select_next = select;
+
+        case (select_next)
+{%- for p in ports %}
+            {{w}}'d{{p}}: input_{{p}}_eth_hdr_ready_next = 1;
+{%- endfor %}
+        endcase
+
         output_eth_hdr_valid_next = 1;
         output_eth_dest_mac_next = selected_input_eth_dest_mac;
         output_eth_src_mac_next = selected_input_eth_src_mac;
@@ -244,10 +251,7 @@ always @* begin
     // generate ready signal on selected port
     case (select_next)
 {%- for p in ports %}
-        {{w}}'d{{p}}: begin
-            input_{{p}}_eth_hdr_ready_next = input_{{p}}_eth_hdr_ready_next | (frame_next & ~frame_reg);
-            input_{{p}}_eth_payload_tready_next = output_eth_payload_tready_int_early & frame_next;
-        end
+        {{w}}'d{{p}}: input_{{p}}_eth_payload_tready_next = output_eth_payload_tready_int_early & frame_next;
 {%- endfor %}
     endcase
 

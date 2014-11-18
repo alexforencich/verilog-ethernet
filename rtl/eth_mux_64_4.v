@@ -255,6 +255,14 @@ always @* begin
         // start of frame, grab select value
         frame_next = 1;
         select_next = select;
+
+        case (select_next)
+            2'd0: input_0_eth_hdr_ready_next = 1;
+            2'd1: input_1_eth_hdr_ready_next = 1;
+            2'd2: input_2_eth_hdr_ready_next = 1;
+            2'd3: input_3_eth_hdr_ready_next = 1;
+        endcase
+
         output_eth_hdr_valid_next = 1;
         output_eth_dest_mac_next = selected_input_eth_dest_mac;
         output_eth_src_mac_next = selected_input_eth_src_mac;
@@ -263,22 +271,10 @@ always @* begin
 
     // generate ready signal on selected port
     case (select_next)
-        2'd0: begin
-            input_0_eth_hdr_ready_next = input_0_eth_hdr_ready_next | (frame_next & ~frame_reg);
-            input_0_eth_payload_tready_next = output_eth_payload_tready_int_early & frame_next;
-        end
-        2'd1: begin
-            input_1_eth_hdr_ready_next = input_1_eth_hdr_ready_next | (frame_next & ~frame_reg);
-            input_1_eth_payload_tready_next = output_eth_payload_tready_int_early & frame_next;
-        end
-        2'd2: begin
-            input_2_eth_hdr_ready_next = input_2_eth_hdr_ready_next | (frame_next & ~frame_reg);
-            input_2_eth_payload_tready_next = output_eth_payload_tready_int_early & frame_next;
-        end
-        2'd3: begin
-            input_3_eth_hdr_ready_next = input_3_eth_hdr_ready_next | (frame_next & ~frame_reg);
-            input_3_eth_payload_tready_next = output_eth_payload_tready_int_early & frame_next;
-        end
+        2'd0: input_0_eth_payload_tready_next = output_eth_payload_tready_int_early & frame_next;
+        2'd1: input_1_eth_payload_tready_next = output_eth_payload_tready_int_early & frame_next;
+        2'd2: input_2_eth_payload_tready_next = output_eth_payload_tready_int_early & frame_next;
+        2'd3: input_3_eth_payload_tready_next = output_eth_payload_tready_int_early & frame_next;
     endcase
 
     // pass through selected packet data
