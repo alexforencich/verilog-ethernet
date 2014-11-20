@@ -32,7 +32,15 @@ THE SOFTWARE.
 module axis_stat_counter #
 (
     parameter DATA_WIDTH = 64,
-    parameter KEEP_WIDTH = (DATA_WIDTH/8)
+    parameter KEEP_WIDTH = (DATA_WIDTH/8),
+    parameter TAG_ENABLE = 1,
+    parameter TAG_WIDTH = 16,
+    parameter TICK_COUNT_ENABLE = 1,
+    parameter TICK_COUNT_WIDTH = 32,
+    parameter BYTE_COUNT_ENABLE = 1,
+    parameter BYTE_COUNT_WIDTH = 32,
+    parameter FRAME_COUNT_ENABLE = 1,
+    parameter FRAME_COUNT_WIDTH = 32
 )
 (
     input  wire                   clk,
@@ -58,7 +66,7 @@ module axis_stat_counter #
     /*
      * Configuration
      */
-    input  wire [15:0] tag,
+    input  wire [TAG_WIDTH-1:0] tag,
     input  wire        trigger,
 
     /*
@@ -67,6 +75,12 @@ module axis_stat_counter #
     output wire        busy
 );
 
+localparam TAG_BYTE_WIDTH = (TAG_WIDTH + 7) / 8;
+localparam TICK_COUNT_BYTE_WIDTH = (TICK_COUNT_WIDTH + 7) / 8;
+localparam BYTE_COUNT_BYTE_WIDTH = (BYTE_COUNT_WIDTH + 7) / 8;
+localparam FRAME_COUNT_BYTE_WIDTH = (FRAME_COUNT_WIDTH + 7) / 8;
+localparam TOTAL_LENGTH = TAG_BYTE_WIDTH + TICK_COUNT_BYTE_WIDTH + BYTE_COUNT_BYTE_WIDTH + FRAME_COUNT_BYTE_WIDTH;
+
 // state register
 localparam [1:0]
     STATE_IDLE = 2'd0,
@@ -74,17 +88,17 @@ localparam [1:0]
 
 reg [1:0] state_reg = STATE_IDLE, state_next;
 
-reg [31:0] tick_count_reg = 0, tick_count_next;
-reg [31:0] byte_count_reg = 0, byte_count_next;
-reg [31:0] frame_count_reg = 0, frame_count_next;
+reg [TICK_COUNT_WIDTH-1:0] tick_count_reg = 0, tick_count_next;
+reg [BYTE_COUNT_WIDTH-1:0] byte_count_reg = 0, byte_count_next;
+reg [FRAME_COUNT_WIDTH-1:0] frame_count_reg = 0, frame_count_next;
 reg frame_reg = 0, frame_next;
 
 reg store_output;
-reg [5:0] frame_ptr_reg = 0, frame_ptr_next;
+reg [$clog2(TOTAL_LENGTH)-1:0] frame_ptr_reg = 0, frame_ptr_next;
 
-reg [31:0] tick_count_output_reg = 0;
-reg [31:0] byte_count_output_reg = 0;
-reg [31:0] frame_count_output_reg = 0;
+reg [TICK_COUNT_WIDTH-1:0] tick_count_output_reg = 0;
+reg [BYTE_COUNT_WIDTH-1:0] byte_count_output_reg = 0;
+reg [FRAME_COUNT_WIDTH-1:0] frame_count_output_reg = 0;
 
 reg busy_reg = 0;
 
@@ -98,35 +112,7 @@ wire       output_axis_tready_int_early;
 
 assign busy = busy_reg;
 
-function [3:0] keep2count;
-    input [7:0] k;
-    case (k)
-        8'b00000000: keep2count = 0;
-        8'b00000001: keep2count = 1;
-        8'b00000011: keep2count = 2;
-        8'b00000111: keep2count = 3;
-        8'b00001111: keep2count = 4;
-        8'b00011111: keep2count = 5;
-        8'b00111111: keep2count = 6;
-        8'b01111111: keep2count = 7;
-        8'b11111111: keep2count = 8;
-    endcase
-endfunction
-
-function [7:0] count2keep;
-    input [3:0] k;
-    case (k)
-        4'd0: count2keep = 8'b00000000;
-        4'd1: count2keep = 8'b00000001;
-        4'd2: count2keep = 8'b00000011;
-        4'd3: count2keep = 8'b00000111;
-        4'd4: count2keep = 8'b00001111;
-        4'd5: count2keep = 8'b00011111;
-        4'd6: count2keep = 8'b00111111;
-        4'd7: count2keep = 8'b01111111;
-        4'd8: count2keep = 8'b11111111;
-    endcase
-endfunction
+integer offset, i, bit_cnt;
 
 always @* begin
     state_next = 2'bz;
@@ -158,7 +144,15 @@ always @* begin
 
                 if (output_axis_tready_int) begin
                     frame_ptr_next = 1;
-                    output_axis_tdata_int = tag[15:8];
+                    if (TAG_ENABLE) begin
+                        output_axis_tdata_int = tag[(TAG_BYTE_WIDTH-1)*8 +: 8];
+                    end else if (TICK_COUNT_ENABLE) begin
+                        output_axis_tdata_int = tag[(TICK_COUNT_BYTE_WIDTH-1)*8 +: 8];
+                    end else if (BYTE_COUNT_ENABLE) begin
+                        output_axis_tdata_int = tag[(BYTE_COUNT_BYTE_WIDTH-1)*8 +: 8];
+                    end else if (FRAME_COUNT_ENABLE) begin
+                        output_axis_tdata_int = tag[(FRAME_COUNT_BYTE_WIDTH-1)*8 +: 8];
+                    end
                     output_axis_tvalid_int = 1;
                 end
 
@@ -172,26 +166,44 @@ always @* begin
                 state_next = STATE_OUTPUT_DATA;
                 frame_ptr_next = frame_ptr_reg + 1;
                 output_axis_tvalid_int = 1;
-                case (frame_ptr_reg)
-                    5'd00: output_axis_tdata_int = tag[15:8];
-                    5'd01: output_axis_tdata_int = tag[7:0];
-                    5'd02: output_axis_tdata_int = tick_count_output_reg[31:24];
-                    5'd03: output_axis_tdata_int = tick_count_output_reg[23:16];
-                    5'd04: output_axis_tdata_int = tick_count_output_reg[15: 8];
-                    5'd05: output_axis_tdata_int = tick_count_output_reg[ 7: 0];
-                    5'd06: output_axis_tdata_int = byte_count_output_reg[31:24];
-                    5'd07: output_axis_tdata_int = byte_count_output_reg[23:16];
-                    5'd08: output_axis_tdata_int = byte_count_output_reg[15: 8];
-                    5'd09: output_axis_tdata_int = byte_count_output_reg[ 7: 0];
-                    5'd10: output_axis_tdata_int = frame_count_output_reg[31:24];
-                    5'd11: output_axis_tdata_int = frame_count_output_reg[23:16];
-                    5'd12: output_axis_tdata_int = frame_count_output_reg[15: 8];
-                    5'd13: begin
-                        output_axis_tdata_int = frame_count_output_reg[ 7: 0];
-                        output_axis_tlast_int = 1;
-                        state_next = STATE_IDLE;
+
+                offset = 0;
+                if (TAG_ENABLE) begin
+                    for (i = TAG_BYTE_WIDTH-1; i >= 0; i = i - 1) begin
+                        if (frame_ptr_reg == offset) begin
+                            output_axis_tdata_int = tag[i*8 +: 8];
+                        end
+                        offset = offset + 1;
                     end
-                endcase
+                end
+                if (TICK_COUNT_ENABLE) begin
+                    for (i = TICK_COUNT_BYTE_WIDTH-1; i >= 0; i = i - 1) begin
+                        if (frame_ptr_reg == offset) begin
+                            output_axis_tdata_int = tick_count_output_reg[i*8 +: 8];
+                        end
+                        offset = offset + 1;
+                    end
+                end
+                if (BYTE_COUNT_ENABLE) begin
+                    for (i = BYTE_COUNT_BYTE_WIDTH-1; i >= 0; i = i - 1) begin
+                        if (frame_ptr_reg == offset) begin
+                            output_axis_tdata_int = byte_count_output_reg[i*8 +: 8];
+                        end
+                        offset = offset + 1;
+                    end
+                end
+                if (FRAME_COUNT_ENABLE) begin
+                    for (i = FRAME_COUNT_BYTE_WIDTH-1; i >= 0; i = i - 1) begin
+                        if (frame_ptr_reg == offset) begin
+                            output_axis_tdata_int = frame_count_output_reg[i*8 +: 8];
+                        end
+                        offset = offset + 1;
+                    end
+                end
+                if (frame_ptr_reg == offset-1) begin
+                    output_axis_tlast_int = 1;
+                    state_next = STATE_IDLE;
+                end
             end else begin
                 state_next = STATE_OUTPUT_DATA;
             end
@@ -207,7 +219,11 @@ always @* begin
         // valid transfer cycle
 
         // increment byte count by number of words transferred
-        byte_count_next = byte_count_next + keep2count(monitor_axis_tkeep);
+        bit_cnt = 0;
+        for (i = 0; i < KEEP_WIDTH; i = i + 1) begin
+            bit_cnt = bit_cnt + monitor_axis_tkeep[i];
+        end
+        byte_count_next = byte_count_next + bit_cnt;
 
         // count frames
         if (monitor_axis_tlast) begin

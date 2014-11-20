@@ -31,7 +31,8 @@ THE SOFTWARE.
  */
 module axis_frame_join_4 #
 (
-    parameter ENABLE_TAG = 1
+    parameter TAG_ENABLE = 1,
+    parameter TAG_WIDTH = 16
 )
 (
     input  wire        clk,
@@ -76,13 +77,15 @@ module axis_frame_join_4 #
     /*
      * Configuration
      */
-    input  wire [15:0] tag,
+    input  wire [TAG_WIDTH-1:0] tag,
 
     /*
      * Status signals
      */
     output wire        busy
 );
+
+localparam TAG_BYTE_WIDTH = (TAG_WIDTH + 7) / 8;
 
 // state register
 localparam [1:0]
@@ -154,6 +157,8 @@ always @* begin
     endcase
 end
 
+integer offset, i;
+
 always @* begin
     state_next = 2'bz;
 
@@ -179,7 +184,7 @@ always @* begin
             port_sel_next = 0;
             output_tuser_next = 0;
 
-            if (ENABLE_TAG) begin
+            if (TAG_ENABLE) begin
                 // next cycle if started will send tag, so do not enable input
                 input_0_axis_tready_next = 0;
             end else begin
@@ -189,15 +194,14 @@ always @* begin
             
             if (input_0_axis_tvalid) begin
                 // input 0 valid; start transferring data
-                if (ENABLE_TAG) begin
+                if (TAG_ENABLE) begin
                     // tag enabled, so transmit it
                     if (output_axis_tready_int) begin
                         // output is ready, so short-circuit first tag byte
                         frame_ptr_next = 1;
-                        output_axis_tdata_int = tag[15:8];
+                        output_axis_tdata_int = tag[(TAG_BYTE_WIDTH-1)*8 +: 8];
                         output_axis_tvalid_int = 1;
                     end
-                    
                     state_next = STATE_WRITE_TAG;
                 end else begin
                     // tag disabled, so transmit data
@@ -219,15 +223,20 @@ always @* begin
                 state_next = STATE_WRITE_TAG;
                 frame_ptr_next = frame_ptr_reg + 1;
                 output_axis_tvalid_int = 1;
-                case (frame_ptr_reg)
-                    2'd0: output_axis_tdata_int = tag[15:8];
-                    2'd1: begin
-                        // last tag byte - get ready to send data, enable input if ready
-                        output_axis_tdata_int = tag[7:0];
-                        input_0_axis_tready_next = output_axis_tready_int_early;
-                        state_next = STATE_TRANSFER;
+
+                offset = 0;
+                if (TAG_ENABLE) begin
+                    for (i = TAG_BYTE_WIDTH-1; i >= 0; i = i - 1) begin
+                        if (frame_ptr_reg == offset) begin
+                            output_axis_tdata_int = tag[i*8 +: 8];
+                        end
+                        offset = offset + 1;
                     end
-                endcase
+                end
+                if (frame_ptr_reg == offset-1) begin
+                    input_0_axis_tready_next = output_axis_tready_int_early;
+                    state_next = STATE_TRANSFER;
+                end
             end else begin
                 state_next = STATE_WRITE_TAG;
             end
