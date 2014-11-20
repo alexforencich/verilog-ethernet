@@ -14,21 +14,205 @@ intelligent bus cosimulation endpoints.
 
 ## Documentation
 
-## eth_axis_rx module
+### arp_eth_rx module
 
-Ethernet frame receiver.  
+ARP frame receiver.
 
-## eth_axis_rx_64 module
+### arp_eth_rx_64 module
+
+ARP frame receiver with 64 bit datapath for 10G Ethernet.
+
+### arp_eth_tx module
+
+ARP frame transmitter.
+
+### arp_eth_tx_64 module
+
+ARP frame transmitter with 64 bit datapath for 10G Ethernet.
+
+### eth_arb_mux_N module
+
+Ethernet frame arbitrated muliplexer with 8 bit data width for gigabit
+Ethernet.  Supports priority and round-robin arbitration.
+
+Can be generated with arbitrary port counts with eth_arb_mux.py.
+
+### eth_arb_mux_64_N module
+
+Ethernet frame arbitrated muliplexer with 8 bit data width for 10G Ethernet.
+Supports priority and round-robin arbitration.
+
+Can be generated with arbitrary port counts with eth_arb_mux_64.py.
+
+### eth_axis_rx module
+
+Ethernet frame receiver.
+
+### eth_axis_rx_64 module
 
 Ethernet frame receiver with 64 bit datapath for 10G Ethernet.
 
-## eth_axis_tx module
+### eth_axis_tx module
 
 Ethernet frame transmitter.
 
-## eth_axis_tx_64 module
+### eth_axis_tx_64 module
 
 Ethernet frame transmitter with 64 bit datapath for 10G Ethernet.
+
+### eth_demux_N module
+
+Ethernet frame demuliplexer with 8 bit data width for gigabit Ethernet.
+Supports priority and round-robin arbitration.
+
+Can be generated with arbitrary port counts with eth_demux.py.
+
+### eth_demux_64_N module
+
+Ethernet frame demuliplexer with 64 bit data width for 10G Ethernet.  Supports
+priority and round-robin arbitration.
+
+Can be generated with arbitrary port counts with eth_demux_64.py.
+
+### eth_mux_N module
+
+Ethernet frame muliplexer with 8 bit data width for gigabit Ethernet.
+Supports priority and round-robin arbitration.
+
+Can be generated with arbitrary port counts with eth_mux.py.
+
+### eth_mux_64_N module
+
+Ethernet frame muliplexer with 64 bit data width for 10G Ethernet.  Supports
+priority and round-robin arbitration.
+
+Can be generated with arbitrary port counts with eth_mux_64.py.
+
+### ip module
+
+IPv4 block with 8 bit data width for gigabit Ethernet.  Manages IPv4 packet
+transmssion and reception.  Interfaces with ARP module for MAC address lookup.
+
+### ip_64 module
+
+IPv4 block with 64 bit data width for 10G Ethernet.  Manages IPv4 packet
+transmssion and reception.  Interfaces with ARP module for MAC address lookup.
+
+### ip_arb_mux_N module
+
+IP frame arbitrated muliplexer with 8 bit data width for gigabit
+Ethernet.  Supports priority and round-robin arbitration.
+
+Can be generated with arbitrary port counts with ip_arb_mux.py.
+
+### ip_arb_mux_64_N module
+
+IP frame arbitrated muliplexer with 8 bit data width for 10G Ethernet.
+Supports priority and round-robin arbitration.
+
+Can be generated with arbitrary port counts with ip_arb_mux_64.py.
+
+### ip_eth_rx module
+
+IP frame receiver.
+
+### ip_eth_rx_64 module
+
+IP frame receiver with 64 bit datapath for 10G Ethernet.
+
+### ip_eth_tx module
+
+IP frame transmitter.
+
+### ip_eth_tx_64 module
+
+IP frame transmitter with 64 bit datapath for 10G Ethernet.
+
+### ip_demux_N module
+
+IP frame demuliplexer with 8 bit data width for gigabit Ethernet.
+Supports priority and round-robin arbitration.
+
+Can be generated with arbitrary port counts with ip_demux.py.
+
+### ip_demux_64_N module
+
+IP frame demuliplexer with 64 bit data width for 10G Ethernet.  Supports
+priority and round-robin arbitration.
+
+Can be generated with arbitrary port counts with ip_demux_64.py.
+
+### ip_mux_N module
+
+IP frame muliplexer with 8 bit data width for gigabit Ethernet.
+Supports priority and round-robin arbitration.
+
+Can be generated with arbitrary port counts with ip_mux.py.
+
+### ip_mux_64_N module
+
+IP frame muliplexer with 64 bit data width for 10G Ethernet.  Supports
+priority and round-robin arbitration.
+
+Can be generated with arbitrary port counts with ip_mux_64.py.
+
+### udp_arb_mux_N module
+
+UDP frame arbitrated muliplexer with 8 bit data width for gigabit
+Ethernet.  Supports priority and round-robin arbitration.
+
+Can be generated with arbitrary port counts with udp_arb_mux.py.
+
+### udp_arb_mux_64_N module
+
+UDP frame arbitrated muliplexer with 8 bit data width for 10G Ethernet.
+Supports priority and round-robin arbitration.
+
+Can be generated with arbitrary port counts with udp_arb_mux_64.py.
+
+### udp_ip_rx module
+
+UDP frame receiver.
+
+### udp_ip_rx_64 module
+
+UDP frame receiver with 64 bit datapath for 10G Ethernet.
+
+### udp_ip_tx module
+
+UDP frame transmitter.
+
+### udp_ip_tx_64 module
+
+UDP frame transmitter with 64 bit datapath for 10G Ethernet.
+
+### udp_demux_N module
+
+UDP frame demuliplexer with 8 bit data width for gigabit Ethernet.
+Supports priority and round-robin arbitration.
+
+Can be generated with arbitrary port counts with udp_demux.py.
+
+### udp_demux_64_N module
+
+UDP frame demuliplexer with 64 bit data width for 10G Ethernet.  Supports
+priority and round-robin arbitration.
+
+Can be generated with arbitrary port counts with udp_demux_64.py.
+
+### udp_mux_N module
+
+UDP frame muliplexer with 8 bit data width for gigabit Ethernet.
+Supports priority and round-robin arbitration.
+
+Can be generated with arbitrary port counts with udp_mux.py.
+
+### udp_mux_64_N module
+
+UDP frame muliplexer with 64 bit data width for 10G Ethernet.  Supports
+priority and round-robin arbitration.
+
+Can be generated with arbitrary port counts with udp_mux_64.py.
 
 ### Common signals
 
@@ -41,13 +225,88 @@ Ethernet frame transmitter with 64 bit datapath for 10G Ethernet.
 
 ### Source Files
 
-    rtl/arbiter.v                   : General-purpose parametrizable arbiter
+    rtl/arp_eth_rx.v                : ARP frame receiver
+    rtl/arp_eth_rx_64.v             : ARP frame receiver (64 bit)
+    rtl/arp_eth_tx.v                : ARP frame transmitter
+    rtl/arp_eth_tx_64.v             : ARP frame transmitter (64 bit)
+    rtl/eth_arb_mux.py              : Ethernet frame arbitrated multiplexer generator
+    rtl/eth_arb_mux_4.v             : 4 port Ethernet frame arbitrated multiplexer
+    rtl/eth_arb_mux_64.py           : Ethernet frame arbitrated multiplexer generator (64 bit)
+    rtl/eth_arb_mux_64_4.v          : 4 port Ethernet frame arbitrated multiplexer (64 bit)
     rtl/eth_axis_rx.v               : Ethernet frame receiver
     rtl/eth_axis_rx_64.v            : Ethernet frame receiver (64 bit)
     rtl/eth_axis_tx.v               : Ethernet frame transmitter
     rtl/eth_axis_tx_64.v            : Ethernet frame transmitter (64 bit)
+    rtl/eth_demux.py                : Ethernet frame demultiplexer generator
+    rtl/eth_demux_4.v               : 4 port Ethernet frame demultiplexer
+    rtl/eth_demux_64.py             : Ethernet frame demultiplexer generator (64 bit)
+    rtl/eth_demux_64_4.v            : 4 port Ethernet frame demultiplexer (64 bit)
+    rtl/eth_mux.py                  : Ethernet frame multiplexer generator
+    rtl/eth_mux_4.v                 : 4 port Ethernet frame multiplexer
+    rtl/eth_mux_64.py               : Ethernet frame multiplexer generator (64 bit)
+    rtl/eth_mux_64_4.v              : 4 port Ethernet frame multiplexer (64 bit)
+    rtl/ip.v                        : IPv4 block
+    rtl/ip_64.v                     : IPv4 block (64 bit)
+    rtl/ip_arb_mux.py               : IP frame arbitrated multiplexer generator
+    rtl/ip_arb_mux_4.v              : 4 port IP frame arbitrated multiplexer
+    rtl/ip_arb_mux_64.py            : IP frame arbitrated multiplexer generator (64 bit)
+    rtl/ip_arb_mux_64_4.v           : 4 port IP frame arbitrated multiplexer (64 bit)
+    rtl/ip_eth_rx.v                 : IPv4 frame receiver
+    rtl/ip_eth_rx_64.v              : IPv4 frame receiver (64 bit)
+    rtl/ip_eth_tx.v                 : IPv4 frame transmitter
+    rtl/ip_eth_tx_64.v              : IPv4 frame transmitter (64 bit)
+    rtl/ip_demux.py                 : IP frame demultiplexer generator
+    rtl/ip_demux_4.v                : 4 port IP frame demultiplexer
+    rtl/ip_demux_64.py              : IP frame demultiplexer generator (64 bit)
+    rtl/ip_demux_64_4.v             : 4 port IP frame demultiplexer (64 bit)
+    rtl/ip_mux.py                   : IP frame multiplexer generator
+    rtl/ip_mux_4.v                  : 4 port IP frame multiplexer
+    rtl/ip_mux_64.py                : IP frame multiplexer generator (64 bit)
+    rtl/ip_mux_64_4.v               : 4 port IP frame multiplexer (64 bit)
+    rtl/udp_arb_mux.py              : UDP frame arbitrated multiplexer generator
+    rtl/udp_arb_mux_4.v             : 4 port UDP frame arbitrated multiplexer
+    rtl/udp_arb_mux_64.py           : UDP frame arbitrated multiplexer generator (64 bit)
+    rtl/udp_arb_mux_64_4.v          : 4 port UDP frame arbitrated multiplexer (64 bit)
+    rtl/udp_ip_rx.v                 : UDP frame receiver
+    rtl/udp_ip_rx_64.v              : UDP frame receiver (64 bit)
+    rtl/udp_ip_tx.v                 : UDP frame transmitter
+    rtl/udp_ip_tx_64.v              : UDP frame transmitter (64 bit)
+    rtl/udp_demux.py                : UDP frame demultiplexer generator
+    rtl/udp_demux_4.v               : 4 port UDP frame demultiplexer
+    rtl/udp_demux_64.py             : UDP frame demultiplexer generator (64 bit)
+    rtl/udp_demux_64_4.v            : 4 port UDP frame demultiplexer (64 bit)
+    rtl/udp_mux.py                  : UDP frame multiplexer generator
+    rtl/udp_mux_4.v                 : 4 port UDP frame multiplexer
+    rtl/udp_mux_64.py               : UDP frame multiplexer generator (64 bit)
+    rtl/udp_mux_64_4.v              : 4 port UDP frame multiplexer (64 bit)
 
 ### AXI Stream Interface Example
+
+transfer with header data
+
+                  __    __    __    __    __    __    __
+    clk        __/  \__/  \__/  \__/  \__/  \__/  \__/  \__
+               ______________                   ___________
+    hdr_ready                \_________________/
+                        _____ 
+    hdr_valid  ________/     \_____________________________
+                        _____
+    hdr_data   XXXXXXXXX_HDR_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+                        ___________ _____ _____
+    tdata      XXXXXXXXX_A0________X_A1__X_A2__XXXXXXXXXXXX
+                        ___________ _____ _____
+    tdata      XXXXXXXXX_A0________X_A1__X_A2__XXXXXXXXXXXX
+                        ___________ _____ _____
+    tkeep      XXXXXXXXX_K0________X_K1__X_K2__XXXXXXXXXXXX
+                        _______________________
+    tvalid     ________/                       \___________
+                              _________________
+    tready     ______________/                 \___________
+                                          _____
+    tlast      __________________________/     \___________
+
+    tuser      ____________________________________________
+
 
 two byte transfer with sink pause after each byte
 
