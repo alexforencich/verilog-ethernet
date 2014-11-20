@@ -102,7 +102,7 @@ initial begin
 end
 
 axis_frame_join_4 #(
-    .ENABLE_TAG(1)
+    .TAG_ENABLE(1)
 )
 UUT (
     .clk(clk),
