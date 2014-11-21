@@ -152,6 +152,7 @@ always @* begin
     output_eth_hdr_valid_next = output_eth_hdr_valid_reg & ~output_eth_hdr_ready;
 
     output_eth_payload_tdata_int = 0;
+    output_eth_payload_tkeep_int = 0;
     output_eth_payload_tvalid_int = 0;
     output_eth_payload_tlast_int = 0;
     output_eth_payload_tuser_int = 0;
