@@ -114,6 +114,7 @@ module {{name}} #
     input  wire [DATA_WIDTH-1:0]  input_{{p}}_axis_tdata,
     input  wire                   input_{{p}}_axis_tvalid,
     input  wire                   input_{{p}}_axis_tlast,
+    input  wire                   input_{{p}}_axis_tuser,
 {% endfor %}
     /*
      * AXI Stream outputs
@@ -122,6 +123,7 @@ module {{name}} #
     output wire [DATA_WIDTH-1:0]  output_{{p}}_axis_tdata,
     output wire                   output_{{p}}_axis_tvalid,
     output wire                   output_{{p}}_axis_tlast,
+    output wire                   output_{{p}}_axis_tuser,
 {% endfor %}
     /*
      * Control
@@ -134,12 +136,14 @@ module {{name}} #
 reg [DATA_WIDTH-1:0]  input_{{p}}_axis_tdata_reg = 0;
 reg                   input_{{p}}_axis_tvalid_reg = 0;
 reg                   input_{{p}}_axis_tlast_reg = 0;
+reg                   input_{{p}}_axis_tuser_reg = 0;
 {% endfor %}
 
 {%- for p in ports %}
 reg [DATA_WIDTH-1:0]  output_{{p}}_axis_tdata_reg = 0;
 reg                   output_{{p}}_axis_tvalid_reg = 0;
 reg                   output_{{p}}_axis_tlast_reg = 0;
+reg                   output_{{p}}_axis_tuser_reg = 0;
 {% endfor %}
 
 {%- for p in ports %}
@@ -149,6 +153,7 @@ reg [{{w-1}}:0]             output_{{p}}_select_reg = 0;
 assign output_{{p}}_axis_tdata = output_{{p}}_axis_tdata_reg;
 assign output_{{p}}_axis_tvalid = output_{{p}}_axis_tvalid_reg;
 assign output_{{p}}_axis_tlast = output_{{p}}_axis_tlast_reg;
+assign output_{{p}}_axis_tuser = output_{{p}}_axis_tuser_reg;
 {% endfor %}
 
 always @(posedge clk or posedge rst) begin
@@ -157,18 +162,23 @@ always @(posedge clk or posedge rst) begin
         output_{{p}}_select_reg <= 0;
 {%- endfor %}
 {% for p in ports %}
+        input_{{p}}_axis_tdata_reg <= 0;
         input_{{p}}_axis_tvalid_reg <= 0;
         input_{{p}}_axis_tlast_reg <= 0;
+        input_{{p}}_axis_tuser_reg <= 0;
 {%- endfor %}
 {% for p in ports %}
+        output_{{p}}_axis_tdata_reg <= 0;
         output_{{p}}_axis_tvalid_reg <= 0;
         output_{{p}}_axis_tlast_reg <= 0;
+        output_{{p}}_axis_tuser_reg <= 0;
 {%- endfor %}
     end else begin
 {%- for p in ports %}
         input_{{p}}_axis_tdata_reg <= input_{{p}}_axis_tdata;
         input_{{p}}_axis_tvalid_reg <= input_{{p}}_axis_tvalid;
         input_{{p}}_axis_tlast_reg <= input_{{p}}_axis_tlast;
+        input_{{p}}_axis_tuser_reg <= input_{{p}}_axis_tuser;
 {% endfor %}
 {%- for p in ports %}
         output_{{p}}_select_reg <= output_{{p}}_select;
@@ -181,6 +191,7 @@ always @(posedge clk or posedge rst) begin
                 output_{{p}}_axis_tdata_reg <= input_{{q}}_axis_tdata_reg;
                 output_{{p}}_axis_tvalid_reg <= input_{{q}}_axis_tvalid_reg;
                 output_{{p}}_axis_tlast_reg <= input_{{q}}_axis_tlast_reg;
+                output_{{p}}_axis_tuser_reg <= input_{{q}}_axis_tuser_reg;
             end
 {%- endfor %}
         endcase

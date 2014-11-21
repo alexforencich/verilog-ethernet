@@ -43,8 +43,8 @@ module priority_encoder #
 );
 
 // power-of-two width
-localparam W1 = 2**$clog2(WIDTH);
-localparam W2 = W1/2;
+parameter W1 = 2**$clog2(WIDTH);
+parameter W2 = W1/2;
 
 generate
     if (WIDTH == 2) begin
