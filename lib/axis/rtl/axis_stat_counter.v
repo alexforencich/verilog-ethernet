@@ -220,8 +220,9 @@ always @* begin
 
         // increment byte count by number of words transferred
         bit_cnt = 0;
-        for (i = 0; i < KEEP_WIDTH; i = i + 1) begin
-            bit_cnt = bit_cnt + monitor_axis_tkeep[i];
+        for (i = 0; i <= KEEP_WIDTH; i = i + 1) begin
+            //bit_cnt = bit_cnt + monitor_axis_tkeep[i];
+            if (monitor_axis_tkeep == ({KEEP_WIDTH{1'b1}}) >> (KEEP_WIDTH-i)) bit_cnt = i;
         end
         byte_count_next = byte_count_next + bit_cnt;
 
