@@ -250,13 +250,18 @@ Can be generated with arbitrary port counts with udp_mux_64.py.
 
 ### Source Files
 
+    rtl/arp.v                       : ARP handling logic
+    rtl/arp_64.v                    : ARP handling logic (64 bit)
+    rtl/arp_cache.v                 : ARP LRU cache
     rtl/arp_eth_rx.v                : ARP frame receiver
     rtl/arp_eth_rx_64.v             : ARP frame receiver (64 bit)
     rtl/arp_eth_tx.v                : ARP frame transmitter
     rtl/arp_eth_tx_64.v             : ARP frame transmitter (64 bit)
     rtl/eth_arb_mux.py              : Ethernet frame arbitrated multiplexer generator
+    rtl/eth_arb_mux_2.v             : 2 port Ethernet frame arbitrated multiplexer
     rtl/eth_arb_mux_4.v             : 4 port Ethernet frame arbitrated multiplexer
     rtl/eth_arb_mux_64.py           : Ethernet frame arbitrated multiplexer generator (64 bit)
+    rtl/eth_arb_mux_64_2.v          : 2 port Ethernet frame arbitrated multiplexer (64 bit)
     rtl/eth_arb_mux_64_4.v          : 4 port Ethernet frame arbitrated multiplexer (64 bit)
     rtl/eth_axis_rx.v               : Ethernet frame receiver
     rtl/eth_axis_rx_64.v            : Ethernet frame receiver (64 bit)
@@ -267,8 +272,10 @@ Can be generated with arbitrary port counts with udp_mux_64.py.
     rtl/eth_demux_64.py             : Ethernet frame demultiplexer generator (64 bit)
     rtl/eth_demux_64_4.v            : 4 port Ethernet frame demultiplexer (64 bit)
     rtl/eth_mux.py                  : Ethernet frame multiplexer generator
+    rtl/eth_mux_2.v                 : 4 port Ethernet frame multiplexer
     rtl/eth_mux_4.v                 : 4 port Ethernet frame multiplexer
     rtl/eth_mux_64.py               : Ethernet frame multiplexer generator (64 bit)
+    rtl/eth_mux_64_2.v              : 4 port Ethernet frame multiplexer (64 bit)
     rtl/eth_mux_64_4.v              : 4 port Ethernet frame multiplexer (64 bit)
     rtl/ip.v                        : IPv4 block
     rtl/ip_64.v                     : IPv4 block (64 bit)
@@ -276,6 +283,8 @@ Can be generated with arbitrary port counts with udp_mux_64.py.
     rtl/ip_arb_mux_4.v              : 4 port IP frame arbitrated multiplexer
     rtl/ip_arb_mux_64.py            : IP frame arbitrated multiplexer generator (64 bit)
     rtl/ip_arb_mux_64_4.v           : 4 port IP frame arbitrated multiplexer (64 bit)
+    rtl/ip_complete.v               : IPv4 stack (IP-ARP integration)
+    rtl/ip_complete_64.v            : IPv4 stack (IP-ARP integration) (64 bit)
     rtl/ip_eth_rx.v                 : IPv4 frame receiver
     rtl/ip_eth_rx_64.v              : IPv4 frame receiver (64 bit)
     rtl/ip_eth_tx.v                 : IPv4 frame transmitter
