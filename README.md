@@ -14,6 +14,19 @@ intelligent bus cosimulation endpoints.
 
 ## Documentation
 
+### arp module
+
+ARP handling logic with parametrizable retry timeout parameters.
+
+### arp_64 module
+
+ARP handling logic with parametrizable retry timeout parameters and 64 bit
+datapath for 10G Ethernet.
+
+### arp_cache module
+
+Basic LRU cache for ARP entries.  Parametrizable depth.  
+
 ### arp_eth_rx module
 
 ARP frame receiver.
@@ -111,6 +124,18 @@ IP frame arbitrated muliplexer with 8 bit data width for 10G Ethernet.
 Supports priority and round-robin arbitration.
 
 Can be generated with arbitrary port counts with ip_arb_mux_64.py.
+
+### ip_complete module
+
+IPv4 module with ARP integration.
+
+Top level for gigabit IP stack.
+
+### ip_complete_64 module
+
+IPv4 module with ARP integration and 64 bit data width for 10G Ethernet.
+
+Top level for 10G IP stack.
 
 ### ip_eth_rx module
 
