@@ -247,7 +247,7 @@ reg drop_packet_reg = 0, drop_packet_next;
 assign input_ip_hdr_ready = input_ip_hdr_ready_reg;
 assign input_ip_payload_tready = outgoing_ip_payload_tready | drop_packet_reg;
 
-assign arp_request_valid = arp_request_valid_reg | input_ip_hdr_valid;
+assign arp_request_valid = arp_request_valid_reg | (input_ip_hdr_valid & ~input_ip_hdr_ready_reg);
 assign arp_request_ip = input_ip_dest_ip;
 
 assign tx_error_arp_failed = arp_response_error;
