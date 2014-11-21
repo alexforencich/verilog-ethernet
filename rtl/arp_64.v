@@ -330,7 +330,7 @@ always @* begin
     end
 
     // manage ARP lookup requests
-    if (~arp_request_operation_reg) begin
+    if (~arp_request_operation_reg & ~arp_response_valid) begin
         if (arp_request_valid) begin
             if (~(arp_request_ip | subnet_mask) == 0) begin
                 // broadcast address
@@ -359,7 +359,7 @@ always @* begin
             arp_request_retry_cnt_next = REQUEST_RETRY_COUNT-1;
             arp_request_timer_next = REQUEST_RETRY_INTERVAL;
         end
-    end else begin
+    end else if (arp_request_operation_reg) begin
         arp_request_timer_next = arp_request_timer_reg - 1;
         // if we got a response, it will go in the cache, so when the query succeds, we're done
         if (cache_query_response_valid  & ~cache_query_response_error) begin
