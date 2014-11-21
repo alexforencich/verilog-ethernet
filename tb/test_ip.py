@@ -35,9 +35,9 @@ module = 'ip'
 srcs = []
 
 srcs.append("../rtl/%s.v" % module)
-srcs.append("test_%s.v" % module)
 srcs.append("../rtl/ip_eth_rx.v")
 srcs.append("../rtl/ip_eth_tx.v")
+srcs.append("test_%s.v" % module)
 
 src = ' '.join(srcs)
 
