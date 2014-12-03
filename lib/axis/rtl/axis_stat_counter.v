@@ -147,11 +147,11 @@ always @* begin
                     if (TAG_ENABLE) begin
                         output_axis_tdata_int = tag[(TAG_BYTE_WIDTH-1)*8 +: 8];
                     end else if (TICK_COUNT_ENABLE) begin
-                        output_axis_tdata_int = tag[(TICK_COUNT_BYTE_WIDTH-1)*8 +: 8];
+                        output_axis_tdata_int = tick_count_reg[(TICK_COUNT_BYTE_WIDTH-1)*8 +: 8];
                     end else if (BYTE_COUNT_ENABLE) begin
-                        output_axis_tdata_int = tag[(BYTE_COUNT_BYTE_WIDTH-1)*8 +: 8];
+                        output_axis_tdata_int = byte_count_reg[(BYTE_COUNT_BYTE_WIDTH-1)*8 +: 8];
                     end else if (FRAME_COUNT_ENABLE) begin
-                        output_axis_tdata_int = tag[(FRAME_COUNT_BYTE_WIDTH-1)*8 +: 8];
+                        output_axis_tdata_int = frame_count_reg[(FRAME_COUNT_BYTE_WIDTH-1)*8 +: 8];
                     end
                     output_axis_tvalid_int = 1;
                 end
