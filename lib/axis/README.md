@@ -154,6 +154,27 @@ Datapath register.  Use to improve timing for long routes.
 
 Datapath register with tkeep signal.  Use to improve timing for long routes.
 
+### axis_srl_fifo module
+
+SRL-based FIFO.  Good for small FIFOs.  SRLs on Xilinx FPGAs have a very fast
+input setup time, so this module can be used to aid in timing closure.
+
+### axis_srl_fifo_64 module
+
+SRL-based FIFO with tkeep signal.  Good for small FIFOs.  SRLs on Xilinx FPGAs
+have a very fast input setup time, so this module can be used to aid in timing
+closure.
+
+### axis_srl_register module
+
+SRL-based register.  SRLs on Xilinx FPGAs have a very fast input setup time,
+so this module can be used to aid in timing closure.
+
+### axis_srl_register_64 module
+
+SRL-based register with tkeep signal.  SRLs on Xilinx FPGAs have a very fast
+input setup time, so this module can be used to aid in timing closure.
+
 ### axis_stat_counter module
 
 Statistics counter module.  Counts bytes and frames passing through monitored
@@ -213,6 +234,10 @@ Parametrizable priority encoder.
     rtl/axis_rate_limit_64.v        : Fractional rate limiter (64 bit)
     rtl/axis_register.v             : AXI Stream register
     rtl/axis_register_64.v          : AXI Stream register (64 bit)
+    rtl/axis_srl_fifo.v             : SRL-based FIFO
+    rtl/axis_srl_fifo_64.v          : SRL-based FIFO (64 bit)
+    rtl/axis_srl_register.v         : SRL-based register
+    rtl/axis_srl_register_64.v      : SRL-based register (64 bit)
     rtl/axis_stat_counter.v         : Statistics counter
     rtl/ll_axis_bridge.v            : LocalLink to AXI stream bridge
     rtl/priority_encoder.v          : Parametrizable priority encoder
