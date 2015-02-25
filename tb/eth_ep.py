@@ -26,19 +26,22 @@ from myhdl import *
 import axis_ep
 from Queue import Queue
 import struct
+import zlib
 
 class EthFrame(object):
-    def __init__(self, payload=b'', eth_dest_mac=0, eth_src_mac=0, eth_type=0):
+    def __init__(self, payload=b'', eth_dest_mac=0, eth_src_mac=0, eth_type=0, eth_fcs=None):
         self._payload = axis_ep.AXIStreamFrame()
         self.eth_dest_mac = eth_dest_mac
         self.eth_src_mac = eth_src_mac
         self.eth_type = eth_type
+        self.eth_fcs = eth_fcs
 
         if type(payload) is dict:
             self.payload = axis_ep.AXIStreamFrame(payload['eth_payload'])
             self.eth_dest_mac = payload['eth_dest_mac']
             self.eth_src_mac = payload['eth_src_mac']
             self.eth_type = payload['eth_type']
+            self.eth_fcs = payload['eth_fcs']
         if type(payload) is bytes:
             payload = bytearray(payload)
         if type(payload) is bytearray or type(payload) is axis_ep.AXIStreamFrame:
@@ -48,6 +51,7 @@ class EthFrame(object):
             self.eth_dest_mac = payload.eth_dest_mac
             self.eth_src_mac = payload.eth_src_mac
             self.eth_type = payload.eth_type
+            self.eth_fcs = payload.eth_fcs
 
     @property
     def payload(self):
@@ -56,6 +60,14 @@ class EthFrame(object):
     @payload.setter
     def payload(self, value):
         self._payload = axis_ep.AXIStreamFrame(value)
+
+    def calc_fcs(self):
+        frame = self.build_axis().data
+
+        return zlib.crc32(bytes(frame)) & 0xffffffff
+
+    def update_fcs(self):
+        self.eth_fcs = self.calc_fcs()
 
     def build_axis(self):
         data = b''
@@ -68,6 +80,16 @@ class EthFrame(object):
 
         return axis_ep.AXIStreamFrame(data)
 
+    def build_axis_fcs(self):
+        if self.eth_fcs is None:
+            self.update_fcs()
+
+        data = self.build_axis().data
+
+        data += struct.pack('<L', self.eth_fcs)
+
+        return axis_ep.AXIStreamFrame(data)
+
     def parse_axis(self, data):
         data = axis_ep.AXIStreamFrame(data).data
         self.eth_dest_mac = struct.unpack('>Q', '\x00\x00'+data[0:6])[0]
@@ -75,6 +97,12 @@ class EthFrame(object):
         self.eth_type = struct.unpack('>H', data[12:14])[0]
         data = data[14:]
         self.payload = axis_ep.AXIStreamFrame(data)
+
+    def parse_axis_fcs(self, data):
+        self.parse_axis(data)
+        data = self.payload.data
+        self.payload = axis_ep.AXIStreamFrame(data[:-4])
+        self.eth_fcs = struct.unpack('<L', data[-4:])[0]
 
     def __eq__(self, other):
         if type(other) is EthFrame:
@@ -84,7 +112,7 @@ class EthFrame(object):
                 self.payload == other.payload)
 
     def __repr__(self):
-        return 'EthFrame(payload=%s, eth_dest_mac=0x%012x, eth_src_mac=0x%012x, eth_type=0x%04x)' % (repr(self.payload), self.eth_dest_mac, self.eth_src_mac, self.eth_type)
+        return 'EthFrame(payload=%s, eth_dest_mac=0x%012x, eth_src_mac=0x%012x, eth_type=0x%04x, eth_fcs=0x%08x)' % (repr(self.payload), self.eth_dest_mac, self.eth_src_mac, self.eth_type, self.eth_fcs)
 
 def EthFrameSource(clk, rst,
                    eth_hdr_valid=None,
