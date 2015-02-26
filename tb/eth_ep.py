@@ -112,7 +112,10 @@ class EthFrame(object):
                 self.payload == other.payload)
 
     def __repr__(self):
-        return 'EthFrame(payload=%s, eth_dest_mac=0x%012x, eth_src_mac=0x%012x, eth_type=0x%04x, eth_fcs=0x%08x)' % (repr(self.payload), self.eth_dest_mac, self.eth_src_mac, self.eth_type, self.eth_fcs)
+        fcs = 'None'
+        if self.eth_fcs is not None:
+            fcs = '0x%08x' % self.eth_fcs
+        return 'EthFrame(payload=%s, eth_dest_mac=0x%012x, eth_src_mac=0x%012x, eth_type=0x%04x, eth_fcs=%s)' % (repr(self.payload), self.eth_dest_mac, self.eth_src_mac, self.eth_type, fcs)
 
 def EthFrameSource(clk, rst,
                    eth_hdr_valid=None,
