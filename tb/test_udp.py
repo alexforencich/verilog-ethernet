@@ -109,7 +109,6 @@ def dut_udp(clk,
             input_udp_ip_flags,
             input_udp_ip_fragment_offset,
             input_udp_ip_ttl,
-            input_udp_ip_protocol,
             input_udp_ip_header_checksum,
             input_udp_ip_source_ip,
             input_udp_ip_dest_ip,
@@ -225,7 +224,6 @@ def dut_udp(clk,
                 input_udp_ip_flags=input_udp_ip_flags,
                 input_udp_ip_fragment_offset=input_udp_ip_fragment_offset,
                 input_udp_ip_ttl=input_udp_ip_ttl,
-                input_udp_ip_protocol=input_udp_ip_protocol,
                 input_udp_ip_header_checksum=input_udp_ip_header_checksum,
                 input_udp_ip_source_ip=input_udp_ip_source_ip,
                 input_udp_ip_dest_ip=input_udp_ip_dest_ip,
@@ -313,7 +311,6 @@ def bench():
     input_udp_ip_flags = Signal(intbv(0)[3:])
     input_udp_ip_fragment_offset = Signal(intbv(0)[13:])
     input_udp_ip_ttl = Signal(intbv(0)[8:])
-    input_udp_ip_protocol = Signal(intbv(0)[8:])
     input_udp_ip_header_checksum = Signal(intbv(0)[16:])
     input_udp_ip_source_ip = Signal(intbv(0)[32:])
     input_udp_ip_dest_ip = Signal(intbv(0)[32:])
@@ -470,7 +467,6 @@ def bench():
                                        ip_flags=input_udp_ip_flags,
                                        ip_fragment_offset=input_udp_ip_fragment_offset,
                                        ip_ttl=input_udp_ip_ttl,
-                                       ip_protocol=input_udp_ip_protocol,
                                        ip_header_checksum=input_udp_ip_header_checksum,
                                        ip_source_ip=input_udp_ip_source_ip,
                                        ip_dest_ip=input_udp_ip_dest_ip,
@@ -586,7 +582,6 @@ def bench():
                   input_udp_ip_flags,
                   input_udp_ip_fragment_offset,
                   input_udp_ip_ttl,
-                  input_udp_ip_protocol,
                   input_udp_ip_header_checksum,
                   input_udp_ip_source_ip,
                   input_udp_ip_dest_ip,

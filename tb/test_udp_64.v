@@ -72,7 +72,6 @@ reg [15:0] input_udp_ip_identification = 0;
 reg [2:0] input_udp_ip_flags = 0;
 reg [12:0] input_udp_ip_fragment_offset = 0;
 reg [7:0] input_udp_ip_ttl = 0;
-reg [7:0] input_udp_ip_protocol = 0;
 reg [15:0] input_udp_ip_header_checksum = 0;
 reg [31:0] input_udp_ip_source_ip = 0;
 reg [31:0] input_udp_ip_dest_ip = 0;
@@ -188,7 +187,6 @@ initial begin
                 input_udp_ip_flags,
                 input_udp_ip_fragment_offset,
                 input_udp_ip_ttl,
-                input_udp_ip_protocol,
                 input_udp_ip_header_checksum,
                 input_udp_ip_source_ip,
                 input_udp_ip_dest_ip,
@@ -340,7 +338,6 @@ UUT (
     .input_udp_ip_flags(input_udp_ip_flags),
     .input_udp_ip_fragment_offset(input_udp_ip_fragment_offset),
     .input_udp_ip_ttl(input_udp_ip_ttl),
-    .input_udp_ip_protocol(input_udp_ip_protocol),
     .input_udp_ip_header_checksum(input_udp_ip_header_checksum),
     .input_udp_ip_source_ip(input_udp_ip_source_ip),
     .input_udp_ip_dest_ip(input_udp_ip_dest_ip),

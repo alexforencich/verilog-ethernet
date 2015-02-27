@@ -111,7 +111,6 @@ module udp_64 #
     input  wire [2:0]  input_udp_ip_flags,
     input  wire [12:0] input_udp_ip_fragment_offset,
     input  wire [7:0]  input_udp_ip_ttl,
-    input  wire [7:0]  input_udp_ip_protocol,
     input  wire [15:0] input_udp_ip_header_checksum,
     input  wire [31:0] input_udp_ip_source_ip,
     input  wire [31:0] input_udp_ip_dest_ip,
@@ -181,7 +180,6 @@ wire [15:0] tx_udp_ip_identification;
 wire [2:0]  tx_udp_ip_flags;
 wire [12:0] tx_udp_ip_fragment_offset;
 wire [7:0]  tx_udp_ip_ttl;
-wire [7:0]  tx_udp_ip_protocol;
 wire [15:0] tx_udp_ip_header_checksum;
 wire [31:0] tx_udp_ip_source_ip;
 wire [31:0] tx_udp_ip_dest_ip;
@@ -285,13 +283,12 @@ if (CHECKSUM_ENABLE) begin
         .input_ip_flags(input_udp_ip_flags),
         .input_ip_fragment_offset(input_udp_ip_fragment_offset),
         .input_ip_ttl(input_udp_ip_ttl),
-        .input_ip_protocol(input_udp_ip_protocol),
+        .input_ip_protocol(0),
         .input_ip_header_checksum(input_udp_ip_header_checksum),
         .input_ip_source_ip(input_udp_ip_source_ip),
         .input_ip_dest_ip(input_udp_ip_dest_ip),
         .input_udp_source_port(input_udp_source_port),
         .input_udp_dest_port(input_udp_dest_port),
-        .input_udp_length(input_udp_length),
         .input_udp_checksum(input_udp_checksum),
         .input_udp_payload_tdata(input_udp_payload_tdata),
         .input_udp_payload_tkeep(input_udp_payload_tkeep),
@@ -314,7 +311,6 @@ if (CHECKSUM_ENABLE) begin
         .output_ip_flags(tx_udp_ip_flags),
         .output_ip_fragment_offset(tx_udp_ip_fragment_offset),
         .output_ip_ttl(tx_udp_ip_ttl),
-        .output_ip_protocol(tx_udp_ip_protocol),
         .output_ip_header_checksum(tx_udp_ip_header_checksum),
         .output_ip_source_ip(tx_udp_ip_source_ip),
         .output_ip_dest_ip(tx_udp_ip_dest_ip),
@@ -345,7 +341,6 @@ end else begin
     assign tx_udp_ip_flags = input_udp_ip_flags;
     assign tx_udp_ip_fragment_offset = input_udp_ip_fragment_offset;
     assign tx_udp_ip_ttl = input_udp_ip_ttl;
-    assign tx_udp_ip_protocol = input_udp_ip_protocol;
     assign tx_udp_ip_header_checksum = input_udp_ip_header_checksum;
     assign tx_udp_ip_source_ip = input_udp_ip_source_ip;
     assign tx_udp_ip_dest_ip = input_udp_ip_dest_ip;
@@ -382,7 +377,7 @@ udp_ip_tx_64_inst (
     .input_ip_flags(tx_udp_ip_flags),
     .input_ip_fragment_offset(tx_udp_ip_fragment_offset),
     .input_ip_ttl(tx_udp_ip_ttl),
-    .input_ip_protocol(tx_udp_ip_protocol),
+    .input_ip_protocol(8'h11),
     .input_ip_header_checksum(tx_udp_ip_header_checksum),
     .input_ip_source_ip(tx_udp_ip_source_ip),
     .input_ip_dest_ip(tx_udp_ip_dest_ip),
