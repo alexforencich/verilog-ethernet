@@ -455,5 +455,6 @@ individual test scripts can be run with python directly.
     tb/arp_ep.py         : MyHDL ARP frame endpoints
     tb/axis_ep.py        : MyHDL AXI Stream endpoints
     tb/eth_ep.py         : MyHDL Ethernet frame endpoints
+    tb/gmii_ep.py        : MyHDL GMII endpoints
     tb/ip_ep.py          : MyHDL IP frame endpoints
     tb/udp_ep.py         : MyHDL UDP frame endpoints
