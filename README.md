@@ -213,6 +213,16 @@ priority and round-robin arbitration.
 
 Can be generated with arbitrary port counts with ip_mux_64.py.
 
+### udp module
+
+UDP block with 8 bit data width for gigabit Ethernet.  Manages UDP packet
+transmssion and reception.
+
+### udp_64 module
+
+UDP block with 64 bit data width for 10G Ethernet.  Manages UDP packet
+transmssion and reception.
+
 ### udp_arb_mux_N module
 
 UDP frame arbitrated muliplexer with 8 bit data width for gigabit
@@ -226,6 +236,19 @@ UDP frame arbitrated muliplexer with 8 bit data width for 10G Ethernet.
 Supports priority and round-robin arbitration.
 
 Can be generated with arbitrary port counts with udp_arb_mux_64.py.
+
+### udp_complete module
+
+UDP module with IPv4 and ARP integration.
+
+Top level for gigabit UDP stack.
+
+### udp_complete_64 module
+
+UDP module with IPv4 and ARP integration and 64 bit data width for 10G
+Ethernet.
+
+Top level for 10G UDP stack.
 
 ### udp_ip_rx module
 
@@ -344,10 +367,14 @@ Can be generated with arbitrary port counts with udp_mux_64.py.
     rtl/ip_mux_4.v                  : 4 port IP frame multiplexer
     rtl/ip_mux_64.py                : IP frame multiplexer generator (64 bit)
     rtl/ip_mux_64_4.v               : 4 port IP frame multiplexer (64 bit)
+    rtl/udp.v                       : UDP block
+    rtl/udp_64.v                    : UDP block (64 bit)
     rtl/udp_arb_mux.py              : UDP frame arbitrated multiplexer generator
     rtl/udp_arb_mux_4.v             : 4 port UDP frame arbitrated multiplexer
     rtl/udp_arb_mux_64.py           : UDP frame arbitrated multiplexer generator (64 bit)
     rtl/udp_arb_mux_64_4.v          : 4 port UDP frame arbitrated multiplexer (64 bit)
+    rtl/udp_complete.v              : UDP stack (IP-ARP-UDP)
+    rtl/udp_complete_64.v           : UDP stack (IP-ARP-UDP) (64 bit)
     rtl/udp_ip_rx.v                 : UDP frame receiver
     rtl/udp_ip_rx_64.v              : UDP frame receiver (64 bit)
     rtl/udp_ip_tx.v                 : UDP frame transmitter
