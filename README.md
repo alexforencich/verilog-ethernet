@@ -51,6 +51,14 @@ Ethernet frame check sequence calculator.
 
 Ethernet frame check sequence calculator with 64 bit datapath for 10G Ethernet.
 
+### axis_eth_fcs_check module
+
+Ethernet frame check sequence checker.
+
+### axis_eth_fcs_insert module
+
+Ethernet frame check sequence inserter.
+
 ### eth_arb_mux_N module
 
 Ethernet frame arbitrated muliplexer with 8 bit data width for gigabit
@@ -98,6 +106,18 @@ Ethernet frame demuliplexer with 64 bit data width for 10G Ethernet.  Supports
 priority and round-robin arbitration.
 
 Can be generated with arbitrary port counts with eth_demux_64.py.
+
+### eth_mac_1g module
+
+Gigabit Ethernet MAC with GMII interface.
+
+### eth_mac_1g_rx module
+
+Gigabit Ethernet MAC RX with GMII interface.
+
+### eth_mac_1g_tx module
+
+Gigabit Ethernet MAC TX with GMII interface.
 
 ### eth_mux_N module
 
@@ -272,6 +292,8 @@ Can be generated with arbitrary port counts with udp_mux_64.py.
     rtl/eth_arb_mux.py              : Ethernet frame arbitrated multiplexer generator
     rtl/axis_eth_fcs.v              : Ethernet FCS calculator
     rtl/axis_eth_fcs_64.v           : Ethernet FCS calculator (64 bit)
+    rtl/axis_eth_fcs_insert.v       : Ethernet FCS inserter
+    rtl/axis_eth_fcs_check.v        : Ethernet FCS checker
     rtl/eth_arb_mux_2.v             : 2 port Ethernet frame arbitrated multiplexer
     rtl/eth_arb_mux_4.v             : 4 port Ethernet frame arbitrated multiplexer
     rtl/eth_arb_mux_64.py           : Ethernet frame arbitrated multiplexer generator (64 bit)
@@ -293,6 +315,9 @@ Can be generated with arbitrary port counts with udp_mux_64.py.
     rtl/eth_demux_4.v               : 4 port Ethernet frame demultiplexer
     rtl/eth_demux_64.py             : Ethernet frame demultiplexer generator (64 bit)
     rtl/eth_demux_64_4.v            : 4 port Ethernet frame demultiplexer (64 bit)
+    rtl/eth_mac_1g.v                : Gigabit Etherent MAC
+    rtl/eth_mac_1g_rx.v             : Gigabit Etherent MAC RX
+    rtl/eth_mac_1g_tx.v             : Gigabit Etherent MAC TX
     rtl/eth_mux.py                  : Ethernet frame multiplexer generator
     rtl/eth_mux_2.v                 : 4 port Ethernet frame multiplexer
     rtl/eth_mux_4.v                 : 4 port Ethernet frame multiplexer
