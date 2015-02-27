@@ -160,6 +160,13 @@ def bench():
     def clkgen():
         clk.next = not clk
 
+    error_bad_fcs_asserted = Signal(bool(0))
+
+    @always(clk.posedge)
+    def monitor():
+        if (error_bad_fcs):
+            error_bad_fcs_asserted.next = 1
+
     def wait_normal():
         while input_axis_tvalid or output_axis_tvalid:
             yield clk.posedge
@@ -371,6 +378,8 @@ def bench():
             axis_frame1.data[-1] ^= 0xff
 
             for wait in wait_normal, wait_pause_source, wait_pause_sink:
+                error_bad_fcs_asserted.next = 0
+
                 source_queue.put(axis_frame1)
                 source_queue.put(axis_frame2)
                 yield clk.posedge
@@ -381,6 +390,8 @@ def bench():
                 yield clk.posedge
                 yield clk.posedge
                 yield clk.posedge
+
+                assert error_bad_fcs_asserted
 
                 rx_frame = None
                 if not sink_queue.empty():
@@ -405,7 +416,7 @@ def bench():
 
         raise StopSimulation
 
-    return dut, source, sink, clkgen, check
+    return dut, monitor, source, sink, clkgen, check
 
 def test_bench():
     sim = Simulation(bench())
