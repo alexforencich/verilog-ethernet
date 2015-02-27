@@ -239,7 +239,7 @@ class UDPFrame(object):
     def parse_eth(self, data):
         frame = ip_ep.IPFrame()
         frame.parse_eth(data)
-        self.parse_ip(data)
+        self.parse_ip(frame)
 
     def parse_ip(self, data):
         self.eth_src_mac = data.eth_src_mac
