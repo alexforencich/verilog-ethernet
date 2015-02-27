@@ -12,6 +12,10 @@ Ethernet frames as well as IP, UDP, and ARP and the components for
 constructing a complete UDP/IP stack.  Includes full MyHDL testbench with
 intelligent bus cosimulation endpoints.
 
+For IP and ARP support only, use ip_complete (1G) or ip_complete_64 (10G).
+
+For UDP, IP, and ARP support, use udp_complete (1G) or udp_complete_64 (10G).
+
 ## Documentation
 
 ### arp module
