@@ -73,6 +73,10 @@ Ethernet frame transmitter.
 
 Ethernet frame transmitter with 64 bit datapath for 10G Ethernet.
 
+### eth_crc_N module
+
+CRC logic for Ethernet frame check sequence, N input data bits.
+
 ### eth_demux_N module
 
 Ethernet frame demuliplexer with 8 bit data width for gigabit Ethernet.
@@ -267,6 +271,14 @@ Can be generated with arbitrary port counts with udp_mux_64.py.
     rtl/eth_axis_rx_64.v            : Ethernet frame receiver (64 bit)
     rtl/eth_axis_tx.v               : Ethernet frame transmitter
     rtl/eth_axis_tx_64.v            : Ethernet frame transmitter (64 bit)
+    rtl/eth_crc_8.v                 : Ethernet CRC logic, 8 bits
+    rtl/eth_crc_16.v                : Ethernet CRC logic, 16 bits
+    rtl/eth_crc_24.v                : Ethernet CRC logic, 24 bits
+    rtl/eth_crc_32.v                : Ethernet CRC logic, 32 bits
+    rtl/eth_crc_40.v                : Ethernet CRC logic, 40 bits
+    rtl/eth_crc_48.v                : Ethernet CRC logic, 48 bits
+    rtl/eth_crc_56.v                : Ethernet CRC logic, 56 bits
+    rtl/eth_crc_64.v                : Ethernet CRC logic, 64 bits
     rtl/eth_demux.py                : Ethernet frame demultiplexer generator
     rtl/eth_demux_4.v               : 4 port Ethernet frame demultiplexer
     rtl/eth_demux_64.py             : Ethernet frame demultiplexer generator (64 bit)
