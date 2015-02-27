@@ -43,6 +43,14 @@ ARP frame transmitter.
 
 ARP frame transmitter with 64 bit datapath for 10G Ethernet.
 
+### axis_eth_fcs module
+
+Ethernet frame check sequence calculator.
+
+### axis_eth_fcs_64 module
+
+Ethernet frame check sequence calculator with 64 bit datapath for 10G Ethernet.
+
 ### eth_arb_mux_N module
 
 Ethernet frame arbitrated muliplexer with 8 bit data width for gigabit
@@ -262,6 +270,8 @@ Can be generated with arbitrary port counts with udp_mux_64.py.
     rtl/arp_eth_tx.v                : ARP frame transmitter
     rtl/arp_eth_tx_64.v             : ARP frame transmitter (64 bit)
     rtl/eth_arb_mux.py              : Ethernet frame arbitrated multiplexer generator
+    rtl/axis_eth_fcs.v              : Ethernet FCS calculator
+    rtl/axis_eth_fcs_64.v           : Ethernet FCS calculator (64 bit)
     rtl/eth_arb_mux_2.v             : 2 port Ethernet frame arbitrated multiplexer
     rtl/eth_arb_mux_4.v             : 4 port Ethernet frame arbitrated multiplexer
     rtl/eth_arb_mux_64.py           : Ethernet frame arbitrated multiplexer generator (64 bit)
