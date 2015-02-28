@@ -514,10 +514,6 @@ always @(posedge clk or posedge rst) begin
         output_ip_header_checksum_reg <= 0;
         output_ip_source_ip_reg <= 0;
         output_ip_dest_ip_reg <= 0;
-        output_ip_payload_tdata_reg <= 0;
-        output_ip_payload_tvalid_reg <= 0;
-        output_ip_payload_tlast_reg <= 0;
-        output_ip_payload_tuser_reg <= 0;
         save_eth_payload_tdata_reg <= 0;
         save_eth_payload_tkeep_reg <= 0;
         save_eth_payload_tlast_reg <= 0;
