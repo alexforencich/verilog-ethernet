@@ -155,8 +155,11 @@ always @(posedge mac_gmii_rx_clk or posedge rst) begin
 end
 
 // register RX data from PHY to MAC
+(* IOB = "TRUE" *)
 reg [7:0] gmii_rxd_reg = 0;
+(* IOB = "TRUE" *)
 reg gmii_rx_dv_reg = 0;
+(* IOB = "TRUE" *)
 reg gmii_rx_er_reg = 0;
 
 always @(posedge phy_gmii_rx_clk_io) begin
@@ -170,8 +173,11 @@ assign mac_gmii_rx_dv = gmii_rx_dv_reg;
 assign mac_gmii_rx_er = gmii_rx_er_reg;
 
 // register TX data from MAC to PHY
+(* IOB = "TRUE" *)
 reg [7:0] gmii_txd_reg = 0;
+(* IOB = "TRUE" *)
 reg gmii_tx_en_reg = 0;
+(* IOB = "TRUE" *)
 reg gmii_tx_er_reg = 0;
 
 always @(posedge phy_gmii_tx_clk_int) begin
