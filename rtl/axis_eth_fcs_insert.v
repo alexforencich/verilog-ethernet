@@ -158,7 +158,7 @@ always @* begin
                         state_next = STATE_IDLE;
                     end else begin
                         input_axis_tready_next = 0;
-                        if (ENABLE_PADDING && frame_ptr_next < MIN_FRAME_LENGTH-5) begin
+                        if (ENABLE_PADDING && frame_ptr_reg < MIN_FRAME_LENGTH-5) begin
                             state_next = STATE_PAD;
                         end else begin
                             frame_ptr_next = 0;
@@ -184,12 +184,14 @@ always @* begin
             if (output_axis_tready_int) begin
                 frame_ptr_next = frame_ptr_reg + 1;
                 update_crc = 1;
-                if (frame_ptr_next < MIN_FRAME_LENGTH-5) begin
+                if (frame_ptr_reg < MIN_FRAME_LENGTH-5) begin
                     state_next = STATE_PAD;
                 end else begin
                     frame_ptr_next = 0;
                     state_next = STATE_FCS;
                 end
+            end else begin
+                state_next = STATE_PAD;
             end
         end
         STATE_FCS: begin
