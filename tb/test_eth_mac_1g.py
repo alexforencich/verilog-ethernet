@@ -320,6 +320,7 @@ def bench():
         print(hex(eth_frame.eth_fcs))
         print(hex(eth_frame.calc_fcs()))
 
+        assert len(eth_frame.payload.data) == 46
         assert eth_frame.eth_fcs == eth_frame.calc_fcs()
         assert eth_frame.eth_dest_mac == test_frame.eth_dest_mac
         assert eth_frame.eth_src_mac == test_frame.eth_src_mac

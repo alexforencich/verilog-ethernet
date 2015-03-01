@@ -196,6 +196,7 @@ def bench():
             print(hex(eth_frame.eth_fcs))
             print(hex(eth_frame.calc_fcs()))
 
+            assert len(eth_frame.payload.data) == max(payload_len, 46)
             assert eth_frame.eth_fcs == eth_frame.calc_fcs()
             assert eth_frame.eth_dest_mac == test_frame.eth_dest_mac
             assert eth_frame.eth_src_mac == test_frame.eth_src_mac
@@ -248,6 +249,7 @@ def bench():
             print(hex(eth_frame.eth_fcs))
             print(hex(eth_frame.calc_fcs()))
 
+            assert len(eth_frame.payload.data) == max(payload_len, 46)
             assert eth_frame.eth_fcs == eth_frame.calc_fcs()
             assert eth_frame.eth_dest_mac == test_frame1.eth_dest_mac
             assert eth_frame.eth_src_mac == test_frame1.eth_src_mac
@@ -264,6 +266,7 @@ def bench():
             print(hex(eth_frame.eth_fcs))
             print(hex(eth_frame.calc_fcs()))
 
+            assert len(eth_frame.payload.data) == max(payload_len, 46)
             assert eth_frame.eth_fcs == eth_frame.calc_fcs()
             assert eth_frame.eth_dest_mac == test_frame2.eth_dest_mac
             assert eth_frame.eth_src_mac == test_frame2.eth_src_mac
@@ -324,6 +327,7 @@ def bench():
             print(hex(eth_frame.eth_fcs))
             print(hex(eth_frame.calc_fcs()))
 
+            assert len(eth_frame.payload.data) == max(payload_len, 46)
             assert eth_frame.eth_fcs == eth_frame.calc_fcs()
             assert eth_frame.eth_dest_mac == test_frame2.eth_dest_mac
             assert eth_frame.eth_src_mac == test_frame2.eth_src_mac
