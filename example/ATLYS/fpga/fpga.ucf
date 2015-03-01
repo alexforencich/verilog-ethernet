@@ -1,0 +1,193 @@
+# User Constraints File for the Digilent Atlys board, rev C
+
+CONFIG PART = xc6slx45-2csg324;
+
+# 100MHz Clock: I/O Bank 1
+NET "clk" LOC = "L15" | IOSTANDARD=LVCMOS33; # IO_L42P_GCLK7_M1UDM (GCLK)
+NET "clk" TNM_NET = "sys_clk_pin";
+TIMESPEC "TS_sys_clk_pin" = PERIOD "sys_clk_pin" 100000 kHz;
+
+# Light Emitting Diodes (not used)
+NET "led<0>" LOC = "U18" | IOSTANDARD=LVCMOS25 | SLEW=QUIETIO | DRIVE=2; # Bank = 1, IO_L52N_M1DQ15 (LD0)
+NET "led<1>" LOC = "M14" | IOSTANDARD=LVCMOS25 | SLEW=QUIETIO | DRIVE=2; # Bank = 1, IO_L53P (LD1)
+NET "led<2>" LOC = "N14" | IOSTANDARD=LVCMOS25 | SLEW=QUIETIO | DRIVE=2; # Bank = 1, IO_L53N_VREF (LD2)
+NET "led<3>" LOC = "L14" | IOSTANDARD=LVCMOS25 | SLEW=QUIETIO | DRIVE=2; # Bank = 1, IO_L61P (LD3)
+NET "led<4>" LOC = "M13" | IOSTANDARD=LVCMOS25 | SLEW=QUIETIO | DRIVE=2; # Bank = 1, IO_L61N (LD4)
+NET "led<5>" LOC = "D4"  | IOSTANDARD=LVCMOS33 | SLEW=QUIETIO | DRIVE=2; # Bank = 0, IO_L1P_HSWAPEN_0 (HSWAP/LD5)
+NET "led<6>" LOC = "P16" | IOSTANDARD=LVCMOS25 | SLEW=QUIETIO | DRIVE=2; # Bank = 1, IO_L74N_DOUT_BUSY_1 (LD6)
+NET "led<7>" LOC = "N12" | IOSTANDARD=LVCMOS33 | SLEW=QUIETIO | DRIVE=2; # Bank = 2, IO_L13P_M1_2 (M1/LD7)
+ 
+# Reset Button: I/O Bank 2 (not used)
+NET "reset_n" LOC = "T15" | IOSTANDARD=LVCMOS33; # IO_L1N_M0_CMPMISO_2 (M0/RESET)
+
+# Push Buttons: I/O Bank 3 (not used)
+NET "btnu" LOC = "N4"; # IO_L1P (BTNU)
+NET "btnl" LOC = "P4"; # IO_L2P (BTNL)
+NET "btnd" LOC = "P3"; # IO_L2N (BTND)
+NET "btnr" LOC = "F6"; # IO_L55P_M3A13 (BTNR)
+NET "btnc" LOC = "F5"; # IO_L55N_M3A14 (BTNC)
+ 
+# Toggle Switches (not used)
+NET "sw<0>" LOC = "A10"; # Bank = 0, IO_L37N_GCLK12 (SW0)
+NET "sw<1>" LOC = "D14"; # Bank = 0, IO_L65P_SCP3 (SW1)
+NET "sw<2>" LOC = "C14"; # Bank = 0, IO_L65N_SCP2 (SW2)
+NET "sw<3>" LOC = "P15"; # Bank = 1, IO_L74P_AWAKE_1 (SW3)
+NET "sw<4>" LOC = "P12"; # Bank = 2, IO_L13N_D10 (SW4)
+NET "sw<5>" LOC = "R5";  # Bank = 2, IO_L48P_D7 (SW5)
+NET "sw<6>" LOC = "T5";  # Bank = 2, IO_L48N_RDWR_B_VREF_2 (SW6)
+NET "sw<7>" LOC = "E4";  # Bank = 3, IO_L54P_M3RESET (SW7)
+
+# Marvell M88E1111 Tri-Mode Ethernet PHY (1000BASE-T): I/O Bank 1
+# Interrupt, Reset, MDIO
+#NET "phy_int_n" LOC = "L16" | IOSTANDARD=LVCMOS25; # IO_L42N_GCLK6_TRDY1_M1LDM (E-INT)
+NET "phy_reset_n" LOC = "G13" | IOSTANDARD=LVCMOS25; # IO_L32N_A16_M1A9 (E-RESET)
+#NET "phy_mdc" LOC = "F16" | IOSTANDARD=LVCMOS25; # IO_L1N_A24_VREF (E-MDC)
+#NET "phy_mdio" LOC = "N17" | IOSTANDARD=LVCMOS25; # IO_L48P_HDC_M1DQ8 (E-MDIO)
+# GMII Transmit
+NET "phy_gtx_clk" LOC = "L12" | IOSTANDARD=LVCMOS25 | SLEW = FAST; # IO_L40P_GCLK11_M1A5 (E-GTXCLK)
+NET "phy_txd<0>" LOC = "H16" | IOSTANDARD=LVCMOS25 | SLEW = FAST; # IO_L37N_A6_M1A1 (E-TXD0)
+NET "phy_txd<1>" LOC = "H13" | IOSTANDARD=LVCMOS25 | SLEW = FAST; # IO_L36P_A9_M1BA0 (E-TXD1)
+NET "phy_txd<2>" LOC = "K14" | IOSTANDARD=LVCMOS25 | SLEW = FAST; # IO_L39N_M1ODT (E-TXD2)
+NET "phy_txd<3>" LOC = "K13" | IOSTANDARD=LVCMOS25 | SLEW = FAST; # IO_L34N_A12_M1BA2 (E-TXD3)
+NET "phy_txd<4>" LOC = "J13" | IOSTANDARD=LVCMOS25 | SLEW = FAST; # IO_L39P_M1A3 (E-TXD4)
+NET "phy_txd<5>" LOC = "G14" | IOSTANDARD=LVCMOS25 | SLEW = FAST; # IO_L30N_A20_M1A11 (E-TXD5)
+NET "phy_txd<6>" LOC = "H12" | IOSTANDARD=LVCMOS25 | SLEW = FAST; # IO_L32P_A17_M1A8 (E-TXD6)
+NET "phy_txd<7>" LOC = "K12" | IOSTANDARD=LVCMOS25 | SLEW = FAST; # IO_L34P_A13_M1WE (E-TXD7)
+NET "phy_tx_en" LOC = "H15" | IOSTANDARD=LVCMOS25 | SLEW = FAST; # IO_L37P_A7_M1A0 (E-TXEN)
+NET "phy_tx_er" LOC = "G18" | IOSTANDARD=LVCMOS25 | SLEW = FAST; # IO_L38N_A4_M1CLKN (E-TXER)
+# GMII Receive (not used)
+NET "phy_rx_clk" LOC = "K15" | IOSTANDARD=LVCMOS25 | TNM_NET = "clk_rx_local"; # IO_L41P_GCLK9_IRDY1_M1RASN (E-RXCLK)
+NET "phy_rxd<0>" LOC = "G16" | IOSTANDARD=LVCMOS25; # IO_L38P_A5_M1CLK (E-RXD0)
+NET "phy_rxd<1>" LOC = "H14" | IOSTANDARD=LVCMOS25; # IO_L36N_A8_M1BA1 (E-RXD1)
+NET "phy_rxd<2>" LOC = "E16" | IOSTANDARD=LVCMOS25; # IO_L33P_A15_M1A10 (E-RXD2)
+NET "phy_rxd<3>" LOC = "F15" | IOSTANDARD=LVCMOS25; # IO_L1P_A25 (E-RXD3)
+NET "phy_rxd<4>" LOC = "F14" | IOSTANDARD=LVCMOS25; # IO_L30P_A21_M1RESET (E-RXD4)
+NET "phy_rxd<5>" LOC = "E18" | IOSTANDARD=LVCMOS25; # IO_L33N_A14_M1A4 (E-RXD5)
+NET "phy_rxd<6>" LOC = "D18" | IOSTANDARD=LVCMOS25; # IO_L31N_A18_M1A12 (E-RXD6)
+NET "phy_rxd<7>" LOC = "D17" | IOSTANDARD=LVCMOS25; # IO_L31P_A19_M1CKE (E-RXD7)
+NET "phy_rx_dv" LOC = "F17" | IOSTANDARD=LVCMOS25; # IO_L35P_A11_M1A7 (E-RXDV)
+NET "phy_rx_er" LOC = "F18" | IOSTANDARD=LVCMOS25; # IO_L35N_A10_M1A2 (E-RXER)
+
+# Timing constraints for Ethernet PHY
+TIMESPEC "TS_rx_clk_root" = PERIOD "clk_rx_local" 8000 ps HIGH 50 %;
+# WARNING: Receiving Ethernet frames will not work without these constraints.
+# WARNING: Meeting these constraints will require instantiating an IODELAY2 primitive.
+#INST "phy_rxd<?>" TNM = IN_GMII; 
+#INST "phy_rx_er"  TNM = IN_GMII;
+#INST "phy_rx_dv"  TNM = IN_GMII;
+#TIMEGRP "IN_GMII" OFFSET = IN 2.4 ns VALID 2.8 ns BEFORE "phy_rx_clk125"; 
+
+# PMOD Connector (FPGA Bank 2)
+#
+# FPGA                 | Atlys
+# ------------------------------------
+#  T3 | IO_L62N_D6     |  JA1 (TOP)
+#  R3 | IO_L62P_D5     |  JA2 (TOP)
+#  P6 | IO_L64N_D9     |  JA3 (TOP)
+#  N5 | IO_L64P_D8     |  JA4 (TOP)
+#     | GND            |  JA5 (TOP)
+#     | Vcc            |  JA6 (TOP)
+#  V9 | IO_L32N_GCLK28 |  JA7 (BOTTOM)
+#  T9 | IO_L32P_GCLK29 |  JA8 (BOTTOM)
+#  V4 | IO_L63N        |  JA9 (BOTTOM)
+#  T4 | IO_L63P        | JA10 (BOTTOM)
+#     | GND            | JA11 (BOTTOM)
+#     | Vcc            | JA12 (BOTTOM)
+#
+#NET "ready<1>" LOC = "T3" | IOSTANDARD=LVCMOS33 | PULLDOWN;
+#NET "trigger<1>" LOC = "V9" | IOSTANDARD=LVCMOS33 | SLEW=QUIETIO | DRIVE=2;
+#NET "spi_mosi<1>" LOC = "R3" | IOSTANDARD=LVCMOS33 | SLEW=QUIETIO | DRIVE=2;
+#NET "spi_cs_n<1>" LOC = "T9" | IOSTANDARD=LVCMOS33 | SLEW=QUIETIO | DRIVE=2;
+#NET "spi_clk<1>" LOC = "P6" | IOSTANDARD=LVCMOS33 | SLEW=QUIETIO | DRIVE=2;
+#NET "spi_gnd<1>" LOC = "V4" | IOSTANDARD=LVCMOS33 | SLEW=QUIETIO | DRIVE=2;
+
+# VHDCI Connector (FPGA Bank 2)
+# Note: Channnel 1 connects to P signals, Channel 2 to N signals
+#
+# FPGA                          | Atlys              | VmodMIB
+# -----------------------------------------------------------------------------
+#  U16 | IO_L2P_CMPCLK          |  EXP-IO1_P |  JC.1 | JC-CLK_P | JC8  (BOTTOM)
+#  U15 | *IO_L5P                |  EXP-IO2_P |  JC.3 |  JC-D0_P | JC2  (TOP)
+#  U13 | IO_L14P_D11            |  EXP-IO3_P |  JC.4 |  JC-D1_P | JC10 (BOTTOM)
+#  M11 | *IO_L15P               |  EXP-IO4_P |  JC.6 |  JC-D2_P | JC4  (TOP)
+#  R11 | IO_L16P                |  EXP-IO5_P |  JC.7 |  JA-D0_P | JA2  (TOP)
+#  T12 | *IO_L19P               |  EXP-IO6_P |  JC.9 |  JA-D1_P | JA10 (BOTTOM)
+#  N10 | *IO_L20P               |  EXP-IO7_P | JC.10 |  JA-D2_P | JA4  (TOP)
+#  M10 | *IO_L22P               |  EXP-IO8_P | JC.12 |  JB-D0_P | JB2  (TOP)
+#  U11 | IO_L23P                |  EXP-IO9_P | JC.13 |  JB-D1_P | JB10 (BOTTOM)
+#  R10 | IO_L29P_GCLK3          | EXP-IO10_P | JC.15 | JA-CLK_P | JA8  (BOTTOM)
+#  U10 | IO_L30P_GCLK1_D13      | EXP-IO11_P | JC.20 | JB-CLK_P | JB8  (BOTTOM)
+#   R8 | IO_L31P_GCLK31_D14     | EXP-IO12_P | JC.22 |  JB-D2_P | JB4  (TOP)
+#   M8 | *IO_L40P               | EXP-IO13_P | JC.23 |      JE8 | JE8  (BOTTOM)
+#   U8 | IO_L41P                | EXP-IO14_P | JC.25 |      JE2 | JE2  (TOP)
+#   U7 | IO_L43P                | EXP-IO15_P | JC.26 |     JE10 | JE10 (BOTTOM)
+#   N7 | *IO_L44P               | EXP-IO16_P | JC.28 |      JE4 | JE4  (TOP)
+#   T6 | IO_L45P                | EXP-IO17_P | JC.29 | JD-CLK_P | JD8  (BOTTOM)
+#   R7 | IO_L46P                | EXP-IO18_P | JC.31 |  JD-D0_P | JD2  (TOP)
+#   N6 | *IO_L47P               | EXP-IO19_P | JC.32 |  JD-D1_P | JD10 (BOTTOM)
+#   U5 | IO_49P_D3              | EXP-IO20_P | JC.34 |  JD-D2_P | JD4  (TOP)
+#  V16 | IO_L2N_CMPMOSI         |  EXP-IO1_N | JC.35 | JC-CLK_N | JC7  (BOTTOM)
+#  V15 | *IO_L5N                |  EXP-IO2_N | JC.37 |  JC-D0_N | JC1  (TOP)
+#  V13 | IO_L14N_D12            |  EXP-IO3_N | JC.38 |  JC-D1_N | JC9  (BOTTOM)
+#  N11 | *IO_L15N               |  EXP-IO4_N | JC.40 |  JC-D2_N | JC3  (TOP)
+#  T11 | IO_L16N_VREF           |  EXP-IO5_N | JC.41 |  JA-D0_N | JA1  (TOP)
+#  V12 | *IO_L19N               |  EXP-IO6_N | JC.43 |  JA-D1_N | JA9  (BOTTOM)
+#  P11 | *IO_L20N               |  EXP-IO7_N | JC.44 |  JA-D2_N | JA3  (TOP)
+#   N9 | *IO_L22N               |  EXP-IO8_N | JC.46 |  JB-D0_N | JB1  (TOP)
+#  V11 | IO_L23N                |  EXP-IO9_N | JC.47 |  JB-D1_N | JB9  (BOTTOM)
+#  T10 | IO_L29N_GCLK2          | EXP-IO10_N | JC.49 | JA-CLK_N | JA7  (BOTTOM)
+#  V10 | IO_L30N_GCLK0_USERCCLK | EXP-IO11_N | JC.54 | JB-CLK_N | JB7  (BOTTOM)
+#   T8 | IO_L31N_GCLK30_D15     | EXP-IO12_N | JC.56 |  JB-D2_N | JB3  (TOP)
+#   N8 | *IO_L40N               | EXP-IO13_N | JC.57 |      JE7 | JE7  (BOTTOM)
+#   V8 | IO_L41N_VREF           | EXP-IO14_N | JC.59 |      JE1 | JE1  (TOP)
+#   V7 | IO_L43N                | EXP-IO15_N | JC.60 |      JE9 | JE9  (BOTTOM)
+#   P8 | *IO_L44N               | EXP-IO16_N | JC.62 |      JE3 | JE3  (TOP)
+#   V6 | IO_L45N                | EXP-IO17_N | JC.63 | JD-CLK_N | JD7  (BOTTOM)
+#   T7 | IO_L46N                | EXP-IO18_N | JC.65 |  JD-D0_N | JD1  (TOP)
+#   P7 | *IO_L47N               | EXP-IO19_N | JC.66 |  JD-D1_N | JD9  (BOTTOM)
+#   V5 | IO_49N_D4              | EXP-IO20_N | JC.68 |  JD-D2_N | JD3  (TOP)
+
+#NET "" LOC = "U16" | IOSTANDARD=LVCMOS33 | SLEW=FAST | DRIVE=8; # EXP-IO1_P
+#NET "" LOC = "U15" | IOSTANDARD=LVCMOS33 | SLEW=FAST | DRIVE=8; # EXP-IO2_P
+#NET "" LOC = "U13" | IOSTANDARD=LVCMOS33 | SLEW=FAST | DRIVE=8; # EXP-IO3_P
+#NET "" LOC = "M11" | IOSTANDARD=LVCMOS33 | SLEW=FAST | DRIVE=8; # EXP-IO4_P
+#NET "" LOC = "R11" | IOSTANDARD=LVCMOS33 | SLEW=FAST | DRIVE=8; # EXP-IO5_P
+#NET "" LOC = "T12" | IOSTANDARD=LVCMOS33 | SLEW=FAST | DRIVE=8; # EXP-IO6_P
+#NET "" LOC = "N10" | IOSTANDARD=LVCMOS33 | SLEW=FAST | DRIVE=8; # EXP-IO7_P
+#NET "" LOC = "M10" | IOSTANDARD=LVCMOS33 | SLEW=FAST | DRIVE=8; # EXP-IO8_P
+#NET "" LOC = "U11" | IOSTANDARD=LVCMOS33 | SLEW=FAST | DRIVE=8; # EXP-IO9_P
+#NET "" LOC = "R10" | IOSTANDARD=LVCMOS33 | SLEW=FAST | DRIVE=2; # EXP-IO10_P
+#NET "" LOC = "U10" | IOSTANDARD=LVCMOS33 | SLEW=FAST | DRIVE=8; # EXP-IO11_P
+#NET "" LOC = "R8"  | IOSTANDARD=LVCMOS33 | SLEW=FAST | DRIVE=8; # EXP-IO12_P
+#NET "" LOC = "M8"  | IOSTANDARD=LVCMOS33 | SLEW=FAST | DRIVE=8; # EXP-IO13_P
+#NET "" LOC = "U8"  | IOSTANDARD=LVCMOS33 | SLEW=FAST | DRIVE=8; # EXP-IO14_P
+#NET "" LOC = "U7"  | IOSTANDARD=LVCMOS33 | SLEW=FAST | DRIVE=2; # EXP-IO15_P
+#NET "" LOC = "N7"  | IOSTANDARD=LVCMOS33 | SLEW=FAST | DRIVE=2; # EXP-IO16_P
+#NET "" LOC = "T6"  | IOSTANDARD=LVCMOS33 | SLEW=FAST | DRIVE=2; # EXP-IO17_P
+#NET "" LOC = "R7"  | IOSTANDARD=LVCMOS33 | SLEW=FAST | DRIVE=2; # EXP-IO18_P
+#NET "" LOC = "N6"  | IOSTANDARD=LVCMOS33 | SLEW=FAST | DRIVE=2; # EXP-IO19_P
+#NET "" LOC = "U5"  | IOSTANDARD=LVCMOS33 | SLEW=FAST | DRIVE=2; # EXP-IO20_P
+#NET "" LOC = "V16" | IOSTANDARD=LVCMOS33 | SLEW=FAST | DRIVE=8; # EXP-IO1_N
+#NET "" LOC = "V15" | IOSTANDARD=LVCMOS33 | SLEW=FAST | DRIVE=8; # EXP-IO2_N
+#NET "" LOC = "V13" | IOSTANDARD=LVCMOS33 | SLEW=FAST | DRIVE=8; # EXP-IO3_N
+#NET "" LOC = "N11" | IOSTANDARD=LVCMOS33 | SLEW=FAST | DRIVE=8; # EXP-IO4_N
+#NET "" LOC = "T11" | IOSTANDARD=LVCMOS33 | SLEW=FAST | DRIVE=8; # EXP-IO5_N
+#NET "" LOC = "V12" | IOSTANDARD=LVCMOS33 | SLEW=FAST | DRIVE=2; # EXP-IO6_N
+#NET "" LOC = "P11" | IOSTANDARD=LVCMOS33 | SLEW=FAST | DRIVE=2; # EXP-IO7_N
+#NET "" LOC = "N9"  | IOSTANDARD=LVCMOS33 | SLEW=FAST | DRIVE=2; # EXP-IO8_N
+#NET "" LOC = "V11" | IOSTANDARD=LVCMOS33 | SLEW=FAST | DRIVE=2; # EXP-IO9_N
+#NET "" LOC = "T10" | IOSTANDARD=LVCMOS33 | SLEW=FAST | DRIVE=2; # EXP-IO10_N
+#NET "" LOC = "V10" | IOSTANDARD=LVCMOS33 | SLEW=FAST | DRIVE=2; # EXP-IO11_N
+#NET "" LOC = "T8"  | IOSTANDARD=LVCMOS33 | SLEW=FAST | DRIVE=2; # EXP-IO12_N
+#NET "" LOC = "N8"  | IOSTANDARD=LVCMOS33 | SLEW=FAST | DRIVE=2; # EXP-IO13_N
+#NET "" LOC = "V8"  | IOSTANDARD=LVCMOS33 | SLEW=FAST | DRIVE=2; # EXP-IO14_N
+#NET "" LOC = "V7"  | IOSTANDARD=LVCMOS33 | SLEW=FAST | DRIVE=2; # EXP-IO15_N
+#NET "" LOC = "P8"  | IOSTANDARD=LVCMOS33 | SLEW=FAST | DRIVE=2; # EXP-IO16_N
+#NET "" LOC = "V6"  | IOSTANDARD=LVCMOS33 | SLEW=FAST | DRIVE=2; # EXP-IO17_N
+#NET "" LOC = "T7"  | IOSTANDARD=LVCMOS33 | SLEW=FAST | DRIVE=2; # EXP-IO18_N
+#NET "" LOC = "P7"  | IOSTANDARD=LVCMOS33 | SLEW=FAST | DRIVE=2; # EXP-IO19_N
+#NET "" LOC = "V5"  | IOSTANDARD=LVCMOS33 | SLEW=FAST | DRIVE=2; # EXP-IO20_N
+
+# Exar UART: I/O Bank 0
+NET "uart_rxd" LOC = "A16" | IOSTANDARD=LVCMOS33; # IO_L66N_SCP0 (USBB-RXD)
+NET "uart_txd" LOC = "B16" | IOSTANDARD=LVCMOS33; # IO_L66P_SCP1 (USBB-TXD)

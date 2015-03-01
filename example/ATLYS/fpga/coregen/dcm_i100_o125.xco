@@ -1,0 +1,269 @@
+##############################################################
+#
+# Xilinx Core Generator version 14.7
+# Date: Sun Mar  1 03:45:12 2015
+#
+##############################################################
+#
+#  This file contains the customisation parameters for a
+#  Xilinx CORE Generator IP GUI. It is strongly recommended
+#  that you do not manually alter this file as it may cause
+#  unexpected and unsupported behavior.
+#
+##############################################################
+#
+#  Generated from component: xilinx.com:ip:clk_wiz:3.6
+#
+##############################################################
+#
+# BEGIN Project Options
+SET addpads = false
+SET asysymbol = true
+SET busformat = BusFormatAngleBracketNotRipped
+SET createndf = false
+SET designentry = Verilog
+SET device = xc6slx45
+SET devicefamily = spartan6
+SET flowvendor = Foundation_ISE
+SET formalverification = false
+SET foundationsym = false
+SET implementationfiletype = Ngc
+SET package = csg324
+SET removerpms = false
+SET simulationfiles = Behavioral
+SET speedgrade = -2
+SET verilogsim = true
+SET vhdlsim = false
+# END Project Options
+# BEGIN Select
+SELECT Clocking_Wizard xilinx.com:ip:clk_wiz:3.6
+# END Select
+# BEGIN Parameters
+CSET calc_done=DONE
+CSET clk_in_sel_port=CLK_IN_SEL
+CSET clk_out1_port=CLK_OUT1
+CSET clk_out1_use_fine_ps_gui=false
+CSET clk_out2_port=CLK_OUT2
+CSET clk_out2_use_fine_ps_gui=false
+CSET clk_out3_port=CLK_OUT3
+CSET clk_out3_use_fine_ps_gui=false
+CSET clk_out4_port=CLK_OUT4
+CSET clk_out4_use_fine_ps_gui=false
+CSET clk_out5_port=CLK_OUT5
+CSET clk_out5_use_fine_ps_gui=false
+CSET clk_out6_port=CLK_OUT6
+CSET clk_out6_use_fine_ps_gui=false
+CSET clk_out7_port=CLK_OUT7
+CSET clk_out7_use_fine_ps_gui=false
+CSET clk_valid_port=CLK_VALID
+CSET clkfb_in_n_port=CLKFB_IN_N
+CSET clkfb_in_p_port=CLKFB_IN_P
+CSET clkfb_in_port=CLKFB_IN
+CSET clkfb_in_signaling=SINGLE
+CSET clkfb_out_n_port=CLKFB_OUT_N
+CSET clkfb_out_p_port=CLKFB_OUT_P
+CSET clkfb_out_port=CLKFB_OUT
+CSET clkfb_stopped_port=CLKFB_STOPPED
+CSET clkin1_jitter_ps=100.0
+CSET clkin1_ui_jitter=0.010
+CSET clkin2_jitter_ps=100.0
+CSET clkin2_ui_jitter=0.010
+CSET clkout1_drives=BUFG
+CSET clkout1_requested_duty_cycle=50.000
+CSET clkout1_requested_out_freq=125.000
+CSET clkout1_requested_phase=0.000
+CSET clkout2_drives=BUFG
+CSET clkout2_requested_duty_cycle=50.000
+CSET clkout2_requested_out_freq=100.000
+CSET clkout2_requested_phase=0.000
+CSET clkout2_used=false
+CSET clkout3_drives=BUFG
+CSET clkout3_requested_duty_cycle=50.000
+CSET clkout3_requested_out_freq=100.000
+CSET clkout3_requested_phase=0.000
+CSET clkout3_used=false
+CSET clkout4_drives=BUFG
+CSET clkout4_requested_duty_cycle=50.000
+CSET clkout4_requested_out_freq=100.000
+CSET clkout4_requested_phase=0.000
+CSET clkout4_used=false
+CSET clkout5_drives=BUFG
+CSET clkout5_requested_duty_cycle=50.000
+CSET clkout5_requested_out_freq=100.000
+CSET clkout5_requested_phase=0.000
+CSET clkout5_used=false
+CSET clkout6_drives=BUFG
+CSET clkout6_requested_duty_cycle=50.000
+CSET clkout6_requested_out_freq=100.000
+CSET clkout6_requested_phase=0.000
+CSET clkout6_used=false
+CSET clkout7_drives=BUFG
+CSET clkout7_requested_duty_cycle=50.000
+CSET clkout7_requested_out_freq=100.000
+CSET clkout7_requested_phase=0.000
+CSET clkout7_used=false
+CSET clock_mgr_type=AUTO
+CSET component_name=dcm_i100_o125
+CSET daddr_port=DADDR
+CSET dclk_port=DCLK
+CSET dcm_clk_feedback=1X
+CSET dcm_clk_out1_port=CLKFX
+CSET dcm_clk_out2_port=CLK0
+CSET dcm_clk_out3_port=CLK0
+CSET dcm_clk_out4_port=CLK0
+CSET dcm_clk_out5_port=CLK0
+CSET dcm_clk_out6_port=CLK0
+CSET dcm_clkdv_divide=2.0
+CSET dcm_clkfx_divide=4
+CSET dcm_clkfx_multiply=5
+CSET dcm_clkgen_clk_out1_port=CLKFX
+CSET dcm_clkgen_clk_out2_port=CLKFX
+CSET dcm_clkgen_clk_out3_port=CLKFX
+CSET dcm_clkgen_clkfx_divide=1
+CSET dcm_clkgen_clkfx_md_max=0.000
+CSET dcm_clkgen_clkfx_multiply=4
+CSET dcm_clkgen_clkfxdv_divide=2
+CSET dcm_clkgen_clkin_period=10.000
+CSET dcm_clkgen_notes=None
+CSET dcm_clkgen_spread_spectrum=NONE
+CSET dcm_clkgen_startup_wait=false
+CSET dcm_clkin_divide_by_2=false
+CSET dcm_clkin_period=10.000
+CSET dcm_clkout_phase_shift=NONE
+CSET dcm_deskew_adjust=SYSTEM_SYNCHRONOUS
+CSET dcm_notes=None
+CSET dcm_phase_shift=0
+CSET dcm_pll_cascade=NONE
+CSET dcm_startup_wait=false
+CSET den_port=DEN
+CSET din_port=DIN
+CSET dout_port=DOUT
+CSET drdy_port=DRDY
+CSET dwe_port=DWE
+CSET feedback_source=FDBK_AUTO
+CSET in_freq_units=Units_MHz
+CSET in_jitter_units=Units_UI
+CSET input_clk_stopped_port=INPUT_CLK_STOPPED
+CSET jitter_options=UI
+CSET jitter_sel=No_Jitter
+CSET locked_port=LOCKED
+CSET mmcm_bandwidth=OPTIMIZED
+CSET mmcm_clkfbout_mult_f=4.000
+CSET mmcm_clkfbout_phase=0.000
+CSET mmcm_clkfbout_use_fine_ps=false
+CSET mmcm_clkin1_period=10.000
+CSET mmcm_clkin2_period=10.000
+CSET mmcm_clkout0_divide_f=4.000
+CSET mmcm_clkout0_duty_cycle=0.500
+CSET mmcm_clkout0_phase=0.000
+CSET mmcm_clkout0_use_fine_ps=false
+CSET mmcm_clkout1_divide=1
+CSET mmcm_clkout1_duty_cycle=0.500
+CSET mmcm_clkout1_phase=0.000
+CSET mmcm_clkout1_use_fine_ps=false
+CSET mmcm_clkout2_divide=1
+CSET mmcm_clkout2_duty_cycle=0.500
+CSET mmcm_clkout2_phase=0.000
+CSET mmcm_clkout2_use_fine_ps=false
+CSET mmcm_clkout3_divide=1
+CSET mmcm_clkout3_duty_cycle=0.500
+CSET mmcm_clkout3_phase=0.000
+CSET mmcm_clkout3_use_fine_ps=false
+CSET mmcm_clkout4_cascade=false
+CSET mmcm_clkout4_divide=1
+CSET mmcm_clkout4_duty_cycle=0.500
+CSET mmcm_clkout4_phase=0.000
+CSET mmcm_clkout4_use_fine_ps=false
+CSET mmcm_clkout5_divide=1
+CSET mmcm_clkout5_duty_cycle=0.500
+CSET mmcm_clkout5_phase=0.000
+CSET mmcm_clkout5_use_fine_ps=false
+CSET mmcm_clkout6_divide=1
+CSET mmcm_clkout6_duty_cycle=0.500
+CSET mmcm_clkout6_phase=0.000
+CSET mmcm_clkout6_use_fine_ps=false
+CSET mmcm_clock_hold=false
+CSET mmcm_compensation=ZHOLD
+CSET mmcm_divclk_divide=1
+CSET mmcm_notes=None
+CSET mmcm_ref_jitter1=0.010
+CSET mmcm_ref_jitter2=0.010
+CSET mmcm_startup_wait=false
+CSET num_out_clks=1
+CSET override_dcm=false
+CSET override_dcm_clkgen=false
+CSET override_mmcm=false
+CSET override_pll=false
+CSET platform=lin64
+CSET pll_bandwidth=OPTIMIZED
+CSET pll_clk_feedback=CLKFBOUT
+CSET pll_clkfbout_mult=4
+CSET pll_clkfbout_phase=0.000
+CSET pll_clkin_period=10.000
+CSET pll_clkout0_divide=1
+CSET pll_clkout0_duty_cycle=0.500
+CSET pll_clkout0_phase=0.000
+CSET pll_clkout1_divide=1
+CSET pll_clkout1_duty_cycle=0.500
+CSET pll_clkout1_phase=0.000
+CSET pll_clkout2_divide=1
+CSET pll_clkout2_duty_cycle=0.500
+CSET pll_clkout2_phase=0.000
+CSET pll_clkout3_divide=1
+CSET pll_clkout3_duty_cycle=0.500
+CSET pll_clkout3_phase=0.000
+CSET pll_clkout4_divide=1
+CSET pll_clkout4_duty_cycle=0.500
+CSET pll_clkout4_phase=0.000
+CSET pll_clkout5_divide=1
+CSET pll_clkout5_duty_cycle=0.500
+CSET pll_clkout5_phase=0.000
+CSET pll_compensation=SYSTEM_SYNCHRONOUS
+CSET pll_divclk_divide=1
+CSET pll_notes=None
+CSET pll_ref_jitter=0.010
+CSET power_down_port=POWER_DOWN
+CSET prim_in_freq=100.000
+CSET prim_in_jitter=0.010
+CSET prim_source=Single_ended_clock_capable_pin
+CSET primary_port=CLK_IN1
+CSET primitive=MMCM
+CSET primtype_sel=PLL_BASE
+CSET psclk_port=PSCLK
+CSET psdone_port=PSDONE
+CSET psen_port=PSEN
+CSET psincdec_port=PSINCDEC
+CSET relative_inclk=REL_PRIMARY
+CSET reset_port=RESET
+CSET secondary_in_freq=100.000
+CSET secondary_in_jitter=0.010
+CSET secondary_port=CLK_IN2
+CSET secondary_source=Single_ended_clock_capable_pin
+CSET ss_mod_freq=250
+CSET ss_mode=CENTER_HIGH
+CSET status_port=STATUS
+CSET summary_strings=empty
+CSET use_clk_valid=false
+CSET use_clkfb_stopped=false
+CSET use_dyn_phase_shift=false
+CSET use_dyn_reconfig=false
+CSET use_freeze=false
+CSET use_freq_synth=true
+CSET use_inclk_stopped=false
+CSET use_inclk_switchover=false
+CSET use_locked=true
+CSET use_max_i_jitter=false
+CSET use_min_o_jitter=false
+CSET use_min_power=false
+CSET use_phase_alignment=true
+CSET use_power_down=false
+CSET use_reset=true
+CSET use_spread_spectrum=false
+CSET use_spread_spectrum_1=false
+CSET use_status=false
+# END Parameters
+# BEGIN Extra information
+MISC pkg_timestamp=2012-05-10T12:44:55Z
+# END Extra information
+GENERATE
+# CRC: fe0bbd35
