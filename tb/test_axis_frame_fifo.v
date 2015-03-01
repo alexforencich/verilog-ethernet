@@ -67,7 +67,8 @@ end
 
 axis_frame_fifo #(
     .ADDR_WIDTH(9),
-    .DATA_WIDTH(8)
+    .DATA_WIDTH(8),
+    .DROP_WHEN_FULL(0)
 )
 UUT (
     .clk(clk),

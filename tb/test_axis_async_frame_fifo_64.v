@@ -75,7 +75,8 @@ end
 
 axis_async_frame_fifo_64 #(
     .ADDR_WIDTH(6),
-    .DATA_WIDTH(64)
+    .DATA_WIDTH(64),
+    .DROP_WHEN_FULL(0)
 )
 UUT (
     // AXI input

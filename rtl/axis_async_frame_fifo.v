@@ -32,7 +32,8 @@ THE SOFTWARE.
 module axis_async_frame_fifo #
 (
     parameter ADDR_WIDTH = 12,
-    parameter DATA_WIDTH = 8
+    parameter DATA_WIDTH = 8,
+    parameter DROP_WHEN_FULL = 0
 )
 (
     /*
@@ -70,6 +71,8 @@ reg [ADDR_WIDTH:0] rd_ptr_gray_sync1 = {ADDR_WIDTH+1{1'b0}};
 reg [ADDR_WIDTH:0] rd_ptr_gray_sync2 = {ADDR_WIDTH+1{1'b0}};
 reg [ADDR_WIDTH:0] rd_ptr_gray_sync3 = {ADDR_WIDTH+1{1'b0}};
 
+reg drop_frame = 1'b0;
+
 reg [DATA_WIDTH+2-1:0] data_out_reg = {1'b0, {DATA_WIDTH{1'b0}}};
 
 //(* RAM_STYLE="BLOCK" *)
@@ -92,12 +95,12 @@ wire empty = rd_ptr_gray == wr_ptr_gray_sync3;
 wire full_cur = ((wr_ptr[ADDR_WIDTH] != wr_ptr_cur[ADDR_WIDTH]) &&
                  (wr_ptr[ADDR_WIDTH-1:0] == wr_ptr_cur[ADDR_WIDTH-1:0]));
 
-wire write = input_axis_tvalid & ~full;
+wire write = input_axis_tvalid & (~full | DROP_WHEN_FULL);
 wire read = (output_axis_tready | ~output_axis_tvalid_reg) & ~empty;
 
 assign {output_axis_tlast, output_axis_tdata} = data_out_reg;
 
-assign input_axis_tready = ~full;
+assign input_axis_tready = (~full | DROP_WHEN_FULL);
 assign output_axis_tvalid = output_axis_tvalid_reg;
 
 // write
@@ -105,10 +108,12 @@ always @(posedge input_clk or posedge input_rst) begin
     if (input_rst) begin
         wr_ptr <= 0;
     end else if (write) begin
-        if (full_cur) begin
+        if (full | full_cur | drop_frame) begin
             // buffer full, hold current pointer, drop packet at end
+            drop_frame <= 1;
             if (input_axis_tlast) begin
                 wr_ptr_cur <= wr_ptr;
+                drop_frame <= 0;
             end
         end else begin
             mem[wr_ptr_cur[ADDR_WIDTH-1:0]] <= data_in;
