@@ -84,7 +84,7 @@ def dut_axis_eth_fcs_insert(clk,
 def bench():
 
     # Parameters
-    ENABLE_PADDING = 0
+    ENABLE_PADDING = 1
     MIN_FRAME_LENGTH = 64
 
     # Inputs
@@ -224,7 +224,15 @@ def bench():
                 eth_frame = eth_ep.EthFrame()
                 eth_frame.parse_axis_fcs(rx_frame)
 
-                assert eth_frame == test_frame
+                print(hex(eth_frame.eth_fcs))
+                print(hex(eth_frame.calc_fcs()))
+
+                assert len(eth_frame.payload.data) == max(payload_len, 46)
+                assert eth_frame.eth_fcs == eth_frame.calc_fcs()
+                assert eth_frame.eth_dest_mac == test_frame.eth_dest_mac
+                assert eth_frame.eth_src_mac == test_frame.eth_src_mac
+                assert eth_frame.eth_type == test_frame.eth_type
+                assert eth_frame.payload.data.index(test_frame.payload.data) == 0
 
                 assert sink_queue.empty()
 
@@ -269,7 +277,15 @@ def bench():
                 eth_frame = eth_ep.EthFrame()
                 eth_frame.parse_axis_fcs(rx_frame)
 
-                assert eth_frame == test_frame1
+                print(hex(eth_frame.eth_fcs))
+                print(hex(eth_frame.calc_fcs()))
+
+                assert len(eth_frame.payload.data) == max(payload_len, 46)
+                assert eth_frame.eth_fcs == eth_frame.calc_fcs()
+                assert eth_frame.eth_dest_mac == test_frame1.eth_dest_mac
+                assert eth_frame.eth_src_mac == test_frame1.eth_src_mac
+                assert eth_frame.eth_type == test_frame1.eth_type
+                assert eth_frame.payload.data.index(test_frame1.payload.data) == 0
 
                 rx_frame = None
                 if not sink_queue.empty():
@@ -278,7 +294,15 @@ def bench():
                 eth_frame = eth_ep.EthFrame()
                 eth_frame.parse_axis_fcs(rx_frame)
 
-                assert eth_frame == test_frame2
+                print(hex(eth_frame.eth_fcs))
+                print(hex(eth_frame.calc_fcs()))
+
+                assert len(eth_frame.payload.data) == max(payload_len, 46)
+                assert eth_frame.eth_fcs == eth_frame.calc_fcs()
+                assert eth_frame.eth_dest_mac == test_frame2.eth_dest_mac
+                assert eth_frame.eth_src_mac == test_frame2.eth_src_mac
+                assert eth_frame.eth_type == test_frame2.eth_type
+                assert eth_frame.payload.data.index(test_frame2.payload.data) == 0
 
                 assert sink_queue.empty()
 
@@ -331,7 +355,15 @@ def bench():
                 eth_frame = eth_ep.EthFrame()
                 eth_frame.parse_axis_fcs(rx_frame)
 
-                assert eth_frame == test_frame2
+                print(hex(eth_frame.eth_fcs))
+                print(hex(eth_frame.calc_fcs()))
+
+                assert len(eth_frame.payload.data) == max(payload_len, 46)
+                assert eth_frame.eth_fcs == eth_frame.calc_fcs()
+                assert eth_frame.eth_dest_mac == test_frame2.eth_dest_mac
+                assert eth_frame.eth_src_mac == test_frame2.eth_src_mac
+                assert eth_frame.eth_type == test_frame2.eth_type
+                assert eth_frame.payload.data.index(test_frame2.payload.data) == 0
 
                 assert sink_queue.empty()
 

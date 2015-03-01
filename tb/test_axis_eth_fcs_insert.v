@@ -32,7 +32,7 @@ THE SOFTWARE.
 module test_axis_eth_fcs_insert;
 
 // Parameters
-parameter ENABLE_PADDING = 0;
+parameter ENABLE_PADDING = 1;
 parameter MIN_FRAME_LENGTH = 64;
 
 // Inputs
