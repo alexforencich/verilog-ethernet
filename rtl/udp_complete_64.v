@@ -287,6 +287,27 @@ wire udp_tx_ip_payload_tready;
 wire input_select_udp = (ip_rx_ip_protocol == 8'h11);
 wire input_select_ip = ~input_select_udp;
 
+reg input_select_udp_reg = 0;
+reg input_select_ip_reg = 0;
+
+always @(posedge clk) begin
+    if (rst) begin
+        input_select_udp_reg <= 0;
+        input_select_ip_reg <= 0;
+    end else begin
+        if (ip_rx_ip_payload_tvalid) begin
+            if ((~input_select_udp_reg & ~input_select_ip_reg) |
+                (ip_rx_ip_payload_tvalid & ip_rx_ip_payload_tready & ip_rx_ip_payload_tlast)) begin
+                input_select_udp_reg <= input_select_udp;
+                input_select_ip_reg <= input_select_ip;
+            end
+        end else begin
+            input_select_udp_reg <= 0;
+            input_select_ip_reg <= 0;
+        end
+    end
+end
+
 // IP frame to UDP module
 assign udp_rx_ip_hdr_valid = input_select_udp & ip_rx_ip_hdr_valid;
 assign udp_rx_ip_eth_dest_mac = ip_rx_ip_eth_dest_mac;
@@ -307,7 +328,7 @@ assign udp_rx_ip_source_ip = ip_rx_ip_source_ip;
 assign udp_rx_ip_dest_ip = ip_rx_ip_dest_ip;
 assign udp_rx_ip_payload_tdata = ip_rx_ip_payload_tdata;
 assign udp_rx_ip_payload_tkeep = ip_rx_ip_payload_tkeep;
-assign udp_rx_ip_payload_tvalid = input_select_udp & ip_rx_ip_payload_tvalid;
+assign udp_rx_ip_payload_tvalid = input_select_udp_reg & ip_rx_ip_payload_tvalid;
 assign udp_rx_ip_payload_tlast = ip_rx_ip_payload_tlast;
 assign udp_rx_ip_payload_tuser = ip_rx_ip_payload_tuser;
 
@@ -331,14 +352,14 @@ assign output_ip_source_ip = ip_rx_ip_source_ip;
 assign output_ip_dest_ip = ip_rx_ip_dest_ip;
 assign output_ip_payload_tdata = ip_rx_ip_payload_tdata;
 assign output_ip_payload_tkeep = ip_rx_ip_payload_tkeep;
-assign output_ip_payload_tvalid = input_select_ip & ip_rx_ip_payload_tvalid;
+assign output_ip_payload_tvalid = input_select_ip_reg & ip_rx_ip_payload_tvalid;
 assign output_ip_payload_tlast = ip_rx_ip_payload_tlast;
 assign output_ip_payload_tuser = ip_rx_ip_payload_tuser;
 
 assign ip_rx_ip_hdr_ready = udp_rx_ip_hdr_ready & output_ip_hdr_ready;
 
-assign ip_rx_ip_payload_tready = (input_select_udp & udp_rx_ip_payload_tready) |
-                                 (input_select_ip & output_ip_payload_tready);
+assign ip_rx_ip_payload_tready = (input_select_udp_reg & udp_rx_ip_payload_tready) |
+                                 (input_select_ip_reg & output_ip_payload_tready);
 
 /*
  * Output arbiter

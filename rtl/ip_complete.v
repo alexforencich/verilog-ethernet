@@ -197,12 +197,37 @@ wire input_select_ip = (input_eth_type == 16'h0800);
 wire input_select_arp = (input_eth_type == 16'h0806);
 wire input_select_none = ~(input_select_ip | input_select_arp);
 
+reg input_select_ip_reg = 0;
+reg input_select_arp_reg = 0;
+reg input_select_none_reg = 0;
+
+always @(posedge clk) begin
+    if (rst) begin
+        input_select_ip_reg <= 0;
+        input_select_arp_reg <= 0;
+        input_select_none_reg <= 0;
+    end else begin
+        if (input_eth_payload_tvalid) begin
+            if ((~input_select_ip_reg & ~input_select_arp_reg & ~input_select_none_reg) |
+                (input_eth_payload_tvalid & input_eth_payload_tready & input_eth_payload_tlast)) begin
+                input_select_ip_reg <= input_select_ip;
+                input_select_arp_reg <= input_select_arp;
+                input_select_none_reg <= input_select_none;
+            end
+        end else begin
+            input_select_ip_reg <= 0;
+            input_select_arp_reg <= 0;
+            input_select_none_reg <= 0;
+        end
+    end
+end
+
 assign ip_rx_eth_hdr_valid = input_select_ip & input_eth_hdr_valid;
 assign ip_rx_eth_dest_mac = input_eth_dest_mac;
 assign ip_rx_eth_src_mac = input_eth_src_mac;
 assign ip_rx_eth_type = 16'h0800;
 assign ip_rx_eth_payload_tdata = input_eth_payload_tdata;
-assign ip_rx_eth_payload_tvalid = input_select_ip & input_eth_payload_tvalid;
+assign ip_rx_eth_payload_tvalid = input_select_ip_reg & input_eth_payload_tvalid;
 assign ip_rx_eth_payload_tlast = input_eth_payload_tlast;
 assign ip_rx_eth_payload_tuser = input_eth_payload_tuser;
 
@@ -211,15 +236,15 @@ assign arp_rx_eth_dest_mac = input_eth_dest_mac;
 assign arp_rx_eth_src_mac = input_eth_src_mac;
 assign arp_rx_eth_type = 16'h0806;
 assign arp_rx_eth_payload_tdata = input_eth_payload_tdata;
-assign arp_rx_eth_payload_tvalid = input_select_arp & input_eth_payload_tvalid;
+assign arp_rx_eth_payload_tvalid = input_select_arp_reg & input_eth_payload_tvalid;
 assign arp_rx_eth_payload_tlast = input_eth_payload_tlast;
 assign arp_rx_eth_payload_tuser = input_eth_payload_tuser;
 
 assign input_eth_hdr_ready = arp_rx_eth_hdr_ready & ip_rx_eth_hdr_ready;
 
-assign input_eth_payload_tready = (input_select_ip & ip_rx_eth_payload_tready) |
-                                  (input_select_arp & arp_rx_eth_payload_tready) |
-                                  input_select_none;
+assign input_eth_payload_tready = (input_select_ip_reg & ip_rx_eth_payload_tready) |
+                                  (input_select_arp_reg & arp_rx_eth_payload_tready) |
+                                  input_select_none_reg;
 
 /*
  * Output arbiter
