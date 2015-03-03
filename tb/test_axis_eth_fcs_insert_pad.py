@@ -36,7 +36,7 @@ srcs = []
 
 srcs.append("../rtl/%s.v" % module)
 srcs.append("../rtl/eth_crc_8.v")
-srcs.append("test_%s.v" % module)
+srcs.append("test_%s_pad.v" % module)
 
 src = ' '.join(srcs)
 
@@ -227,7 +227,7 @@ def bench():
                 print(hex(eth_frame.eth_fcs))
                 print(hex(eth_frame.calc_fcs()))
 
-                assert eth_frame.payload.data == test_frame.payload.data
+                assert len(eth_frame.payload.data) == max(payload_len, 46)
                 assert eth_frame.eth_fcs == eth_frame.calc_fcs()
                 assert eth_frame.eth_dest_mac == test_frame.eth_dest_mac
                 assert eth_frame.eth_src_mac == test_frame.eth_src_mac
@@ -280,7 +280,7 @@ def bench():
                 print(hex(eth_frame.eth_fcs))
                 print(hex(eth_frame.calc_fcs()))
 
-                assert eth_frame.payload.data == test_frame1.payload.data
+                assert len(eth_frame.payload.data) == max(payload_len, 46)
                 assert eth_frame.eth_fcs == eth_frame.calc_fcs()
                 assert eth_frame.eth_dest_mac == test_frame1.eth_dest_mac
                 assert eth_frame.eth_src_mac == test_frame1.eth_src_mac
@@ -297,7 +297,7 @@ def bench():
                 print(hex(eth_frame.eth_fcs))
                 print(hex(eth_frame.calc_fcs()))
 
-                assert eth_frame.payload.data == test_frame2.payload.data
+                assert len(eth_frame.payload.data) == max(payload_len, 46)
                 assert eth_frame.eth_fcs == eth_frame.calc_fcs()
                 assert eth_frame.eth_dest_mac == test_frame2.eth_dest_mac
                 assert eth_frame.eth_src_mac == test_frame2.eth_src_mac
@@ -358,7 +358,7 @@ def bench():
                 print(hex(eth_frame.eth_fcs))
                 print(hex(eth_frame.calc_fcs()))
 
-                assert eth_frame.payload.data == test_frame2.payload.data
+                assert len(eth_frame.payload.data) == max(payload_len, 46)
                 assert eth_frame.eth_fcs == eth_frame.calc_fcs()
                 assert eth_frame.eth_dest_mac == test_frame2.eth_dest_mac
                 assert eth_frame.eth_src_mac == test_frame2.eth_src_mac

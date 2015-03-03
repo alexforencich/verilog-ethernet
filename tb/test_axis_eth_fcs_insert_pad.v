@@ -29,10 +29,10 @@ THE SOFTWARE.
 /*
  * Testbench for axis_eth_fcs_insert
  */
-module test_axis_eth_fcs_insert;
+module test_axis_eth_fcs_insert_pad;
 
 // Parameters
-parameter ENABLE_PADDING = 0;
+parameter ENABLE_PADDING = 1;
 parameter MIN_FRAME_LENGTH = 64;
 
 // Inputs
@@ -72,8 +72,8 @@ initial begin
               busy);
 
     // dump file
-    $dumpfile("test_axis_eth_fcs_insert.lxt");
-    $dumpvars(0, test_axis_eth_fcs_insert);
+    $dumpfile("test_axis_eth_fcs_insert_pad.lxt");
+    $dumpvars(0, test_axis_eth_fcs_insert_pad);
 end
 
 axis_eth_fcs_insert #(
