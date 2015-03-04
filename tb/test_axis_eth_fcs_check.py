@@ -26,6 +26,8 @@ THE SOFTWARE.
 from myhdl import *
 import os
 from Queue import Queue
+import struct
+import zlib
 
 import axis_ep
 import eth_ep
@@ -409,6 +411,36 @@ def bench():
 
                 assert eth_frame == test_frame2
                 assert not rx_frame.user[-1]
+
+                assert sink_queue.empty()
+
+                yield delay(100)
+
+        for payload_len in list(range(1,18)):
+            yield clk.posedge
+            print("test 5: test short packet, length %d" % payload_len)
+            current_test.next = 5
+
+            test_frame = bytearray(range(payload_len))
+            fcs = zlib.crc32(bytes(test_frame)) & 0xffffffff
+            test_frame_fcs = test_frame + struct.pack('<L', fcs)
+
+            for wait in wait_normal, wait_pause_source, wait_pause_sink:
+                source_queue.put(test_frame_fcs)
+                yield clk.posedge
+                yield clk.posedge
+
+                yield wait()
+
+                yield clk.posedge
+                yield clk.posedge
+                yield clk.posedge
+
+                rx_frame = None
+                if not sink_queue.empty():
+                    rx_frame = sink_queue.get()
+
+                assert test_frame == bytearray(rx_frame)
 
                 assert sink_queue.empty()
 

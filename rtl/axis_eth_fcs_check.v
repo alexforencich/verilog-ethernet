@@ -149,7 +149,20 @@ always @* begin
                     frame_ptr_next = 1;
                     reset_crc = 0;
                     update_crc = 1;
-                    state_next = STATE_PAYLOAD;
+                    if (input_axis_tlast) begin
+                        shift_reset = 1;
+                        reset_crc = 1;
+                        output_axis_tlast_int = 1;
+                        output_axis_tuser_int = input_axis_tuser;
+                        if ({input_axis_tdata, input_axis_tdata_d0, input_axis_tdata_d1, input_axis_tdata_d2} != ~crc_next) begin
+                            output_axis_tuser_int = 1;
+                            error_bad_fcs_next = 1;
+                        end
+                        input_axis_tready_next = output_axis_tready_int_early;
+                        state_next = STATE_IDLE;
+                    end else begin
+                        state_next = STATE_PAYLOAD;
+                    end
                 end else begin
                     state_next = STATE_IDLE;
                 end
