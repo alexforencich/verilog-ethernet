@@ -150,6 +150,8 @@ always @* begin
                     reset_crc = 0;
                     update_crc = 1;
                     state_next = STATE_PAYLOAD;
+                end else begin
+                    state_next = STATE_IDLE;
                 end
             end else begin
                 state_next = STATE_IDLE;
