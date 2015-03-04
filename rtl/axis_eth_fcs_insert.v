@@ -133,7 +133,25 @@ always @* begin
                 frame_ptr_next = 1;
                 reset_crc = 0;
                 update_crc = 1;
-                state_next = STATE_PAYLOAD;
+                if (input_axis_tlast) begin
+                    if (input_axis_tuser) begin
+                        output_axis_tlast_int = 1;
+                        output_axis_tuser_int = 1;
+                        reset_crc = 1;
+                        frame_ptr_next = 0;
+                        state_next = STATE_IDLE;
+                    end else begin
+                        input_axis_tready_next = 0;
+                        if (ENABLE_PADDING && frame_ptr_reg < MIN_FRAME_LENGTH-5) begin
+                            state_next = STATE_PAD;
+                        end else begin
+                            frame_ptr_next = 0;
+                            state_next = STATE_FCS;
+                        end
+                    end
+                end else begin
+                    state_next = STATE_PAYLOAD;
+                end
             end else begin
                 state_next = STATE_IDLE;
             end
@@ -155,6 +173,7 @@ always @* begin
                         output_axis_tlast_int = 1;
                         output_axis_tuser_int = 1;
                         reset_crc = 1;
+                        frame_ptr_next = 0;
                         state_next = STATE_IDLE;
                     end else begin
                         input_axis_tready_next = 0;
