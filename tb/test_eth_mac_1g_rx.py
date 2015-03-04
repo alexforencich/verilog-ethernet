@@ -179,7 +179,7 @@ def bench():
 
             axis_frame = test_frame.build_axis_fcs()
 
-            source_queue.put(axis_frame)
+            source_queue.put(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+bytearray(axis_frame))
             yield clk.posedge
             yield clk.posedge
 
@@ -224,8 +224,8 @@ def bench():
             axis_frame1 = test_frame1.build_axis_fcs()
             axis_frame2 = test_frame2.build_axis_fcs()
 
-            source_queue.put(axis_frame1)
-            source_queue.put(axis_frame2)
+            source_queue.put(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+bytearray(axis_frame1))
+            source_queue.put(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+bytearray(axis_frame2))
             yield clk.posedge
             yield clk.posedge
 
@@ -290,8 +290,8 @@ def bench():
             error_bad_frame_asserted.next = 0
             error_bad_fcs_asserted.next = 0
 
-            source_queue.put(axis_frame1)
-            source_queue.put(axis_frame2)
+            source_queue.put(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+bytearray(axis_frame1))
+            source_queue.put(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+bytearray(axis_frame2))
             yield clk.posedge
             yield clk.posedge
 

@@ -58,7 +58,6 @@ def GMIISource(clk, rst,
                     frame = fifo.get()
                     if name is not None:
                         print("[%s] Sending frame %s" % (name, repr(frame)))
-                    frame = '\x55\x55\x55\x55\x55\x55\x55\xD5'+bytearray(frame)
                     txd.next = frame.pop(0)
                     tx_en.next = 1
                 else:
@@ -85,12 +84,12 @@ def GMIISink(clk, rst,
                 frame = None
             else:
                 if rx_dv:
-                    if frame is None and rxd == 0xD5:
+                    if frame is None:
                         frame = []
-                    elif frame is not None:
-                        frame.append(int(rxd))
+                    frame.append(int(rxd))
                 elif frame is not None:
                     if len(frame) > 0:
+                        frame = bytearray(frame)
                         if fifo is not None:
                             fifo.put(frame)
                         if name is not None:

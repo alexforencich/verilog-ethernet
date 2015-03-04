@@ -190,8 +190,10 @@ def bench():
             if not sink_queue.empty():
                 rx_frame = sink_queue.get()
 
+            assert rx_frame[0:8] == bytearray(b'\x55\x55\x55\x55\x55\x55\x55\xD5')
+
             eth_frame = eth_ep.EthFrame()
-            eth_frame.parse_axis_fcs(bytearray(rx_frame))
+            eth_frame.parse_axis_fcs(rx_frame[8:])
 
             print(hex(eth_frame.eth_fcs))
             print(hex(eth_frame.calc_fcs()))
@@ -243,8 +245,10 @@ def bench():
             if not sink_queue.empty():
                 rx_frame = sink_queue.get()
 
+            assert rx_frame[0:8] == bytearray(b'\x55\x55\x55\x55\x55\x55\x55\xD5')
+
             eth_frame = eth_ep.EthFrame()
-            eth_frame.parse_axis_fcs(bytearray(rx_frame))
+            eth_frame.parse_axis_fcs(rx_frame[8:])
 
             print(hex(eth_frame.eth_fcs))
             print(hex(eth_frame.calc_fcs()))
@@ -260,8 +264,10 @@ def bench():
             if not sink_queue.empty():
                 rx_frame = sink_queue.get()
 
+            assert rx_frame[0:8] == bytearray(b'\x55\x55\x55\x55\x55\x55\x55\xD5')
+
             eth_frame = eth_ep.EthFrame()
-            eth_frame.parse_axis_fcs(bytearray(rx_frame))
+            eth_frame.parse_axis_fcs(rx_frame[8:])
 
             print(hex(eth_frame.eth_fcs))
             print(hex(eth_frame.calc_fcs()))
@@ -315,14 +321,18 @@ def bench():
             if not sink_queue.empty():
                 rx_frame = sink_queue.get()
 
+            assert rx_frame[0:8] == bytearray(b'\x55\x55\x55\x55\x55\x55\x55\xD5')
+
             # bad packet
 
             rx_frame = None
             if not sink_queue.empty():
                 rx_frame = sink_queue.get()
 
+            assert rx_frame[0:8] == bytearray(b'\x55\x55\x55\x55\x55\x55\x55\xD5')
+
             eth_frame = eth_ep.EthFrame()
-            eth_frame.parse_axis_fcs(bytearray(rx_frame))
+            eth_frame.parse_axis_fcs(rx_frame[8:])
 
             print(hex(eth_frame.eth_fcs))
             print(hex(eth_frame.calc_fcs()))

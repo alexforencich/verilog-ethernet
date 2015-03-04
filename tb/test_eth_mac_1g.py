@@ -265,7 +265,7 @@ def bench():
 
         axis_frame = test_frame.build_axis_fcs()
 
-        gmii_source_queue.put(axis_frame)
+        gmii_source_queue.put(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+bytearray(axis_frame))
         yield clk.posedge
         yield clk.posedge
 
@@ -314,8 +314,10 @@ def bench():
         if not gmii_sink_queue.empty():
             rx_frame = gmii_sink_queue.get()
 
+        assert rx_frame[0:8] == bytearray(b'\x55\x55\x55\x55\x55\x55\x55\xD5')
+        
         eth_frame = eth_ep.EthFrame()
-        eth_frame.parse_axis_fcs(bytearray(rx_frame))
+        eth_frame.parse_axis_fcs(rx_frame[8:])
 
         print(hex(eth_frame.eth_fcs))
         print(hex(eth_frame.calc_fcs()))
