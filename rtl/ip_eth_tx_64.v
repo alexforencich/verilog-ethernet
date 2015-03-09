@@ -245,7 +245,7 @@ always @* begin
 end
 
 always @* begin
-    state_next = 2'bz;
+    state_next = STATE_IDLE;
 
     input_ip_hdr_ready_next = 0;
     input_ip_payload_tready_next = 0;

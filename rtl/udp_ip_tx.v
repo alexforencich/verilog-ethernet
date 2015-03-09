@@ -213,7 +213,7 @@ assign busy = busy_reg;
 assign error_payload_early_termination = error_payload_early_termination_reg;
 
 always @* begin
-    state_next = 2'bz;
+    state_next = STATE_IDLE;
 
     input_udp_hdr_ready_next = 0;
     input_udp_payload_tready_next = 0;

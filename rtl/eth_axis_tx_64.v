@@ -155,7 +155,7 @@ always @* begin
 end
 
 always @* begin
-    state_next = 2'bz;
+    state_next = STATE_IDLE;
 
     input_eth_hdr_ready_next = 0;
     input_eth_payload_tready_next = 0;

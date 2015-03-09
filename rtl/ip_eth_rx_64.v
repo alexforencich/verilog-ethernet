@@ -276,7 +276,7 @@ always @* begin
 end
 
 always @* begin
-    state_next = 2'bz;
+    state_next = STATE_IDLE;
 
     flush_save = 0;
     transfer_in_save = 0;

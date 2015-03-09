@@ -141,7 +141,7 @@ assign output_eth_type = output_eth_type_reg;
 assign busy = busy_reg;
 
 always @* begin
-    state_next = 2'bz;
+    state_next = STATE_IDLE;
 
     input_frame_ready_next = 0;
 

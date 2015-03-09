@@ -253,7 +253,7 @@ assign arp_request_ip = input_ip_dest_ip;
 assign tx_error_arp_failed = arp_response_error;
 
 always @* begin
-    state_next = 8'bz;
+    state_next = STATE_IDLE;
 
     arp_request_valid_next = 0;
     drop_packet_next = 0;
