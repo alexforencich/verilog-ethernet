@@ -505,8 +505,8 @@ def bench():
                 assert byte_count == sum(len(f.data) for f in test_frame)
                 assert frame_count == len(test_frame)
 
-                test_rate = 1.0 * rate_num / rate_denom
-                meas_rate = 1.0 * byte_count / tick_count
+                test_rate = float(rate_num) / float(rate_denom)
+                meas_rate = float(byte_count) / float(tick_count)
                 error = (test_rate - meas_rate) / test_rate
 
                 print("test rate %f" % test_rate)
