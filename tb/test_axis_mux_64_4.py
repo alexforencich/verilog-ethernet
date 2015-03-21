@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 """
 
 Copyright (c) 2014 Alex Forencich
@@ -25,7 +25,11 @@ THE SOFTWARE.
 
 from myhdl import *
 import os
-from Queue import Queue
+
+try:
+    from queue import Queue
+except ImportError:
+    from Queue import Queue
 
 import axis_ep
 
@@ -299,10 +303,10 @@ def bench():
 
         select.next = 0
 
-        test_frame = axis_ep.AXIStreamFrame('\xDA\xD1\xD2\xD3\xD4\xD5' +
-                                            '\x5A\x51\x52\x53\x54\x55' +
-                                            '\x80\x00' +
-                                            '\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
+        test_frame = axis_ep.AXIStreamFrame(b'\xDA\xD1\xD2\xD3\xD4\xD5' +
+                                            b'\x5A\x51\x52\x53\x54\x55' +
+                                            b'\x80\x00' +
+                                            b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
         source_0_queue.put(test_frame)
         yield clk.posedge
 
@@ -325,10 +329,10 @@ def bench():
 
         select.next = 1
 
-        test_frame = axis_ep.AXIStreamFrame('\xDA\xD1\xD2\xD3\xD4\xD5' +
-                                            '\x5A\x51\x52\x53\x54\x55' +
-                                            '\x80\x00' +
-                                            '\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
+        test_frame = axis_ep.AXIStreamFrame(b'\xDA\xD1\xD2\xD3\xD4\xD5' +
+                                            b'\x5A\x51\x52\x53\x54\x55' +
+                                            b'\x80\x00' +
+                                            b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
         source_1_queue.put(test_frame)
         yield clk.posedge
 
@@ -351,14 +355,14 @@ def bench():
 
         select.next = 0
 
-        test_frame1 = axis_ep.AXIStreamFrame('\xDA\xD1\xD2\xD3\xD4\xD5' +
-                                            '\x5A\x51\x52\x53\x54\x55' +
-                                            '\x80\x00' +
-                                            '\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
-        test_frame2 = axis_ep.AXIStreamFrame('\xDA\xD1\xD2\xD3\xD4\xD5' +
-                                            '\x5A\x51\x52\x53\x54\x55' +
-                                            '\x80\x00' +
-                                            '\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
+        test_frame1 = axis_ep.AXIStreamFrame(b'\xDA\xD1\xD2\xD3\xD4\xD5' +
+                                            b'\x5A\x51\x52\x53\x54\x55' +
+                                            b'\x80\x00' +
+                                            b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
+        test_frame2 = axis_ep.AXIStreamFrame(b'\xDA\xD1\xD2\xD3\xD4\xD5' +
+                                            b'\x5A\x51\x52\x53\x54\x55' +
+                                            b'\x80\x00' +
+                                            b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
         source_0_queue.put(test_frame1)
         source_0_queue.put(test_frame2)
         yield clk.posedge
@@ -388,14 +392,14 @@ def bench():
 
         select.next = 1
 
-        test_frame1 = axis_ep.AXIStreamFrame('\xDA\xD1\xD2\xD3\xD4\xD5' +
-                                            '\x5A\x51\x52\x53\x54\x55' +
-                                            '\x80\x00' +
-                                            '\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
-        test_frame2 = axis_ep.AXIStreamFrame('\xDA\xD1\xD2\xD3\xD4\xD5' +
-                                            '\x5A\x51\x52\x53\x54\x55' +
-                                            '\x80\x00' +
-                                            '\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
+        test_frame1 = axis_ep.AXIStreamFrame(b'\xDA\xD1\xD2\xD3\xD4\xD5' +
+                                            b'\x5A\x51\x52\x53\x54\x55' +
+                                            b'\x80\x00' +
+                                            b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
+        test_frame2 = axis_ep.AXIStreamFrame(b'\xDA\xD1\xD2\xD3\xD4\xD5' +
+                                            b'\x5A\x51\x52\x53\x54\x55' +
+                                            b'\x80\x00' +
+                                            b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
         source_1_queue.put(test_frame1)
         source_2_queue.put(test_frame2)
         yield clk.posedge
@@ -426,14 +430,14 @@ def bench():
 
         select.next = 1
 
-        test_frame1 = axis_ep.AXIStreamFrame('\xDA\xD1\xD2\xD3\xD4\xD5' +
-                                            '\x5A\x51\x52\x53\x54\x55' +
-                                            '\x80\x00' +
-                                            '\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
-        test_frame2 = axis_ep.AXIStreamFrame('\xDA\xD1\xD2\xD3\xD4\xD5' +
-                                            '\x5A\x51\x52\x53\x54\x55' +
-                                            '\x80\x00' +
-                                            '\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
+        test_frame1 = axis_ep.AXIStreamFrame(b'\xDA\xD1\xD2\xD3\xD4\xD5' +
+                                            b'\x5A\x51\x52\x53\x54\x55' +
+                                            b'\x80\x00' +
+                                            b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
+        test_frame2 = axis_ep.AXIStreamFrame(b'\xDA\xD1\xD2\xD3\xD4\xD5' +
+                                            b'\x5A\x51\x52\x53\x54\x55' +
+                                            b'\x80\x00' +
+                                            b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
         source_1_queue.put(test_frame1)
         source_2_queue.put(test_frame2)
         yield clk.posedge
@@ -475,14 +479,14 @@ def bench():
 
         select.next = 1
 
-        test_frame1 = axis_ep.AXIStreamFrame('\xDA\xD1\xD2\xD3\xD4\xD5' +
-                                            '\x5A\x51\x52\x53\x54\x55' +
-                                            '\x80\x00' +
-                                            '\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
-        test_frame2 = axis_ep.AXIStreamFrame('\xDA\xD1\xD2\xD3\xD4\xD5' +
-                                            '\x5A\x51\x52\x53\x54\x55' +
-                                            '\x80\x00' +
-                                            '\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
+        test_frame1 = axis_ep.AXIStreamFrame(b'\xDA\xD1\xD2\xD3\xD4\xD5' +
+                                            b'\x5A\x51\x52\x53\x54\x55' +
+                                            b'\x80\x00' +
+                                            b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
+        test_frame2 = axis_ep.AXIStreamFrame(b'\xDA\xD1\xD2\xD3\xD4\xD5' +
+                                            b'\x5A\x51\x52\x53\x54\x55' +
+                                            b'\x80\x00' +
+                                            b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
         source_1_queue.put(test_frame1)
         source_2_queue.put(test_frame2)
         yield clk.posedge

@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 """
 
 Copyright (c) 2014 Alex Forencich
@@ -114,7 +114,10 @@ def bench():
 
         for i in range(32):
             l = [i]
-            request.next = reduce(lambda x, y: x|y, [1<<y for y in l])
+            k = 0
+            for y in l:
+                k = k | 1 << y
+            request.next = k
             yield clk.posedge
             request.next = 0
             yield clk.posedge
@@ -134,7 +137,10 @@ def bench():
         for i in range(32):
             for j in range(32):
                 l = [i, j]
-                request.next = reduce(lambda x, y: x|y, [1<<y for y in l])
+                k = 0
+                for y in l:
+                    k = k | 1 << y
+                request.next = k
                 yield clk.posedge
                 request.next = 0
                 yield clk.posedge
@@ -151,7 +157,10 @@ def bench():
 
         for i in range(32):
             l = [(i*x) % 32 for x in [1,2,3,4,5]]
-            request.next = reduce(lambda x, y: x|y, [1<<y for y in l])
+            k = 0
+            for y in l:
+                k = k | 1 << y
+            request.next = k
             yield clk.posedge
             request.next = 0
             yield clk.posedge
