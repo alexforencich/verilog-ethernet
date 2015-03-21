@@ -26,6 +26,7 @@ from myhdl import *
 
 class AXIStreamFrame(object):
     def __init__(self, data=b'', keep=None, user=None):
+        self.B = 0
         self.N = 8
         self.M = 1
         self.WL = 8
@@ -35,10 +36,13 @@ class AXIStreamFrame(object):
 
         if type(data) is bytes or type(data) is bytearray:
             self.data = bytearray(data)
-        if type(data) is AXIStreamFrame:
+        elif type(data) is AXIStreamFrame:
             self.N = data.N
             self.WL = data.WL
-            self.data = bytearray(data.data)
+            if type(data.data) is bytearray:
+                self.data = bytearray(data.data)
+            else:
+                self.data = list(data.data)
             if data.keep is not None:
                 self.keep = list(data.keep)
             if data.user is not None:
@@ -46,6 +50,8 @@ class AXIStreamFrame(object):
                     self.user = data.user
                 else:
                     self.user = list(data.user)
+        else:
+            self.data = list(data)
 
     def build(self):
         if self.data is None:
@@ -62,23 +68,35 @@ class AXIStreamFrame(object):
             assert_tuser = True
             self.user = None
 
-        while len(f) > 0:
-            data = 0
-            keep = 0
-            for j in range(self.M):
-                data = data | (f.pop(0) << (j*self.WL))
-                keep = keep | (1 << j)
-                if len(f) == 0: break
-            tdata.append(data)
-            if self.keep is None:
-                tkeep.append(keep)
-            else:
-                tkeep.append(self.keep[i])
-            if self.user is None:
-                tuser.append(0)
-            else:
-                tuser.append(self.user[i])
-            i += 1
+        if self.B == 0:
+            while len(f) > 0:
+                data = 0
+                keep = 0
+                for j in range(self.M):
+                    data = data | (f.pop(0) << (j*self.WL))
+                    keep = keep | (1 << j)
+                    if len(f) == 0: break
+                tdata.append(data)
+                if self.keep is None:
+                    tkeep.append(keep)
+                else:
+                    tkeep.append(self.keep[i])
+                if self.user is None:
+                    tuser.append(0)
+                else:
+                    tuser.append(self.user[i])
+                i += 1
+        else:
+            # multiple tdata signals
+            while len(f) > 0:
+                data = 0
+                tdata.append(f.pop(0))
+                tkeep.append(0)
+                if self.user is None:
+                    tuser.append(0)
+                else:
+                    tuser.append(self.user[i])
+                i += 1
 
         if assert_tuser:
             tuser[-1] = 1
@@ -95,14 +113,21 @@ class AXIStreamFrame(object):
         self.data = []
         self.keep = []
         self.user = []
-        mask = 2**self.WL-1
 
-        for i in range(len(tdata)):
-            for j in range(self.M):
-                if tkeep[i] & (1 << j):
-                    self.data.append((tdata[i] >> (j*self.WL)) & mask)
-            self.keep.append(tkeep[i])
-            self.user.append(tuser[i])
+        if self.B == 0:
+            mask = 2**self.WL-1
+
+            for i in range(len(tdata)):
+                for j in range(self.M):
+                    if tkeep[i] & (1 << j):
+                        self.data.append((tdata[i] >> (j*self.WL)) & mask)
+                self.keep.append(tkeep[i])
+                self.user.append(tuser[i])
+        else:
+            for i in range(len(tdata)):
+                self.data.append(tdata[i])
+                self.keep.append(tkeep[i])
+                self.user.append(tuser[i])
 
         if self.WL == 8:
             self.data = bytearray(self.data)
@@ -142,27 +167,39 @@ def AXIStreamSource(clk, rst,
         data = []
         keep = []
         user = []
+        B = 0
         N = len(tdata)
-        M = 1
-        b = False
-        if tkeep is not None:
-            M = len(tkeep)
-        WL = (len(tdata)+M-1)/M
-        if WL == 8:
-            b = True
+        M = len(tkeep)
+        WL = int((len(tdata)+M-1)/M)
+
+        if type(tdata) is list or type(tdata) is tuple:
+            # multiple tdata signals
+            B = len(tdata)
+            N = [len(b) for b in tdata]
+            M = 1
+            WL = [1]*B
 
         while True:
             yield clk.posedge, rst.posedge
 
             if rst:
-                tdata.next = 0
+                if B > 0:
+                    for s in tdata:
+                        s.next = 0
+                else:
+                    tdata.next = 0
                 tkeep.next = 0
                 tvalid_int.next = False
                 tlast.next = False
             else:
                 if tready_int and tvalid:
                     if len(data) > 0:
-                        tdata.next = data.pop(0)
+                        if B > 0:
+                            l = data.pop(0)
+                            for i in range(B):
+                                tdata[i].next = l[i]
+                        else:
+                            tdata.next = data.pop(0)
                         tkeep.next = keep.pop(0)
                         tuser.next = user.pop(0)
                         tvalid_int.next = True
@@ -174,14 +211,19 @@ def AXIStreamSource(clk, rst,
                     if not fifo.empty():
                         frame = fifo.get()
                         frame = AXIStreamFrame(frame)
+                        frame.B = B
                         frame.N = N
                         frame.M = M
                         frame.WL = WL
-                        frame.build()
+                        data, keep, user = frame.build()
                         if name is not None:
                             print("[%s] Sending frame %s" % (name, repr(frame)))
-                        data, keep, user = frame.build()
-                        tdata.next = data.pop(0)
+                        if B > 0:
+                            l = data.pop(0)
+                            for i in range(B):
+                                tdata[i].next = l[i]
+                        else:
+                            tdata.next = data.pop(0)
                         tkeep.next = keep.pop(0)
                         tuser.next = user.pop(0)
                         tvalid_int.next = True
@@ -215,13 +257,17 @@ def AXIStreamSink(clk, rst,
         data = []
         keep = []
         user = []
+        B = 0
         N = len(tdata)
-        M = 1
-        b = False
         M = len(tkeep)
-        WL = (len(tdata)+M-1)/M
-        if WL == 8:
-            b = True
+        WL = int((len(tdata)+M-1)/M)
+
+        if type(tdata) is list or type(tdata) is tuple:
+            # multiple tdata signals
+            B = len(tdata)
+            N = [len(b) for b in tdata]
+            M = 1
+            WL = [1]*B
 
         while True:
             yield clk.posedge, rst.posedge
@@ -236,10 +282,17 @@ def AXIStreamSink(clk, rst,
                 tready_int.next = True
 
                 if tvalid_int:
-                    data.append(int(tdata))
+                    if B > 0:
+                        l = []
+                        for i in range(B):
+                            l.append(int(tdata[i]))
+                        data.append(l)
+                    else:
+                        data.append(int(tdata))
                     keep.append(int(tkeep))
                     user.append(int(tuser))
                     if tlast:
+                        frame.B = B
                         frame.N = N
                         frame.M = M
                         frame.WL = WL
