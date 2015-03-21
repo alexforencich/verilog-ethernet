@@ -147,7 +147,7 @@ def AXIStreamSource(clk, rst,
         b = False
         if tkeep is not None:
             M = len(tkeep)
-        WL = (len(tdata)+M-1)/M
+        WL = int((len(tdata)+M-1)/M)
         if WL == 8:
             b = True
 
@@ -219,7 +219,7 @@ def AXIStreamSink(clk, rst,
         M = 1
         b = False
         M = len(tkeep)
-        WL = (len(tdata)+M-1)/M
+        WL = int((len(tdata)+M-1)/M)
         if WL == 8:
             b = True
 
