@@ -1,6 +1,8 @@
 language: python
 python:
-  - "3.3"
+  - "3.2"
+virtualenv:
+  system_site_packages: true
 before_install:
   - export d=`pwd`
   - sudo apt-get update -qq
