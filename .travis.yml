@@ -7,7 +7,7 @@ before_install:
   - export d=`pwd`
   - sudo apt-get update -qq
   - sudo apt-get install -y iverilog
-  - hg clone https://bitbucket.org/alexforencich/myhdl
+  - git clone https://github.com/jandecaluwe/myhdl.git
   - cd $d/myhdl && sudo python setup.py install
   - cd $d/myhdl/cosimulation/icarus && make && sudo install -m 0755 -D ./myhdl.vpi /usr/lib/ivl/myhdl.vpi
   - cd $d
