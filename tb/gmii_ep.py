@@ -55,7 +55,7 @@ def GMIISource(clk, rst,
                     if len(frame) == 0:
                         ifg_cnt = 12
                 elif not fifo.empty():
-                    frame = fifo.get()
+                    frame = list(fifo.get())
                     if name is not None:
                         print("[%s] Sending frame %s" % (name, repr(frame)))
                     txd.next = frame.pop(0)

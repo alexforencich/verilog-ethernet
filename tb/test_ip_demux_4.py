@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 """
 
 Copyright (c) 2014 Alex Forencich
@@ -25,7 +25,11 @@ THE SOFTWARE.
 
 from myhdl import *
 import os
-from Queue import Queue
+
+try:
+    from queue import Queue
+except ImportError:
+    from Queue import Queue
 
 import ip_ep
 

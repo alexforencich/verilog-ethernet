@@ -26,11 +26,15 @@ from myhdl import *
 import axis_ep
 import eth_ep
 import ip_ep
-from Queue import Queue
 import struct
 
+try:
+    from queue import Queue
+except ImportError:
+    from Queue import Queue
+
 class UDPFrame(object):
-    def __init__(self, payload='',
+    def __init__(self, payload=b'',
                  eth_dest_mac=0,
                  eth_src_mac=0,
                  eth_type=0,
@@ -204,7 +208,7 @@ class UDPFrame(object):
 
     def build_ip(self):
         self.build()
-        data = ''
+        data = b''
 
         data += struct.pack('>H', self.udp_source_port)
         data += struct.pack('>H', self.udp_dest_port)

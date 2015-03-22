@@ -25,8 +25,12 @@ THE SOFTWARE.
 from myhdl import *
 import axis_ep
 import eth_ep
-from Queue import Queue
 import struct
+
+try:
+    from queue import Queue
+except ImportError:
+    from Queue import Queue
 
 class ARPFrame(object):
     def __init__(self,
@@ -116,9 +120,9 @@ class ARPFrame(object):
         self.arp_hlen = struct.unpack('B', data.payload.data[4:5])[0]
         self.arp_plen = struct.unpack('B', data.payload.data[5:6])[0]
         self.arp_oper = struct.unpack('>H', data.payload.data[6:8])[0]
-        self.arp_sha = struct.unpack('>Q', '\x00\x00'+data.payload.data[8:14])[0]
+        self.arp_sha = struct.unpack('>Q', b'\x00\x00'+data.payload.data[8:14])[0]
         self.arp_spa = struct.unpack('>L', data.payload.data[14:18])[0]
-        self.arp_tha = struct.unpack('>Q', '\x00\x00'+data.payload.data[18:24])[0]
+        self.arp_tha = struct.unpack('>Q', b'\x00\x00'+data.payload.data[18:24])[0]
         self.arp_tpa = struct.unpack('>L', data.payload.data[24:28])[0]
 
     def __eq__(self, other):

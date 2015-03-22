@@ -25,11 +25,15 @@ THE SOFTWARE.
 from myhdl import *
 import axis_ep
 import eth_ep
-from Queue import Queue
 import struct
 
+try:
+    from queue import Queue
+except ImportError:
+    from Queue import Queue
+
 class IPFrame(object):
-    def __init__(self, payload='',
+    def __init__(self, payload=b'',
                  eth_dest_mac=0,
                  eth_src_mac=0,
                  eth_type=0,
@@ -145,7 +149,7 @@ class IPFrame(object):
 
     def build_eth(self):
         self.build()
-        data = ''
+        data = b''
 
         data += struct.pack('B', self.ip_version << 4 | self.ip_ihl)
         data += struct.pack('B', self.ip_dscp << 2 | self.ip_ecn)

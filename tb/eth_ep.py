@@ -24,9 +24,13 @@ THE SOFTWARE.
 
 from myhdl import *
 import axis_ep
-from Queue import Queue
 import struct
 import zlib
+
+try:
+    from queue import Queue
+except ImportError:
+    from Queue import Queue
 
 class EthFrame(object):
     def __init__(self, payload=b'', eth_dest_mac=0, eth_src_mac=0, eth_type=0, eth_fcs=None):
@@ -92,8 +96,8 @@ class EthFrame(object):
 
     def parse_axis(self, data):
         data = axis_ep.AXIStreamFrame(data).data
-        self.eth_dest_mac = struct.unpack('>Q', '\x00\x00'+data[0:6])[0]
-        self.eth_src_mac = struct.unpack('>Q', '\x00\x00'+data[6:12])[0]
+        self.eth_dest_mac = struct.unpack('>Q', b'\x00\x00'+data[0:6])[0]
+        self.eth_src_mac = struct.unpack('>Q', b'\x00\x00'+data[6:12])[0]
         self.eth_type = struct.unpack('>H', data[12:14])[0]
         data = data[14:]
         self.payload = axis_ep.AXIStreamFrame(data)
