@@ -248,7 +248,7 @@ def bench():
         test_frame.payload = bytearray(range(32))
         test_frame.build()
 
-        gmii_source_queue.put(test_frame.build_eth().build_axis_fcs())
+        gmii_source_queue.put(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+test_frame.build_eth().build_axis_fcs().data)
 
         # wait for ARP request packet
         while gmii_sink_queue.empty():
@@ -256,7 +256,7 @@ def bench():
 
         rx_frame = gmii_sink_queue.get(False)
         check_eth_frame = eth_ep.EthFrame()
-        check_eth_frame.parse_axis_fcs(bytearray(rx_frame))
+        check_eth_frame.parse_axis_fcs(bytearray(rx_frame)[8:])
         check_frame = arp_ep.ARPFrame()
         check_frame.parse_eth(check_eth_frame)
 
@@ -290,14 +290,14 @@ def bench():
         arp_frame.arp_tha = 0x020000000000
         arp_frame.arp_tpa = 0xc0a80180
 
-        gmii_source_queue.put(arp_frame.build_eth().build_axis_fcs())
+        gmii_source_queue.put(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+arp_frame.build_eth().build_axis_fcs().data)
 
         while gmii_sink_queue.empty():
             yield clk.posedge
 
         rx_frame = gmii_sink_queue.get(False)
         check_eth_frame = eth_ep.EthFrame()
-        check_eth_frame.parse_axis_fcs(bytearray(rx_frame))
+        check_eth_frame.parse_axis_fcs(bytearray(rx_frame)[8:])
         check_frame = udp_ep.UDPFrame()
         check_frame.parse_eth(check_eth_frame)
 
