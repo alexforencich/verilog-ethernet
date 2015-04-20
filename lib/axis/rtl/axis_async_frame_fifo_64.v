@@ -110,6 +110,9 @@ assign output_axis_tvalid = output_axis_tvalid_reg;
 always @(posedge input_clk or posedge input_rst) begin
     if (input_rst) begin
         wr_ptr <= 0;
+        wr_ptr_cur <= 0;
+        wr_ptr_gray <= 0;
+        drop_frame <= 0;
     end else if (write) begin
         if (full | full_cur | drop_frame) begin
             // buffer full, hold current pointer, drop packet at end
@@ -147,6 +150,7 @@ end
 always @(posedge output_clk or posedge output_rst) begin
     if (output_rst) begin
         rd_ptr <= 0;
+        rd_ptr_gray <= 0;
     end else if (read) begin
         data_out_reg <= mem[rd_ptr[ADDR_WIDTH-1:0]];
         rd_ptr_next = rd_ptr + 1;

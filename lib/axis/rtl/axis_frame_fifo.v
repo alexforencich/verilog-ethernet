@@ -95,6 +95,8 @@ assign output_axis_tvalid = output_axis_tvalid_reg;
 always @(posedge clk or posedge rst) begin
     if (rst) begin
         wr_ptr <= 0;
+        wr_ptr_cur <= 0;
+        drop_frame <= 0;
     end else if (write) begin
         if (full | full_cur | drop_frame) begin
             // buffer full, hold current pointer, drop packet at end
