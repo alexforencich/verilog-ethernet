@@ -63,16 +63,16 @@ reg [ADDR_WIDTH:0] rd_ptr = {ADDR_WIDTH+1{1'b0}};
 
 reg drop_frame = 1'b0;
 
-reg [DATA_WIDTH+2-1:0] data_out_reg = {1'b0, {DATA_WIDTH{1'b0}}};
+reg [DATA_WIDTH+1-1:0] data_out_reg = {1'b0, {DATA_WIDTH{1'b0}}};
 
 //(* RAM_STYLE="BLOCK" *)
-reg [DATA_WIDTH+2-1:0] mem[(2**ADDR_WIDTH)-1:0];
+reg [DATA_WIDTH+1-1:0] mem[(2**ADDR_WIDTH)-1:0];
 
 reg output_read = 1'b0;
 
 reg output_axis_tvalid_reg = 1'b0;
 
-wire [DATA_WIDTH+2-1:0] data_in = {input_axis_tlast, input_axis_tdata};
+wire [DATA_WIDTH+1-1:0] data_in = {input_axis_tlast, input_axis_tdata};
 
 // full when first MSB different but rest same
 wire full = ((wr_ptr[ADDR_WIDTH] != rd_ptr[ADDR_WIDTH]) &&
