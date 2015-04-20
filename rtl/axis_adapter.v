@@ -103,6 +103,8 @@ reg [2:0] state_reg = STATE_IDLE, state_next;
 
 reg [7:0] cycle_count_reg = 0, cycle_count_next;
 
+reg last_cycle;
+
 reg [DATA_WIDTH-1:0] temp_tdata_reg = 0, temp_tdata_next;
 reg [KEEP_WIDTH-1:0] temp_tkeep_reg = 0, temp_tkeep_next;
 reg                  temp_tlast_reg = 0, temp_tlast_next;
@@ -161,7 +163,7 @@ always @* begin
                 // accept new data
                 input_axis_tready_next = 1;
 
-                if (input_axis_tvalid) begin
+                if (input_axis_tready & input_axis_tvalid) begin
                     // word transfer in - store it in data register
                     
                     // pass complete input word, zero-extended to temp register
@@ -191,9 +193,23 @@ always @* begin
                 // accept new data
                 input_axis_tready_next = 1;
 
-                if (input_axis_tvalid) begin
+                if (input_axis_tready & input_axis_tvalid) begin
                     // word transfer in - store it in data register
                     cycle_count_next = 0;
+
+                    // is this the last cycle?
+                    if (CYCLE_COUNT == 1) begin
+                        // last cycle by counter value
+                        last_cycle = 1;
+                    end else if (input_axis_tkeep[CYCLE_KEEP_WIDTH-1:0] != {CYCLE_KEEP_WIDTH{1'b1}}) begin
+                        // last cycle by tkeep fall in current cycle
+                        last_cycle = 1;
+                    end else if (input_axis_tkeep[(CYCLE_KEEP_WIDTH*2)-1:CYCLE_KEEP_WIDTH] == {CYCLE_KEEP_WIDTH{1'b0}}) begin
+                        // last cycle by tkeep fall at end of current cycle
+                        last_cycle = 1;
+                    end else begin
+                        last_cycle = 0;
+                    end
 
                     // pass complete input word, zero-extended to temp register
                     temp_tdata_next = input_axis_tdata;
@@ -202,20 +218,24 @@ always @* begin
                     temp_tuser_next = input_axis_tuser;
 
                     // short-circuit and get first word out the door
-                    output_axis_tdata_int = input_axis_tdata;
-                    output_axis_tkeep_int = input_axis_tkeep;
+                    output_axis_tdata_int = input_axis_tdata[CYCLE_DATA_WIDTH-1:0];
+                    output_axis_tkeep_int = input_axis_tkeep[CYCLE_KEEP_WIDTH-1:0];
                     output_axis_tvalid_int = 1;
-                    output_axis_tlast_int = input_axis_tlast & ((CYCLE_COUNT == 1) | (input_axis_tkeep[CYCLE_KEEP_WIDTH-1:0] != {CYCLE_KEEP_WIDTH{1'b1}}));
-                    output_axis_tuser_int = input_axis_tuser & ((CYCLE_COUNT == 1) | (input_axis_tkeep[CYCLE_KEEP_WIDTH-1:0] != {CYCLE_KEEP_WIDTH{1'b1}}));
+                    output_axis_tlast_int = input_axis_tlast & last_cycle;
+                    output_axis_tuser_int = input_axis_tuser & last_cycle;
 
                     if (output_axis_tready_int) begin
                         // if output register is ready for first word, then move on to the next one
                         cycle_count_next = 1;
                     end
 
-                    // continue outputting words
-                    input_axis_tready_next = 0;
-                    state_next = STATE_TRANSFER_OUT;
+                    if (!last_cycle || !output_axis_tready_int) begin
+                        // continue outputting words
+                        input_axis_tready_next = 0;
+                        state_next = STATE_TRANSFER_OUT;
+                    end else begin
+                        state_next = STATE_IDLE;
+                    end
                 end else begin
                     state_next = STATE_IDLE;
                 end
@@ -228,7 +248,7 @@ always @* begin
             // accept new data
             input_axis_tready_next = 1;
 
-            if (input_axis_tvalid) begin
+            if (input_axis_tready & input_axis_tvalid) begin
                 // word transfer in - store in data register
                 
                 temp_tdata_next[cycle_count_reg*CYCLE_DATA_WIDTH +: CYCLE_DATA_WIDTH] = input_axis_tdata;
@@ -305,19 +325,33 @@ always @* begin
                 // do not accept new data
                 input_axis_tready_next = 0;
 
+                // is this the last cycle?
+                if (cycle_count_reg == CYCLE_COUNT-1) begin
+                    // last cycle by counter value
+                    last_cycle = 1;
+                end else if (temp_tkeep_reg[cycle_count_reg*CYCLE_KEEP_WIDTH +: CYCLE_KEEP_WIDTH] != {CYCLE_KEEP_WIDTH{1'b1}}) begin
+                    // last cycle by tkeep fall in current cycle
+                    last_cycle = 1;
+                end else if (temp_tkeep_reg[(cycle_count_reg+1)*CYCLE_KEEP_WIDTH +: CYCLE_KEEP_WIDTH] == {CYCLE_KEEP_WIDTH{1'b0}}) begin
+                    // last cycle by tkeep fall at end of current cycle
+                    last_cycle = 1;
+                end else begin
+                    last_cycle = 0;
+                end
+
                 // output current part of stored word (output narrower)
                 output_axis_tdata_int = temp_tdata_reg[cycle_count_reg*CYCLE_DATA_WIDTH +: CYCLE_DATA_WIDTH];
                 output_axis_tkeep_int = temp_tkeep_reg[cycle_count_reg*CYCLE_KEEP_WIDTH +: CYCLE_KEEP_WIDTH];
                 output_axis_tvalid_int = 1;
-                output_axis_tlast_int = temp_tlast_reg & ((cycle_count_reg == CYCLE_COUNT-1) | (temp_tkeep_reg[cycle_count_reg*CYCLE_KEEP_WIDTH +: CYCLE_KEEP_WIDTH] != {CYCLE_KEEP_WIDTH{1'b1}}));
-                output_axis_tuser_int = temp_tuser_reg & ((cycle_count_reg == CYCLE_COUNT-1) | (temp_tkeep_reg[cycle_count_reg*CYCLE_KEEP_WIDTH +: CYCLE_KEEP_WIDTH] != {CYCLE_KEEP_WIDTH{1'b1}}));
+                output_axis_tlast_int = temp_tlast_reg & last_cycle;
+                output_axis_tuser_int = temp_tuser_reg & last_cycle;
 
                 if (output_axis_tready_int) begin
                     // word transfer out
 
                     cycle_count_next = cycle_count_reg + 1;
 
-                    if ((cycle_count_reg == CYCLE_COUNT-1) | (temp_tkeep_reg[cycle_count_reg*CYCLE_KEEP_WIDTH +: CYCLE_KEEP_WIDTH] != {CYCLE_KEEP_WIDTH{1'b1}})) begin
+                    if (last_cycle) begin
                         // terminated by counter or tlast signal
                         
                         input_axis_tready_next = 1;
