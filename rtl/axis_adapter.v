@@ -121,7 +121,7 @@ reg input_axis_tready_reg = 0, input_axis_tready_next;
 assign input_axis_tready = input_axis_tready_reg;
 
 always @* begin
-    state_next = 3'bz;
+    state_next = STATE_IDLE;
 
     cycle_count_next = cycle_count_reg;
 
