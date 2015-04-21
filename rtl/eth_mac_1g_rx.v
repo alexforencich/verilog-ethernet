@@ -66,8 +66,6 @@ reg [2:0] state_reg = STATE_IDLE, state_next;
 reg reset_crc;
 reg update_crc;
 
-reg [7:0] frame_ptr_reg = 0, frame_ptr_next;
-
 reg [7:0] gmii_rxd_d0 = 0;
 reg [7:0] gmii_rxd_d1 = 0;
 reg [7:0] gmii_rxd_d2 = 0;
@@ -117,8 +115,6 @@ always @* begin
 
     reset_crc = 0;
     update_crc = 0;
-
-    frame_ptr_next = frame_ptr_reg;
 
     output_axis_tdata_next = 0;
     output_axis_tvalid_next = 0;
@@ -176,8 +172,6 @@ always @(posedge clk) begin
     if (rst) begin
         state_reg <= STATE_IDLE;
 
-        frame_ptr_reg <= 0;
-
         output_axis_tdata_reg <= 0;
         output_axis_tvalid_reg <= 0;
         output_axis_tlast_reg <= 0;
@@ -189,8 +183,6 @@ always @(posedge clk) begin
         crc_state <= 32'hFFFFFFFF;
     end else begin
         state_reg <= state_next;
-
-        frame_ptr_reg <= frame_ptr_next;
 
         output_axis_tdata_reg <= output_axis_tdata_next;
         output_axis_tvalid_reg <= output_axis_tvalid_next;
