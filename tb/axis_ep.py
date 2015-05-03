@@ -24,6 +24,8 @@ THE SOFTWARE.
 
 from myhdl import *
 
+skip_asserts = False
+
 class AXIStreamFrame(object):
     def __init__(self, data=b'', keep=None, user=None):
         self.B = 0
@@ -261,6 +263,7 @@ def AXIStreamSink(clk, rst,
         N = len(tdata)
         M = len(tkeep)
         WL = int((len(tdata)+M-1)/M)
+        first = True
 
         if type(tdata) is list or type(tdata) is tuple:
             # multiple tdata signals
@@ -278,10 +281,31 @@ def AXIStreamSink(clk, rst,
                 data = []
                 keep = []
                 user = []
+                first = True
             else:
                 tready_int.next = True
 
                 if tvalid_int:
+
+                    if not skip_asserts:
+                        # zero tkeep not allowed
+                        assert int(tkeep) != 0
+                        # tkeep must be contiguous
+                        # i.e. 0b00011110 allowed, but 0b00011010 not allowed
+                        b = int(tkeep)
+                        while b & 1 == 0:
+                            b = b >> 1
+                        while b & 1 == 1:
+                            b = b >> 1
+                        assert b == 0
+                        # tkeep must not have gaps across cycles
+                        if not first:
+                            # not first cycle; lowest bit must be set
+                            assert int(tkeep) & 1
+                        if not tlast:
+                            # not last cycle; highest bit must be set
+                            assert int(tkeep) & (1 << len(tkeep)-1)
+
                     if B > 0:
                         l = []
                         for i in range(B):
@@ -291,6 +315,7 @@ def AXIStreamSink(clk, rst,
                         data.append(int(tdata))
                     keep.append(int(tkeep))
                     user.append(int(tuser))
+                    first = False
                     if tlast:
                         frame.B = B
                         frame.N = N
@@ -305,6 +330,7 @@ def AXIStreamSink(clk, rst,
                         data = []
                         keep = []
                         user = []
+                        first = True
 
     return logic, pause_logic
 
