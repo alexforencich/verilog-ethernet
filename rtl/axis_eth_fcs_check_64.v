@@ -386,8 +386,8 @@ always @* begin
                         input_axis_tready_next = output_axis_tready_int_early;
                         state_next = STATE_IDLE;
                     end else begin
-                        last_cycle_tkeep_reg = fcs_output_tkeep_0;
-                        last_cycle_tuser_reg = input_axis_tuser;
+                        last_cycle_tkeep_next = fcs_output_tkeep_0;
+                        last_cycle_tuser_next = input_axis_tuser;
                         if (input_axis_tdata_masked != fcs_output_tdata_0) begin
                             error_bad_fcs_next = 1;
                             last_cycle_tuser_next = 1;
