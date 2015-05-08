@@ -341,7 +341,9 @@ gmii_phy_if_inst (
 
 eth_mac_1g_fifo #(
     .ENABLE_PADDING(1),
-    .MIN_FRAME_LENGTH(64)
+    .MIN_FRAME_LENGTH(64),
+    .TX_FIFO_ADDR_WIDTH(12),
+    .RX_FIFO_ADDR_WIDTH(12)
 )
 eth_mac_1g_fifo_inst (
     .rx_clk(gmii_rx_clk),
