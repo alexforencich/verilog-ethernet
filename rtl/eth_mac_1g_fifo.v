@@ -33,8 +33,8 @@ module eth_mac_1g_fifo #
 (
     parameter ENABLE_PADDING = 1,
     parameter MIN_FRAME_LENGTH = 64,
-    parameter TX_FIFO_ADDR_WIDTH = 9,
-    parameter RX_FIFO_ADDR_WIDTH = 9
+    parameter TX_FIFO_ADDR_WIDTH = 12,
+    parameter RX_FIFO_ADDR_WIDTH = 12
 )
 (
     input  wire        rx_clk,
