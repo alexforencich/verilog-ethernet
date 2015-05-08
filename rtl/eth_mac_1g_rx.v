@@ -58,7 +58,8 @@ module eth_mac_1g_rx
 
 localparam [2:0]
     STATE_IDLE = 3'd0,
-    STATE_PAYLOAD = 3'd1;
+    STATE_PAYLOAD = 3'd1,
+    STATE_WAIT_LAST = 3'd2;
 
 reg [2:0] state_reg = STATE_IDLE, state_next;
 
@@ -142,13 +143,13 @@ always @* begin
             output_axis_tdata_next = gmii_rxd_d4;
             output_axis_tvalid_next = 1;
 
-            if (gmii_rx_er) begin
+            if (gmii_rx_dv & gmii_rx_er) begin
                 // error
                 output_axis_tlast_next = 1;
                 output_axis_tuser_next = 1;
                 error_bad_frame_next = 1;
-                state_next = STATE_IDLE;
-            end if (~gmii_rx_dv) begin
+                state_next = STATE_WAIT_LAST;
+            end else if (~gmii_rx_dv) begin
                 // end of packet
                 output_axis_tlast_next = 1;
                 if ({gmii_rxd_d0, gmii_rxd_d1, gmii_rxd_d2, gmii_rxd_d3} == ~crc_next) begin
@@ -163,6 +164,15 @@ always @* begin
                 state_next = STATE_IDLE;
             end else begin
                 state_next = STATE_PAYLOAD;
+            end
+        end
+        STATE_WAIT_LAST: begin
+            // wait for end of packet
+
+            if (~gmii_rx_dv) begin
+                state_next = STATE_IDLE;
+            end else begin
+                state_next = STATE_WAIT_LAST;
             end
         end
     endcase
