@@ -182,8 +182,9 @@ def bench():
             test_frame.update_fcs()
 
             axis_frame = test_frame.build_axis_fcs()
+            gmii_frame = gmii_ep.GMIIFrame(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+bytearray(axis_frame))
 
-            source_queue.put(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+bytearray(axis_frame))
+            source_queue.put(gmii_frame)
             yield clk.posedge
             yield clk.posedge
 
@@ -227,9 +228,11 @@ def bench():
 
             axis_frame1 = test_frame1.build_axis_fcs()
             axis_frame2 = test_frame2.build_axis_fcs()
+            gmii_frame1 = gmii_ep.GMIIFrame(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+bytearray(axis_frame1))
+            gmii_frame2 = gmii_ep.GMIIFrame(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+bytearray(axis_frame2))
 
-            source_queue.put(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+bytearray(axis_frame1))
-            source_queue.put(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+bytearray(axis_frame2))
+            source_queue.put(gmii_frame1)
+            source_queue.put(gmii_frame2)
             yield clk.posedge
             yield clk.posedge
 
@@ -294,8 +297,11 @@ def bench():
             error_bad_frame_asserted.next = 0
             error_bad_fcs_asserted.next = 0
 
-            source_queue.put(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+bytearray(axis_frame1))
-            source_queue.put(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+bytearray(axis_frame2))
+            gmii_frame1 = gmii_ep.GMIIFrame(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+bytearray(axis_frame1))
+            gmii_frame2 = gmii_ep.GMIIFrame(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+bytearray(axis_frame2))
+
+            source_queue.put(gmii_frame1)
+            source_queue.put(gmii_frame2)
             yield clk.posedge
             yield clk.posedge
 
@@ -313,6 +319,74 @@ def bench():
 
             assert error_bad_frame_asserted
             assert error_bad_fcs_asserted
+
+            rx_frame = None
+            if not sink_queue.empty():
+                rx_frame = sink_queue.get()
+
+            assert rx_frame.user[-1]
+
+            rx_frame = None
+            if not sink_queue.empty():
+                rx_frame = sink_queue.get()
+
+            eth_frame = eth_ep.EthFrame()
+            eth_frame.parse_axis(rx_frame)
+            eth_frame.update_fcs()
+
+            assert eth_frame == test_frame2
+
+            assert sink_queue.empty()
+
+            yield delay(100)
+
+            yield clk.posedge
+            print("test 4: errored frame, length %d" % payload_len)
+            current_test.next = 4
+
+            test_frame1 = eth_ep.EthFrame()
+            test_frame1.eth_dest_mac = 0xDAD1D2D3D4D5
+            test_frame1.eth_src_mac = 0x5A5152535455
+            test_frame1.eth_type = 0x8000
+            test_frame1.payload = bytearray(range(payload_len))
+            test_frame1.update_fcs()
+            test_frame2 = eth_ep.EthFrame()
+            test_frame2.eth_dest_mac = 0xDAD1D2D3D4D5
+            test_frame2.eth_src_mac = 0x5A5152535455
+            test_frame2.eth_type = 0x8000
+            test_frame2.payload = bytearray(range(payload_len))
+            test_frame2.update_fcs()
+
+            axis_frame1 = test_frame1.build_axis_fcs()
+            axis_frame2 = test_frame2.build_axis_fcs()
+
+            error_bad_frame_asserted.next = 0
+            error_bad_fcs_asserted.next = 0
+
+            gmii_frame1 = gmii_ep.GMIIFrame(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+bytearray(axis_frame1))
+            gmii_frame2 = gmii_ep.GMIIFrame(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+bytearray(axis_frame2))
+
+            gmii_frame1.error = 1
+
+            source_queue.put(gmii_frame1)
+            source_queue.put(gmii_frame2)
+            yield clk.posedge
+            yield clk.posedge
+
+            while gmii_rx_dv or output_axis_tvalid or not source_queue.empty():
+                yield clk.posedge
+
+            yield clk.posedge
+
+            while gmii_rx_dv or output_axis_tvalid or not source_queue.empty():
+                yield clk.posedge
+
+            yield clk.posedge
+            yield clk.posedge
+            yield clk.posedge
+
+            assert error_bad_frame_asserted
+            assert not error_bad_fcs_asserted
 
             rx_frame = None
             if not sink_queue.empty():
