@@ -42,6 +42,7 @@ srcs = []
 
 srcs.append("../rtl/%s.v" % module)
 srcs.append("../lib/eth/rtl/gmii_phy_if.v")
+srcs.append("../lib/eth/rtl/eth_mac_1g_fifo.v")
 srcs.append("../lib/eth/rtl/eth_mac_1g.v")
 srcs.append("../lib/eth/rtl/eth_mac_1g_rx.v")
 srcs.append("../lib/eth/rtl/eth_mac_1g_tx.v")
@@ -256,7 +257,7 @@ def bench():
 
         rx_frame = gmii_sink_queue.get(False)
         check_eth_frame = eth_ep.EthFrame()
-        check_eth_frame.parse_axis_fcs(bytearray(rx_frame)[8:])
+        check_eth_frame.parse_axis_fcs(rx_frame.data[8:])
         check_frame = arp_ep.ARPFrame()
         check_frame.parse_eth(check_eth_frame)
 
@@ -297,7 +298,7 @@ def bench():
 
         rx_frame = gmii_sink_queue.get(False)
         check_eth_frame = eth_ep.EthFrame()
-        check_eth_frame.parse_axis_fcs(bytearray(rx_frame)[8:])
+        check_eth_frame.parse_axis_fcs(rx_frame.data[8:])
         check_frame = udp_ep.UDPFrame()
         check_frame.parse_eth(check_eth_frame)
 

@@ -16,6 +16,7 @@ SYN_FILES += rtl/debounce_switch.v
 SYN_FILES += rtl/sync_reset.v
 SYN_FILES += rtl/sync_signal.v
 SYN_FILES += lib/eth/rtl/gmii_phy_if.v
+SYN_FILES += lib/eth/rtl/eth_mac_1g_fifo.v
 SYN_FILES += lib/eth/rtl/eth_mac_1g.v
 SYN_FILES += lib/eth/rtl/eth_mac_1g_rx.v
 SYN_FILES += lib/eth/rtl/eth_mac_1g_tx.v

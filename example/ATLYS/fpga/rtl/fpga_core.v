@@ -79,9 +79,10 @@ wire [7:0] gmii_txd;
 wire gmii_tx_en;
 wire gmii_tx_er;
 
-// AXI between MAC and FIFO
+// AXI between MAC and Ethernet modules
 wire [7:0] rx_axis_tdata;
 wire rx_axis_tvalid;
+wire rx_axis_tready;
 wire rx_axis_tlast;
 wire rx_axis_tuser;
 
@@ -89,19 +90,7 @@ wire [7:0] tx_axis_tdata;
 wire tx_axis_tvalid;
 wire tx_axis_tready;
 wire tx_axis_tlast;
-
-// AXI between FIFO and Ethernet modules
-wire [7:0] rx_fifo_axis_tdata;
-wire rx_fifo_axis_tvalid;
-wire rx_fifo_axis_tready;
-wire rx_fifo_axis_tlast;
-wire rx_fifo_axis_tuser = 0;
-
-wire [7:0] tx_fifo_axis_tdata;
-wire tx_fifo_axis_tvalid;
-wire tx_fifo_axis_tready;
-wire tx_fifo_axis_tlast;
-wire tx_fifo_axis_tuser;
+wire tx_axis_tuser;
 
 // Ethernet frame between Ethernet modules and UDP stack
 wire rx_eth_hdr_ready;
@@ -350,89 +339,41 @@ gmii_phy_if_inst (
     .phy_gmii_tx_er(phy_tx_er)
 );
 
-eth_mac_1g #(
+eth_mac_1g_fifo #(
     .ENABLE_PADDING(1),
     .MIN_FRAME_LENGTH(64)
 )
-eth_mac_1g_inst (
+eth_mac_1g_fifo_inst (
     .rx_clk(gmii_rx_clk),
     .rx_rst(gmii_rx_rst),
     .tx_clk(gmii_tx_clk),
     .tx_rst(gmii_tx_rst),
+    .logic_clk(clk),
+    .logic_rst(rst),
 
     .tx_axis_tdata(tx_axis_tdata),
     .tx_axis_tvalid(tx_axis_tvalid),
     .tx_axis_tready(tx_axis_tready),
     .tx_axis_tlast(tx_axis_tlast),
-    .tx_axis_tuser(0),
-    
+    .tx_axis_tuser(tx_axis_tuser),
+
     .rx_axis_tdata(rx_axis_tdata),
     .rx_axis_tvalid(rx_axis_tvalid),
+    .rx_axis_tready(rx_axis_tready),
     .rx_axis_tlast(rx_axis_tlast),
     .rx_axis_tuser(rx_axis_tuser),
-    
+
     .gmii_rxd(gmii_rxd),
     .gmii_rx_dv(gmii_rx_dv),
     .gmii_rx_er(gmii_rx_er),
     .gmii_txd(gmii_txd),
     .gmii_tx_en(gmii_tx_en),
     .gmii_tx_er(gmii_tx_er),
-    
+
     .rx_error_bad_frame(rx_error_bad_frame),
     .rx_error_bad_fcs(rx_error_bad_fcs),
-    
+
     .ifg_delay(12)
-);
-
-axis_async_frame_fifo #(
-    .ADDR_WIDTH(12),
-    .DATA_WIDTH(8),
-    .DROP_WHEN_FULL(1)
-)
-rx_fifo (
-    // AXI input
-    .input_clk(gmii_rx_clk),
-    .input_rst(gmii_rx_rst),
-
-    .input_axis_tdata(rx_axis_tdata),
-    .input_axis_tvalid(rx_axis_tvalid),
-    .input_axis_tready(),
-    .input_axis_tlast(rx_axis_tlast),
-    .input_axis_tuser(rx_axis_tuser),
-
-    // AXI output
-    .output_clk(clk),
-    .output_rst(rst),
-
-    .output_axis_tdata(rx_fifo_axis_tdata),
-    .output_axis_tvalid(rx_fifo_axis_tvalid),
-    .output_axis_tready(rx_fifo_axis_tready),
-    .output_axis_tlast(rx_fifo_axis_tlast)
-);
-
-axis_async_frame_fifo #(
-    .ADDR_WIDTH(12),
-    .DATA_WIDTH(8)
-)
-tx_fifo (
-    // AXI input
-    .input_clk(clk),
-    .input_rst(rst),
-
-    .input_axis_tdata(tx_fifo_axis_tdata),
-    .input_axis_tvalid(tx_fifo_axis_tvalid),
-    .input_axis_tready(tx_fifo_axis_tready),
-    .input_axis_tlast(tx_fifo_axis_tlast),
-    .input_axis_tuser(tx_fifo_axis_tuser),
-
-    // AXI output
-    .output_clk(gmii_tx_clk),
-    .output_rst(gmii_tx_rst),
-
-    .output_axis_tdata(tx_axis_tdata),
-    .output_axis_tvalid(tx_axis_tvalid),
-    .output_axis_tready(tx_axis_tready),
-    .output_axis_tlast(tx_axis_tlast)
 );
 
 eth_axis_rx
@@ -440,11 +381,11 @@ eth_axis_rx_inst (
     .clk(clk),
     .rst(rst),
     // AXI input
-    .input_axis_tdata(rx_fifo_axis_tdata),
-    .input_axis_tvalid(rx_fifo_axis_tvalid),
-    .input_axis_tready(rx_fifo_axis_tready),
-    .input_axis_tlast(rx_fifo_axis_tlast),
-    .input_axis_tuser(rx_fifo_axis_tuser),
+    .input_axis_tdata(rx_axis_tdata),
+    .input_axis_tvalid(rx_axis_tvalid),
+    .input_axis_tready(rx_axis_tready),
+    .input_axis_tlast(rx_axis_tlast),
+    .input_axis_tuser(rx_axis_tuser),
     // Ethernet frame output
     .output_eth_hdr_valid(rx_eth_hdr_valid),
     .output_eth_hdr_ready(rx_eth_hdr_ready),
@@ -477,11 +418,11 @@ eth_axis_tx_inst (
     .input_eth_payload_tlast(tx_eth_payload_tlast),
     .input_eth_payload_tuser(tx_eth_payload_tuser),
     // AXI output
-    .output_axis_tdata(tx_fifo_axis_tdata),
-    .output_axis_tvalid(tx_fifo_axis_tvalid),
-    .output_axis_tready(tx_fifo_axis_tready),
-    .output_axis_tlast(tx_fifo_axis_tlast),
-    .output_axis_tuser(tx_fifo_axis_tuser),
+    .output_axis_tdata(tx_axis_tdata),
+    .output_axis_tvalid(tx_axis_tvalid),
+    .output_axis_tready(tx_axis_tready),
+    .output_axis_tlast(tx_axis_tlast),
+    .output_axis_tuser(tx_axis_tuser),
     // Status signals
     .busy()
 );
