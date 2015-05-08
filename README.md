@@ -115,6 +115,10 @@ Can be generated with arbitrary port counts with eth_demux_64.py.
 
 Gigabit Ethernet MAC with GMII interface.
 
+### eth_mac_1g_fifo module
+
+Gigabit Ethernet MAC with GMII interface and FIFOs.
+
 ### eth_mac_1g_rx module
 
 Gigabit Ethernet MAC RX with GMII interface.
@@ -122,6 +126,22 @@ Gigabit Ethernet MAC RX with GMII interface.
 ### eth_mac_1g_tx module
 
 Gigabit Ethernet MAC TX with GMII interface.
+
+### eth_mac_10g module
+
+10G Ethernet MAC with XGMII interface.
+
+### eth_mac_10g_fifo module
+
+10G Ethernet MAC with XGMII interface and FIFOs.
+
+### eth_mac_10g_rx module
+
+10G Ethernet MAC RX with XGMII interface.
+
+### eth_mac_10g_tx module
+
+10G Ethernet MAC TX with XGMII interface.
 
 ### eth_mux_N module
 
@@ -136,6 +156,10 @@ Ethernet frame muliplexer with 64 bit data width for 10G Ethernet.  Supports
 priority and round-robin arbitration.
 
 Can be generated with arbitrary port counts with eth_mux_64.py.
+
+### gmii_phy_if
+
+GMII PHY interface and clocking logic.
 
 ### ip module
 
@@ -342,15 +366,21 @@ Can be generated with arbitrary port counts with udp_mux_64.py.
     rtl/eth_demux_4.v               : 4 port Ethernet frame demultiplexer
     rtl/eth_demux_64.py             : Ethernet frame demultiplexer generator (64 bit)
     rtl/eth_demux_64_4.v            : 4 port Ethernet frame demultiplexer (64 bit)
-    rtl/eth_mac_1g.v                : Gigabit Etherent MAC
-    rtl/eth_mac_1g_rx.v             : Gigabit Etherent MAC RX
-    rtl/eth_mac_1g_tx.v             : Gigabit Etherent MAC TX
+    rtl/eth_mac_1g.v                : Gigabit Etherent GMII MAC
+    rtl/eth_mac_1g_fifo.v           : Gigabit Etherent GMII MAC with FIFO
+    rtl/eth_mac_1g_rx.v             : Gigabit Etherent GMII MAC RX
+    rtl/eth_mac_1g_tx.v             : Gigabit Etherent GMII MAC TX
+    rtl/eth_mac_10g.v               : 10G Etherent XGMII MAC
+    rtl/eth_mac_10g_fifo.v          : 10G Etherent XGMII MAC with FIFO
+    rtl/eth_mac_10g_rx.v            : 10G Etherent XGMII MAC RX
+    rtl/eth_mac_10g_tx.v            : 10G Etherent XGMII MAC TX
     rtl/eth_mux.py                  : Ethernet frame multiplexer generator
     rtl/eth_mux_2.v                 : 4 port Ethernet frame multiplexer
     rtl/eth_mux_4.v                 : 4 port Ethernet frame multiplexer
     rtl/eth_mux_64.py               : Ethernet frame multiplexer generator (64 bit)
     rtl/eth_mux_64_2.v              : 4 port Ethernet frame multiplexer (64 bit)
     rtl/eth_mux_64_4.v              : 4 port Ethernet frame multiplexer (64 bit)
+    rtl/gmii_phy_if.v               : GMII PHY interface
     rtl/ip.v                        : IPv4 block
     rtl/ip_64.v                     : IPv4 block (64 bit)
     rtl/ip_arb_mux.py               : IP frame arbitrated multiplexer generator
@@ -489,3 +519,4 @@ individual test scripts can be run with python directly.
     tb/gmii_ep.py        : MyHDL GMII endpoints
     tb/ip_ep.py          : MyHDL IP frame endpoints
     tb/udp_ep.py         : MyHDL UDP frame endpoints
+    tb/xgmii_ep.py       : MyHDL XGMII endpoints
