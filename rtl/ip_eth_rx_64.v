@@ -140,9 +140,8 @@ reg transfer_in_save;
 reg [15:0] frame_ptr_reg = 0, frame_ptr_next;
 
 reg [31:0] hdr_sum_temp;
-reg [15:0] hdr_sum_reg = 0, hdr_sum_next;
-reg [15:0] hdr_sum_temp_a_reg = 0, hdr_sum_temp_a_next;
-reg [15:0] hdr_sum_temp_b_reg = 0, hdr_sum_temp_b_next;
+reg [31:0] hdr_sum_reg = 0, hdr_sum_next;
+reg check_hdr_reg = 0, check_hdr_next;
 
 reg [63:0] last_word_data_reg = 0;
 reg [7:0] last_word_keep_reg = 0;
@@ -295,8 +294,7 @@ always @* begin
 
     hdr_sum_temp = 0;
     hdr_sum_next = hdr_sum_reg;
-    hdr_sum_temp_a_next = hdr_sum_temp_a_reg;
-    hdr_sum_temp_b_next = hdr_sum_temp_b_reg;
+    check_hdr_next = check_hdr_reg;
 
     output_ip_hdr_valid_next = output_ip_hdr_valid_reg & ~output_ip_hdr_ready;
 
@@ -341,41 +339,34 @@ always @* begin
                 case (frame_ptr_reg)
                     8'h00: begin
                         store_hdr_word_0 = 1;
-                        hdr_sum_temp = input_eth_payload_tdata[15:0] +
+                        hdr_sum_next = input_eth_payload_tdata[15:0] +
                                        input_eth_payload_tdata[31:16] +
                                        input_eth_payload_tdata[47:32] +
                                        input_eth_payload_tdata[63:48];
-                        hdr_sum_temp = hdr_sum_temp[15:0] + hdr_sum_temp[31:16];
-                        hdr_sum_temp_a_next = hdr_sum_temp[15:0] + hdr_sum_temp[16];
                     end
                     8'h08: begin
                         store_hdr_word_1 = 1;
-                        hdr_sum_temp = input_eth_payload_tdata[15:0] +
+                        hdr_sum_next = hdr_sum_reg +
+                                       input_eth_payload_tdata[15:0] +
                                        input_eth_payload_tdata[31:16] +
                                        input_eth_payload_tdata[47:32] +
                                        input_eth_payload_tdata[63:48];
-                        hdr_sum_temp = hdr_sum_temp[15:0] + hdr_sum_temp[31:16];
-                        hdr_sum_temp_b_next = hdr_sum_temp[15:0] + hdr_sum_temp[16];
                     end
                     8'h10: begin
                         store_hdr_word_2 = 1;
-                        hdr_sum_temp = input_eth_payload_tdata[15:0] +
-                                       input_eth_payload_tdata[31:16] +
-                                       hdr_sum_temp_a_reg +
-                                       hdr_sum_temp_b_reg;
-                        hdr_sum_temp = hdr_sum_temp[15:0] + hdr_sum_temp[31:16];
-                        hdr_sum_next = hdr_sum_temp[15:0] + hdr_sum_temp[16];
+                        hdr_sum_next = hdr_sum_reg +
+                                       input_eth_payload_tdata[15:0] +
+                                       input_eth_payload_tdata[31:16];
                         frame_ptr_next = frame_ptr_reg+4;
+
+                        // check header checksum on next cycle for improved timing
+                        check_hdr_next = 1;
+
                         if (output_ip_version_reg != 4 || output_ip_ihl_reg != 5) begin
                             error_invalid_header_next = 1;
                             input_eth_payload_tready_next = shift_eth_payload_input_tready;
                             state_next = STATE_WAIT_LAST;
-                        end else if (hdr_sum_next != 16'hffff) begin
-                            error_invalid_checksum_next = 1;
-                            input_eth_payload_tready_next = shift_eth_payload_input_tready;
-                            state_next = STATE_WAIT_LAST;
                         end else begin
-                            output_ip_hdr_valid_next = 1;
                             input_eth_payload_tready_next = output_ip_payload_tready_int_early & shift_eth_payload_input_tready;
                             state_next = STATE_READ_PAYLOAD;
                         end
@@ -417,7 +408,7 @@ always @* begin
                     if (shift_eth_payload_tlast) begin
                         input_eth_payload_tready_next = 0;
                         flush_save = 1;
-                        input_eth_hdr_ready_next = ~output_ip_hdr_valid_reg;
+                        input_eth_hdr_ready_next = ~output_ip_hdr_valid_reg & ~check_hdr_reg;
                         state_next = STATE_IDLE;
                     end else begin
                         store_last_word = 1;
@@ -431,7 +422,7 @@ always @* begin
                         output_ip_payload_tuser_int = 1;
                         input_eth_payload_tready_next = 0;
                         flush_save = 1;
-                        input_eth_hdr_ready_next = ~output_ip_hdr_valid_reg;
+                        input_eth_hdr_ready_next = ~output_ip_hdr_valid_reg & ~check_hdr_reg;
                         state_next = STATE_IDLE;
                     end else begin
                         state_next = STATE_READ_PAYLOAD;
@@ -439,6 +430,31 @@ always @* begin
                 end
             end else begin
                 state_next = STATE_READ_PAYLOAD;
+            end
+
+            if (check_hdr_reg) begin
+                check_hdr_next = 0;
+
+                hdr_sum_temp = hdr_sum_reg[15:0] + hdr_sum_reg[31:16];
+                hdr_sum_temp = hdr_sum_temp[15:0] + hdr_sum_temp[16];
+
+                if (hdr_sum_temp != 16'hffff) begin
+                    // bad checksum
+                    error_invalid_checksum_next = 1;
+                    output_ip_payload_tvalid_int = 0;
+                    if (shift_eth_payload_tlast & shift_eth_payload_tvalid) begin
+                        // only one payload cycle; return to idle now
+                        input_eth_hdr_ready_next = ~output_ip_hdr_valid_reg & ~check_hdr_reg;
+                        state_next = STATE_IDLE;
+                    end else begin
+                        // drop payload
+                        input_eth_payload_tready_next = shift_eth_payload_input_tready;
+                        state_next = STATE_WAIT_LAST;
+                    end
+                end else begin
+                    // good checksum; transfer header
+                    output_ip_hdr_valid_next = 1;
+                end
             end
         end
         STATE_READ_PAYLOAD_LAST: begin
@@ -491,8 +507,7 @@ always @(posedge clk or posedge rst) begin
         state_reg <= STATE_IDLE;
         frame_ptr_reg <= 0;
         hdr_sum_reg <= 0;
-        hdr_sum_temp_a_reg <= 0;
-        hdr_sum_temp_b_reg <= 0;
+        check_hdr_reg <= 0;
         last_word_data_reg <= 0;
         last_word_keep_reg <= 0;
         input_eth_hdr_ready_reg <= 0;
@@ -529,8 +544,7 @@ always @(posedge clk or posedge rst) begin
         frame_ptr_reg <= frame_ptr_next;
 
         hdr_sum_reg <= hdr_sum_next;
-        hdr_sum_temp_a_reg <= hdr_sum_temp_a_next;
-        hdr_sum_temp_b_reg <= hdr_sum_temp_b_next;
+        check_hdr_reg <= check_hdr_next;
 
         input_eth_hdr_ready_reg <= input_eth_hdr_ready_next;
         input_eth_payload_tready_reg <= input_eth_payload_tready_next;
