@@ -132,7 +132,7 @@ reg flush_save;
 reg transfer_in_save;
 
 reg [31:0] hdr_sum_temp;
-reg [15:0] hdr_sum_reg = 0, hdr_sum_next;
+reg [31:0] hdr_sum_reg = 0, hdr_sum_next;
 
 reg [63:0] last_word_data_reg = 0;
 reg [7:0] last_word_keep_reg = 0;
@@ -281,13 +281,15 @@ always @* begin
 
             if (input_ip_hdr_ready & input_ip_hdr_valid) begin
                 store_ip_hdr = 1;
-                hdr_sum_temp = {4'd4, 4'd5, input_ip_dscp, input_ip_ecn} +
+                hdr_sum_next = {4'd4, 4'd5, input_ip_dscp, input_ip_ecn} +
                                input_ip_length +
                                input_ip_identification +
                                {input_ip_flags, input_ip_fragment_offset} +
-                               {input_ip_ttl, input_ip_protocol};
-                hdr_sum_temp = hdr_sum_temp[15:0] + hdr_sum_temp[31:16];
-                hdr_sum_next = hdr_sum_temp[15:0] + hdr_sum_temp[16];
+                               {input_ip_ttl, input_ip_protocol} +
+                               input_ip_source_ip[31:16] +
+                               input_ip_source_ip[15: 0] +
+                               input_ip_dest_ip[31:16] +
+                               input_ip_dest_ip[15: 0];
                 input_ip_hdr_ready_next = 0;
                 output_eth_hdr_valid_next = 1;
                 if (output_eth_payload_tready_int) begin
@@ -327,17 +329,12 @@ always @* begin
                         output_eth_payload_tkeep_int = 8'hff;
                     end
                     8'h08: begin
-                        hdr_sum_temp = hdr_sum_reg +
-                                    ip_source_ip_reg[31:16] +
-                                    ip_source_ip_reg[15: 0] +
-                                    ip_dest_ip_reg[31:16] +
-                                    ip_dest_ip_reg[15: 0];
-                        hdr_sum_temp = hdr_sum_temp[15:0] + hdr_sum_temp[31:16];
-                        hdr_sum_next = hdr_sum_temp[15:0] + hdr_sum_temp[16];
+                        hdr_sum_temp = hdr_sum_reg[15:0] + hdr_sum_reg[31:16];
+                        hdr_sum_temp = hdr_sum_temp[15:0] + hdr_sum_temp[16];
                         output_eth_payload_tdata_int[ 7: 0] = ip_ttl_reg;
                         output_eth_payload_tdata_int[15: 8] = ip_protocol_reg;
-                        output_eth_payload_tdata_int[23:16] = ~hdr_sum_next[15: 8];
-                        output_eth_payload_tdata_int[31:24] = ~hdr_sum_next[ 7: 0];
+                        output_eth_payload_tdata_int[23:16] = ~hdr_sum_temp[15: 8];
+                        output_eth_payload_tdata_int[31:24] = ~hdr_sum_temp[ 7: 0];
                         output_eth_payload_tdata_int[39:32] = ip_source_ip_reg[31:24];
                         output_eth_payload_tdata_int[47:40] = ip_source_ip_reg[23:16];
                         output_eth_payload_tdata_int[55:48] = ip_source_ip_reg[15: 8];
