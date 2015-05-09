@@ -420,6 +420,10 @@ def IPFrameSink(clk, rst,
                     frame.payload = ip_payload_fifo.get()
                     fifo.put(frame)
 
+                    # ensure all payloads have been matched to headers
+                    if ip_header_fifo.empty():
+                        assert ip_payload_fifo.empty()
+
                     if name is not None:
                         print("[%s] Got frame %s" % (name, repr(frame)))
 
