@@ -126,7 +126,7 @@ reg [2:0] state_reg = STATE_IDLE, state_next;
 reg store_ip_hdr;
 reg store_last_word;
 
-reg [7:0] frame_ptr_reg = 0, frame_ptr_next;
+reg [15:0] frame_ptr_reg = 0, frame_ptr_next;
 
 reg flush_save;
 reg transfer_in_save;
