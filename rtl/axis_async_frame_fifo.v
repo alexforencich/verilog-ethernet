@@ -55,7 +55,14 @@ module axis_async_frame_fifo #
     output wire [DATA_WIDTH-1:0]  output_axis_tdata,
     output wire                   output_axis_tvalid,
     input  wire                   output_axis_tready,
-    output wire                   output_axis_tlast
+    output wire                   output_axis_tlast,
+
+    /*
+     * Status
+     */
+    output wire                   overflow,
+    output wire                   bad_frame,
+    output wire                   good_frame
 );
 
 reg [ADDR_WIDTH:0] wr_ptr = {ADDR_WIDTH+1{1'b0}}, wr_ptr_next;
@@ -75,13 +82,14 @@ reg output_rst_sync1 = 1;
 reg output_rst_sync2 = 1;
 
 reg drop_frame = 1'b0;
+reg overflow_reg = 1'b0;
+reg bad_frame_reg = 1'b0;
+reg good_frame_reg = 1'b0;
 
 reg [DATA_WIDTH+2-1:0] data_out_reg = {1'b0, {DATA_WIDTH{1'b0}}};
 
 //(* RAM_STYLE="BLOCK" *)
 reg [DATA_WIDTH+2-1:0] mem[(2**ADDR_WIDTH)-1:0];
-
-reg output_read = 1'b0;
 
 reg output_axis_tvalid_reg = 1'b0;
 
@@ -105,6 +113,10 @@ assign {output_axis_tlast, output_axis_tdata} = data_out_reg;
 
 assign input_axis_tready = (~full | DROP_WHEN_FULL);
 assign output_axis_tvalid = output_axis_tvalid_reg;
+
+assign overflow = overflow_reg;
+assign bad_frame = bad_frame_reg;
+assign good_frame = good_frame_reg;
 
 // reset synchronization
 always @(posedge input_clk or posedge input_rst or posedge output_rst) begin
@@ -134,13 +146,20 @@ always @(posedge input_clk or posedge input_rst_sync2) begin
         wr_ptr_cur <= 0;
         wr_ptr_gray <= 0;
         drop_frame <= 0;
+        overflow_reg <= 0;
+        bad_frame_reg <= 0;
+        good_frame_reg <= 0;
     end else if (write) begin
+        overflow_reg <= 0;
+        bad_frame_reg <= 0;
+        good_frame_reg <= 0;
         if (full | full_cur | drop_frame) begin
             // buffer full, hold current pointer, drop packet at end
             drop_frame <= 1;
             if (input_axis_tlast) begin
                 wr_ptr_cur <= wr_ptr;
                 drop_frame <= 0;
+                overflow_reg <= 1;
             end
         end else begin
             mem[wr_ptr_cur[ADDR_WIDTH-1:0]] <= data_in;
@@ -149,14 +168,20 @@ always @(posedge input_clk or posedge input_rst_sync2) begin
                 if (input_axis_tuser) begin
                     // bad packet, reset write pointer
                     wr_ptr_cur <= wr_ptr;
+                    bad_frame_reg <= 1;
                 end else begin
                     // good packet, push new write pointer
                     wr_ptr_next = wr_ptr_cur + 1;
                     wr_ptr <= wr_ptr_next;
                     wr_ptr_gray <= wr_ptr_next ^ (wr_ptr_next >> 1);
+                    good_frame_reg <= 1;
                 end
             end
         end
+    end else begin
+        overflow_reg <= 0;
+        bad_frame_reg <= 0;
+        good_frame_reg <= 0;
     end
 end
 

@@ -44,6 +44,9 @@ wire input_axis_tready;
 wire [7:0] output_axis_tdata;
 wire output_axis_tvalid;
 wire output_axis_tlast;
+wire overflow;
+wire bad_frame;
+wire good_frame;
 
 initial begin
     // myhdl integration
@@ -58,7 +61,10 @@ initial begin
     $to_myhdl(input_axis_tready,
               output_axis_tdata,
               output_axis_tvalid,
-              output_axis_tlast);
+              output_axis_tlast,
+              overflow,
+              bad_frame,
+              good_frame);
 
     // dump file
     $dumpfile("test_axis_frame_fifo.lxt");
@@ -83,7 +89,11 @@ UUT (
     .output_axis_tdata(output_axis_tdata),
     .output_axis_tvalid(output_axis_tvalid),
     .output_axis_tready(output_axis_tready),
-    .output_axis_tlast(output_axis_tlast)
+    .output_axis_tlast(output_axis_tlast),
+    // Status
+    .overflow(overflow),
+    .bad_frame(bad_frame),
+    .good_frame(good_frame)
 );
 
 endmodule

@@ -61,7 +61,11 @@ def dut_axis_async_frame_fifo_64(input_clk,
                  output_axis_tkeep,
                  output_axis_tvalid,
                  output_axis_tready,
-                 output_axis_tlast):
+                 output_axis_tlast,
+
+                 overflow,
+                 bad_frame,
+                 good_frame):
 
     if os.system(build_cmd):
         raise Exception("Error running build command")
@@ -83,7 +87,11 @@ def dut_axis_async_frame_fifo_64(input_clk,
                 output_axis_tkeep=output_axis_tkeep,
                 output_axis_tvalid=output_axis_tvalid,
                 output_axis_tready=output_axis_tready,
-                output_axis_tlast=output_axis_tlast)
+                output_axis_tlast=output_axis_tlast,
+
+                overflow=overflow,
+                bad_frame=bad_frame,
+                good_frame=good_frame)
 
 def bench():
 
@@ -107,6 +115,9 @@ def bench():
     output_axis_tkeep = Signal(intbv(0)[8:])
     output_axis_tvalid = Signal(bool(0))
     output_axis_tlast = Signal(bool(0))
+    overflow = Signal(bool(0))
+    bad_frame = Signal(bool(0))
+    good_frame = Signal(bool(0))
 
     # sources and sinks
     source_queue = Queue()
@@ -155,7 +166,11 @@ def bench():
                        output_axis_tkeep,
                        output_axis_tvalid,
                        output_axis_tready,
-                       output_axis_tlast)
+                       output_axis_tlast,
+
+                       overflow,
+                       bad_frame,
+                       good_frame)
 
     @always(delay(4))
     def input_clkgen():
@@ -164,6 +179,19 @@ def bench():
     @always(delay(5))
     def output_clkgen():
         output_clk.next = not output_clk
+
+    overflow_asserted = Signal(bool(0))
+    bad_frame_asserted = Signal(bool(0))
+    good_frame_asserted = Signal(bool(0))
+
+    @always(input_clk.posedge)
+    def monitor():
+        if (overflow):
+            overflow_asserted.next = 1
+        if (bad_frame):
+            bad_frame_asserted.next = 1
+        if (good_frame):
+            good_frame_asserted.next = 1
 
     @instance
     def check():
@@ -190,6 +218,11 @@ def bench():
                                             b'\x5A\x51\x52\x53\x54\x55' +
                                             b'\x80\x00' +
                                             b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
+
+        overflow_asserted.next = 0
+        bad_frame_asserted.next = 0
+        good_frame_asserted.next = 0
+
         source_queue.put(test_frame)
         yield input_clk.posedge
 
@@ -202,6 +235,10 @@ def bench():
             rx_frame = sink_queue.get()
 
         assert rx_frame == test_frame
+
+        assert not overflow_asserted
+        assert not bad_frame_asserted
+        assert good_frame_asserted
 
         yield delay(100)
 
@@ -213,6 +250,11 @@ def bench():
                                             b'\x5A\x51\x52\x53\x54\x55' +
                                             b'\x80\x00' +
                                             bytearray(range(256)))
+
+        overflow_asserted.next = 0
+        bad_frame_asserted.next = 0
+        good_frame_asserted.next = 0
+
         source_queue.put(test_frame)
         yield input_clk.posedge
 
@@ -226,6 +268,10 @@ def bench():
 
         assert rx_frame == test_frame
 
+        assert not overflow_asserted
+        assert not bad_frame_asserted
+        assert good_frame_asserted
+
         yield input_clk.posedge
         print("test 3: test packet with pauses")
         current_test.next = 3
@@ -234,6 +280,11 @@ def bench():
                                             b'\x5A\x51\x52\x53\x54\x55' +
                                             b'\x80\x00' +
                                             bytearray(range(256)))
+
+        overflow_asserted.next = 0
+        bad_frame_asserted.next = 0
+        good_frame_asserted.next = 0
+
         source_queue.put(test_frame)
         yield input_clk.posedge
 
@@ -261,6 +312,10 @@ def bench():
 
         assert rx_frame == test_frame
 
+        assert not overflow_asserted
+        assert not bad_frame_asserted
+        assert good_frame_asserted
+
         yield delay(100)
 
         yield input_clk.posedge
@@ -275,6 +330,11 @@ def bench():
                                              b'\x5A\x51\x52\x53\x54\x55' +
                                              b'\x80\x00' +
                                              b'\x02\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
+
+        overflow_asserted.next = 0
+        bad_frame_asserted.next = 0
+        good_frame_asserted.next = 0
+
         source_queue.put(test_frame1)
         source_queue.put(test_frame2)
         yield input_clk.posedge
@@ -297,6 +357,10 @@ def bench():
 
         assert rx_frame == test_frame2
 
+        assert not overflow_asserted
+        assert not bad_frame_asserted
+        assert good_frame_asserted
+
         yield delay(100)
 
         yield input_clk.posedge
@@ -311,6 +375,11 @@ def bench():
                                              b'\x5A\x51\x52\x53\x54\x55' +
                                              b'\x80\x00' +
                                              b'\x02\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
+
+        overflow_asserted.next = 0
+        bad_frame_asserted.next = 0
+        good_frame_asserted.next = 0
+
         source_queue.put(test_frame1)
         source_queue.put(test_frame2)
         yield input_clk.posedge
@@ -342,6 +411,10 @@ def bench():
 
         assert rx_frame == test_frame2
 
+        assert not overflow_asserted
+        assert not bad_frame_asserted
+        assert good_frame_asserted
+
         yield delay(100)
 
         yield input_clk.posedge
@@ -356,6 +429,11 @@ def bench():
                                              b'\x5A\x51\x52\x53\x54\x55' +
                                              b'\x80\x00' +
                                              b'\x02\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
+
+        overflow_asserted.next = 0
+        bad_frame_asserted.next = 0
+        good_frame_asserted.next = 0
+
         source_queue.put(test_frame1)
         source_queue.put(test_frame2)
         yield input_clk.posedge
@@ -383,6 +461,10 @@ def bench():
 
         assert rx_frame == test_frame2
 
+        assert not overflow_asserted
+        assert not bad_frame_asserted
+        assert good_frame_asserted
+
         yield delay(100)
 
         yield input_clk.posedge
@@ -394,12 +476,21 @@ def bench():
                                             b'\x80\x00' +
                                             b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
         test_frame.user = 1
+
+        overflow_asserted.next = 0
+        bad_frame_asserted.next = 0
+        good_frame_asserted.next = 0
+
         source_queue.put(test_frame)
         yield input_clk.posedge
 
         yield delay(1000)
 
         assert sink_queue.empty()
+
+        assert not overflow_asserted
+        assert bad_frame_asserted
+        assert not good_frame_asserted
 
         yield delay(100)
 
@@ -411,6 +502,11 @@ def bench():
                                             b'\x5A\x51\x52\x53\x54\x55' +
                                             b'\x80\x00' +
                                             bytearray(range(256))*2)
+
+        overflow_asserted.next = 0
+        bad_frame_asserted.next = 0
+        good_frame_asserted.next = 0
+
         source_queue.put(test_frame)
         yield input_clk.posedge
 
@@ -418,11 +514,15 @@ def bench():
 
         assert sink_queue.empty()
 
+        assert overflow_asserted
+        assert not bad_frame_asserted
+        assert not good_frame_asserted
+
         yield delay(100)
 
         raise StopSimulation
 
-    return dut, source, sink, input_clkgen, output_clkgen, check
+    return dut, monitor, source, sink, input_clkgen, output_clkgen, check
 
 def test_bench():
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
