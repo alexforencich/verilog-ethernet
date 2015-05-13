@@ -91,6 +91,12 @@ def dut_eth_mac_1g(clk,
 
                    rx_error_bad_frame,
                    rx_error_bad_fcs,
+                   rx_fifo_overflow,
+                   rx_fifo_bad_frame,
+                   rx_fifo_good_frame,
+                   tx_fifo_overflow,
+                   tx_fifo_bad_frame,
+                   tx_fifo_good_frame,
 
                    ifg_delay):
 
@@ -128,8 +134,14 @@ def dut_eth_mac_1g(clk,
                 xgmii_txd=xgmii_txd,
                 xgmii_txc=xgmii_txc,
 
+                tx_fifo_overflow=tx_fifo_overflow,
+                tx_fifo_bad_frame=tx_fifo_bad_frame,
+                tx_fifo_good_frame=tx_fifo_good_frame,
                 rx_error_bad_frame=rx_error_bad_frame,
                 rx_error_bad_fcs=rx_error_bad_fcs,
+                rx_fifo_overflow=rx_fifo_overflow,
+                rx_fifo_bad_frame=rx_fifo_bad_frame,
+                rx_fifo_good_frame=rx_fifo_good_frame,
 
                 ifg_delay=ifg_delay)
 
@@ -172,8 +184,14 @@ def bench():
     rx_axis_tuser = Signal(bool(0))
     xgmii_txd = Signal(intbv(0x0707070707070707)[64:])
     xgmii_txc = Signal(intbv(0xff)[8:])
+    tx_fifo_overflow = Signal(bool(0))
+    tx_fifo_bad_frame = Signal(bool(0))
+    tx_fifo_good_frame = Signal(bool(0))
     rx_error_bad_frame = Signal(bool(0))
     rx_error_bad_fcs = Signal(bool(0))
+    rx_fifo_overflow = Signal(bool(0))
+    rx_fifo_bad_frame = Signal(bool(0))
+    rx_fifo_good_frame = Signal(bool(0))
 
     # sources and sinks
     xgmii_source_queue = Queue()
@@ -251,8 +269,14 @@ def bench():
                          xgmii_txd,
                          xgmii_txc,
 
+                         tx_fifo_overflow,
+                         tx_fifo_bad_frame,
+                         tx_fifo_good_frame,
                          rx_error_bad_frame,
                          rx_error_bad_fcs,
+                         rx_fifo_overflow,
+                         rx_fifo_bad_frame,
+                         rx_fifo_good_frame,
 
                          ifg_delay)
 

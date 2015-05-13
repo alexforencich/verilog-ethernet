@@ -67,8 +67,14 @@ wire rx_axis_tuser;
 wire [7:0] gmii_txd;
 wire gmii_tx_en;
 wire gmii_tx_er;
+wire tx_fifo_overflow;
+wire tx_fifo_bad_frame;
+wire tx_fifo_good_frame;
 wire rx_error_bad_frame;
 wire rx_error_bad_fcs;
+wire rx_fifo_overflow;
+wire rx_fifo_bad_frame;
+wire rx_fifo_good_frame;
 
 initial begin
     // myhdl integration
@@ -98,8 +104,14 @@ initial begin
               gmii_txd,
               gmii_tx_en,
               gmii_tx_er,
+              tx_fifo_overflow,
+              tx_fifo_bad_frame,
+              tx_fifo_good_frame,
               rx_error_bad_frame,
-              rx_error_bad_fcs);
+              rx_error_bad_fcs,
+              rx_fifo_overflow,
+              rx_fifo_bad_frame,
+              rx_fifo_good_frame);
 
     // dump file
     $dumpfile("test_eth_mac_1g_fifo.lxt");
@@ -135,8 +147,14 @@ UUT (
     .gmii_txd(gmii_txd),
     .gmii_tx_en(gmii_tx_en),
     .gmii_tx_er(gmii_tx_er),
+    .tx_fifo_overflow(tx_fifo_overflow),
+    .tx_fifo_bad_frame(tx_fifo_bad_frame),
+    .tx_fifo_good_frame(tx_fifo_good_frame),
     .rx_error_bad_frame(rx_error_bad_frame),
     .rx_error_bad_fcs(rx_error_bad_fcs),
+    .rx_fifo_overflow(rx_fifo_overflow),
+    .rx_fifo_bad_frame(rx_fifo_bad_frame),
+    .rx_fifo_good_frame(rx_fifo_good_frame),
     .ifg_delay(ifg_delay)
 );
 
