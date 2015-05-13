@@ -81,7 +81,7 @@ assign input_axis_tready = input_axis_tready_reg;
 always @* begin
     acc_next = acc_reg;
     pause = 0;
-    frame_next = frame_reg & ~input_axis_tlast;
+    frame_next = frame_reg;
 
     if (acc_reg >= rate_num) begin
         acc_next = acc_reg - rate_num;

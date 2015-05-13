@@ -28,6 +28,18 @@ THE SOFTWARE.
 
 module test_axis_stat_counter;
 
+// parameters
+parameter DATA_WIDTH = 64;
+parameter KEEP_WIDTH = (DATA_WIDTH/8);
+parameter TAG_ENABLE = 1;
+parameter TAG_WIDTH = 16;
+parameter TICK_COUNT_ENABLE = 1;
+parameter TICK_COUNT_WIDTH = 32;
+parameter BYTE_COUNT_ENABLE = 1;
+parameter BYTE_COUNT_WIDTH = 32;
+parameter FRAME_COUNT_ENABLE = 1;
+parameter FRAME_COUNT_WIDTH = 32;
+
 // Inputs
 reg clk = 0;
 reg rst = 0;
@@ -76,7 +88,16 @@ initial begin
 end
 
 axis_stat_counter #(
-    .DATA_WIDTH(64)
+    .DATA_WIDTH(DATA_WIDTH),
+    .KEEP_WIDTH(KEEP_WIDTH),
+    .TAG_ENABLE(TAG_ENABLE),
+    .TAG_WIDTH(TAG_WIDTH),
+    .TICK_COUNT_ENABLE(TICK_COUNT_ENABLE),
+    .TICK_COUNT_WIDTH(TICK_COUNT_WIDTH),
+    .BYTE_COUNT_ENABLE(BYTE_COUNT_ENABLE),
+    .BYTE_COUNT_WIDTH(BYTE_COUNT_WIDTH),
+    .FRAME_COUNT_ENABLE(FRAME_COUNT_ENABLE),
+    .FRAME_COUNT_WIDTH(FRAME_COUNT_WIDTH)
 )
 UUT (
     .clk(clk),
