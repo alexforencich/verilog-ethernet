@@ -303,6 +303,7 @@ always @* begin
     frame_ptr_next = frame_ptr_reg;
 
     ifg_count_next = ifg_count_reg;
+    deficit_idle_count_next = deficit_idle_count_reg;
 
     last_cycle_txd_next = last_cycle_txd_reg;
     last_cycle_txc_next = last_cycle_txc_reg;
