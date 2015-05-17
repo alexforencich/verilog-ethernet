@@ -285,6 +285,9 @@ always @* begin
     8'b10000000: begin
         detect_error_masked = detect_error[6:0];
     end
+    default: begin
+        detect_error_masked = detect_error;
+    end
     endcase
 end
 
