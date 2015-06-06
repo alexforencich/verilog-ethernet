@@ -143,7 +143,7 @@ always @* begin
             output_axis_tdata_next = gmii_rxd_d4;
             output_axis_tvalid_next = 1;
 
-            if (gmii_rx_dv & gmii_rx_er) begin
+            if (gmii_rx_dv_d4 & gmii_rx_er_d4) begin
                 // error
                 output_axis_tlast_next = 1;
                 output_axis_tuser_next = 1;
@@ -152,7 +152,11 @@ always @* begin
             end else if (~gmii_rx_dv) begin
                 // end of packet
                 output_axis_tlast_next = 1;
-                if ({gmii_rxd_d0, gmii_rxd_d1, gmii_rxd_d2, gmii_rxd_d3} == ~crc_next) begin
+                if (gmii_rx_er_d0 | gmii_rx_er_d1 | gmii_rx_er_d2 | gmii_rx_er_d3) begin
+                    // error received in FCS bytes
+                    output_axis_tuser_next = 1;
+                    error_bad_frame_next = 1;
+                end else if ({gmii_rxd_d0, gmii_rxd_d1, gmii_rxd_d2, gmii_rxd_d3} == ~crc_next) begin
                     // FCS good
                     output_axis_tuser_next = 0;
                 end else begin
