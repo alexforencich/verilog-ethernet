@@ -325,9 +325,20 @@ always @* begin
 
             if (xgmii_rxc_d1[0] && xgmii_rxd_d1[7:0] == 8'hfb) begin
                 // start condition
-                reset_crc = 0;
-                update_crc = 1;
-                state_next = STATE_PAYLOAD;
+                if (detect_error_masked) begin
+                    // error in first data word
+                    output_axis_tdata_next = 0;
+                    output_axis_tkeep_next = 1;
+                    output_axis_tvalid_next = 1;
+                    output_axis_tlast_next = 1;
+                    output_axis_tuser_next = 1;
+                    error_bad_frame_next = 1;
+                    state_next = STATE_IDLE;
+                end else begin
+                    reset_crc = 0;
+                    update_crc = 1;
+                    state_next = STATE_PAYLOAD;
+                end
             end else begin
                 state_next = STATE_IDLE;
             end
