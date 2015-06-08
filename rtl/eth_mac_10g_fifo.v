@@ -143,7 +143,7 @@ eth_mac_10g #(
     .ENABLE_DIC(ENABLE_DIC),
     .MIN_FRAME_LENGTH(MIN_FRAME_LENGTH)
 )
-eth_mac_1g_inst (
+eth_mac_10g_inst (
     .tx_clk(tx_clk),
     .tx_rst(tx_rst),
     .rx_clk(rx_clk),
