@@ -61,6 +61,10 @@ module eth_mac_10g_tx #
     input  wire [7:0]  ifg_delay
 );
 
+localparam MIN_FL_NOCRC = MIN_FRAME_LENGTH-4;
+localparam MIN_FL_NOCRC_MS = MIN_FL_NOCRC & 16'hfff8;
+localparam MIN_FL_NOCRC_LS = MIN_FL_NOCRC & 16'h0007;
+
 localparam [2:0]
     STATE_IDLE = 3'd0,
     STATE_PAYLOAD = 3'd1,
@@ -315,7 +319,7 @@ always @* begin
     case (state_reg)
         STATE_IDLE: begin
             // idle state - wait for data
-            frame_ptr_next = keep2count(input_axis_tkeep);
+            frame_ptr_next = 8;
             reset_crc = 1;
             input_axis_tready_next = 1;
 
@@ -358,8 +362,9 @@ always @* begin
             input_tkeep_next = input_axis_tkeep;
 
             if (input_axis_tvalid) begin
-                frame_ptr_next = frame_ptr_reg + keep2count(input_axis_tkeep);
+                frame_ptr_next = frame_ptr_reg + 8;
                 if (input_axis_tlast) begin
+                    frame_ptr_next = frame_ptr_reg + keep2count(input_axis_tkeep);
                     input_axis_tready_next = 0;
                     if (input_axis_tuser) begin
                         xgmii_txd_next = 64'h070707fdfefefefe;
@@ -370,14 +375,14 @@ always @* begin
                     end else begin
                         input_axis_tready_next = 0;
 
-                        if (ENABLE_PADDING && frame_ptr_next < MIN_FRAME_LENGTH-4) begin
+                        if (ENABLE_PADDING && (frame_ptr_reg < MIN_FL_NOCRC_MS || (frame_ptr_reg == MIN_FL_NOCRC_MS && keep2count(input_axis_tkeep) < MIN_FL_NOCRC_LS))) begin
                             input_tkeep_next = 8'hff;
                             frame_ptr_next = frame_ptr_reg + 8;
 
-                            if (frame_ptr_next < MIN_FRAME_LENGTH-4) begin
+                            if (frame_ptr_reg < MIN_FL_NOCRC_MS) begin
                                 state_next = STATE_PAD;
                             end else begin
-                                input_tkeep_next = 8'hff >> (8-((MIN_FRAME_LENGTH-4) & 7));
+                                input_tkeep_next = 8'hff >> (8-MIN_FL_NOCRC_LS);
                                 state_next = STATE_FCS_1;
                             end
                         end else begin
@@ -407,10 +412,10 @@ always @* begin
             update_crc = 1;
             frame_ptr_next = frame_ptr_reg + 8;
 
-            if (frame_ptr_next < MIN_FRAME_LENGTH-4) begin
+            if (frame_ptr_reg < MIN_FL_NOCRC_MS) begin
                 state_next = STATE_PAD;
             end else begin
-                input_tkeep_next = 8'hff >> (8-((MIN_FRAME_LENGTH-4) & 7));
+                input_tkeep_next = 8'hff >> (8-MIN_FL_NOCRC_LS);
 
                 state_next = STATE_FCS_1;
             end
