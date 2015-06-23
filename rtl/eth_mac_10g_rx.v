@@ -255,38 +255,49 @@ end
 
 // mask errors to within packet
 reg [7:0] detect_error_masked;
+reg [7:0] control_masked;
 
 always @* begin
     case (detect_term)
     8'b00000000: begin
         detect_error_masked = detect_error;
+        control_masked = xgmii_rxc_d0;
     end
     8'b00000001: begin
         detect_error_masked = 0;
+        control_masked = 0;
     end
     8'b00000010: begin
         detect_error_masked = detect_error[0];
+        control_masked = xgmii_rxc_d0[0];
     end
     8'b00000100: begin
         detect_error_masked = detect_error[1:0];
+        control_masked = xgmii_rxc_d0[1:0];
     end
     8'b00001000: begin
         detect_error_masked = detect_error[2:0];
+        control_masked = xgmii_rxc_d0[2:0];
     end
     8'b00010000: begin
         detect_error_masked = detect_error[3:0];
+        control_masked = xgmii_rxc_d0[3:0];
     end
     8'b00100000: begin
         detect_error_masked = detect_error[4:0];
+        control_masked = xgmii_rxc_d0[4:0];
     end
     8'b01000000: begin
         detect_error_masked = detect_error[5:0];
+        control_masked = xgmii_rxc_d0[5:0];
     end
     8'b10000000: begin
         detect_error_masked = detect_error[6:0];
+        control_masked = xgmii_rxc_d0[6:0];
     end
     default: begin
         detect_error_masked = detect_error;
+        control_masked = xgmii_rxc_d0;
     end
     endcase
 end
@@ -360,8 +371,8 @@ always @* begin
                 error_bad_frame_next = 1;
                 reset_crc = 1;
                 state_next = STATE_PAYLOAD;
-            end else if (detect_error_masked) begin
-                // error condition
+            end else if (control_masked) begin
+                // control or error characters in packet
                 output_axis_tlast_next = 1;
                 output_axis_tuser_next = 1;
                 error_bad_frame_next = 1;
