@@ -411,6 +411,90 @@ def bench():
 
         yield delay(100)
 
+        yield input_clk.posedge
+        print("test 8: initial sink pause")
+        current_test.next = 8
+
+        test_frame = axis_ep.AXIStreamFrame(bytearray(range(24)))
+
+        sink_pause.next = 1
+        source_queue.put(test_frame)
+        yield input_clk.posedge
+        yield input_clk.posedge
+        yield input_clk.posedge
+        yield input_clk.posedge
+        sink_pause.next = 0
+
+        yield output_axis_tlast.posedge
+        yield output_clk.posedge
+        yield output_clk.posedge
+
+        rx_frame = None
+        if not sink_queue.empty():
+            rx_frame = sink_queue.get()
+
+        assert rx_frame == test_frame
+
+        yield delay(100)
+
+        yield input_clk.posedge
+        print("test 9: initial sink pause, input reset")
+        current_test.next = 9
+
+        test_frame = axis_ep.AXIStreamFrame(bytearray(range(24)))
+
+        sink_pause.next = 1
+        source_queue.put(test_frame)
+        yield input_clk.posedge
+        yield input_clk.posedge
+        yield input_clk.posedge
+        yield input_clk.posedge
+
+        input_rst.next = 1
+        yield input_clk.posedge
+        input_rst.next = 0
+
+        sink_pause.next = 0
+
+        yield delay(100)
+
+        yield output_clk.posedge
+        yield output_clk.posedge
+        yield output_clk.posedge
+
+        assert sink_queue.empty()
+
+        yield delay(100)
+
+        yield input_clk.posedge
+        print("test 10: initial sink pause, output reset")
+        current_test.next = 10
+
+        test_frame = axis_ep.AXIStreamFrame(bytearray(range(24)))
+
+        sink_pause.next = 1
+        source_queue.put(test_frame)
+        yield input_clk.posedge
+        yield input_clk.posedge
+        yield input_clk.posedge
+        yield input_clk.posedge
+
+        output_rst.next = 1
+        yield output_clk.posedge
+        output_rst.next = 0
+
+        sink_pause.next = 0
+
+        yield delay(100)
+
+        yield output_clk.posedge
+        yield output_clk.posedge
+        yield output_clk.posedge
+
+        assert sink_queue.empty()
+
+        yield delay(100)
+
         raise StopSimulation
 
     return dut, source, sink, input_clkgen, output_clkgen, check
