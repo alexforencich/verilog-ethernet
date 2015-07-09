@@ -81,8 +81,6 @@ reg [DATA_WIDTH+KEEP_WIDTH+2-1:0] data_out_reg = {1'b0, 1'b0, {KEEP_WIDTH{1'b0}}
 //(* RAM_STYLE="BLOCK" *)
 reg [DATA_WIDTH+KEEP_WIDTH+2-1:0] mem[(2**ADDR_WIDTH)-1:0];
 
-reg output_read = 1'b0;
-
 reg output_axis_tvalid_reg = 1'b0;
 
 wire [DATA_WIDTH+KEEP_WIDTH+2-1:0] data_in = {input_axis_tlast, input_axis_tuser, input_axis_tkeep, input_axis_tdata};
