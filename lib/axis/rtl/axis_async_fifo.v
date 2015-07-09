@@ -78,8 +78,6 @@ reg [DATA_WIDTH+2-1:0] data_out_reg = {1'b0, 1'b0, {DATA_WIDTH{1'b0}}};
 //(* RAM_STYLE="BLOCK" *)
 reg [DATA_WIDTH+2-1:0] mem[(2**ADDR_WIDTH)-1:0];
 
-reg output_read = 1'b0;
-
 reg output_axis_tvalid_reg = 1'b0;
 
 wire [DATA_WIDTH+2-1:0] data_in = {input_axis_tlast, input_axis_tuser, input_axis_tdata};
@@ -125,6 +123,7 @@ end
 always @(posedge input_clk or posedge input_rst_sync2) begin
     if (input_rst_sync2) begin
         wr_ptr <= 0;
+        wr_ptr_gray <= 0;
     end else if (write) begin
         mem[wr_ptr[ADDR_WIDTH-1:0]] <= data_in;
         wr_ptr_next = wr_ptr + 1;
@@ -148,6 +147,7 @@ end
 always @(posedge output_clk or posedge output_rst_sync2) begin
     if (output_rst_sync2) begin
         rd_ptr <= 0;
+        rd_ptr_gray <= 0;
     end else if (read) begin
         data_out_reg <= mem[rd_ptr[ADDR_WIDTH-1:0]];
         rd_ptr_next = rd_ptr + 1;

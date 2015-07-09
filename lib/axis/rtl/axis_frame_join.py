@@ -13,7 +13,7 @@ Usage: axis_frame_join [OPTION]...
 import io
 import sys
 import getopt
-from math import *
+import math
 from jinja2 import Template
 
 class Usage(Exception):
@@ -66,7 +66,7 @@ def main(argv=None):
     
     print("Generating {0} port AXI Stream frame joiner {1}...".format(ports, name))
     
-    select_width = ceil(log2(ports))
+    select_width = int(math.ceil(math.log(ports, 2)))
     
     t = Template(u"""/*
 
