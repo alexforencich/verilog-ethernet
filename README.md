@@ -114,6 +114,29 @@ Frame joiner with optional tag.  8 bit data path only.
 
 Can be generated with arbitrary port counts with axis_frame_join.py.
 
+### axis_frame_length_adjust module
+
+Frame length adjuster module.  Truncates or pads frames as necessary to meet
+the specified minimum and maximum length.  Reports the original and current
+lengths as well as whether the packet was truncated or padded.  Length limits
+are configurable at run time.
+
+### axis_frame_length_adjust_fifo module
+
+Frame length adjuster module with FIFO.  Truncates or pads frames as necessary
+to meet the specified minimum and maximum length.  Reports the original and
+current lengths as well as whether the packet was truncated or padded.  FIFOs
+are used so that the status information can be read before the packet itself.
+Length limits are configurable at run time.
+
+### axis_frame_length_adjust_fifo_64 module
+
+Frame length adjuster module with FIFO.  Truncates or pads frames as necessary
+to meet the specified minimum and maximum length.  Reports the original and
+current lengths as well as whether the packet was truncated or padded.  FIFOs
+are used so that the status information can be read before the packet itself.
+Length limits are configurable at run time.  Packet FIFO has a tkeep signal.
+
 ### axis_ll_bridge module
 
 AXI stream to LocalLink bridge.
@@ -182,6 +205,18 @@ AXI stream interface.  Trigger signal used to reset and dump counts out of AXI
 interface, along with tag value.  Use with axis_frame_join_N to form a single
 monolithic frame from multiple monitored points with the same trigger.
 
+### axis_tap module
+
+AXI stream tap module.  Used to make a copy of an AXI stream bus without
+affecting the bus.  Back-pressure on the output results in truncated frames
+with tuser set.  
+
+### axis_tap_64 module
+
+AXI stream tap module with tkeep signal.  Used to make a copy of an AXI stream
+bus without affecting the bus.  Back-pressure on the output results in
+truncated frames with tuser set.  
+
 ### ll_axis_bridge module
 
 LocalLink to AXI stream bridge.
@@ -201,46 +236,51 @@ Parametrizable priority encoder.
 
 ### Source Files
 
-    rtl/arbiter.v                   : General-purpose parametrizable arbiter
-    rtl/axis_adapter.v              : Parametrizable bus width adapter
-    rtl/axis_arb_mux.py             : Arbitrated multiplexer generator
-    rtl/axis_arb_mux_4.v            : 4 port arbitrated multiplexer
-    rtl/axis_arb_mux_64.py          : Arbitrated multiplexer generator (64 bit)
-    rtl/axis_arb_mux_64_4.v         : 4 port arbitrated multiplexer (64 bit)
-    rtl/axis_async_fifo.v           : Asynchronous FIFO
-    rtl/axis_async_fifo_64.v        : Asynchronous FIFO (64 bit)
-    rtl/axis_async_frame_fifo.v     : Asynchronous frame FIFO
-    rtl/axis_async_frame_fifo_64.v  : Asynchronous frame FIFO (64 bit)
-    rtl/axis_crosspoint.py          : Crosspoint switch generator
-    rtl/axis_crosspoint_4x4.v       : 4x4 crosspoint switch
-    rtl/axis_crosspoint_64.py       : Crosspoint switch generator (64 bit)
-    rtl/axis_crosspoint_64_4x4.v    : 4x4 crosspoint switch (64 bit)
-    rtl/axis_demux.py               : Demultiplexer generator
-    rtl/axis_demux_4.v              : 4 port demultiplexer
-    rtl/axis_demux_64.py            : Demultiplexer generator (64 bit)
-    rtl/axis_demux_64_4.v           : 4 port demultiplexer (64 bit)
-    rtl/axis_fifo.v                 : Synchronous FIFO
-    rtl/axis_fifo_64.v              : Synchronous FIFO (64 bit)
-    rtl/axis_frame_fifo.v           : Synchronous frame FIFO
-    rtl/axis_frame_fifo_64.v        : Synchronous frame FIFO (64 bit)
-    rtl/axis_frame_join.py          : Frame joiner generator
-    rtl/axis_frame_join_4.v         : 4 port frame joiner
-    rtl/axis_ll_bridge.v            : AXI stream to LocalLink bridge
-    rtl/axis_mux.py                 : Multiplexer generator
-    rtl/axis_mux_4.v                : 4 port multiplexer
-    rtl/axis_mux_64.py              : Multiplexer generator (64 bit)
-    rtl/axis_mux_64_4.v             : 4 port multiplexer (64 bit)
-    rtl/axis_rate_limit.v           : Fractional rate limiter
-    rtl/axis_rate_limit_64.v        : Fractional rate limiter (64 bit)
-    rtl/axis_register.v             : AXI Stream register
-    rtl/axis_register_64.v          : AXI Stream register (64 bit)
-    rtl/axis_srl_fifo.v             : SRL-based FIFO
-    rtl/axis_srl_fifo_64.v          : SRL-based FIFO (64 bit)
-    rtl/axis_srl_register.v         : SRL-based register
-    rtl/axis_srl_register_64.v      : SRL-based register (64 bit)
-    rtl/axis_stat_counter.v         : Statistics counter
-    rtl/ll_axis_bridge.v            : LocalLink to AXI stream bridge
-    rtl/priority_encoder.v          : Parametrizable priority encoder
+    arbiter.v                          : General-purpose parametrizable arbiter
+    axis_adapter.v                     : Parametrizable bus width adapter
+    axis_arb_mux.py                    : Arbitrated multiplexer generator
+    axis_arb_mux_4.v                   : 4 port arbitrated multiplexer
+    axis_arb_mux_64.py                 : Arbitrated multiplexer generator (64 bit)
+    axis_arb_mux_64_4.v                : 4 port arbitrated multiplexer (64 bit)
+    axis_async_fifo.v                  : Asynchronous FIFO
+    axis_async_fifo_64.v               : Asynchronous FIFO (64 bit)
+    axis_async_frame_fifo.v            : Asynchronous frame FIFO
+    axis_async_frame_fifo_64.v         : Asynchronous frame FIFO (64 bit)
+    axis_crosspoint.py                 : Crosspoint switch generator
+    axis_crosspoint_4x4.v              : 4x4 crosspoint switch
+    axis_crosspoint_64.py              : Crosspoint switch generator (64 bit)
+    axis_crosspoint_64_4x4.v           : 4x4 crosspoint switch (64 bit)
+    axis_demux.py                      : Demultiplexer generator
+    axis_demux_4.v                     : 4 port demultiplexer
+    axis_demux_64.py                   : Demultiplexer generator (64 bit)
+    axis_demux_64_4.v                  : 4 port demultiplexer (64 bit)
+    axis_fifo.v                        : Synchronous FIFO
+    axis_fifo_64.v                     : Synchronous FIFO (64 bit)
+    axis_frame_fifo.v                  : Synchronous frame FIFO
+    axis_frame_fifo_64.v               : Synchronous frame FIFO (64 bit)
+    axis_frame_join.py                 : Frame joiner generator
+    axis_frame_join_4.v                : 4 port frame joiner
+    axis_frame_length_adjust.v         : Frame length adjuster
+    axis_frame_length_adjust_fifo.v    : Frame length adjuster with FIFO
+    axis_frame_length_adjust_fifo_64.v : Frame length adjuster with FIFO (64 bit)
+    axis_ll_bridge.v                   : AXI stream to LocalLink bridge
+    axis_mux.py                        : Multiplexer generator
+    axis_mux_4.v                       : 4 port multiplexer
+    axis_mux_64.py                     : Multiplexer generator (64 bit)
+    axis_mux_64_4.v                    : 4 port multiplexer (64 bit)
+    axis_rate_limit.v                  : Fractional rate limiter
+    axis_rate_limit_64.v               : Fractional rate limiter (64 bit)
+    axis_register.v                    : AXI Stream register
+    axis_register_64.v                 : AXI Stream register (64 bit)
+    axis_srl_fifo.v                    : SRL-based FIFO
+    axis_srl_fifo_64.v                 : SRL-based FIFO (64 bit)
+    axis_srl_register.v                : SRL-based register
+    axis_srl_register_64.v             : SRL-based register (64 bit)
+    axis_stat_counter.v                : Statistics counter
+    axis_tap.v                         : AXI stream tap
+    axis_tap_64.v                      : AXI stream tap (64 bit)
+    ll_axis_bridge.v                   : LocalLink to AXI stream bridge
+    priority_encoder.v                 : Parametrizable priority encoder
 
 ### AXI Stream Interface Example
 
