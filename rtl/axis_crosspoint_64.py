@@ -10,6 +10,8 @@ Usage: axis_crosspoint_64 [OPTION]...
   -o, --output   specify output file name
 """
 
+from __future__ import print_function
+
 import io
 import sys
 import getopt

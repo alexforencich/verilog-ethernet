@@ -10,6 +10,8 @@ Usage: axis_frame_join [OPTION]...
   -o, --output   specify output file name
 """
 
+from __future__ import print_function
+
 import io
 import sys
 import getopt
