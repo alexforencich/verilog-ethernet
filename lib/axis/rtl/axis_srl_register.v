@@ -77,6 +77,7 @@ end
 always @(posedge clk) begin
     if (rst) begin
         ptr_reg <= 0;
+        full_reg <= 0;
     end else begin
         // transfer empty to full
         full_reg <= ~output_axis_tready & output_axis_tvalid;

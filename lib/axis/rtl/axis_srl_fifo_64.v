@@ -66,7 +66,7 @@ module axis_srl_fifo_64 #
 );
 
 reg [DATA_WIDTH+KEEP_WIDTH+2-1:0] data_reg[DEPTH-1:0];
-reg [$clog2(DEPTH+1)-1:0] ptr_reg = 0, ptr_next;
+reg [$clog2(DEPTH+1)-1:0] ptr_reg = 0;
 reg full_reg = 0, full_next;
 reg empty_reg = 1, empty_next;
 
@@ -96,7 +96,6 @@ always @* begin
     shift = 0;
     inc = 0;
     dec = 0;
-    ptr_next = ptr_reg;
     full_next = full_reg;
     empty_next = empty_reg;
 
@@ -119,6 +118,8 @@ end
 always @(posedge clk) begin
     if (rst) begin
         ptr_reg <= 0;
+        full_reg <= 0;
+        empty_reg <= 1;
     end else begin
         if (shift) begin
             data_reg[0] <= {input_axis_tlast, input_axis_tuser, input_axis_tkeep, input_axis_tdata};
