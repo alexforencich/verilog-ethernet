@@ -115,6 +115,8 @@ end
 always @(posedge clk) begin
     if (rst) begin
         ptr_reg <= 0;
+        full_reg <= 0;
+        empty_reg <= 1;
     end else begin
         if (shift) begin
             data_reg[0] <= {input_axis_tlast, input_axis_tuser, input_axis_tdata};
