@@ -403,6 +403,61 @@ def bench():
 
         yield delay(100)
 
+        yield clk.posedge
+        print("test 8: initial sink pause")
+        current_test.next = 8
+
+        test_frame = axis_ep.AXIStreamFrame(bytearray(range(24)))
+
+        sink_pause.next = 1
+        source_queue.put(test_frame)
+        yield clk.posedge
+        yield clk.posedge
+        yield clk.posedge
+        yield clk.posedge
+        sink_pause.next = 0
+
+        yield output_axis_tlast.posedge
+        yield clk.posedge
+        yield clk.posedge
+
+        rx_frame = None
+        if not sink_queue.empty():
+            rx_frame = sink_queue.get()
+
+        assert rx_frame == test_frame
+
+        yield delay(100)
+
+        yield clk.posedge
+        print("test 9: initial sink pause, reset")
+        current_test.next = 9
+
+        test_frame = axis_ep.AXIStreamFrame(bytearray(range(24)))
+
+        sink_pause.next = 1
+        source_queue.put(test_frame)
+        yield clk.posedge
+        yield clk.posedge
+        yield clk.posedge
+        yield clk.posedge
+
+        rst.next = 1
+        yield clk.posedge
+        rst.next = 0
+
+        sink_pause.next = 0
+
+        yield delay(100)
+
+        yield clk.posedge
+        yield clk.posedge
+        yield clk.posedge
+
+        assert sink_queue.empty()
+
+        yield delay(100)
+
         raise StopSimulation
 
     return dut, source, sink, clkgen, check
