@@ -113,6 +113,8 @@ reg [31:0] crc_next5_save = 0;
 reg [31:0] crc_next6_save = 0;
 reg [31:0] crc_next7_save = 0;
 
+reg [31:0] crc_check = 0;
+
 assign output_axis_tdata = output_axis_tdata_reg;
 assign output_axis_tkeep = output_axis_tkeep_reg;
 assign output_axis_tvalid = output_axis_tvalid_reg;
@@ -186,54 +188,63 @@ always @* begin
             fcs_output_tdata_1 = 0;
             fcs_output_tkeep_0 = 8'b00001111;
             fcs_output_tkeep_1 = 8'b00000000;
+            crc_check = ~crc_next7_save;
         end
         8'b11111110: begin
             fcs_output_tdata_0 = {~crc_next4_save[23:0], xgmii_rxd_d1[39:0]};
             fcs_output_tdata_1 = {56'd0, ~crc_next4_save[31:24]};
             fcs_output_tkeep_0 = 8'b00011111;
             fcs_output_tkeep_1 = 8'b00000000;
+            crc_check = ~crc_next0;
         end
         8'b11111100: begin
             fcs_output_tdata_0 = {~crc_next5_save[15:0], xgmii_rxd_d1[47:0]};
             fcs_output_tdata_1 = {48'd0, ~crc_next5_save[31:16]};
             fcs_output_tkeep_0 = 8'b00111111;
             fcs_output_tkeep_1 = 8'b00000000;
+            crc_check = ~crc_next1;
         end
         8'b11111000: begin
             fcs_output_tdata_0 = {~crc_next6_save[7:0], xgmii_rxd_d1[55:0]};
             fcs_output_tdata_1 = {40'd0, ~crc_next6_save[31:8]};
             fcs_output_tkeep_0 = 8'b01111111;
             fcs_output_tkeep_1 = 8'b00000000;
+            crc_check = ~crc_next2;
         end
         8'b11110000: begin
             fcs_output_tdata_0 = xgmii_rxd_d1;
             fcs_output_tdata_1 = {32'd0, ~crc_next7_save[31:0]};
             fcs_output_tkeep_0 = 8'b11111111;
             fcs_output_tkeep_1 = 8'b00000000;
+            crc_check = ~crc_next3;
         end
         8'b11100000: begin
             fcs_output_tdata_0 = {24'd0, ~crc_next0[31:0], xgmii_rxd_d0[7:0]};
             fcs_output_tdata_1 = 0;
             fcs_output_tkeep_0 = 8'b00000001;
             fcs_output_tkeep_1 = 8'b00000000;
+            crc_check = ~crc_next4;
         end
         8'b11000000: begin
             fcs_output_tdata_0 = {16'd0, ~crc_next1[31:0], xgmii_rxd_d0[15:0]};
             fcs_output_tdata_1 = 0;
             fcs_output_tkeep_0 = 8'b00000011;
             fcs_output_tkeep_1 = 8'b00000000;
+            crc_check = ~crc_next5;
         end
         8'b10000000: begin
             fcs_output_tdata_0 = {8'd0, ~crc_next2[31:0], xgmii_rxd_d0[23:0]};
             fcs_output_tdata_1 = 0;
             fcs_output_tkeep_0 = 8'b00000111;
             fcs_output_tkeep_1 = 8'b00000000;
+            crc_check = ~crc_next6;
         end
         default: begin
             fcs_output_tdata_0 = 0;
             fcs_output_tdata_1 = 0;
             fcs_output_tkeep_0 = 0;
             fcs_output_tkeep_1 = 0;
+            crc_check = 0;
         end
     endcase
 end
@@ -384,7 +395,7 @@ always @* begin
                     reset_crc = 1;
                     output_axis_tkeep_next = fcs_output_tkeep_0;
                     output_axis_tlast_next = 1;
-                    if (xgmii_rxd_masked != fcs_output_tdata_1 || xgmii_rxd_d1 != fcs_output_tdata_0) begin
+                    if (crc_check != 32'h2144df1c) begin
                         output_axis_tuser_next = 1;
                         error_bad_frame_next = 1;
                         error_bad_fcs_next = 1;
@@ -394,7 +405,7 @@ always @* begin
                     // need extra cycle
                     last_cycle_tkeep_next = fcs_output_tkeep_0;
                     last_cycle_tuser_next = 0;
-                    if (xgmii_rxd_masked != fcs_output_tdata_0) begin
+                    if (crc_check != 32'h2144df1c) begin
                         error_bad_frame_next = 1;
                         error_bad_fcs_next = 1;
                         last_cycle_tuser_next = 1;
@@ -440,8 +451,14 @@ always @(posedge clk or posedge rst) begin
 
         error_bad_frame_reg <= 0;
         error_bad_fcs_reg <= 0;
-        
+
         crc_state <= 32'hFFFFFFFF;
+
+        crc_next3_save <= 0;
+        crc_next4_save <= 0;
+        crc_next5_save <= 0;
+        crc_next6_save <= 0;
+        crc_next7_save <= 0;
 
         xgmii_rxd_d0 <= 64'h0707070707070707;
         xgmii_rxd_d1 <= 64'h0707070707070707;
