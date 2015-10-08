@@ -36,10 +36,14 @@ module axis_async_fifo #
 )
 (
     /*
+     * Common asynchronous reset
+     */
+    input  wire                   async_rst,
+
+    /*
      * AXI input
      */
     input  wire                   input_clk,
-    input  wire                   input_rst,
     input  wire [DATA_WIDTH-1:0]  input_axis_tdata,
     input  wire                   input_axis_tvalid,
     output wire                   input_axis_tready,
@@ -50,7 +54,6 @@ module axis_async_fifo #
      * AXI output
      */
     input  wire                   output_clk,
-    input  wire                   output_rst,
     output wire [DATA_WIDTH-1:0]  output_axis_tdata,
     output wire                   output_axis_tvalid,
     input  wire                   output_axis_tready,
@@ -99,8 +102,8 @@ assign input_axis_tready = ~full;
 assign output_axis_tvalid = output_axis_tvalid_reg;
 
 // reset synchronization
-always @(posedge input_clk or posedge input_rst or posedge output_rst) begin
-    if (input_rst | output_rst) begin
+always @(posedge input_clk or posedge async_rst) begin
+    if (async_rst) begin
         input_rst_sync1 <= 1;
         input_rst_sync2 <= 1;
     end else begin
@@ -109,8 +112,8 @@ always @(posedge input_clk or posedge input_rst or posedge output_rst) begin
     end
 end
 
-always @(posedge output_clk or posedge input_rst or posedge output_rst) begin
-    if (input_rst | output_rst) begin
+always @(posedge output_clk or posedge async_rst) begin
+    if (async_rst) begin
         output_rst_sync1 <= 1;
         output_rst_sync2 <= 1;
     end else begin
