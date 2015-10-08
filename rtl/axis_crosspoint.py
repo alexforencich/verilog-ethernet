@@ -158,7 +158,7 @@ assign output_{{p}}_axis_tlast = output_{{p}}_axis_tlast_reg;
 assign output_{{p}}_axis_tuser = output_{{p}}_axis_tuser_reg;
 {% endfor %}
 
-always @(posedge clk or posedge rst) begin
+always @(posedge clk) begin
     if (rst) begin
 {%- for p in ports %}
         output_{{p}}_select_reg <= 0;

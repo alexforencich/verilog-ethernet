@@ -84,7 +84,7 @@ assign input_axis_tready = ~full;
 assign output_axis_tvalid = output_axis_tvalid_reg;
 
 // write
-always @(posedge clk or posedge rst) begin
+always @(posedge clk) begin
     if (rst) begin
         wr_ptr <= 0;
     end else if (write) begin
@@ -94,7 +94,7 @@ always @(posedge clk or posedge rst) begin
 end
 
 // read
-always @(posedge clk or posedge rst) begin
+always @(posedge clk) begin
     if (rst) begin
         rd_ptr <= 0;
     end else if (read) begin
@@ -104,7 +104,7 @@ always @(posedge clk or posedge rst) begin
 end
 
 // source ready output
-always @(posedge clk or posedge rst) begin
+always @(posedge clk) begin
     if (rst) begin
         output_axis_tvalid_reg <= 1'b0;
     end else if (output_axis_tready | ~output_axis_tvalid_reg) begin

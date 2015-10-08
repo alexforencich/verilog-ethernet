@@ -82,7 +82,7 @@ assign output_axis_tvalid = output_axis_tvalid_reg;
 assign output_axis_tlast = output_axis_tlast_reg;
 assign output_axis_tuser = output_axis_tuser_reg;
 
-always @(posedge clk or posedge rst) begin
+always @(posedge clk) begin
     if (rst) begin
         input_axis_tready_reg <= 0;
         output_axis_tdata_reg <= 0;

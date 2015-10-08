@@ -107,7 +107,7 @@ assign bad_frame = bad_frame_reg;
 assign good_frame = good_frame_reg;
 
 // write
-always @(posedge clk or posedge rst) begin
+always @(posedge clk) begin
     if (rst) begin
         wr_ptr <= 0;
         wr_ptr_cur <= 0;
@@ -150,7 +150,7 @@ always @(posedge clk or posedge rst) begin
 end
 
 // read
-always @(posedge clk or posedge rst) begin
+always @(posedge clk) begin
     if (rst) begin
         rd_ptr <= 0;
     end else if (read) begin
@@ -160,7 +160,7 @@ always @(posedge clk or posedge rst) begin
 end
 
 // source ready output
-always @(posedge clk or posedge rst) begin
+always @(posedge clk) begin
     if (rst) begin
         output_axis_tvalid_reg <= 1'b0;
     end else if (output_axis_tready | ~output_axis_tvalid_reg) begin
