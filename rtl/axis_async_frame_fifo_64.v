@@ -84,8 +84,10 @@ reg [ADDR_WIDTH:0] rd_ptr_gray_sync2 = {ADDR_WIDTH+1{1'b0}};
 
 reg input_rst_sync1 = 1;
 reg input_rst_sync2 = 1;
+reg input_rst_sync3 = 1;
 reg output_rst_sync1 = 1;
 reg output_rst_sync2 = 1;
+reg output_rst_sync3 = 1;
 
 reg drop_frame = 1'b0;
 reg overflow_reg = 1'b0;
@@ -129,9 +131,11 @@ always @(posedge input_clk or posedge async_rst) begin
     if (async_rst) begin
         input_rst_sync1 <= 1;
         input_rst_sync2 <= 1;
+        input_rst_sync3 <= 1;
     end else begin
         input_rst_sync1 <= 0;
-        input_rst_sync2 <= input_rst_sync1;
+        input_rst_sync2 <= input_rst_sync1 | output_rst_sync1;
+        input_rst_sync3 <= input_rst_sync2;
     end
 end
 
@@ -139,15 +143,17 @@ always @(posedge output_clk or posedge async_rst) begin
     if (async_rst) begin
         output_rst_sync1 <= 1;
         output_rst_sync2 <= 1;
+        output_rst_sync3 <= 1;
     end else begin
         output_rst_sync1 <= 0;
         output_rst_sync2 <= output_rst_sync1;
+        output_rst_sync3 <= output_rst_sync2;
     end
 end
 
 // write
-always @(posedge input_clk or posedge input_rst_sync2) begin
-    if (input_rst_sync2) begin
+always @(posedge input_clk) begin
+    if (input_rst_sync3) begin
         wr_ptr <= 0;
         wr_ptr_cur <= 0;
         wr_ptr_gray <= 0;
@@ -192,8 +198,8 @@ always @(posedge input_clk or posedge input_rst_sync2) begin
 end
 
 // pointer synchronization
-always @(posedge input_clk or posedge input_rst_sync2) begin
-    if (input_rst_sync2) begin
+always @(posedge input_clk) begin
+    if (input_rst_sync3) begin
         rd_ptr_gray_sync1 <= 0;
         rd_ptr_gray_sync2 <= 0;
     end else begin
@@ -203,8 +209,8 @@ always @(posedge input_clk or posedge input_rst_sync2) begin
 end
 
 // read
-always @(posedge output_clk or posedge output_rst_sync2) begin
-    if (output_rst_sync2) begin
+always @(posedge output_clk) begin
+    if (output_rst_sync3) begin
         rd_ptr <= 0;
         rd_ptr_gray <= 0;
     end else if (read) begin
@@ -216,8 +222,8 @@ always @(posedge output_clk or posedge output_rst_sync2) begin
 end
 
 // pointer synchronization
-always @(posedge output_clk or posedge output_rst_sync2) begin
-    if (output_rst_sync2) begin
+always @(posedge output_clk) begin
+    if (output_rst_sync3) begin
         wr_ptr_gray_sync1 <= 0;
         wr_ptr_gray_sync2 <= 0;
     end else begin
@@ -227,8 +233,8 @@ always @(posedge output_clk or posedge output_rst_sync2) begin
 end
 
 // source ready output
-always @(posedge output_clk or posedge output_rst_sync2) begin
-    if (output_rst_sync2) begin
+always @(posedge output_clk) begin
+    if (output_rst_sync3) begin
         output_axis_tvalid_reg <= 1'b0;
     end else if (output_axis_tready | ~output_axis_tvalid_reg) begin
         output_axis_tvalid_reg <= ~empty;
