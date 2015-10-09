@@ -136,7 +136,7 @@ always @* begin
     end
 end
 
-always @(posedge clk or posedge rst) begin
+always @(posedge clk) begin
     if (rst) begin
         grant_reg <= 0;
         grant_valid_reg <= 0;

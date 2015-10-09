@@ -158,7 +158,7 @@ assign output_3_axis_tlast = output_3_axis_tlast_reg;
 assign output_3_axis_tuser = output_3_axis_tuser_reg;
 
 
-always @(posedge clk or posedge rst) begin
+always @(posedge clk) begin
     if (rst) begin
         output_0_select_reg <= 0;
         output_1_select_reg <= 0;

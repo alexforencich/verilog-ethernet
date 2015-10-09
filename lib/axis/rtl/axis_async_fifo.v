@@ -36,10 +36,14 @@ module axis_async_fifo #
 )
 (
     /*
+     * Common asynchronous reset
+     */
+    input  wire                   async_rst,
+
+    /*
      * AXI input
      */
     input  wire                   input_clk,
-    input  wire                   input_rst,
     input  wire [DATA_WIDTH-1:0]  input_axis_tdata,
     input  wire                   input_axis_tvalid,
     output wire                   input_axis_tready,
@@ -50,7 +54,6 @@ module axis_async_fifo #
      * AXI output
      */
     input  wire                   output_clk,
-    input  wire                   output_rst,
     output wire [DATA_WIDTH-1:0]  output_axis_tdata,
     output wire                   output_axis_tvalid,
     input  wire                   output_axis_tready,
@@ -70,8 +73,10 @@ reg [ADDR_WIDTH:0] rd_ptr_gray_sync2 = {ADDR_WIDTH+1{1'b0}};
 
 reg input_rst_sync1 = 1;
 reg input_rst_sync2 = 1;
+reg input_rst_sync3 = 1;
 reg output_rst_sync1 = 1;
 reg output_rst_sync2 = 1;
+reg output_rst_sync3 = 1;
 
 reg [DATA_WIDTH+2-1:0] data_out_reg = {1'b0, 1'b0, {DATA_WIDTH{1'b0}}};
 
@@ -95,33 +100,37 @@ wire read = (output_axis_tready | ~output_axis_tvalid_reg) & ~empty;
 
 assign {output_axis_tlast, output_axis_tuser, output_axis_tdata} = data_out_reg;
 
-assign input_axis_tready = ~full;
+assign input_axis_tready = ~full & ~input_rst_sync3;
 assign output_axis_tvalid = output_axis_tvalid_reg;
 
 // reset synchronization
-always @(posedge input_clk or posedge input_rst or posedge output_rst) begin
-    if (input_rst | output_rst) begin
+always @(posedge input_clk or posedge async_rst) begin
+    if (async_rst) begin
         input_rst_sync1 <= 1;
         input_rst_sync2 <= 1;
+        input_rst_sync3 <= 1;
     end else begin
         input_rst_sync1 <= 0;
-        input_rst_sync2 <= input_rst_sync1;
+        input_rst_sync2 <= input_rst_sync1 | output_rst_sync1;
+        input_rst_sync3 <= input_rst_sync2;
     end
 end
 
-always @(posedge output_clk or posedge input_rst or posedge output_rst) begin
-    if (input_rst | output_rst) begin
+always @(posedge output_clk or posedge async_rst) begin
+    if (async_rst) begin
         output_rst_sync1 <= 1;
         output_rst_sync2 <= 1;
+        output_rst_sync3 <= 1;
     end else begin
         output_rst_sync1 <= 0;
         output_rst_sync2 <= output_rst_sync1;
+        output_rst_sync3 <= output_rst_sync2;
     end
 end
 
 // write
-always @(posedge input_clk or posedge input_rst_sync2) begin
-    if (input_rst_sync2) begin
+always @(posedge input_clk) begin
+    if (input_rst_sync3) begin
         wr_ptr <= 0;
         wr_ptr_gray <= 0;
     end else if (write) begin
@@ -133,8 +142,8 @@ always @(posedge input_clk or posedge input_rst_sync2) begin
 end
 
 // pointer synchronization
-always @(posedge input_clk or posedge input_rst_sync2) begin
-    if (input_rst_sync2) begin
+always @(posedge input_clk) begin
+    if (input_rst_sync3) begin
         rd_ptr_gray_sync1 <= 0;
         rd_ptr_gray_sync2 <= 0;
     end else begin
@@ -144,8 +153,8 @@ always @(posedge input_clk or posedge input_rst_sync2) begin
 end
 
 // read
-always @(posedge output_clk or posedge output_rst_sync2) begin
-    if (output_rst_sync2) begin
+always @(posedge output_clk) begin
+    if (output_rst_sync3) begin
         rd_ptr <= 0;
         rd_ptr_gray <= 0;
     end else if (read) begin
@@ -157,8 +166,8 @@ always @(posedge output_clk or posedge output_rst_sync2) begin
 end
 
 // pointer synchronization
-always @(posedge output_clk or posedge output_rst_sync2) begin
-    if (output_rst_sync2) begin
+always @(posedge output_clk) begin
+    if (output_rst_sync3) begin
         wr_ptr_gray_sync1 <= 0;
         wr_ptr_gray_sync2 <= 0;
     end else begin
@@ -168,8 +177,8 @@ always @(posedge output_clk or posedge output_rst_sync2) begin
 end
 
 // source ready output
-always @(posedge output_clk or posedge output_rst_sync2) begin
-    if (output_rst_sync2) begin
+always @(posedge output_clk) begin
+    if (output_rst_sync3) begin
         output_axis_tvalid_reg <= 1'b0;
     end else if (output_axis_tready | ~output_axis_tvalid_reg) begin
         output_axis_tvalid_reg <= ~empty;

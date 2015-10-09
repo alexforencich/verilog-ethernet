@@ -57,7 +57,7 @@ module axis_ll_bridge #
 
 reg last_tlast = 1'b1;
 
-always @(posedge clk or posedge rst) begin
+always @(posedge clk) begin
     if (rst) begin
         last_tlast = 1'b1;
     end else begin

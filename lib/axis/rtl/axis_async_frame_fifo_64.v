@@ -38,10 +38,14 @@ module axis_async_frame_fifo_64 #
 )
 (
     /*
+     * Common asynchronous reset
+     */
+    input  wire                   async_rst,
+
+    /*
      * AXI input
      */
     input  wire                   input_clk,
-    input  wire                   input_rst,
     input  wire [DATA_WIDTH-1:0]  input_axis_tdata,
     input  wire [KEEP_WIDTH-1:0]  input_axis_tkeep,
     input  wire                   input_axis_tvalid,
@@ -53,7 +57,6 @@ module axis_async_frame_fifo_64 #
      * AXI output
      */
     input  wire                   output_clk,
-    input  wire                   output_rst,
     output wire [DATA_WIDTH-1:0]  output_axis_tdata,
     output wire [KEEP_WIDTH-1:0]  output_axis_tkeep,
     output wire                   output_axis_tvalid,
@@ -63,9 +66,12 @@ module axis_async_frame_fifo_64 #
     /*
      * Status
      */
-    output wire                   overflow,
-    output wire                   bad_frame,
-    output wire                   good_frame
+    output wire                   input_status_overflow,
+    output wire                   input_status_bad_frame,
+    output wire                   input_status_good_frame,
+    output wire                   output_status_overflow,
+    output wire                   output_status_bad_frame,
+    output wire                   output_status_good_frame
 );
 
 reg [ADDR_WIDTH:0] wr_ptr = {ADDR_WIDTH+1{1'b0}}, wr_ptr_next;
@@ -81,13 +87,28 @@ reg [ADDR_WIDTH:0] rd_ptr_gray_sync2 = {ADDR_WIDTH+1{1'b0}};
 
 reg input_rst_sync1 = 1;
 reg input_rst_sync2 = 1;
+reg input_rst_sync3 = 1;
 reg output_rst_sync1 = 1;
 reg output_rst_sync2 = 1;
+reg output_rst_sync3 = 1;
 
 reg drop_frame = 1'b0;
 reg overflow_reg = 1'b0;
 reg bad_frame_reg = 1'b0;
 reg good_frame_reg = 1'b0;
+
+reg overflow_sync1 = 1'b0;
+reg overflow_sync2 = 1'b0;
+reg overflow_sync3 = 1'b0;
+reg overflow_sync4 = 1'b0;
+reg bad_frame_sync1 = 1'b0;
+reg bad_frame_sync2 = 1'b0;
+reg bad_frame_sync3 = 1'b0;
+reg bad_frame_sync4 = 1'b0;
+reg good_frame_sync1 = 1'b0;
+reg good_frame_sync2 = 1'b0;
+reg good_frame_sync3 = 1'b0;
+reg good_frame_sync4 = 1'b0;
 
 reg [DATA_WIDTH+KEEP_WIDTH+2-1:0] data_out_reg = {1'b0, {KEEP_WIDTH{1'b0}}, {DATA_WIDTH{1'b0}}};
 
@@ -114,37 +135,45 @@ wire read = (output_axis_tready | ~output_axis_tvalid_reg) & ~empty;
 
 assign {output_axis_tlast, output_axis_tkeep, output_axis_tdata} = data_out_reg;
 
-assign input_axis_tready = (~full | DROP_WHEN_FULL);
+assign input_axis_tready = (~full | DROP_WHEN_FULL) & ~input_rst_sync3;
 assign output_axis_tvalid = output_axis_tvalid_reg;
 
-assign overflow = overflow_reg;
-assign bad_frame = bad_frame_reg;
-assign good_frame = good_frame_reg;
+assign input_status_overflow = overflow_reg;
+assign input_status_bad_frame = bad_frame_reg;
+assign input_status_good_frame = good_frame_reg;
+
+assign output_status_overflow = overflow_sync3 ^ overflow_sync4;
+assign output_status_bad_frame = bad_frame_sync3 ^ bad_frame_sync4;
+assign output_status_good_frame = good_frame_sync3 ^ good_frame_sync4;
 
 // reset synchronization
-always @(posedge input_clk or posedge input_rst or posedge output_rst) begin
-    if (input_rst | output_rst) begin
+always @(posedge input_clk or posedge async_rst) begin
+    if (async_rst) begin
         input_rst_sync1 <= 1;
         input_rst_sync2 <= 1;
+        input_rst_sync3 <= 1;
     end else begin
         input_rst_sync1 <= 0;
-        input_rst_sync2 <= input_rst_sync1;
+        input_rst_sync2 <= input_rst_sync1 | output_rst_sync1;
+        input_rst_sync3 <= input_rst_sync2;
     end
 end
 
-always @(posedge output_clk or posedge input_rst or posedge output_rst) begin
-    if (input_rst | output_rst) begin
+always @(posedge output_clk or posedge async_rst) begin
+    if (async_rst) begin
         output_rst_sync1 <= 1;
         output_rst_sync2 <= 1;
+        output_rst_sync3 <= 1;
     end else begin
         output_rst_sync1 <= 0;
         output_rst_sync2 <= output_rst_sync1;
+        output_rst_sync3 <= output_rst_sync2;
     end
 end
 
 // write
-always @(posedge input_clk or posedge input_rst_sync2) begin
-    if (input_rst_sync2) begin
+always @(posedge input_clk) begin
+    if (input_rst_sync3) begin
         wr_ptr <= 0;
         wr_ptr_cur <= 0;
         wr_ptr_gray <= 0;
@@ -189,8 +218,8 @@ always @(posedge input_clk or posedge input_rst_sync2) begin
 end
 
 // pointer synchronization
-always @(posedge input_clk or posedge input_rst_sync2) begin
-    if (input_rst_sync2) begin
+always @(posedge input_clk) begin
+    if (input_rst_sync3) begin
         rd_ptr_gray_sync1 <= 0;
         rd_ptr_gray_sync2 <= 0;
     end else begin
@@ -200,8 +229,8 @@ always @(posedge input_clk or posedge input_rst_sync2) begin
 end
 
 // read
-always @(posedge output_clk or posedge output_rst_sync2) begin
-    if (output_rst_sync2) begin
+always @(posedge output_clk) begin
+    if (output_rst_sync3) begin
         rd_ptr <= 0;
         rd_ptr_gray <= 0;
     end else if (read) begin
@@ -213,8 +242,8 @@ always @(posedge output_clk or posedge output_rst_sync2) begin
 end
 
 // pointer synchronization
-always @(posedge output_clk or posedge output_rst_sync2) begin
-    if (output_rst_sync2) begin
+always @(posedge output_clk) begin
+    if (output_rst_sync3) begin
         wr_ptr_gray_sync1 <= 0;
         wr_ptr_gray_sync2 <= 0;
     end else begin
@@ -224,13 +253,47 @@ always @(posedge output_clk or posedge output_rst_sync2) begin
 end
 
 // source ready output
-always @(posedge output_clk or posedge output_rst_sync2) begin
-    if (output_rst_sync2) begin
+always @(posedge output_clk) begin
+    if (output_rst_sync3) begin
         output_axis_tvalid_reg <= 1'b0;
     end else if (output_axis_tready | ~output_axis_tvalid_reg) begin
         output_axis_tvalid_reg <= ~empty;
     end else begin
         output_axis_tvalid_reg <= output_axis_tvalid_reg;
+    end
+end
+
+// status synchronization
+always @(posedge input_clk) begin
+    if (input_rst_sync3) begin
+        overflow_sync1 <= 1'b0;
+        bad_frame_sync1 <= 1'b0;
+        good_frame_sync1 <= 1'b0;
+    end else begin
+        overflow_sync1 <= overflow_sync1 ^ overflow_reg;
+        bad_frame_sync1 <= bad_frame_sync1 ^ bad_frame_reg;
+        good_frame_sync1 <= good_frame_sync1 ^ good_frame_reg;
+    end
+end
+
+always @(posedge output_clk) begin
+    if (output_rst_sync3) begin
+        overflow_sync2 <= 1'b0;
+        overflow_sync3 <= 1'b0;
+        bad_frame_sync2 <= 1'b0;
+        bad_frame_sync3 <= 1'b0;
+        good_frame_sync2 <= 1'b0;
+        good_frame_sync3 <= 1'b0;
+    end else begin
+        overflow_sync2 <= overflow_sync1;
+        overflow_sync3 <= overflow_sync2;
+        overflow_sync4 <= overflow_sync3;
+        bad_frame_sync2 <= bad_frame_sync1;
+        bad_frame_sync3 <= bad_frame_sync2;
+        bad_frame_sync4 <= bad_frame_sync3;
+        good_frame_sync2 <= good_frame_sync1;
+        good_frame_sync3 <= good_frame_sync2;
+        good_frame_sync4 <= good_frame_sync3;
     end
 end
 

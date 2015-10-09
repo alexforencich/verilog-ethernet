@@ -44,10 +44,9 @@ src = ' '.join(srcs)
 
 build_cmd = "iverilog -o test_%s.vvp %s" % (module, src)
 
-def dut_axis_async_fifo_64(input_clk,
-                 input_rst,
+def dut_axis_async_fifo_64(async_rst,
+                 input_clk,
                  output_clk,
-                 output_rst,
                  current_test,
 
                  input_axis_tdata,
@@ -67,10 +66,9 @@ def dut_axis_async_fifo_64(input_clk,
     if os.system(build_cmd):
         raise Exception("Error running build command")
     return Cosimulation("vvp -m myhdl test_%s.vvp -lxt2" % module,
+                async_rst=async_rst,
                 input_clk=input_clk,
-                input_rst=input_rst,
                 output_clk=output_clk,
-                output_rst=output_rst,
                 current_test=current_test,
 
                 input_axis_tdata=input_axis_tdata,
@@ -90,10 +88,9 @@ def dut_axis_async_fifo_64(input_clk,
 def bench():
 
     # Inputs
+    async_rst = Signal(bool(0))
     input_clk = Signal(bool(0))
-    input_rst = Signal(bool(0))
     output_clk = Signal(bool(0))
-    output_rst = Signal(bool(0))
     current_test = Signal(intbv(0)[8:])
 
     input_axis_tdata = Signal(intbv(0)[64:])
@@ -118,7 +115,7 @@ def bench():
     sink_pause = Signal(bool(0))
 
     source = axis_ep.AXIStreamSource(input_clk,
-                                    input_rst,
+                                    async_rst,
                                     tdata=input_axis_tdata,
                                     tkeep=input_axis_tkeep,
                                     tvalid=input_axis_tvalid,
@@ -130,7 +127,7 @@ def bench():
                                     name='source')
 
     sink = axis_ep.AXIStreamSink(output_clk,
-                                output_rst,
+                                async_rst,
                                 tdata=output_axis_tdata,
                                 tkeep=output_axis_tkeep,
                                 tvalid=output_axis_tvalid,
@@ -142,10 +139,9 @@ def bench():
                                 name='sink')
 
     # DUT
-    dut = dut_axis_async_fifo_64(input_clk,
-                       input_rst,
+    dut = dut_axis_async_fifo_64(async_rst,
+                       input_clk,
                        output_clk,
-                       output_rst,
                        current_test,
 
                        input_axis_tdata,
@@ -174,13 +170,11 @@ def bench():
     def check():
         yield delay(100)
         yield input_clk.posedge
-        input_rst.next = 1
-        output_rst.next = 1
+        async_rst.next = 1
         yield input_clk.posedge
         yield input_clk.posedge
         yield input_clk.posedge
-        input_rst.next = 0
-        output_rst.next = 0
+        async_rst.next = 0
         yield input_clk.posedge
         yield delay(100)
         yield input_clk.posedge
@@ -438,7 +432,7 @@ def bench():
         yield delay(100)
 
         yield input_clk.posedge
-        print("test 9: initial sink pause, input reset")
+        print("test 9: initial sink pause, assert reset")
         current_test.next = 9
 
         test_frame = axis_ep.AXIStreamFrame(bytearray(range(24)))
@@ -450,38 +444,9 @@ def bench():
         yield input_clk.posedge
         yield input_clk.posedge
 
-        input_rst.next = 1
+        async_rst.next = 1
         yield input_clk.posedge
-        input_rst.next = 0
-
-        sink_pause.next = 0
-
-        yield delay(100)
-
-        yield output_clk.posedge
-        yield output_clk.posedge
-        yield output_clk.posedge
-
-        assert sink_queue.empty()
-
-        yield delay(100)
-
-        yield input_clk.posedge
-        print("test 10: initial sink pause, output reset")
-        current_test.next = 10
-
-        test_frame = axis_ep.AXIStreamFrame(bytearray(range(24)))
-
-        sink_pause.next = 1
-        source_queue.put(test_frame)
-        yield input_clk.posedge
-        yield input_clk.posedge
-        yield input_clk.posedge
-        yield input_clk.posedge
-
-        output_rst.next = 1
-        yield output_clk.posedge
-        output_rst.next = 0
+        async_rst.next = 0
 
         sink_pause.next = 0
 

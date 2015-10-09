@@ -29,10 +29,9 @@ THE SOFTWARE.
 module test_axis_async_fifo_64;
 
 // Inputs
+reg async_rst = 0;
 reg input_clk = 0;
-reg input_rst = 0;
 reg output_clk = 0;
-reg output_rst = 0;
 reg [7:0] current_test = 0;
 
 reg [63:0] input_axis_tdata = 0;
@@ -52,10 +51,9 @@ wire output_axis_tuser;
 
 initial begin
     // myhdl integration
-    $from_myhdl(input_clk,
-                input_rst,
+    $from_myhdl(async_rst,
+                input_clk,
                 output_clk,
-                output_rst,
                 current_test,
                 input_axis_tdata,
                 input_axis_tkeep,
@@ -80,9 +78,10 @@ axis_async_fifo_64 #(
     .DATA_WIDTH(64)
 )
 UUT (
+    // Common reset
+    .async_rst(async_rst),
     // AXI input
     .input_clk(input_clk),
-    .input_rst(input_rst),
     .input_axis_tdata(input_axis_tdata),
     .input_axis_tkeep(input_axis_tkeep),
     .input_axis_tvalid(input_axis_tvalid),
@@ -91,7 +90,6 @@ UUT (
     .input_axis_tuser(input_axis_tuser),
     // AXI output
     .output_clk(output_clk),
-    .output_rst(output_rst),
     .output_axis_tdata(output_axis_tdata),
     .output_axis_tkeep(output_axis_tkeep),
     .output_axis_tvalid(output_axis_tvalid),
