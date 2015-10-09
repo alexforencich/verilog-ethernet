@@ -63,9 +63,12 @@ module axis_async_frame_fifo #
     /*
      * Status
      */
-    output wire                   overflow,
-    output wire                   bad_frame,
-    output wire                   good_frame
+    output wire                   input_status_overflow,
+    output wire                   input_status_bad_frame,
+    output wire                   input_status_good_frame,
+    output wire                   output_status_overflow,
+    output wire                   output_status_bad_frame,
+    output wire                   output_status_good_frame
 );
 
 reg [ADDR_WIDTH:0] wr_ptr = {ADDR_WIDTH+1{1'b0}}, wr_ptr_next;
@@ -90,6 +93,19 @@ reg drop_frame = 1'b0;
 reg overflow_reg = 1'b0;
 reg bad_frame_reg = 1'b0;
 reg good_frame_reg = 1'b0;
+
+reg overflow_sync1 = 1'b0;
+reg overflow_sync2 = 1'b0;
+reg overflow_sync3 = 1'b0;
+reg overflow_sync4 = 1'b0;
+reg bad_frame_sync1 = 1'b0;
+reg bad_frame_sync2 = 1'b0;
+reg bad_frame_sync3 = 1'b0;
+reg bad_frame_sync4 = 1'b0;
+reg good_frame_sync1 = 1'b0;
+reg good_frame_sync2 = 1'b0;
+reg good_frame_sync3 = 1'b0;
+reg good_frame_sync4 = 1'b0;
 
 reg [DATA_WIDTH+2-1:0] data_out_reg = {1'b0, {DATA_WIDTH{1'b0}}};
 
@@ -119,9 +135,13 @@ assign {output_axis_tlast, output_axis_tdata} = data_out_reg;
 assign input_axis_tready = (~full | DROP_WHEN_FULL) & ~input_rst_sync3;
 assign output_axis_tvalid = output_axis_tvalid_reg;
 
-assign overflow = overflow_reg;
-assign bad_frame = bad_frame_reg;
-assign good_frame = good_frame_reg;
+assign input_status_overflow = overflow_reg;
+assign input_status_bad_frame = bad_frame_reg;
+assign input_status_good_frame = good_frame_reg;
+
+assign output_status_overflow = overflow_sync3 ^ overflow_sync4;
+assign output_status_bad_frame = bad_frame_sync3 ^ bad_frame_sync4;
+assign output_status_good_frame = good_frame_sync3 ^ good_frame_sync4;
 
 // reset synchronization
 always @(posedge input_clk or posedge async_rst) begin
@@ -237,6 +257,40 @@ always @(posedge output_clk) begin
         output_axis_tvalid_reg <= ~empty;
     end else begin
         output_axis_tvalid_reg <= output_axis_tvalid_reg;
+    end
+end
+
+// status synchronization
+always @(posedge input_clk) begin
+    if (input_rst_sync3) begin
+        overflow_sync1 <= 1'b0;
+        bad_frame_sync1 <= 1'b0;
+        good_frame_sync1 <= 1'b0;
+    end else begin
+        overflow_sync1 <= overflow_sync1 ^ overflow_reg;
+        bad_frame_sync1 <= bad_frame_sync1 ^ bad_frame_reg;
+        good_frame_sync1 <= good_frame_sync1 ^ good_frame_reg;
+    end
+end
+
+always @(posedge output_clk) begin
+    if (output_rst_sync3) begin
+        overflow_sync2 <= 1'b0;
+        overflow_sync3 <= 1'b0;
+        bad_frame_sync2 <= 1'b0;
+        bad_frame_sync3 <= 1'b0;
+        good_frame_sync2 <= 1'b0;
+        good_frame_sync3 <= 1'b0;
+    end else begin
+        overflow_sync2 <= overflow_sync1;
+        overflow_sync3 <= overflow_sync2;
+        overflow_sync4 <= overflow_sync3;
+        bad_frame_sync2 <= bad_frame_sync1;
+        bad_frame_sync3 <= bad_frame_sync2;
+        bad_frame_sync4 <= bad_frame_sync3;
+        good_frame_sync2 <= good_frame_sync1;
+        good_frame_sync3 <= good_frame_sync2;
+        good_frame_sync4 <= good_frame_sync3;
     end
 end
 

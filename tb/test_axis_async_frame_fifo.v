@@ -45,9 +45,12 @@ wire input_axis_tready;
 wire [7:0] output_axis_tdata;
 wire output_axis_tvalid;
 wire output_axis_tlast;
-wire overflow;
-wire bad_frame;
-wire good_frame;
+wire input_status_overflow;
+wire input_status_bad_frame;
+wire input_status_good_frame;
+wire output_status_overflow;
+wire output_status_bad_frame;
+wire output_status_good_frame;
 
 initial begin
     // myhdl integration
@@ -64,9 +67,12 @@ initial begin
               output_axis_tdata,
               output_axis_tvalid,
               output_axis_tlast,
-              overflow,
-              bad_frame,
-              good_frame);
+              input_status_overflow,
+              input_status_bad_frame,
+              input_status_good_frame,
+              output_status_overflow,
+              output_status_bad_frame,
+              output_status_good_frame);
 
     // dump file
     $dumpfile("test_axis_async_frame_fifo.lxt");
@@ -95,9 +101,12 @@ UUT (
     .output_axis_tready(output_axis_tready),
     .output_axis_tlast(output_axis_tlast),
     // Status
-    .overflow(overflow),
-    .bad_frame(bad_frame),
-    .good_frame(good_frame)
+    .input_status_overflow(input_status_overflow),
+    .input_status_bad_frame(input_status_bad_frame),
+    .input_status_good_frame(input_status_good_frame),
+    .output_status_overflow(output_status_overflow),
+    .output_status_bad_frame(output_status_bad_frame),
+    .output_status_good_frame(output_status_good_frame)
 );
 
 endmodule
