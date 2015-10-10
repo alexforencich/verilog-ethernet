@@ -115,6 +115,8 @@ reg [31:0] crc_next5_save = 0;
 reg [31:0] crc_next6_save = 0;
 reg [31:0] crc_next7_save = 0;
 
+reg [31:0] crc_check = 0;
+
 // internal datapath
 reg [63:0] output_axis_tdata_int;
 reg [7:0]  output_axis_tkeep_int;
@@ -235,48 +237,56 @@ always @* begin
             fcs_output_tdata_1 = {56'd0, ~crc_next4_save[31:24]};
             fcs_output_tkeep_0 = 8'b00011111;
             fcs_output_tkeep_1 = 8'b00000000;
+            crc_check = ~crc_next0;
         end
         8'b00000011: begin
             fcs_output_tdata_0 = {~crc_next5_save[15:0], input_axis_tdata_d0[47:0]};
             fcs_output_tdata_1 = {48'd0, ~crc_next5_save[31:16]};
             fcs_output_tkeep_0 = 8'b00111111;
             fcs_output_tkeep_1 = 8'b00000000;
+            crc_check = ~crc_next1;
         end
         8'b00000111: begin
             fcs_output_tdata_0 = {~crc_next6_save[7:0], input_axis_tdata_d0[55:0]};
             fcs_output_tdata_1 = {40'd0, ~crc_next6_save[31:8]};
             fcs_output_tkeep_0 = 8'b01111111;
             fcs_output_tkeep_1 = 8'b00000000;
+            crc_check = ~crc_next2;
         end
         8'b00001111: begin
             fcs_output_tdata_0 = input_axis_tdata_d0;
             fcs_output_tdata_1 = {32'd0, ~crc_next7_save[31:0]};
             fcs_output_tkeep_0 = 8'b11111111;
             fcs_output_tkeep_1 = 8'b00000000;
+            crc_check = ~crc_next3;
         end
         8'b00011111: begin
             fcs_output_tdata_0 = {24'd0, ~crc_next0[31:0], input_axis_tdata[7:0]};
             fcs_output_tdata_1 = 0;
             fcs_output_tkeep_0 = 8'b00000001;
             fcs_output_tkeep_1 = 8'b00000000;
+            crc_check = ~crc_next4;
         end
         8'b00111111: begin
             fcs_output_tdata_0 = {16'd0, ~crc_next1[31:0], input_axis_tdata[15:0]};
             fcs_output_tdata_1 = 0;
             fcs_output_tkeep_0 = 8'b00000011;
             fcs_output_tkeep_1 = 8'b00000000;
+            crc_check = ~crc_next5;
         end
         8'b01111111: begin
             fcs_output_tdata_0 = {8'd0, ~crc_next2[31:0], input_axis_tdata[23:0]};
             fcs_output_tdata_1 = 0;
             fcs_output_tkeep_0 = 8'b00000111;
             fcs_output_tkeep_1 = 8'b00000000;
+            crc_check = ~crc_next6;
         end
         8'b11111111: begin
             fcs_output_tdata_0 = {~crc_next3[31:0], input_axis_tdata[31:0]};
             fcs_output_tdata_1 = 0;
             fcs_output_tkeep_0 = 8'b00001111;
             fcs_output_tkeep_1 = 8'b00000000;
+            crc_check = ~crc_next7;
         end
         default: begin
             fcs_output_tdata_0 = 0;
@@ -379,7 +389,7 @@ always @* begin
                         output_axis_tlast_int = 1;
                         output_axis_tuser_int = input_axis_tuser;
                         output_axis_tkeep_int = fcs_output_tkeep_0;
-                        if (input_axis_tdata_masked != fcs_output_tdata_1 || input_axis_tdata_d0 != fcs_output_tdata_0) begin
+                        if (crc_check != 32'h2144df1c) begin
                             output_axis_tuser_int = 1;
                             error_bad_fcs_next = 1;
                         end
@@ -388,7 +398,7 @@ always @* begin
                     end else begin
                         last_cycle_tkeep_next = fcs_output_tkeep_0;
                         last_cycle_tuser_next = input_axis_tuser;
-                        if (input_axis_tdata_masked != fcs_output_tdata_0) begin
+                        if (crc_check != 32'h2144df1c) begin
                             error_bad_fcs_next = 1;
                             last_cycle_tuser_next = 1;
                         end
