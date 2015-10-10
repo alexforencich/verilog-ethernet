@@ -104,6 +104,38 @@ wire        rx_fifo_axis_tvalid;
 wire        rx_fifo_axis_tlast;
 wire        rx_fifo_axis_tuser;
 
+// synchronize MAC status signals into logic clock domain
+wire rx_error_bad_frame_int;
+wire rx_error_bad_fcs_int;
+
+reg [1:0] rx_sync_reg_1 = 0;
+reg [1:0] rx_sync_reg_2 = 0;
+reg [1:0] rx_sync_reg_3 = 0;
+reg [1:0] rx_sync_reg_4 = 0;
+
+assign rx_error_bad_frame = rx_sync_reg_3[0] ^ rx_sync_reg_4[0];
+assign rx_error_bad_fcs = rx_sync_reg_3[1] ^ rx_sync_reg_4[1];
+
+always @(posedge rx_clk or posedge rx_rst) begin
+    if (rx_rst) begin
+        rx_sync_reg_1 <= 0;
+    end else begin
+        rx_sync_reg_1 <= rx_sync_reg_1 ^ {rx_error_bad_frame_int, rx_error_bad_frame_int};
+    end
+end
+
+always @(posedge logic_clk or posedge logic_rst) begin
+    if (logic_rst) begin
+        rx_sync_reg_2 <= 0;
+        rx_sync_reg_3 <= 0;
+        rx_sync_reg_4 <= 0;
+    end else begin
+        rx_sync_reg_2 <= rx_sync_reg_1;
+        rx_sync_reg_3 <= rx_sync_reg_2;
+        rx_sync_reg_4 <= rx_sync_reg_3;
+    end
+end
+
 eth_mac_10g #(
     .ENABLE_PADDING(ENABLE_PADDING),
     .ENABLE_DIC(ENABLE_DIC),
@@ -129,8 +161,8 @@ eth_mac_10g_inst (
     .xgmii_rxc(xgmii_rxc),
     .xgmii_txd(xgmii_txd),
     .xgmii_txc(xgmii_txc),
-    .rx_error_bad_frame(rx_error_bad_frame),
-    .rx_error_bad_fcs(rx_error_bad_fcs),
+    .rx_error_bad_frame(rx_error_bad_frame_int),
+    .rx_error_bad_fcs(rx_error_bad_fcs_int),
     .ifg_delay(ifg_delay)
 );
 
