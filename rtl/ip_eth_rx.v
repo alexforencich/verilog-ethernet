@@ -425,7 +425,7 @@ always @* begin
     endcase
 end
 
-always @(posedge clk or posedge rst) begin
+always @(posedge clk) begin
     if (rst) begin
         state_reg <= STATE_IDLE;
         frame_ptr_reg <= 0;
@@ -527,7 +527,7 @@ assign output_ip_payload_tvalid = output_ip_payload_tvalid_reg;
 assign output_ip_payload_tlast = output_ip_payload_tlast_reg;
 assign output_ip_payload_tuser = output_ip_payload_tuser_reg;
 
-always @(posedge clk or posedge rst) begin
+always @(posedge clk) begin
     if (rst) begin
         output_ip_payload_tdata_reg <= 0;
         output_ip_payload_tvalid_reg <= 0;

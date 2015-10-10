@@ -204,7 +204,7 @@ always @* begin
     endcase
 end
 
-always @(posedge clk or posedge rst) begin
+always @(posedge clk) begin
     if (rst) begin
         state_reg <= STATE_IDLE;
         
@@ -271,7 +271,7 @@ assign output_axis_tuser = output_axis_tuser_reg;
 // enable ready input next cycle if output is ready or if there is space in both output registers or if there is space in the temp register that will not be filled next cycle
 assign output_axis_tready_int_early = output_axis_tready | (~temp_axis_tvalid_reg & ~output_axis_tvalid_reg) | (~temp_axis_tvalid_reg & ~output_axis_tvalid_int);
 
-always @(posedge clk or posedge rst) begin
+always @(posedge clk) begin
     if (rst) begin
         output_axis_tdata_reg <= 0;
         output_axis_tvalid_reg <= 0;

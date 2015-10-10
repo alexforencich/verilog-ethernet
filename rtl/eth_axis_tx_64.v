@@ -289,7 +289,7 @@ always @* begin
     endcase
 end
 
-always @(posedge clk or posedge rst) begin
+always @(posedge clk) begin
     if (rst) begin
         state_reg <= STATE_IDLE;
         frame_ptr_reg <= 0;
@@ -357,7 +357,7 @@ assign output_axis_tvalid = output_axis_tvalid_reg;
 assign output_axis_tlast = output_axis_tlast_reg;
 assign output_axis_tuser = output_axis_tuser_reg;
 
-always @(posedge clk or posedge rst) begin
+always @(posedge clk) begin
     if (rst) begin
         output_axis_tdata_reg <= 0;
         output_axis_tkeep_reg <= 0;

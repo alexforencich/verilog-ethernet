@@ -100,7 +100,7 @@ wire lru_full = &lru_bit;
 
 integer i;
 
-always @(posedge clk or posedge rst) begin
+always @(posedge clk) begin
     if (rst) begin
         query_response_valid_reg <= 0;
         query_response_error_reg <= 0;

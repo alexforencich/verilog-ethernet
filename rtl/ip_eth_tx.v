@@ -361,7 +361,7 @@ always @* begin
     endcase
 end
 
-always @(posedge clk or posedge rst) begin
+always @(posedge clk) begin
     if (rst) begin
         state_reg <= STATE_IDLE;
         frame_ptr_reg <= 0;
@@ -443,7 +443,7 @@ assign output_eth_payload_tuser = output_eth_payload_tuser_reg;
 // enable ready input next cycle if output is ready or if there is space in both output registers or if there is space in the temp register that will not be filled next cycle
 assign output_eth_payload_tready_int_early = output_eth_payload_tready | (~temp_axis_tvalid_reg & ~output_eth_payload_tvalid_reg) | (~temp_axis_tvalid_reg & ~output_eth_payload_tvalid_int);
 
-always @(posedge clk or posedge rst) begin
+always @(posedge clk) begin
     if (rst) begin
         output_eth_payload_tdata_reg <= 0;
         output_eth_payload_tvalid_reg <= 0;

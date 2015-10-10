@@ -67,7 +67,7 @@ eth_crc_8_inst (
     .crc_next(crc_next)
 );
 
-always @(posedge clk or posedge rst) begin
+always @(posedge clk) begin
     if (rst) begin
         crc_state <= 32'hFFFFFFFF;
         fcs_reg <= 0;

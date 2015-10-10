@@ -310,7 +310,7 @@ always @* begin
     output_ip_payload_tuser_int = input_ip_payload_tuser;
 end
 
-always @(posedge clk or posedge rst) begin
+always @(posedge clk) begin
     if (rst) begin
         select_reg <= 0;
         frame_reg <= 0;
@@ -383,7 +383,7 @@ assign output_{{p}}_ip_payload_tuser = output_ip_payload_tuser_reg;
 // enable ready input next cycle if output is ready or if there is space in both output registers or if there is space in the temp register that will not be filled next cycle
 assign output_ip_payload_tready_int_early = current_output_tready | (~temp_ip_payload_tvalid_reg & ~current_output_tvalid) | (~temp_ip_payload_tvalid_reg & ~output_ip_payload_tvalid_int);
 
-always @(posedge clk or posedge rst) begin
+always @(posedge clk) begin
     if (rst) begin
         output_ip_payload_tdata_reg <= 0;
 {%- for p in ports %}
