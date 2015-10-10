@@ -101,40 +101,6 @@ wire        rx_fifo_axis_tvalid;
 wire        rx_fifo_axis_tlast;
 wire        rx_fifo_axis_tuser;
 
-// synchronize FIFO status signals into logic clock domain (only required for RX FIFO)
-wire rx_fifo_overflow_int;
-wire rx_fifo_bad_frame_int;
-wire rx_fifo_good_frame_int;
-
-reg [2:0] rx_sync_reg_1 = 0;
-reg [2:0] rx_sync_reg_2 = 0;
-reg [2:0] rx_sync_reg_3 = 0;
-reg [2:0] rx_sync_reg_4 = 0;
-
-assign rx_fifo_overflow = rx_sync_reg_3[0] ^ rx_sync_reg_4[0];
-assign rx_fifo_bad_frame = rx_sync_reg_3[1] ^ rx_sync_reg_4[1];
-assign rx_fifo_good_frame = rx_sync_reg_3[2] ^ rx_sync_reg_4[2];
-
-always @(posedge rx_clk or posedge rx_rst) begin
-    if (rx_rst) begin
-        rx_sync_reg_1 <= 0;
-    end else begin
-        rx_sync_reg_1 <= rx_sync_reg_1 ^ {rx_fifo_good_frame_int, rx_fifo_bad_frame_int, rx_fifo_overflow_int};
-    end
-end
-
-always @(posedge logic_clk or posedge logic_rst) begin
-    if (logic_rst) begin
-        rx_sync_reg_2 <= 0;
-        rx_sync_reg_3 <= 0;
-        rx_sync_reg_4 <= 0;
-    end else begin
-        rx_sync_reg_2 <= rx_sync_reg_1;
-        rx_sync_reg_3 <= rx_sync_reg_2;
-        rx_sync_reg_4 <= rx_sync_reg_3;
-    end
-end
-
 eth_mac_1g #(
     .ENABLE_PADDING(ENABLE_PADDING),
     .MIN_FRAME_LENGTH(MIN_FRAME_LENGTH)
@@ -170,9 +136,10 @@ axis_async_frame_fifo #(
     .DROP_WHEN_FULL(0)
 )
 tx_fifo (
+    // Common reset
+    .async_rst(logic_rst | tx_rst),
     // AXI input
     .input_clk(logic_clk),
-    .input_rst(logic_rst),
     .input_axis_tdata(tx_axis_tdata),
     .input_axis_tvalid(tx_axis_tvalid),
     .input_axis_tready(tx_axis_tready),
@@ -180,15 +147,17 @@ tx_fifo (
     .input_axis_tuser(tx_axis_tuser),
     // AXI output
     .output_clk(tx_clk),
-    .output_rst(tx_rst),
     .output_axis_tdata(tx_fifo_axis_tdata),
     .output_axis_tvalid(tx_fifo_axis_tvalid),
     .output_axis_tready(tx_fifo_axis_tready),
     .output_axis_tlast(tx_fifo_axis_tlast),
     // Status
-    .overflow(tx_fifo_overflow),
-    .bad_frame(tx_fifo_bad_frame),
-    .good_frame(tx_fifo_good_frame)
+    .input_status_overflow(tx_fifo_overflow),
+    .input_status_bad_frame(tx_fifo_bad_frame),
+    .input_status_good_frame(tx_fifo_good_frame),
+    .output_status_overflow(),
+    .output_status_bad_frame(),
+    .output_status_good_frame()
 );
 
 assign tx_fifo_axis_tuser = 1'b0;
@@ -199,9 +168,10 @@ axis_async_frame_fifo #(
     .DROP_WHEN_FULL(1)
 )
 rx_fifo (
+    // Common reset
+    .async_rst(rx_rst | logic_rst),
     // AXI input
     .input_clk(rx_clk),
-    .input_rst(rx_rst),
     .input_axis_tdata(rx_fifo_axis_tdata),
     .input_axis_tvalid(rx_fifo_axis_tvalid),
     .input_axis_tready(),
@@ -209,15 +179,17 @@ rx_fifo (
     .input_axis_tuser(rx_fifo_axis_tuser),
     // AXI output
     .output_clk(logic_clk),
-    .output_rst(logic_rst),
     .output_axis_tdata(rx_axis_tdata),
     .output_axis_tvalid(rx_axis_tvalid),
     .output_axis_tready(rx_axis_tready),
     .output_axis_tlast(rx_axis_tlast),
     // Status
-    .overflow(rx_fifo_overflow_int),
-    .bad_frame(rx_fifo_bad_frame_int),
-    .good_frame(rx_fifo_good_frame_int)
+    .input_status_overflow(),
+    .input_status_bad_frame(),
+    .input_status_good_frame(),
+    .output_status_overflow(rx_fifo_overflow),
+    .output_status_bad_frame(rx_fifo_bad_frame),
+    .output_status_good_frame(rx_fifo_good_frame)
 );
 
 assign rx_axis_tuser = 1'b0;
