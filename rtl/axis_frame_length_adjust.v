@@ -100,6 +100,10 @@ reg store_last_word;
 
 reg [15:0] frame_ptr_reg = 0, frame_ptr_next;
 
+// frame length counters
+reg [15:0] short_counter_reg = 0, short_counter_next = 0;
+reg [15:0] long_counter_reg = 0, long_counter_next = 0;
+
 reg [DATA_WIDTH-1:0] last_word_data_reg = 0;
 reg [KEEP_WIDTH-1:0] last_word_keep_reg = 0;
 
@@ -138,6 +142,9 @@ always @* begin
 
     frame_ptr_next = frame_ptr_reg;
 
+    short_counter_next = short_counter_reg;
+    long_counter_next = long_counter_reg;
+
     output_axis_tdata_int = 0;
     output_axis_tkeep_int = 0;
     output_axis_tvalid_int = 0;
@@ -166,6 +173,9 @@ always @* begin
             output_axis_tlast_int = input_axis_tlast;
             output_axis_tuser_int = input_axis_tuser;
 
+            short_counter_next = length_min;
+            long_counter_next = length_max;
+
             if (input_axis_tready & input_axis_tvalid) begin
                 // transfer through
                 word_cnt = 0;
@@ -173,18 +183,32 @@ always @* begin
                     //bit_cnt = bit_cnt + monitor_axis_tkeep[i];
                     if (input_axis_tkeep == ({KEEP_WIDTH{1'b1}}) >> (KEEP_WIDTH-i)) word_cnt = i;
                 end
-                frame_ptr_next = frame_ptr_reg+word_cnt;
+                frame_ptr_next = frame_ptr_reg+KEEP_WIDTH;
 
-                if (frame_ptr_next >= length_max) begin
-                    output_axis_tkeep_int = ({KEEP_WIDTH{1'b1}}) >> (KEEP_WIDTH-(length_max - frame_ptr_reg));
+                if (short_counter_reg > KEEP_WIDTH) begin
+                    short_counter_next = short_counter_reg - KEEP_WIDTH;
+                end else begin
+                    short_counter_next = 0;
+                end
+
+                if (long_counter_reg > KEEP_WIDTH) begin
+                    long_counter_next = long_counter_reg - KEEP_WIDTH;
+                end else begin
+                    long_counter_next = 0;
+                end
+
+                if (long_counter_reg <= word_cnt) begin
+                    output_axis_tkeep_int = ({KEEP_WIDTH{1'b1}}) >> (KEEP_WIDTH-long_counter_reg);
                     if (input_axis_tlast) begin
                         status_valid_next = 1;
                         status_frame_pad_next = 0;
-                        status_frame_truncate_next = frame_ptr_next > length_max;
+                        status_frame_truncate_next = word_cnt > long_counter_reg;
                         status_frame_length_next = length_max;
-                        status_frame_original_length_next = frame_ptr_next;
+                        status_frame_original_length_next = frame_ptr_reg+word_cnt;
                         input_axis_tready_next = output_axis_tready_int_early & status_ready;
                         frame_ptr_next = 0;
+                        short_counter_next = length_min;
+                        long_counter_next = length_max;
                         state_next = STATE_IDLE;
                     end else begin
                         output_axis_tvalid_int = 0;
@@ -193,9 +217,9 @@ always @* begin
                     end
                 end else begin
                     if (input_axis_tlast) begin
-                        status_frame_original_length_next = frame_ptr_next;
-                        if (frame_ptr_next < length_min) begin
-                            if (frame_ptr_reg + KEEP_WIDTH < length_min) begin
+                        status_frame_original_length_next = frame_ptr_reg+word_cnt;
+                        if (short_counter_reg > word_cnt) begin
+                            if (short_counter_reg > KEEP_WIDTH) begin
                                 frame_ptr_next = frame_ptr_reg + KEEP_WIDTH;
                                 input_axis_tready_next = 0;
                                 output_axis_tkeep_int = {KEEP_WIDTH{1'b1}};
@@ -211,16 +235,20 @@ always @* begin
                                 input_axis_tready_next = output_axis_tready_int_early & status_ready;
                                 output_axis_tkeep_int = ({KEEP_WIDTH{1'b1}}) >> (KEEP_WIDTH-(length_min - frame_ptr_reg));
                                 frame_ptr_next = 0;
+                                short_counter_next = length_min;
+                                long_counter_next = length_max;
                                 state_next = STATE_IDLE;
                             end
                         end else begin
                             status_valid_next = 1;
                             status_frame_pad_next = 0;
                             status_frame_truncate_next = 0;
-                            status_frame_length_next = frame_ptr_next;
-                            status_frame_original_length_next = frame_ptr_next;
+                            status_frame_length_next = frame_ptr_reg+word_cnt;
+                            status_frame_original_length_next = frame_ptr_reg+word_cnt;
                             input_axis_tready_next = output_axis_tready_int_early & status_ready;
                             frame_ptr_next = 0;
+                            short_counter_next = length_min;
+                            long_counter_next = length_max;
                             state_next = STATE_IDLE;
                         end
                     end else begin
@@ -249,18 +277,32 @@ always @* begin
                     //bit_cnt = bit_cnt + monitor_axis_tkeep[i];
                     if (input_axis_tkeep == ({KEEP_WIDTH{1'b1}}) >> (KEEP_WIDTH-i)) word_cnt = i;
                 end
-                frame_ptr_next = frame_ptr_reg+word_cnt;
+                frame_ptr_next = frame_ptr_reg+KEEP_WIDTH;
 
-                if (frame_ptr_next >= length_max) begin
-                    output_axis_tkeep_int = ({KEEP_WIDTH{1'b1}}) >> (KEEP_WIDTH-(length_max - frame_ptr_reg));
+                if (short_counter_reg > KEEP_WIDTH) begin
+                    short_counter_next = short_counter_reg - KEEP_WIDTH;
+                end else begin
+                    short_counter_next = 0;
+                end
+
+                if (long_counter_reg > KEEP_WIDTH) begin
+                    long_counter_next = long_counter_reg - KEEP_WIDTH;
+                end else begin
+                    long_counter_next = 0;
+                end
+
+                if (long_counter_reg <= word_cnt) begin
+                    output_axis_tkeep_int = ({KEEP_WIDTH{1'b1}}) >> (KEEP_WIDTH-long_counter_reg);
                     if (input_axis_tlast) begin
                         status_valid_next = 1;
                         status_frame_pad_next = 0;
-                        status_frame_truncate_next = frame_ptr_next > length_max;
+                        status_frame_truncate_next = word_cnt > long_counter_reg;
                         status_frame_length_next = length_max;
-                        status_frame_original_length_next = frame_ptr_next;
+                        status_frame_original_length_next = frame_ptr_reg+word_cnt;
                         input_axis_tready_next = output_axis_tready_int_early & status_ready;
                         frame_ptr_next = 0;
+                        short_counter_next = length_min;
+                        long_counter_next = length_max;
                         state_next = STATE_IDLE;
                     end else begin
                         output_axis_tvalid_int = 0;
@@ -269,9 +311,9 @@ always @* begin
                     end
                 end else begin
                     if (input_axis_tlast) begin
-                        status_frame_original_length_next = frame_ptr_next;
-                        if (frame_ptr_next < length_min) begin
-                            if (frame_ptr_reg + KEEP_WIDTH < length_min) begin
+                        status_frame_original_length_next = frame_ptr_reg+word_cnt;
+                        if (short_counter_reg > word_cnt) begin
+                            if (short_counter_reg > KEEP_WIDTH) begin
                                 frame_ptr_next = frame_ptr_reg + KEEP_WIDTH;
                                 input_axis_tready_next = 0;
                                 output_axis_tkeep_int = {KEEP_WIDTH{1'b1}};
@@ -285,18 +327,22 @@ always @* begin
                                 status_frame_truncate_next = 0;
                                 status_frame_length_next = length_min;
                                 input_axis_tready_next = output_axis_tready_int_early & status_ready;
-                                output_axis_tkeep_int = ({KEEP_WIDTH{1'b1}}) >> (KEEP_WIDTH-(length_min - frame_ptr_reg));
+                                output_axis_tkeep_int = ({KEEP_WIDTH{1'b1}}) >> (KEEP_WIDTH-short_counter_reg);
                                 frame_ptr_next = 0;
+                                short_counter_next = length_min;
+                                long_counter_next = length_max;
                                 state_next = STATE_IDLE;
                             end
                         end else begin
                             status_valid_next = 1;
                             status_frame_pad_next = 0;
                             status_frame_truncate_next = 0;
-                            status_frame_length_next = frame_ptr_next;
-                            status_frame_original_length_next = frame_ptr_next;
+                            status_frame_length_next = frame_ptr_reg+word_cnt;
+                            status_frame_original_length_next = frame_ptr_reg+word_cnt;
                             input_axis_tready_next = output_axis_tready_int_early & status_ready;
                             frame_ptr_next = 0;
+                            short_counter_next = length_min;
+                            long_counter_next = length_max;
                             state_next = STATE_IDLE;
                         end
                     end else begin
@@ -320,16 +366,30 @@ always @* begin
             if (output_axis_tready_int) begin
                 frame_ptr_next = frame_ptr_reg + KEEP_WIDTH;
 
-                if (frame_ptr_next >= length_min) begin
+                if (short_counter_reg > KEEP_WIDTH) begin
+                    short_counter_next = short_counter_reg - KEEP_WIDTH;
+                end else begin
+                    short_counter_next = 0;
+                end
+
+                if (long_counter_reg > KEEP_WIDTH) begin
+                    long_counter_next = long_counter_reg - KEEP_WIDTH;
+                end else begin
+                    long_counter_next = 0;
+                end
+
+                if (short_counter_reg <= KEEP_WIDTH) begin
                     status_valid_next = 1;
                     status_frame_pad_next = 1;
                     status_frame_truncate_next = 0;
                     status_frame_length_next = length_min;
                     input_axis_tready_next = output_axis_tready_int_early & status_ready;
-                    output_axis_tkeep_int = ({KEEP_WIDTH{1'b1}}) >> (KEEP_WIDTH-(length_min - frame_ptr_reg));
+                    output_axis_tkeep_int = ({KEEP_WIDTH{1'b1}}) >> (KEEP_WIDTH-short_counter_reg);
                     output_axis_tlast_int = 1;
                     output_axis_tuser_int = last_cycle_tuser_reg;
                     frame_ptr_next = 0;
+                    short_counter_next = length_min;
+                    long_counter_next = length_max;
                     state_next = STATE_IDLE;
                 end else begin
                     state_next = STATE_PAD;
@@ -354,16 +414,18 @@ always @* begin
                     //bit_cnt = bit_cnt + monitor_axis_tkeep[i];
                     if (input_axis_tkeep == ({KEEP_WIDTH{1'b1}}) >> (KEEP_WIDTH-i)) word_cnt = i;
                 end
-                frame_ptr_next = frame_ptr_reg+word_cnt;
+                frame_ptr_next = frame_ptr_reg+KEEP_WIDTH;
 
                 if (input_axis_tlast) begin
                     status_valid_next = 1;
                     status_frame_pad_next = 0;
                     status_frame_truncate_next = 1;
                     status_frame_length_next = length_max;
-                    status_frame_original_length_next = frame_ptr_next;
+                    status_frame_original_length_next = frame_ptr_reg+word_cnt;
                     input_axis_tready_next = output_axis_tready_int_early & status_ready;
                     frame_ptr_next = 0;
+                    short_counter_next = length_min;
+                    long_counter_next = length_max;
                     state_next = STATE_IDLE;
                 end else begin
                     state_next = STATE_TRUNCATE;
@@ -379,6 +441,8 @@ always @(posedge clk) begin
     if (rst) begin
         state_reg <= STATE_IDLE;
         frame_ptr_reg <= 0;
+        short_counter_reg <= 0;
+        long_counter_reg <= 0;
         input_axis_tready_reg <= 0;
         last_word_data_reg <= 0;
         last_word_keep_reg <= 0;
@@ -392,6 +456,9 @@ always @(posedge clk) begin
         state_reg <= state_next;
 
         frame_ptr_reg <= frame_ptr_next;
+
+        short_counter_reg <= short_counter_next;
+        long_counter_reg <= long_counter_next;
 
         input_axis_tready_reg <= input_axis_tready_next;
 
