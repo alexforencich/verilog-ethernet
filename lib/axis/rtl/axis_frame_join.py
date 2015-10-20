@@ -1,70 +1,38 @@
 #!/usr/bin/env python
-"""axis_frame_join
-
+"""
 Generates an AXI Stream frame join module with a specific number of input ports
-
-Usage: axis_frame_join [OPTION]...
-  -?, --help     display this help and exit
-  -p, --ports    specify number of ports
-  -n, --name     specify module name
-  -o, --output   specify output file name
 """
 
 from __future__ import print_function
 
-import io
-import sys
-import getopt
+import argparse
 import math
 from jinja2 import Template
 
-class Usage(Exception):
-    def __init__(self, msg):
-        self.msg = msg
+def main():
+    parser = argparse.ArgumentParser(description=__doc__.strip())
+    parser.add_argument('-p', '--ports',  type=int, default=4, help="number of ports")
+    parser.add_argument('-n', '--name',   type=str, help="module name")
+    parser.add_argument('-o', '--output', type=str, help="output file name")
 
-def main(argv=None):
-    if argv is None:
-        argv = sys.argv
+    args = parser.parse_args()
+
     try:
-        try:
-            opts, args = getopt.getopt(argv[1:], "?n:p:o:", ["help", "name=", "ports=", "output="])
-        except getopt.error as msg:
-             raise Usage(msg)
-        # more code, unchanged  
-    except Usage as err:
-        print(err.msg, file=sys.stderr)
-        print("for help use --help", file=sys.stderr)
-        return 2
-    
-    ports = 4
-    name = None
-    out_name = None
-    
-    # process options
-    for o, a in opts:
-        if o in ('-?', '--help'):
-            print(__doc__)
-            sys.exit(0)
-        if o in ('-p', '--ports'):
-            ports = int(a)
-        if o in ('-n', '--name'):
-            name = a
-        if o in ('-o', '--output'):
-            out_name = a
-    
+        generate(**args.__dict__)
+    except IOError as ex:
+        print(ex)
+        exit(1)
+
+def generate(ports=4, name=None, output=None):
     if name is None:
         name = "axis_frame_join_{0}".format(ports)
-    
-    if out_name is None:
-        out_name = name + ".v"
-    
-    print("Opening file '%s'..." % out_name)
-    
-    try:
-        out_file = open(out_name, 'w')
-    except Exception as ex:
-        print("Error opening \"%s\": %s" %(out_name, ex.strerror), file=sys.stderr)
-        exit(1)
+
+    if output is None:
+        output = name + ".v"
+
+    print("Opening file '{0}'...".format(output))
+
+    output_file = open(output, 'w')
     
     print("Generating {0} port AXI Stream frame joiner {1}...".format(ports, name))
     
@@ -414,7 +382,7 @@ endmodule
 
 """)
     
-    out_file.write(t.render(
+    output_file.write(t.render(
         n=ports,
         w=select_width,
         name=name,
@@ -424,5 +392,5 @@ endmodule
     print("Done")
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()
 
