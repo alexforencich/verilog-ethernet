@@ -355,6 +355,8 @@ always @* begin
             update_crc = 1;
             input_axis_tready_next = 1;
 
+            frame_ptr_next = frame_ptr_reg + 8;
+
             xgmii_txd_next = input_tdata_reg;
             xgmii_txc_next = 8'b00000000;
 
@@ -362,7 +364,6 @@ always @* begin
             input_tkeep_next = input_axis_tkeep;
 
             if (input_axis_tvalid) begin
-                frame_ptr_next = frame_ptr_reg + 8;
                 if (input_axis_tlast) begin
                     frame_ptr_next = frame_ptr_reg + keep2count(input_axis_tkeep);
                     input_axis_tready_next = 0;
