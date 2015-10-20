@@ -71,7 +71,8 @@ localparam [2:0]
     STATE_PAD = 3'd2,
     STATE_FCS_1 = 3'd3,
     STATE_FCS_2 = 3'd4,
-    STATE_IFG = 3'd5;
+    STATE_IFG = 3'd5,
+    STATE_WAIT_END = 3'd6;
 
 reg [2:0] state_reg = STATE_IDLE, state_next;
 
@@ -394,11 +395,12 @@ always @* begin
                     state_next = STATE_PAYLOAD;
                 end
             end else begin
+                // tvalid deassert, fail frame
                 xgmii_txd_next = 64'h070707fdfefefefe;
                 xgmii_txc_next = 8'b11111111;
                 frame_ptr_next = 0;
                 ifg_count_next = 8;
-                state_next = STATE_IFG;
+                state_next = STATE_WAIT_END;
             end
         end
         STATE_PAD: begin
@@ -499,6 +501,46 @@ always @* begin
                     input_axis_tready_next = 1;
                     state_next = STATE_IDLE;
                 end
+            end
+        end
+        STATE_WAIT_END: begin
+            // wait for end of frame
+            if (ifg_count_reg > 8) begin
+                ifg_count_next = ifg_count_reg - 8;
+            end else begin
+                ifg_count_next = 0;
+            end
+
+            reset_crc = 1;
+
+            if (input_axis_tvalid) begin
+                if (input_axis_tlast) begin
+                    if (ENABLE_DIC) begin
+                        if (ifg_count_next > 7) begin
+                            state_next = STATE_IFG;
+                        end else begin
+                            if (ifg_count_next >= 4) begin
+                                deficit_idle_count_next = ifg_count_next - 4;
+                            end else begin
+                                deficit_idle_count_next = ifg_count_next;
+                                ifg_count_next = 0;
+                            end
+                            input_axis_tready_next = 1;
+                            state_next = STATE_IDLE;
+                        end
+                    end else begin
+                        if (ifg_count_next > 4) begin
+                            state_next = STATE_IFG;
+                        end else begin
+                            input_axis_tready_next = 1;
+                            state_next = STATE_IDLE;
+                        end
+                    end
+                end else begin
+                    state_next = STATE_WAIT_END;
+                end
+            end else begin
+                state_next = STATE_WAIT_END;
             end
         end
     endcase
