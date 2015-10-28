@@ -104,8 +104,6 @@ reg [7:0] frame_ptr_reg = 0, frame_ptr_next;
 reg [7:0] ifg_count_reg = 0, ifg_count_next;
 reg [1:0] deficit_idle_count_reg = 0, deficit_idle_count_next;
 
-reg busy_reg = 0;
-
 reg input_axis_tready_reg = 0, input_axis_tready_next;
 
 reg [31:0] crc_state = 32'hFFFFFFFF;
