@@ -67,15 +67,7 @@ reg [2:0] state_reg = STATE_IDLE, state_next;
 reg reset_crc;
 reg update_crc;
 
-reg [63:0] xgmii_rxd_masked;
-
-reg [63:0] fcs_output_tdata_0;
-reg [63:0] fcs_output_tdata_1;
-reg [7:0] fcs_output_tkeep_0;
-reg [7:0] fcs_output_tkeep_1;
-
 reg [7:0] last_cycle_tkeep_reg = 0, last_cycle_tkeep_next;
-reg last_cycle_tuser_reg = 0, last_cycle_tuser_next;
 
 reg lanes_swapped = 0;
 reg [31:0] swap_rxd = 0;
@@ -97,23 +89,21 @@ reg error_bad_frame_reg = 0, error_bad_frame_next;
 reg error_bad_fcs_reg = 0, error_bad_fcs_next;
 
 reg [31:0] crc_state = 32'hFFFFFFFF;
+reg [31:0] crc_state3 = 32'hFFFFFFFF;
 
 wire [31:0] crc_next0;
 wire [31:0] crc_next1;
 wire [31:0] crc_next2;
 wire [31:0] crc_next3;
-wire [31:0] crc_next4;
-wire [31:0] crc_next5;
-wire [31:0] crc_next6;
 wire [31:0] crc_next7;
 
-reg [31:0] crc_next3_save = 0;
-reg [31:0] crc_next4_save = 0;
-reg [31:0] crc_next5_save = 0;
-reg [31:0] crc_next6_save = 0;
-reg [31:0] crc_next7_save = 0;
+wire crc_valid0 = crc_next0 == ~32'h2144df1c;
+wire crc_valid1 = crc_next1 == ~32'h2144df1c;
+wire crc_valid2 = crc_next2 == ~32'h2144df1c;
+wire crc_valid3 = crc_next3 == ~32'h2144df1c;
+wire crc_valid7 = crc_next7 == ~32'h2144df1c;
 
-reg [31:0] crc_check = 0;
+reg crc_valid7_save = 0;
 
 assign output_axis_tdata = output_axis_tdata_reg;
 assign output_axis_tkeep = output_axis_tkeep_reg;
@@ -124,53 +114,34 @@ assign output_axis_tuser = output_axis_tuser_reg;
 assign error_bad_frame = error_bad_frame_reg;
 assign error_bad_fcs = error_bad_fcs_reg;
 
+wire last_cycle = state_reg == STATE_LAST;
+
 eth_crc_8
 eth_crc_8_inst (
-    .data_in(xgmii_rxd_d0[7:0]),
-    .crc_state(crc_state),
+    .data_in(last_cycle ? xgmii_rxd_d1[39:32] : xgmii_rxd_d0[7:0]),
+    .crc_state(last_cycle ? crc_state3 : crc_state),
     .crc_next(crc_next0)
 );
 
 eth_crc_16
 eth_crc_16_inst (
-    .data_in(xgmii_rxd_d0[15:0]),
-    .crc_state(crc_state),
+    .data_in(last_cycle ? xgmii_rxd_d1[47:32] : xgmii_rxd_d0[15:0]),
+    .crc_state(last_cycle ? crc_state3 : crc_state),
     .crc_next(crc_next1)
 );
 
 eth_crc_24
 eth_crc_24_inst (
-    .data_in(xgmii_rxd_d0[23:0]),
-    .crc_state(crc_state),
+    .data_in(last_cycle ? xgmii_rxd_d1[55:32] : xgmii_rxd_d0[23:0]),
+    .crc_state(last_cycle ? crc_state3 : crc_state),
     .crc_next(crc_next2)
 );
 
 eth_crc_32
 eth_crc_32_inst (
-    .data_in(xgmii_rxd_d0[31:0]),
-    .crc_state(crc_state),
+    .data_in(last_cycle ? xgmii_rxd_d1[63:32] : xgmii_rxd_d0[31:0]),
+    .crc_state(last_cycle ? crc_state3 : crc_state),
     .crc_next(crc_next3)
-);
-
-eth_crc_40
-eth_crc_40_inst (
-    .data_in(xgmii_rxd_d0[39:0]),
-    .crc_state(crc_state),
-    .crc_next(crc_next4)
-);
-
-eth_crc_48
-eth_crc_48_inst (
-    .data_in(xgmii_rxd_d0[47:0]),
-    .crc_state(crc_state),
-    .crc_next(crc_next5)
-);
-
-eth_crc_56
-eth_crc_56_inst (
-    .data_in(xgmii_rxd_d0[55:0]),
-    .crc_state(crc_state),
-    .crc_next(crc_next6)
 );
 
 eth_crc_64
@@ -180,79 +151,12 @@ eth_crc_64_inst (
     .crc_next(crc_next7)
 );
 
-// FCS cycle calculation
-always @* begin
-    case (xgmii_rxc_d0)
-        8'b11111111: begin
-            fcs_output_tdata_0 = {~crc_next3_save[31:0], xgmii_rxd_d1[31:0]};
-            fcs_output_tdata_1 = 0;
-            fcs_output_tkeep_0 = 8'b00001111;
-            fcs_output_tkeep_1 = 8'b00000000;
-            crc_check = ~crc_next7_save;
-        end
-        8'b11111110: begin
-            fcs_output_tdata_0 = {~crc_next4_save[23:0], xgmii_rxd_d1[39:0]};
-            fcs_output_tdata_1 = {56'd0, ~crc_next4_save[31:24]};
-            fcs_output_tkeep_0 = 8'b00011111;
-            fcs_output_tkeep_1 = 8'b00000000;
-            crc_check = ~crc_next0;
-        end
-        8'b11111100: begin
-            fcs_output_tdata_0 = {~crc_next5_save[15:0], xgmii_rxd_d1[47:0]};
-            fcs_output_tdata_1 = {48'd0, ~crc_next5_save[31:16]};
-            fcs_output_tkeep_0 = 8'b00111111;
-            fcs_output_tkeep_1 = 8'b00000000;
-            crc_check = ~crc_next1;
-        end
-        8'b11111000: begin
-            fcs_output_tdata_0 = {~crc_next6_save[7:0], xgmii_rxd_d1[55:0]};
-            fcs_output_tdata_1 = {40'd0, ~crc_next6_save[31:8]};
-            fcs_output_tkeep_0 = 8'b01111111;
-            fcs_output_tkeep_1 = 8'b00000000;
-            crc_check = ~crc_next2;
-        end
-        8'b11110000: begin
-            fcs_output_tdata_0 = xgmii_rxd_d1;
-            fcs_output_tdata_1 = {32'd0, ~crc_next7_save[31:0]};
-            fcs_output_tkeep_0 = 8'b11111111;
-            fcs_output_tkeep_1 = 8'b00000000;
-            crc_check = ~crc_next3;
-        end
-        8'b11100000: begin
-            fcs_output_tdata_0 = {24'd0, ~crc_next0[31:0], xgmii_rxd_d0[7:0]};
-            fcs_output_tdata_1 = 0;
-            fcs_output_tkeep_0 = 8'b00000001;
-            fcs_output_tkeep_1 = 8'b00000000;
-            crc_check = ~crc_next4;
-        end
-        8'b11000000: begin
-            fcs_output_tdata_0 = {16'd0, ~crc_next1[31:0], xgmii_rxd_d0[15:0]};
-            fcs_output_tdata_1 = 0;
-            fcs_output_tkeep_0 = 8'b00000011;
-            fcs_output_tkeep_1 = 8'b00000000;
-            crc_check = ~crc_next5;
-        end
-        8'b10000000: begin
-            fcs_output_tdata_0 = {8'd0, ~crc_next2[31:0], xgmii_rxd_d0[23:0]};
-            fcs_output_tdata_1 = 0;
-            fcs_output_tkeep_0 = 8'b00000111;
-            fcs_output_tkeep_1 = 8'b00000000;
-            crc_check = ~crc_next6;
-        end
-        default: begin
-            fcs_output_tdata_0 = 0;
-            fcs_output_tdata_1 = 0;
-            fcs_output_tkeep_0 = 0;
-            fcs_output_tkeep_1 = 0;
-            crc_check = 0;
-        end
-    endcase
-end
-
 // detect control characters
 reg [7:0] detect_start;
 reg [7:0] detect_term;
 reg [7:0] detect_error;
+
+reg [7:0] detect_term_save;
 
 integer i;
 
@@ -267,59 +171,61 @@ end
 // mask errors to within packet
 reg [7:0] detect_error_masked;
 reg [7:0] control_masked;
+reg [7:0] tkeep_mask;
 
 always @* begin
     case (detect_term)
     8'b00000000: begin
         detect_error_masked = detect_error;
         control_masked = xgmii_rxc_d0;
+        tkeep_mask = 8'b11111111;
     end
     8'b00000001: begin
         detect_error_masked = 0;
         control_masked = 0;
+        tkeep_mask = 8'b00000000;
     end
     8'b00000010: begin
         detect_error_masked = detect_error[0];
         control_masked = xgmii_rxc_d0[0];
+        tkeep_mask = 8'b00000001;
     end
     8'b00000100: begin
         detect_error_masked = detect_error[1:0];
         control_masked = xgmii_rxc_d0[1:0];
+        tkeep_mask = 8'b00000011;
     end
     8'b00001000: begin
         detect_error_masked = detect_error[2:0];
         control_masked = xgmii_rxc_d0[2:0];
+        tkeep_mask = 8'b00000111;
     end
     8'b00010000: begin
         detect_error_masked = detect_error[3:0];
         control_masked = xgmii_rxc_d0[3:0];
+        tkeep_mask = 8'b00001111;
     end
     8'b00100000: begin
         detect_error_masked = detect_error[4:0];
         control_masked = xgmii_rxc_d0[4:0];
+        tkeep_mask = 8'b00011111;
     end
     8'b01000000: begin
         detect_error_masked = detect_error[5:0];
         control_masked = xgmii_rxc_d0[5:0];
+        tkeep_mask = 8'b00111111;
     end
     8'b10000000: begin
         detect_error_masked = detect_error[6:0];
         control_masked = xgmii_rxc_d0[6:0];
+        tkeep_mask = 8'b01111111;
     end
     default: begin
         detect_error_masked = detect_error;
         control_masked = xgmii_rxc_d0;
+        tkeep_mask = 8'b11111111;
     end
     endcase
-end
-
-// Mask input data
-integer j;
-
-always @* begin
-    for (j = 0; j < 8; j = j + 1) begin
-        xgmii_rxd_masked[j*8 +: 8] = xgmii_rxc_d0[j] ? 8'd0 : xgmii_rxd_d0[j*8 +: 8];
-    end
 end
 
 always @* begin
@@ -329,7 +235,6 @@ always @* begin
     update_crc = 0;
 
     last_cycle_tkeep_next = last_cycle_tkeep_reg;
-    last_cycle_tuser_next = last_cycle_tuser_reg;
 
     output_axis_tdata_next = 0;
     output_axis_tkeep_next = 0;
@@ -375,14 +280,7 @@ always @* begin
             output_axis_tlast_next = 0;
             output_axis_tuser_next = 0;
 
-            if (xgmii_rxc_d1[0] && xgmii_rxd_d1[7:0] == 8'hfb) begin
-                // start condition in packet - flag as bad and restart
-                output_axis_tlast_next = 1;
-                output_axis_tuser_next = 1;
-                error_bad_frame_next = 1;
-                reset_crc = 1;
-                state_next = STATE_PAYLOAD;
-            end else if (control_masked) begin
+            if (control_masked) begin
                 // control or error characters in packet
                 output_axis_tlast_next = 1;
                 output_axis_tuser_next = 1;
@@ -393,9 +291,15 @@ always @* begin
                 if (detect_term[4:0]) begin
                     // end this cycle
                     reset_crc = 1;
-                    output_axis_tkeep_next = fcs_output_tkeep_0;
+                    output_axis_tkeep_next = {tkeep_mask[3:0], 4'b1111};
                     output_axis_tlast_next = 1;
-                    if (crc_check != 32'h2144df1c) begin
+                    if ((detect_term[0] & crc_valid7_save) ||
+                        (detect_term[1] & crc_valid0) ||
+                        (detect_term[2] & crc_valid1) ||
+                        (detect_term[3] & crc_valid2) ||
+                        (detect_term[4] & crc_valid3)) begin
+                        // CRC valid
+                    end else begin
                         output_axis_tuser_next = 1;
                         error_bad_frame_next = 1;
                         error_bad_fcs_next = 1;
@@ -403,13 +307,7 @@ always @* begin
                     state_next = STATE_IDLE;
                 end else begin
                     // need extra cycle
-                    last_cycle_tkeep_next = fcs_output_tkeep_0;
-                    last_cycle_tuser_next = 0;
-                    if (crc_check != 32'h2144df1c) begin
-                        error_bad_frame_next = 1;
-                        error_bad_fcs_next = 1;
-                        last_cycle_tuser_next = 1;
-                    end
+                    last_cycle_tkeep_next = {4'b0000, tkeep_mask[7:4]};
                     state_next = STATE_LAST;
                 end
             end else begin
@@ -422,9 +320,19 @@ always @* begin
             output_axis_tkeep_next = last_cycle_tkeep_reg;
             output_axis_tvalid_next = 1;
             output_axis_tlast_next = 1;
-            output_axis_tuser_next = last_cycle_tuser_reg;
+            output_axis_tuser_next = 0;
 
             reset_crc = 1;
+
+            if ((detect_term_save[5] & crc_valid0) ||
+                (detect_term_save[6] & crc_valid1) ||
+                (detect_term_save[7] & crc_valid2)) begin
+                // CRC valid
+            end else begin
+                output_axis_tuser_next = 1;
+                error_bad_frame_next = 1;
+                error_bad_fcs_next = 1;
+            end
 
             if (xgmii_rxc_d1[0] && xgmii_rxd_d1[7:0] == 8'hfb) begin
                 // start condition
@@ -447,18 +355,15 @@ always @(posedge clk) begin
         output_axis_tuser_reg <= 0;
 
         last_cycle_tkeep_reg <= 0;
-        last_cycle_tuser_reg <= 0;
 
         error_bad_frame_reg <= 0;
         error_bad_fcs_reg <= 0;
 
         crc_state <= 32'hFFFFFFFF;
+        crc_state3 <= 32'hFFFFFFFF;
+        crc_valid7_save <= 0;
 
-        crc_next3_save <= 0;
-        crc_next4_save <= 0;
-        crc_next5_save <= 0;
-        crc_next6_save <= 0;
-        crc_next7_save <= 0;
+        detect_term_save <= 0;
 
         xgmii_rxd_d0 <= 64'h0707070707070707;
         xgmii_rxd_d1 <= 64'h0707070707070707;
@@ -479,7 +384,6 @@ always @(posedge clk) begin
         output_axis_tuser_reg <= output_axis_tuser_next;
 
         last_cycle_tkeep_reg <= last_cycle_tkeep_next;
-        last_cycle_tuser_reg <= last_cycle_tuser_next;
 
         error_bad_frame_reg <= error_bad_frame_next;
         error_bad_fcs_reg <= error_bad_fcs_next;
@@ -506,23 +410,17 @@ always @(posedge clk) begin
         xgmii_rxd_d1 <= xgmii_rxd_d0;
         xgmii_rxc_d1 <= xgmii_rxc_d0;
 
+        detect_term_save <= detect_term;
+
         // datapath
         if (reset_crc) begin
             crc_state <= 32'hFFFFFFFF;
-
-            crc_next3_save <= 0;
-            crc_next4_save <= 0;
-            crc_next5_save <= 0;
-            crc_next6_save <= 0;
-            crc_next7_save <= 0;
+            crc_state3 <= 32'hFFFFFFFF;
+            crc_valid7_save <= 0;
         end else if (update_crc) begin
             crc_state <= crc_next7;
-
-            crc_next3_save <= crc_next3;
-            crc_next4_save <= crc_next4;
-            crc_next5_save <= crc_next5;
-            crc_next6_save <= crc_next6;
-            crc_next7_save <= crc_next7;
+            crc_state3 <= crc_next3;
+            crc_valid7_save <= crc_valid7;
         end
     end
 end
