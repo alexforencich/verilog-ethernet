@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014 Alex Forencich
+Copyright (c) 2014-2015 Alex Forencich
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -67,106 +67,148 @@ module axis_frame_fifo_64 #
     output wire                   good_frame
 );
 
-reg [ADDR_WIDTH:0] wr_ptr = {ADDR_WIDTH+1{1'b0}};
-reg [ADDR_WIDTH:0] wr_ptr_cur = {ADDR_WIDTH+1{1'b0}};
-reg [ADDR_WIDTH:0] rd_ptr = {ADDR_WIDTH+1{1'b0}};
+reg [ADDR_WIDTH:0] wr_ptr_reg = {ADDR_WIDTH+1{1'b0}}, wr_ptr_next;
+reg [ADDR_WIDTH:0] wr_ptr_cur_reg = {ADDR_WIDTH+1{1'b0}}, wr_ptr_cur_next;
+reg [ADDR_WIDTH:0] rd_ptr_reg = {ADDR_WIDTH+1{1'b0}}, rd_ptr_next;
 
-reg drop_frame = 1'b0;
-reg overflow_reg = 1'b0;
-reg bad_frame_reg = 1'b0;
-reg good_frame_reg = 1'b0;
-
-reg [DATA_WIDTH+KEEP_WIDTH+1-1:0] data_out_reg = {1'b0, {KEEP_WIDTH{1'b0}}, {DATA_WIDTH{1'b0}}};
-
-//(* RAM_STYLE="BLOCK" *)
 reg [DATA_WIDTH+KEEP_WIDTH+1-1:0] mem[(2**ADDR_WIDTH)-1:0];
 
-reg output_axis_tvalid_reg = 1'b0;
-
-wire [DATA_WIDTH+KEEP_WIDTH+1-1:0] data_in = {input_axis_tlast, input_axis_tkeep, input_axis_tdata};
+reg [DATA_WIDTH-1:0] output_axis_tdata_reg = {DATA_WIDTH{1'b0}};
+reg [KEEP_WIDTH-1:0] output_axis_tkeep_reg = {KEEP_WIDTH{1'b0}};
+reg output_axis_tvalid_reg = 1'b0, output_axis_tvalid_next;
+reg output_axis_tlast_reg = 1'b0;
 
 // full when first MSB different but rest same
-wire full = ((wr_ptr[ADDR_WIDTH] != rd_ptr[ADDR_WIDTH]) &&
-             (wr_ptr[ADDR_WIDTH-1:0] == rd_ptr[ADDR_WIDTH-1:0]));
+wire full = ((wr_ptr_reg[ADDR_WIDTH] != rd_ptr_reg[ADDR_WIDTH]) &&
+             (wr_ptr_reg[ADDR_WIDTH-1:0] == rd_ptr_reg[ADDR_WIDTH-1:0]));
 // empty when pointers match exactly
-wire empty = wr_ptr == rd_ptr;
-// overflow in single packet
-wire full_cur = ((wr_ptr[ADDR_WIDTH] != wr_ptr_cur[ADDR_WIDTH]) &&
-                 (wr_ptr[ADDR_WIDTH-1:0] == wr_ptr_cur[ADDR_WIDTH-1:0]));
+wire empty = wr_ptr_reg == rd_ptr_reg;
+// overflow within packet
+wire full_cur = ((wr_ptr_reg[ADDR_WIDTH] != wr_ptr_cur_reg[ADDR_WIDTH]) &&
+                 (wr_ptr_reg[ADDR_WIDTH-1:0] == wr_ptr_cur_reg[ADDR_WIDTH-1:0]));
 
-wire write = input_axis_tvalid & (~full | DROP_WHEN_FULL);
-wire read = (output_axis_tready | ~output_axis_tvalid_reg) & ~empty;
+// control signals
+reg write;
+reg read;
 
-assign {output_axis_tlast, output_axis_tkeep, output_axis_tdata} = data_out_reg;
+reg drop_frame_reg = 1'b0, drop_frame_next;
+reg overflow_reg = 1'b0, overflow_next;
+reg bad_frame_reg = 1'b0, bad_frame_next;
+reg good_frame_reg = 1'b0, good_frame_next;
 
 assign input_axis_tready = (~full | DROP_WHEN_FULL);
+
+assign output_axis_tdata = output_axis_tdata_reg;
+assign output_axis_tkeep = output_axis_tkeep_reg;
 assign output_axis_tvalid = output_axis_tvalid_reg;
+assign output_axis_tlast = output_axis_tlast_reg;
 
 assign overflow = overflow_reg;
 assign bad_frame = bad_frame_reg;
 assign good_frame = good_frame_reg;
 
-// write
-always @(posedge clk) begin
-    if (rst) begin
-        wr_ptr <= 0;
-        wr_ptr_cur <= 0;
-        drop_frame <= 0;
-        overflow_reg <= 0;
-        bad_frame_reg <= 0;
-        good_frame_reg <= 0;
-    end else if (write) begin
-        overflow_reg <= 0;
-        bad_frame_reg <= 0;
-        good_frame_reg <= 0;
-        if (full | full_cur | drop_frame) begin
-            // buffer full, hold current pointer, drop packet at end
-            drop_frame <= 1;
-            if (input_axis_tlast) begin
-                wr_ptr_cur <= wr_ptr;
-                drop_frame <= 0;
-                overflow_reg <= 1;
-            end
-        end else begin
-            mem[wr_ptr_cur[ADDR_WIDTH-1:0]] <= data_in;
-            wr_ptr_cur <= wr_ptr_cur + 1;
-            if (input_axis_tlast) begin
-                if (input_axis_tuser) begin
-                    // bad packet, reset write pointer
-                    wr_ptr_cur <= wr_ptr;
-                    bad_frame_reg <= 1;
-                end else begin
-                    // good packet, push new write pointer
-                    wr_ptr <= wr_ptr_cur + 1;
-                    good_frame_reg <= 1;
+// Write logic
+always @* begin
+    write = 1'b0;
+
+    drop_frame_next = 1'b0;
+    overflow_next = 1'b0;
+    bad_frame_next = 1'b0;
+    good_frame_next = 1'b0;
+
+    wr_ptr_next = wr_ptr_reg;
+    wr_ptr_cur_next = wr_ptr_cur_reg;
+
+    if (input_axis_tvalid) begin
+        // input data valid
+        if (~full | DROP_WHEN_FULL) begin
+            // not full, perform write
+            if (full | full_cur | drop_frame_reg) begin
+                // full, packet overflow, or currently dropping frame
+                // drop frame
+                drop_frame_next = 1'b1;
+                if (input_axis_tlast) begin
+                    // end of frame, reset write pointer
+                    wr_ptr_cur_next = wr_ptr_reg;
+                    drop_frame_next = 1'b0;
+                    overflow_next = 1'b1;
+                end
+            end else begin
+                write = 1'b1;
+                wr_ptr_cur_next = wr_ptr_cur_reg + 1;
+                if (input_axis_tlast) begin
+                    // end of frame
+                    if (input_axis_tuser) begin
+                        // bad packet, reset write pointer
+                        wr_ptr_cur_next = wr_ptr_reg;
+                        bad_frame_next = 1'b1;
+                    end else begin
+                        // good packet, update write pointer
+                        wr_ptr_next = wr_ptr_cur_reg + 1;
+                        good_frame_next = 1'b1;
+                    end
                 end
             end
         end
+    end
+end
+
+always @(posedge clk) begin
+    if (rst) begin
+        wr_ptr_reg <= {ADDR_WIDTH+1{1'b0}};
+        wr_ptr_cur_reg <= {ADDR_WIDTH+1{1'b0}};
+
+        drop_frame_reg <= 1'b0;
+        overflow_reg <= 1'b0;
+        bad_frame_reg <= 1'b0;
+        good_frame_reg <= 1'b0;
     end else begin
-        overflow_reg <= 0;
-        bad_frame_reg <= 0;
-        good_frame_reg <= 0;
+        wr_ptr_reg <= wr_ptr_next;
+        wr_ptr_cur_reg <= wr_ptr_cur_next;
+
+        drop_frame_reg <= drop_frame_next;
+        overflow_reg <= overflow_next;
+        bad_frame_reg <= bad_frame_next;
+        good_frame_reg <= good_frame_next;
+    end
+
+    if (write) begin
+        mem[wr_ptr_cur_reg[ADDR_WIDTH-1:0]] <= {input_axis_tlast, input_axis_tkeep, input_axis_tdata};
     end
 end
 
-// read
-always @(posedge clk) begin
-    if (rst) begin
-        rd_ptr <= 0;
-    end else if (read) begin
-        data_out_reg <= mem[rd_ptr[ADDR_WIDTH-1:0]];
-        rd_ptr <= rd_ptr + 1;
+// Read logic
+always @* begin
+    read = 1'b0;
+
+    rd_ptr_next = rd_ptr_reg;
+
+    output_axis_tvalid_next = output_axis_tvalid_reg;
+
+    if (output_axis_tready | ~output_axis_tvalid) begin
+        // output data not valid OR currently being transferred
+        if (~empty) begin
+            // not empty, perform read
+            read = 1'b1;
+            output_axis_tvalid_next = 1'b1;
+            rd_ptr_next = rd_ptr_reg + 1;
+        end else begin
+            output_axis_tvalid_next = 1'b0;
+        end
     end
 end
 
-// source ready output
 always @(posedge clk) begin
     if (rst) begin
+        rd_ptr_reg <= {ADDR_WIDTH+1{1'b0}};
         output_axis_tvalid_reg <= 1'b0;
-    end else if (output_axis_tready | ~output_axis_tvalid_reg) begin
-        output_axis_tvalid_reg <= ~empty;
     end else begin
-        output_axis_tvalid_reg <= output_axis_tvalid_reg;
+        rd_ptr_reg <= rd_ptr_next;
+        output_axis_tvalid_reg <= output_axis_tvalid_next;
+    end
+
+    if (read) begin
+        {output_axis_tlast_reg, output_axis_tkeep_reg, output_axis_tdata_reg} <= mem[rd_ptr_reg[ADDR_WIDTH-1:0]];
     end
 end
 
