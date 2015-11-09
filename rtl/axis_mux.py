@@ -127,6 +127,7 @@ always @* begin
 {%- for p in ports %}
         {{w}}'d{{p}}: selected_input_tvalid = input_{{p}}_axis_tvalid;
 {%- endfor %}
+        default: selected_input_tvalid = 1'b0;
     endcase
 end
 
@@ -147,6 +148,13 @@ always @* begin
             current_input_tuser = input_{{p}}_axis_tuser;
         end
 {%- endfor %}
+        default: begin
+            current_input_tdata = {DATA_WIDTH{1'b0}};
+            current_input_tvalid = 1'b0;
+            current_input_tready = 1'b0;
+            current_input_tlast = 1'b0;
+            current_input_tuser = 1'b0;
+        end
     endcase
 end
 

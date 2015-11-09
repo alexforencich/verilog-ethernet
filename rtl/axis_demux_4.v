@@ -116,6 +116,10 @@ always @* begin
             current_output_tvalid = output_3_axis_tvalid;
             current_output_tready = output_3_axis_tready;
         end
+        default: begin
+            current_output_tvalid = 1'b0;
+            current_output_tready = 1'b0;
+        end
     endcase
 end
 

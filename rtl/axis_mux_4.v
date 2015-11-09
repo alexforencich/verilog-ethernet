@@ -109,6 +109,7 @@ always @* begin
         2'd1: selected_input_tvalid = input_1_axis_tvalid;
         2'd2: selected_input_tvalid = input_2_axis_tvalid;
         2'd3: selected_input_tvalid = input_3_axis_tvalid;
+        default: selected_input_tvalid = 1'b0;
     endcase
 end
 
@@ -147,6 +148,13 @@ always @* begin
             current_input_tready = input_3_axis_tready;
             current_input_tlast = input_3_axis_tlast;
             current_input_tuser = input_3_axis_tuser;
+        end
+        default: begin
+            current_input_tdata = {DATA_WIDTH{1'b0}};
+            current_input_tvalid = 1'b0;
+            current_input_tready = 1'b0;
+            current_input_tlast = 1'b0;
+            current_input_tuser = 1'b0;
         end
     endcase
 end

@@ -129,6 +129,10 @@ always @* begin
             current_output_tready = output_{{p}}_axis_tready;
         end
 {%- endfor %}
+        default: begin
+            current_output_tvalid = 1'b0;
+            current_output_tready = 1'b0;
+        end
     endcase
 end
 
