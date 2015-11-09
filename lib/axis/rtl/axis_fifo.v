@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013 Alex Forencich
+Copyright (c) 2013-2015 Alex Forencich
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -57,60 +57,93 @@ module axis_fifo #
     output wire                   output_axis_tuser
 );
 
-reg [ADDR_WIDTH:0] wr_ptr = {ADDR_WIDTH+1{1'b0}};
-reg [ADDR_WIDTH:0] rd_ptr = {ADDR_WIDTH+1{1'b0}};
+reg [ADDR_WIDTH:0] wr_ptr_reg = {ADDR_WIDTH+1{1'b0}}, wr_ptr_next;
+reg [ADDR_WIDTH:0] rd_ptr_reg = {ADDR_WIDTH+1{1'b0}}, rd_ptr_next;
 
-reg [DATA_WIDTH+2-1:0] data_out_reg = {1'b0, 1'b0, {DATA_WIDTH{1'b0}}};
-
-//(* RAM_STYLE="BLOCK" *)
 reg [DATA_WIDTH+2-1:0] mem[(2**ADDR_WIDTH)-1:0];
 
-reg output_axis_tvalid_reg = 1'b0;
-
-wire [DATA_WIDTH+2-1:0] data_in = {input_axis_tlast, input_axis_tuser, input_axis_tdata};
+reg [DATA_WIDTH-1:0] output_axis_tdata_reg = {DATA_WIDTH{1'b0}};
+reg output_axis_tvalid_reg = 1'b0, output_axis_tvalid_next;
+reg output_axis_tlast_reg = 1'b0;
+reg output_axis_tuser_reg = 1'b0;
 
 // full when first MSB different but rest same
-wire full = ((wr_ptr[ADDR_WIDTH] != rd_ptr[ADDR_WIDTH]) &&
-             (wr_ptr[ADDR_WIDTH-1:0] == rd_ptr[ADDR_WIDTH-1:0]));
+wire full = ((wr_ptr_reg[ADDR_WIDTH] != rd_ptr_reg[ADDR_WIDTH]) &&
+             (wr_ptr_reg[ADDR_WIDTH-1:0] == rd_ptr_reg[ADDR_WIDTH-1:0]));
 // empty when pointers match exactly
-wire empty = wr_ptr == rd_ptr;
+wire empty = wr_ptr_reg == rd_ptr_reg;
 
-wire write = input_axis_tvalid & ~full;
-wire read = (output_axis_tready | ~output_axis_tvalid_reg) & ~empty;
-
-assign {output_axis_tlast, output_axis_tuser, output_axis_tdata} = data_out_reg;
+// control signals
+reg write;
+reg read;
 
 assign input_axis_tready = ~full;
+
+assign output_axis_tdata = output_axis_tdata_reg;
 assign output_axis_tvalid = output_axis_tvalid_reg;
+assign output_axis_tlast = output_axis_tlast_reg;
+assign output_axis_tuser = output_axis_tuser_reg;
 
-// write
-always @(posedge clk) begin
-    if (rst) begin
-        wr_ptr <= 0;
-    end else if (write) begin
-        mem[wr_ptr[ADDR_WIDTH-1:0]] <= data_in;
-        wr_ptr <= wr_ptr + 1;
+// Write logic
+always @* begin
+    write = 1'b0;
+
+    wr_ptr_next = wr_ptr_reg;
+
+    if (input_axis_tvalid) begin
+        // input data valid
+        if (~full) begin
+            // not full, perform write
+            write = 1'b1;
+            wr_ptr_next = wr_ptr_reg + 1;
+        end
     end
 end
 
-// read
 always @(posedge clk) begin
     if (rst) begin
-        rd_ptr <= 0;
-    end else if (read) begin
-        data_out_reg <= mem[rd_ptr[ADDR_WIDTH-1:0]];
-        rd_ptr <= rd_ptr + 1;
-    end
-end
-
-// source ready output
-always @(posedge clk) begin
-    if (rst) begin
-        output_axis_tvalid_reg <= 1'b0;
-    end else if (output_axis_tready | ~output_axis_tvalid_reg) begin
-        output_axis_tvalid_reg <= ~empty;
+        wr_ptr_reg <= {ADDR_WIDTH+1{1'b0}};
     end else begin
-        output_axis_tvalid_reg <= output_axis_tvalid_reg;
+        wr_ptr_reg <= wr_ptr_next;
+    end
+
+    if (write) begin
+        mem[wr_ptr_reg[ADDR_WIDTH-1:0]] <= {input_axis_tlast, input_axis_tuser, input_axis_tdata};
+    end
+end
+
+// Read logic
+always @* begin
+    read = 1'b0;
+
+    rd_ptr_next = rd_ptr_reg;
+
+    output_axis_tvalid_next = output_axis_tvalid_reg;
+
+    if (output_axis_tready | ~output_axis_tvalid) begin
+        // output data not valid OR currently being transferred
+        if (~empty) begin
+            // not empty, perform read
+            read = 1'b1;
+            output_axis_tvalid_next = 1'b1;
+            rd_ptr_next = rd_ptr_reg + 1;
+        end else begin
+            output_axis_tvalid_next = 1'b0;
+        end
+    end
+end
+
+always @(posedge clk) begin
+    if (rst) begin
+        rd_ptr_reg <= {ADDR_WIDTH+1{1'b0}};
+        output_axis_tvalid_reg <= 1'b0;
+    end else begin
+        rd_ptr_reg <= rd_ptr_next;
+        output_axis_tvalid_reg <= output_axis_tvalid_next;
+    end
+
+    if (read) begin
+        {output_axis_tlast_reg, output_axis_tuser_reg, output_axis_tdata_reg} <= mem[rd_ptr_reg[ADDR_WIDTH-1:0]];
     end
 end
 

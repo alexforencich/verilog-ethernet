@@ -63,7 +63,7 @@ module axis_tap_64 #
 reg [DATA_WIDTH-1:0] output_axis_tdata_int;
 reg [KEEP_WIDTH-1:0] output_axis_tkeep_int;
 reg                  output_axis_tvalid_int;
-reg                  output_axis_tready_int = 0;
+reg                  output_axis_tready_int_reg = 1'b0;
 reg                  output_axis_tlast_int;
 reg                  output_axis_tuser_int;
 wire                 output_axis_tready_int_early;
@@ -76,18 +76,18 @@ localparam [1:0]
 
 reg [1:0] state_reg = STATE_IDLE, state_next;
 
-reg frame_reg = 0, frame_next;
+reg frame_reg = 1'b0, frame_next;
 
 always @* begin
     state_next = STATE_IDLE;
 
     frame_next = frame_reg;
 
-    output_axis_tdata_int = 0;
-    output_axis_tkeep_int = 0;
-    output_axis_tvalid_int = 0;
-    output_axis_tlast_int = 0;
-    output_axis_tuser_int = 0;
+    output_axis_tdata_int = {DATA_WIDTH{1'b0}};
+    output_axis_tkeep_int = {KEEP_WIDTH{1'b0}};
+    output_axis_tvalid_int = 1'b0;
+    output_axis_tlast_int = 1'b0;
+    output_axis_tuser_int = 1'b0;
 
     if (tap_axis_tready & tap_axis_tvalid) begin
         frame_next = ~tap_axis_tlast;
@@ -97,7 +97,7 @@ always @* begin
         STATE_IDLE: begin
             if (tap_axis_tready & tap_axis_tvalid) begin
                 // start of frame
-                if (output_axis_tready_int) begin
+                if (output_axis_tready_int_reg) begin
                     output_axis_tdata_int = tap_axis_tdata;
                     output_axis_tkeep_int = tap_axis_tkeep;
                     output_axis_tvalid_int = tap_axis_tvalid & tap_axis_tready;
@@ -118,7 +118,7 @@ always @* begin
         STATE_TRANSFER: begin
             if (tap_axis_tready & tap_axis_tvalid) begin
                 // transfer data
-                if (output_axis_tready_int) begin
+                if (output_axis_tready_int_reg) begin
                     output_axis_tdata_int = tap_axis_tdata;
                     output_axis_tkeep_int = tap_axis_tkeep;
                     output_axis_tvalid_int = tap_axis_tvalid & tap_axis_tready;
@@ -137,12 +137,12 @@ always @* begin
             end
         end
         STATE_TRUNCATE: begin
-            if (output_axis_tready_int) begin
-                output_axis_tdata_int = 0;
-                output_axis_tkeep_int = 1;
-                output_axis_tvalid_int = 1;
-                output_axis_tlast_int = 1;
-                output_axis_tuser_int = 1;
+            if (output_axis_tready_int_reg) begin
+                output_axis_tdata_int = {DATA_WIDTH{1'b0}};
+                output_axis_tkeep_int = {{KEEP_WIDTH-1{1'b0}}, 1'b1};
+                output_axis_tvalid_int = 1'b1;
+                output_axis_tlast_int = 1'b1;
+                output_axis_tuser_int = 1'b1;
                 if (frame_next) begin
                     state_next = STATE_WAIT;
                 end else begin
@@ -169,7 +169,7 @@ end
 always @(posedge clk) begin
     if (rst) begin
         state_reg <= STATE_IDLE;
-        frame_reg <= 0;
+        frame_reg <= 1'b0;
     end else begin
         state_reg <= state_next;
         frame_reg <= frame_next;
@@ -177,17 +177,22 @@ always @(posedge clk) begin
 end
 
 // output datapath logic
-reg [DATA_WIDTH-1:0] output_axis_tdata_reg = 0;
-reg [KEEP_WIDTH-1:0] output_axis_tkeep_reg = 0;
-reg                  output_axis_tvalid_reg = 0;
-reg                  output_axis_tlast_reg = 0;
-reg                  output_axis_tuser_reg = 0;
+reg [DATA_WIDTH-1:0] output_axis_tdata_reg = {DATA_WIDTH{1'b0}};
+reg [KEEP_WIDTH-1:0] output_axis_tkeep_reg = {KEEP_WIDTH{1'b0}};
+reg                  output_axis_tvalid_reg = 1'b0, output_axis_tvalid_next;
+reg                  output_axis_tlast_reg = 1'b0;
+reg                  output_axis_tuser_reg = 1'b0;
 
-reg [DATA_WIDTH-1:0] temp_axis_tdata_reg = 0;
-reg [KEEP_WIDTH-1:0] temp_axis_tkeep_reg = 0;
-reg                  temp_axis_tvalid_reg = 0;
-reg                  temp_axis_tlast_reg = 0;
-reg                  temp_axis_tuser_reg = 0;
+reg [DATA_WIDTH-1:0] temp_axis_tdata_reg = {DATA_WIDTH{1'b0}};
+reg [KEEP_WIDTH-1:0] temp_axis_tkeep_reg = {KEEP_WIDTH{1'b0}};
+reg                  temp_axis_tvalid_reg = 1'b0, temp_axis_tvalid_next;
+reg                  temp_axis_tlast_reg = 1'b0;
+reg                  temp_axis_tuser_reg = 1'b0;
+
+// datapath control
+reg store_axis_int_to_output;
+reg store_axis_int_to_temp;
+reg store_axis_temp_to_output;
 
 assign output_axis_tdata = output_axis_tdata_reg;
 assign output_axis_tkeep = output_axis_tkeep_reg;
@@ -195,56 +200,66 @@ assign output_axis_tvalid = output_axis_tvalid_reg;
 assign output_axis_tlast = output_axis_tlast_reg;
 assign output_axis_tuser = output_axis_tuser_reg;
 
-// enable ready input next cycle if output is ready or if there is space in both output registers or if there is space in the temp register that will not be filled next cycle
-assign output_axis_tready_int_early = output_axis_tready | (~temp_axis_tvalid_reg & ~output_axis_tvalid_reg) | (~temp_axis_tvalid_reg & ~output_axis_tvalid_int);
+// enable ready input next cycle if output is ready or the temp reg will not be filled on the next cycle (output reg empty or no input)
+assign output_axis_tready_int_early = output_axis_tready | (~temp_axis_tvalid_reg & (~output_axis_tvalid_reg | ~output_axis_tvalid_int));
+
+always @* begin
+    // transfer sink ready state to source
+    output_axis_tvalid_next = output_axis_tvalid_reg;
+    temp_axis_tvalid_next = temp_axis_tvalid_reg;
+
+    store_axis_int_to_output = 1'b0;
+    store_axis_int_to_temp = 1'b0;
+    store_axis_temp_to_output = 1'b0;
+    
+    if (output_axis_tready_int_reg) begin
+        // input is ready
+        if (output_axis_tready | ~output_axis_tvalid_reg) begin
+            // output is ready or currently not valid, transfer data to output
+            output_axis_tvalid_next = output_axis_tvalid_int;
+            store_axis_int_to_output = 1'b1;
+        end else begin
+            // output is not ready, store input in temp
+            temp_axis_tvalid_next = output_axis_tvalid_int;
+            store_axis_int_to_temp = 1'b1;
+        end
+    end else if (output_axis_tready) begin
+        // input is not ready, but output is ready
+        output_axis_tvalid_next = temp_axis_tvalid_reg;
+        temp_axis_tvalid_next = 1'b0;
+        store_axis_temp_to_output = 1'b1;
+    end
+end
 
 always @(posedge clk) begin
     if (rst) begin
-        output_axis_tdata_reg <= 0;
-        output_axis_tkeep_reg <= 0;
-        output_axis_tvalid_reg <= 0;
-        output_axis_tlast_reg <= 0;
-        output_axis_tuser_reg <= 0;
-        output_axis_tready_int <= 0;
-        temp_axis_tdata_reg <= 0;
-        temp_axis_tkeep_reg <= 0;
-        temp_axis_tvalid_reg <= 0;
-        temp_axis_tlast_reg <= 0;
-        temp_axis_tuser_reg <= 0;
+        output_axis_tvalid_reg <= 1'b0;
+        output_axis_tready_int_reg <= 1'b0;
+        temp_axis_tvalid_reg <= 1'b0;
     end else begin
-        // transfer sink ready state to source
-        output_axis_tready_int <= output_axis_tready_int_early;
+        output_axis_tvalid_reg <= output_axis_tvalid_next;
+        output_axis_tready_int_reg <= output_axis_tready_int_early;
+        temp_axis_tvalid_reg <= temp_axis_tvalid_next;
+    end
 
-        if (output_axis_tready_int) begin
-            // input is ready
-            if (output_axis_tready | ~output_axis_tvalid_reg) begin
-                // output is ready or currently not valid, transfer data to output
-                output_axis_tdata_reg <= output_axis_tdata_int;
-                output_axis_tkeep_reg <= output_axis_tkeep_int;
-                output_axis_tvalid_reg <= output_axis_tvalid_int;
-                output_axis_tlast_reg <= output_axis_tlast_int;
-                output_axis_tuser_reg <= output_axis_tuser_int;
-            end else begin
-                // output is not ready, store input in temp
-                temp_axis_tdata_reg <= output_axis_tdata_int;
-                temp_axis_tkeep_reg <= output_axis_tkeep_int;
-                temp_axis_tvalid_reg <= output_axis_tvalid_int;
-                temp_axis_tlast_reg <= output_axis_tlast_int;
-                temp_axis_tuser_reg <= output_axis_tuser_int;
-            end
-        end else if (output_axis_tready) begin
-            // input is not ready, but output is ready
-            output_axis_tdata_reg <= temp_axis_tdata_reg;
-            output_axis_tkeep_reg <= temp_axis_tkeep_reg;
-            output_axis_tvalid_reg <= temp_axis_tvalid_reg;
-            output_axis_tlast_reg <= temp_axis_tlast_reg;
-            output_axis_tuser_reg <= temp_axis_tuser_reg;
-            temp_axis_tdata_reg <= 0;
-            temp_axis_tkeep_reg <= 0;
-            temp_axis_tvalid_reg <= 0;
-            temp_axis_tlast_reg <= 0;
-            temp_axis_tuser_reg <= 0;
-        end
+    // datapath
+    if (store_axis_int_to_output) begin
+        output_axis_tdata_reg <= output_axis_tdata_int;
+        output_axis_tkeep_reg <= output_axis_tkeep_int;
+        output_axis_tlast_reg <= output_axis_tlast_int;
+        output_axis_tuser_reg <= output_axis_tuser_int;
+    end else if (store_axis_temp_to_output) begin
+        output_axis_tdata_reg <= temp_axis_tdata_reg;
+        output_axis_tkeep_reg <= temp_axis_tkeep_reg;
+        output_axis_tlast_reg <= temp_axis_tlast_reg;
+        output_axis_tuser_reg <= temp_axis_tuser_reg;
+    end
+
+    if (store_axis_int_to_temp) begin
+        temp_axis_tdata_reg <= output_axis_tdata_int;
+        temp_axis_tkeep_reg <= output_axis_tkeep_int;
+        temp_axis_tlast_reg <= output_axis_tlast_int;
+        temp_axis_tuser_reg <= output_axis_tuser_int;
     end
 end
 

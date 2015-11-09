@@ -40,7 +40,7 @@ def generate(ports=4, name=None, output=None):
 
     t = Template(u"""/*
 
-Copyright (c) 2014 Alex Forencich
+Copyright (c) 2014-2015 Alex Forencich
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -103,21 +103,21 @@ module {{name}} #
 {%- endfor %}
 );
 {% for p in ports %}
-reg [DATA_WIDTH-1:0]  input_{{p}}_axis_tdata_reg = 0;
-reg                   input_{{p}}_axis_tvalid_reg = 0;
-reg                   input_{{p}}_axis_tlast_reg = 0;
-reg                   input_{{p}}_axis_tuser_reg = 0;
+reg [DATA_WIDTH-1:0]  input_{{p}}_axis_tdata_reg = {DATA_WIDTH{1'b0}};
+reg                   input_{{p}}_axis_tvalid_reg = 1'b0;
+reg                   input_{{p}}_axis_tlast_reg = 1'b0;
+reg                   input_{{p}}_axis_tuser_reg = 1'b0;
 {% endfor %}
 
 {%- for p in ports %}
-reg [DATA_WIDTH-1:0]  output_{{p}}_axis_tdata_reg = 0;
-reg                   output_{{p}}_axis_tvalid_reg = 0;
-reg                   output_{{p}}_axis_tlast_reg = 0;
-reg                   output_{{p}}_axis_tuser_reg = 0;
+reg [DATA_WIDTH-1:0]  output_{{p}}_axis_tdata_reg = {DATA_WIDTH{1'b0}};
+reg                   output_{{p}}_axis_tvalid_reg = 1'b0;
+reg                   output_{{p}}_axis_tlast_reg = 1'b0;
+reg                   output_{{p}}_axis_tuser_reg = 1'b0;
 {% endfor %}
 
 {%- for p in ports %}
-reg [{{w-1}}:0]             output_{{p}}_select_reg = 0;
+reg [{{w-1}}:0]             output_{{p}}_select_reg = {{w}}'d0;
 {%- endfor %}
 {% for p in ports %}
 assign output_{{p}}_axis_tdata = output_{{p}}_axis_tdata_reg;
@@ -129,44 +129,48 @@ assign output_{{p}}_axis_tuser = output_{{p}}_axis_tuser_reg;
 always @(posedge clk) begin
     if (rst) begin
 {%- for p in ports %}
-        output_{{p}}_select_reg <= 0;
+        output_{{p}}_select_reg <= {{w}}'d0;
 {%- endfor %}
 {% for p in ports %}
-        input_{{p}}_axis_tdata_reg <= 0;
-        input_{{p}}_axis_tvalid_reg <= 0;
-        input_{{p}}_axis_tlast_reg <= 0;
-        input_{{p}}_axis_tuser_reg <= 0;
+        input_{{p}}_axis_tvalid_reg <= 1'b0;
 {%- endfor %}
 {% for p in ports %}
-        output_{{p}}_axis_tdata_reg <= 0;
-        output_{{p}}_axis_tvalid_reg <= 0;
-        output_{{p}}_axis_tlast_reg <= 0;
-        output_{{p}}_axis_tuser_reg <= 0;
+        output_{{p}}_axis_tvalid_reg <= 1'b0;
 {%- endfor %}
     end else begin
 {%- for p in ports %}
-        input_{{p}}_axis_tdata_reg <= input_{{p}}_axis_tdata;
         input_{{p}}_axis_tvalid_reg <= input_{{p}}_axis_tvalid;
-        input_{{p}}_axis_tlast_reg <= input_{{p}}_axis_tlast;
-        input_{{p}}_axis_tuser_reg <= input_{{p}}_axis_tuser;
-{% endfor %}
-{%- for p in ports %}
+{%- endfor %}
+{% for p in ports %}
         output_{{p}}_select_reg <= output_{{p}}_select;
 {%- endfor %}
 {%- for p in ports %}
 
         case (output_{{p}}_select_reg)
 {%- for q in ports %}
-            {{w}}'d{{q}}: begin
-                output_{{p}}_axis_tdata_reg <= input_{{q}}_axis_tdata_reg;
-                output_{{p}}_axis_tvalid_reg <= input_{{q}}_axis_tvalid_reg;
-                output_{{p}}_axis_tlast_reg <= input_{{q}}_axis_tlast_reg;
-                output_{{p}}_axis_tuser_reg <= input_{{q}}_axis_tuser_reg;
-            end
+            {{w}}'d{{q}}: output_{{p}}_axis_tvalid_reg <= input_{{q}}_axis_tvalid_reg;
 {%- endfor %}
         endcase
 {%- endfor %}
     end
+{%- for p in ports %}
+
+    input_{{p}}_axis_tdata_reg <= input_{{p}}_axis_tdata;
+    input_{{p}}_axis_tlast_reg <= input_{{p}}_axis_tlast;
+    input_{{p}}_axis_tuser_reg <= input_{{p}}_axis_tuser;
+{%- endfor %}
+{%- for p in ports %}
+
+    case (output_{{p}}_select_reg)
+{%- for q in ports %}
+        {{w}}'d{{q}}: begin
+            output_{{p}}_axis_tdata_reg <= input_{{q}}_axis_tdata_reg;
+            output_{{p}}_axis_tlast_reg <= input_{{q}}_axis_tlast_reg;
+            output_{{p}}_axis_tuser_reg <= input_{{q}}_axis_tuser_reg;
+        end
+{%- endfor %}
+    endcase
+{%- endfor %}
 end
 
 endmodule
