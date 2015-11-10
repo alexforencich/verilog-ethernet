@@ -51,8 +51,8 @@ module axis_eth_fcs
 );
 
 reg [31:0] crc_state = 32'hFFFFFFFF;
-reg [31:0] fcs_reg = 0;
-reg fcs_valid_reg = 0;
+reg [31:0] fcs_reg = 32'h00000000;
+reg fcs_valid_reg = 1'b0;
 
 wire [31:0] crc_next;
 
@@ -70,15 +70,15 @@ eth_crc_8_inst (
 always @(posedge clk) begin
     if (rst) begin
         crc_state <= 32'hFFFFFFFF;
-        fcs_reg <= 0;
-        fcs_valid_reg <= 0;
+        fcs_reg <= 32'h00000000;
+        fcs_valid_reg <= 1'b0;
     end else begin
-        fcs_valid_reg <= 0;
+        fcs_valid_reg <= 1'b0;
         if (input_axis_tvalid) begin
             if (input_axis_tlast) begin
                 crc_state <= 32'hFFFFFFFF;
                 fcs_reg <= ~crc_next;
-                fcs_valid_reg <= 1;
+                fcs_valid_reg <= 1'b1;
             end else begin
                 crc_state <= crc_next;
             end

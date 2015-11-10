@@ -105,17 +105,17 @@ wire        rx_fifo_axis_tuser;
 wire rx_error_bad_frame_int;
 wire rx_error_bad_fcs_int;
 
-reg [1:0] rx_sync_reg_1 = 0;
-reg [1:0] rx_sync_reg_2 = 0;
-reg [1:0] rx_sync_reg_3 = 0;
-reg [1:0] rx_sync_reg_4 = 0;
+reg [1:0] rx_sync_reg_1 = 2'd0;
+reg [1:0] rx_sync_reg_2 = 2'd0;
+reg [1:0] rx_sync_reg_3 = 2'd0;
+reg [1:0] rx_sync_reg_4 = 2'd0;
 
 assign rx_error_bad_frame = rx_sync_reg_3[0] ^ rx_sync_reg_4[0];
 assign rx_error_bad_fcs = rx_sync_reg_3[1] ^ rx_sync_reg_4[1];
 
 always @(posedge rx_clk or posedge rx_rst) begin
     if (rx_rst) begin
-        rx_sync_reg_1 <= 0;
+        rx_sync_reg_1 <= 2'd0;
     end else begin
         rx_sync_reg_1 <= rx_sync_reg_1 ^ {rx_error_bad_frame_int, rx_error_bad_frame_int};
     end
@@ -123,9 +123,9 @@ end
 
 always @(posedge logic_clk or posedge logic_rst) begin
     if (logic_rst) begin
-        rx_sync_reg_2 <= 0;
-        rx_sync_reg_3 <= 0;
-        rx_sync_reg_4 <= 0;
+        rx_sync_reg_2 <= 2'd0;
+        rx_sync_reg_3 <= 2'd0;
+        rx_sync_reg_4 <= 2'd0;
     end else begin
         rx_sync_reg_2 <= rx_sync_reg_1;
         rx_sync_reg_3 <= rx_sync_reg_2;

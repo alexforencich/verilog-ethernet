@@ -67,11 +67,11 @@ reg [2:0] state_reg = STATE_IDLE, state_next;
 reg reset_crc;
 reg update_crc;
 
-reg [7:0] last_cycle_tkeep_reg = 0, last_cycle_tkeep_next;
+reg [7:0] last_cycle_tkeep_reg = 8'd0, last_cycle_tkeep_next;
 
-reg lanes_swapped = 0;
-reg [31:0] swap_rxd = 0;
-reg [3:0] swap_rxc = 0;
+reg lanes_swapped = 1'b0;
+reg [31:0] swap_rxd = 32'd0;
+reg [3:0] swap_rxc = 4'd0;
 
 reg [63:0] xgmii_rxd_d0 = 64'h0707070707070707;
 reg [63:0] xgmii_rxd_d1 = 64'h0707070707070707;
@@ -79,14 +79,14 @@ reg [63:0] xgmii_rxd_d1 = 64'h0707070707070707;
 reg [7:0] xgmii_rxc_d0 = 8'b11111111;
 reg [7:0] xgmii_rxc_d1 = 8'b11111111;
 
-reg [63:0] output_axis_tdata_reg = 0, output_axis_tdata_next;
-reg [7:0] output_axis_tkeep_reg = 0, output_axis_tkeep_next;
-reg output_axis_tvalid_reg = 0, output_axis_tvalid_next;
-reg output_axis_tlast_reg = 0, output_axis_tlast_next;
-reg output_axis_tuser_reg = 0, output_axis_tuser_next;
+reg [63:0] output_axis_tdata_reg = 64'd0, output_axis_tdata_next;
+reg [7:0] output_axis_tkeep_reg = 8'd0, output_axis_tkeep_next;
+reg output_axis_tvalid_reg = 1'b0, output_axis_tvalid_next;
+reg output_axis_tlast_reg = 1'b0, output_axis_tlast_next;
+reg output_axis_tuser_reg = 1'b0, output_axis_tuser_next;
 
-reg error_bad_frame_reg = 0, error_bad_frame_next;
-reg error_bad_fcs_reg = 0, error_bad_fcs_next;
+reg error_bad_frame_reg = 1'b0, error_bad_frame_next;
+reg error_bad_fcs_reg = 1'b0, error_bad_fcs_next;
 
 reg [31:0] crc_state = 32'hFFFFFFFF;
 reg [31:0] crc_state3 = 32'hFFFFFFFF;
@@ -103,7 +103,7 @@ wire crc_valid2 = crc_next2 == ~32'h2144df1c;
 wire crc_valid3 = crc_next3 == ~32'h2144df1c;
 wire crc_valid7 = crc_next7 == ~32'h2144df1c;
 
-reg crc_valid7_save = 0;
+reg crc_valid7_save = 1'b0;
 
 assign output_axis_tdata = output_axis_tdata_reg;
 assign output_axis_tkeep = output_axis_tkeep_reg;
@@ -231,39 +231,39 @@ end
 always @* begin
     state_next = STATE_IDLE;
 
-    reset_crc = 0;
-    update_crc = 0;
+    reset_crc = 1'b0;
+    update_crc = 1'b0;
 
     last_cycle_tkeep_next = last_cycle_tkeep_reg;
 
-    output_axis_tdata_next = 0;
-    output_axis_tkeep_next = 0;
-    output_axis_tvalid_next = 0;
-    output_axis_tlast_next = 0;
-    output_axis_tuser_next = 0;
+    output_axis_tdata_next = 64'd0;
+    output_axis_tkeep_next = 8'd0;
+    output_axis_tvalid_next = 1'b0;
+    output_axis_tlast_next = 1'b0;
+    output_axis_tuser_next = 1'b0;
 
-    error_bad_frame_next = 0;
-    error_bad_fcs_next = 0;
+    error_bad_frame_next = 1'b0;
+    error_bad_fcs_next = 1'b0;
 
     case (state_reg)
         STATE_IDLE: begin
             // idle state - wait for packet
-            reset_crc = 1;
+            reset_crc = 1'b1;
 
             if (xgmii_rxc_d1[0] && xgmii_rxd_d1[7:0] == 8'hfb) begin
                 // start condition
                 if (detect_error_masked) begin
                     // error in first data word
-                    output_axis_tdata_next = 0;
-                    output_axis_tkeep_next = 1;
-                    output_axis_tvalid_next = 1;
-                    output_axis_tlast_next = 1;
-                    output_axis_tuser_next = 1;
-                    error_bad_frame_next = 1;
+                    output_axis_tdata_next = 64'd0;
+                    output_axis_tkeep_next = 8'h01;
+                    output_axis_tvalid_next = 1'b1;
+                    output_axis_tlast_next = 1'b1;
+                    output_axis_tuser_next = 1'b1;
+                    error_bad_frame_next = 1'b1;
                     state_next = STATE_IDLE;
                 end else begin
-                    reset_crc = 0;
-                    update_crc = 1;
+                    reset_crc = 1'b0;
+                    update_crc = 1'b1;
                     state_next = STATE_PAYLOAD;
                 end
             end else begin
@@ -272,27 +272,27 @@ always @* begin
         end
         STATE_PAYLOAD: begin
             // read payload
-            update_crc = 1;
+            update_crc = 1'b1;
 
             output_axis_tdata_next = xgmii_rxd_d1;
             output_axis_tkeep_next = ~xgmii_rxc_d1;
-            output_axis_tvalid_next = 1;
-            output_axis_tlast_next = 0;
-            output_axis_tuser_next = 0;
+            output_axis_tvalid_next = 1'b1;
+            output_axis_tlast_next = 1'b0;
+            output_axis_tuser_next = 1'b0;
 
             if (control_masked) begin
                 // control or error characters in packet
-                output_axis_tlast_next = 1;
-                output_axis_tuser_next = 1;
-                error_bad_frame_next = 1;
-                reset_crc = 1;
+                output_axis_tlast_next = 1'b1;
+                output_axis_tuser_next = 1'b1;
+                error_bad_frame_next = 1'b1;
+                reset_crc = 1'b1;
                 state_next = STATE_IDLE;
             end else if (detect_term) begin
                 if (detect_term[4:0]) begin
                     // end this cycle
-                    reset_crc = 1;
+                    reset_crc = 1'b1;
                     output_axis_tkeep_next = {tkeep_mask[3:0], 4'b1111};
-                    output_axis_tlast_next = 1;
+                    output_axis_tlast_next = 1'b1;
                     if ((detect_term[0] & crc_valid7_save) ||
                         (detect_term[1] & crc_valid0) ||
                         (detect_term[2] & crc_valid1) ||
@@ -300,9 +300,9 @@ always @* begin
                         (detect_term[4] & crc_valid3)) begin
                         // CRC valid
                     end else begin
-                        output_axis_tuser_next = 1;
-                        error_bad_frame_next = 1;
-                        error_bad_fcs_next = 1;
+                        output_axis_tuser_next = 1'b1;
+                        error_bad_frame_next = 1'b1;
+                        error_bad_fcs_next = 1'b1;
                     end
                     state_next = STATE_IDLE;
                 end else begin
@@ -318,20 +318,20 @@ always @* begin
             // last cycle of packet
             output_axis_tdata_next = xgmii_rxd_d1;
             output_axis_tkeep_next = last_cycle_tkeep_reg;
-            output_axis_tvalid_next = 1;
-            output_axis_tlast_next = 1;
-            output_axis_tuser_next = 0;
+            output_axis_tvalid_next = 1'b1;
+            output_axis_tlast_next = 1'b1;
+            output_axis_tuser_next = 1'b0;
 
-            reset_crc = 1;
+            reset_crc = 1'b1;
 
             if ((detect_term_save[5] & crc_valid0) ||
                 (detect_term_save[6] & crc_valid1) ||
                 (detect_term_save[7] & crc_valid2)) begin
                 // CRC valid
             end else begin
-                output_axis_tuser_next = 1;
-                error_bad_frame_next = 1;
-                error_bad_fcs_next = 1;
+                output_axis_tuser_next = 1'b1;
+                error_bad_frame_next = 1'b1;
+                error_bad_fcs_next = 1'b1;
             end
 
             if (xgmii_rxc_d1[0] && xgmii_rxd_d1[7:0] == 8'hfb) begin
@@ -348,22 +348,14 @@ always @(posedge clk) begin
     if (rst) begin
         state_reg <= STATE_IDLE;
 
-        output_axis_tdata_reg <= 0;
-        output_axis_tkeep_reg <= 0;
-        output_axis_tvalid_reg <= 0;
-        output_axis_tlast_reg <= 0;
-        output_axis_tuser_reg <= 0;
+        output_axis_tvalid_reg <= 1'b0;
 
-        last_cycle_tkeep_reg <= 0;
-
-        error_bad_frame_reg <= 0;
-        error_bad_fcs_reg <= 0;
+        error_bad_frame_reg <= 1'b0;
+        error_bad_fcs_reg <= 1'b0;
 
         crc_state <= 32'hFFFFFFFF;
         crc_state3 <= 32'hFFFFFFFF;
-        crc_valid7_save <= 0;
-
-        detect_term_save <= 0;
+        crc_valid7_save <= 1'b0;
 
         xgmii_rxd_d0 <= 64'h0707070707070707;
         xgmii_rxd_d1 <= 64'h0707070707070707;
@@ -371,29 +363,21 @@ always @(posedge clk) begin
         xgmii_rxc_d0 <= 8'b11111111;
         xgmii_rxc_d1 <= 8'b11111111;
 
-        lanes_swapped <= 0;
-        swap_rxd <= 0;
-        swap_rxc <= 0;
+        lanes_swapped <= 1'b0;
     end else begin
         state_reg <= state_next;
 
-        output_axis_tdata_reg <= output_axis_tdata_next;
-        output_axis_tkeep_reg <= output_axis_tkeep_next;
         output_axis_tvalid_reg <= output_axis_tvalid_next;
-        output_axis_tlast_reg <= output_axis_tlast_next;
-        output_axis_tuser_reg <= output_axis_tuser_next;
-
-        last_cycle_tkeep_reg <= last_cycle_tkeep_next;
 
         error_bad_frame_reg <= error_bad_frame_next;
         error_bad_fcs_reg <= error_bad_fcs_next;
 
         if (xgmii_rxc[0] && xgmii_rxd[7:0] == 8'hfb) begin
-            lanes_swapped <= 0;
+            lanes_swapped <= 1'b0;
             xgmii_rxd_d0 <= xgmii_rxd;
             xgmii_rxc_d0 <= xgmii_rxc;
         end else if (xgmii_rxc[4] && xgmii_rxd[39:32] == 8'hfb) begin
-            lanes_swapped <= 1;
+            lanes_swapped <= 1'b1;
             xgmii_rxd_d0 <= 64'h0707070707070707;
             xgmii_rxc_d0 <= 8'b11111111;
         end else if (lanes_swapped) begin
@@ -404,25 +388,32 @@ always @(posedge clk) begin
             xgmii_rxc_d0 <= xgmii_rxc;
         end
 
-        swap_rxd <= xgmii_rxd[63:32];
-        swap_rxc <= xgmii_rxc[7:4];
-
         xgmii_rxd_d1 <= xgmii_rxd_d0;
         xgmii_rxc_d1 <= xgmii_rxc_d0;
-
-        detect_term_save <= detect_term;
 
         // datapath
         if (reset_crc) begin
             crc_state <= 32'hFFFFFFFF;
             crc_state3 <= 32'hFFFFFFFF;
-            crc_valid7_save <= 0;
+            crc_valid7_save <= 1'b0;
         end else if (update_crc) begin
             crc_state <= crc_next7;
             crc_state3 <= crc_next3;
             crc_valid7_save <= crc_valid7;
         end
     end
+
+    output_axis_tdata_reg <= output_axis_tdata_next;
+    output_axis_tkeep_reg <= output_axis_tkeep_next;
+    output_axis_tlast_reg <= output_axis_tlast_next;
+    output_axis_tuser_reg <= output_axis_tuser_next;
+
+    last_cycle_tkeep_reg <= last_cycle_tkeep_next;
+
+    detect_term_save <= detect_term;
+
+    swap_rxd <= xgmii_rxd[63:32];
+    swap_rxc <= xgmii_rxc[7:4];
 end
 
 endmodule

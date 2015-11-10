@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014 Alex Forencich
+Copyright (c) 2014-2015 Alex Forencich
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -247,11 +247,11 @@ ip_eth_tx_64_inst (
 );
 
 
-reg input_ip_hdr_ready_reg = 0, input_ip_hdr_ready_next;
+reg input_ip_hdr_ready_reg = 1'b0, input_ip_hdr_ready_next;
 
-reg arp_request_valid_reg = 0, arp_request_valid_next;
+reg arp_request_valid_reg = 1'b0, arp_request_valid_next;
 
-reg drop_packet_reg = 0, drop_packet_next;
+reg drop_packet_reg = 1'b0, drop_packet_next;
 
 assign input_ip_hdr_ready = input_ip_hdr_ready_reg;
 assign input_ip_payload_tready = outgoing_ip_payload_tready | drop_packet_reg;
@@ -264,10 +264,10 @@ assign tx_error_arp_failed = arp_response_error;
 always @* begin
     state_next = STATE_IDLE;
 
-    arp_request_valid_next = 0;
-    drop_packet_next = 0;
+    arp_request_valid_next = 1'b0;
+    drop_packet_next = 1'b0;
 
-    input_ip_hdr_ready_next = 0;
+    input_ip_hdr_ready_next = 1'b0;
 
     outgoing_ip_hdr_valid_next = outgoing_ip_hdr_valid_reg & ~outgoing_ip_hdr_ready;
     outgoing_eth_dest_mac_next = outgoing_eth_dest_mac_reg;
@@ -277,28 +277,28 @@ always @* begin
             // wait for outgoing packet
             if (input_ip_hdr_valid) begin
                 // initiate ARP request
-                arp_request_valid_next = 1;
+                arp_request_valid_next = 1'b1;
                 state_next = STATE_ARP_QUERY;
             end else begin
                 state_next = STATE_IDLE;
             end
         end
         STATE_ARP_QUERY: begin
-            arp_request_valid_next = 1;
+            arp_request_valid_next = 1'b1;
 
             if (arp_response_valid) begin
                 // wait for ARP reponse
                 if (arp_response_error) begin
                     // did not get MAC address; drop packet
-                    input_ip_hdr_ready_next = 1;
-                    arp_request_valid_next = 0;
-                    drop_packet_next = 1;
+                    input_ip_hdr_ready_next = 1'b1;
+                    arp_request_valid_next = 1'b0;
+                    drop_packet_next = 1'b1;
                     state_next = STATE_WAIT_PACKET;
                 end else begin
                     // got MAC address; send packet
-                    input_ip_hdr_ready_next = 1;
-                    arp_request_valid_next = 0;
-                    outgoing_ip_hdr_valid_next = 1;
+                    input_ip_hdr_ready_next = 1'b1;
+                    arp_request_valid_next = 1'b0;
+                    outgoing_ip_hdr_valid_next = 1'b1;
                     outgoing_eth_dest_mac_next = arp_response_mac;
                     state_next = STATE_WAIT_PACKET;
                 end
@@ -322,11 +322,10 @@ end
 always @(posedge clk) begin
     if (rst) begin
         state_reg <= STATE_IDLE;
-        arp_request_valid_reg <= 0;
-        drop_packet_reg <= 0;
-        input_ip_hdr_ready_reg <= 0;
+        arp_request_valid_reg <= 1'b0;
+        drop_packet_reg <= 1'b0;
+        input_ip_hdr_ready_reg <= 1'b0;
         outgoing_ip_hdr_valid_reg <= 1'b0;
-        outgoing_eth_dest_mac_reg <= 48'h000000000000;
     end else begin
         state_reg <= state_next;
 
@@ -336,8 +335,9 @@ always @(posedge clk) begin
         input_ip_hdr_ready_reg <= input_ip_hdr_ready_next;
 
         outgoing_ip_hdr_valid_reg <= outgoing_ip_hdr_valid_next;
-        outgoing_eth_dest_mac_reg <= outgoing_eth_dest_mac_next;
     end
+
+    outgoing_eth_dest_mac_reg <= outgoing_eth_dest_mac_next;
 end
 
 endmodule

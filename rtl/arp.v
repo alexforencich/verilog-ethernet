@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014 Alex Forencich
+Copyright (c) 2014-2015 Alex Forencich
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -107,15 +107,15 @@ wire [31:0] incoming_arp_spa;
 wire [47:0] incoming_arp_tha;
 wire [31:0] incoming_arp_tpa;
 
-reg outgoing_frame_valid_reg = 0, outgoing_frame_valid_next;
+reg outgoing_frame_valid_reg = 1'b0, outgoing_frame_valid_next;
 wire outgoing_frame_ready;
-reg [47:0] outgoing_eth_dest_mac_reg = 0, outgoing_eth_dest_mac_next;
-reg [15:0] outgoing_arp_oper_reg = 0, outgoing_arp_oper_next;
-reg [47:0] outgoing_arp_tha_reg = 0, outgoing_arp_tha_next;
-reg [31:0] outgoing_arp_tpa_reg = 0, outgoing_arp_tpa_next;
+reg [47:0] outgoing_eth_dest_mac_reg = 48'd0, outgoing_eth_dest_mac_next;
+reg [15:0] outgoing_arp_oper_reg = 16'd0, outgoing_arp_oper_next;
+reg [47:0] outgoing_arp_tha_reg = 48'd0, outgoing_arp_tha_next;
+reg [31:0] outgoing_arp_tpa_reg = 32'd0, outgoing_arp_tpa_next;
 
 // drop frame
-reg drop_incoming_frame_reg = 0, drop_incoming_frame_next;
+reg drop_incoming_frame_reg = 1'b0, drop_incoming_frame_next;
 
 // wait on incoming frames until we can reply
 assign incoming_frame_ready = outgoing_frame_ready | drop_incoming_frame_reg;
@@ -216,9 +216,9 @@ wire cache_query_response_valid;
 wire cache_query_response_error;
 wire [47:0] cache_query_response_mac;
 
-reg cache_write_request_valid_reg = 0, cache_write_request_valid_next;
-reg [31:0] cache_write_request_ip_reg = 0, cache_write_request_ip_next;
-reg [47:0] cache_write_request_mac_reg = 0, cache_write_request_mac_next;
+reg cache_write_request_valid_reg = 1'b0, cache_write_request_valid_next;
+reg [31:0] cache_write_request_ip_reg = 32'd0, cache_write_request_ip_next;
+reg [47:0] cache_write_request_mac_reg = 48'd0, cache_write_request_mac_next;
 wire cache_write_in_progress;
 wire cache_write_complete;
 
@@ -247,16 +247,16 @@ arp_cache_inst (
     .clear_cache(clear_cache)
 );
 
-reg arp_request_operation_reg = 0, arp_request_operation_next;
+reg arp_request_operation_reg = 1'b0, arp_request_operation_next;
 
-reg arp_request_valid_reg = 0, arp_request_valid_next;
-reg [31:0] arp_request_ip_reg = 0, arp_request_ip_next;
+reg arp_request_valid_reg = 1'b0, arp_request_valid_next;
+reg [31:0] arp_request_ip_reg = 32'd0, arp_request_ip_next;
 
-reg arp_response_error_reg = 0, arp_response_error_next;
-reg arp_response_broadcast_reg = 0, arp_response_broadcast_next;
+reg arp_response_error_reg = 1'b0, arp_response_error_next;
+reg arp_response_broadcast_reg = 1'b0, arp_response_broadcast_next;
 
-reg [5:0] arp_request_retry_cnt_reg = 0, arp_request_retry_cnt_next;
-reg [35:0] arp_request_timer_reg = 0, arp_request_timer_next;
+reg [5:0] arp_request_retry_cnt_reg = 6'd0, arp_request_retry_cnt_next;
+reg [35:0] arp_request_timer_reg = 36'd0, arp_request_timer_next;
 
 assign cache_query_request_valid = ~arp_request_operation_reg ? arp_request_valid_reg : 1'b1;
 assign cache_query_request_ip = arp_request_ip_reg;
@@ -272,57 +272,57 @@ always @* begin
     outgoing_arp_tha_next = outgoing_arp_tha_reg;
     outgoing_arp_tpa_next = outgoing_arp_tpa_reg;
 
-    cache_write_request_valid_next = 0;
-    cache_write_request_mac_next = 0;
-    cache_write_request_ip_next = 0;
+    cache_write_request_valid_next = 1'b0;
+    cache_write_request_mac_next = 48'd0;
+    cache_write_request_ip_next = 32'd0;
 
-    arp_request_valid_next = 0;
+    arp_request_valid_next = 1'b0;
     arp_request_ip_next = arp_request_ip_reg;
     arp_request_operation_next = arp_request_operation_reg;
     arp_request_retry_cnt_next = arp_request_retry_cnt_reg;
     arp_request_timer_next = arp_request_timer_reg;
-    arp_response_error_next = 0;
-    arp_response_broadcast_next = 0;
+    arp_response_error_next = 1'b0;
+    arp_response_broadcast_next = 1'b0;
     
-    drop_incoming_frame_next = 0;
+    drop_incoming_frame_next = 1'b0;
 
     // manage incoming frames
     if (filtered_incoming_frame_valid & ~(outgoing_frame_valid_reg & ~outgoing_frame_ready)) begin
         // store sender addresses in cache
-        cache_write_request_valid_next = 1;
+        cache_write_request_valid_next = 1'b1;
         cache_write_request_ip_next = incoming_arp_spa;
         cache_write_request_mac_next = incoming_arp_sha;
         if (incoming_arp_oper_arp_request) begin
             if (incoming_arp_tpa == local_ip) begin
                 // send reply frame to valid incoming request
-                outgoing_frame_valid_next = 1;
+                outgoing_frame_valid_next = 1'b1;
                 outgoing_eth_dest_mac_next = incoming_eth_src_mac;
                 outgoing_arp_oper_next = ARP_OPER_ARP_REPLY;
                 outgoing_arp_tha_next = incoming_arp_sha;
                 outgoing_arp_tpa_next = incoming_arp_spa;
             end else begin
                 // does not match -> drop it
-                drop_incoming_frame_next = 1;
+                drop_incoming_frame_next = 1'b1;
             end
         end else if (incoming_arp_oper_inarp_request) begin
             if (incoming_arp_tha == local_mac) begin
                 // send reply frame to valid incoming request
-                outgoing_frame_valid_next = 1;
+                outgoing_frame_valid_next = 1'b1;
                 outgoing_eth_dest_mac_next = incoming_eth_src_mac;
                 outgoing_arp_oper_next = ARP_OPER_INARP_REPLY;
                 outgoing_arp_tha_next = incoming_arp_sha;
                 outgoing_arp_tpa_next = incoming_arp_spa;
             end else begin
                 // does not match -> drop it
-                drop_incoming_frame_next = 1;
+                drop_incoming_frame_next = 1'b1;
             end
         end else begin
             // does not match -> drop it
-            drop_incoming_frame_next = 1;
+            drop_incoming_frame_next = 1'b1;
         end
     end else if (incoming_frame_valid & ~filtered_incoming_frame_valid) begin
         // incoming invalid frame -> drop it
-        drop_incoming_frame_next = 1;
+        drop_incoming_frame_next = 1'b1;
     end
 
     // manage ARP lookup requests
@@ -331,23 +331,23 @@ always @* begin
             if (~(arp_request_ip | subnet_mask) == 0) begin
                 // broadcast address
                 // (all bits in request IP set where subnet mask is clear)
-                arp_request_valid_next = 0;
-                arp_response_broadcast_next = 1;
+                arp_request_valid_next = 1'b0;
+                arp_response_broadcast_next = 1'b1;
             end else if (((arp_request_ip ^ gateway_ip) & subnet_mask) == 0) begin
                 // within subnet, look up IP directly
                 // (no bits differ between request IP and gateway IP where subnet mask is set)
-                arp_request_valid_next = 1;
+                arp_request_valid_next = 1'b1;
                 arp_request_ip_next = arp_request_ip;
             end else begin
                 // outside of subnet, so look up gateway address
-                arp_request_valid_next = 1;
+                arp_request_valid_next = 1'b1;
                 arp_request_ip_next = gateway_ip;
             end
         end
         if (cache_query_response_error & ~arp_response_error) begin
-            arp_request_operation_next = 1;
+            arp_request_operation_next = 1'b1;
             // send ARP request frame
-            outgoing_frame_valid_next = 1;
+            outgoing_frame_valid_next = 1'b1;
             outgoing_eth_dest_mac_next = 48'hFF_FF_FF_FF_FF_FF;
             outgoing_arp_oper_next = ARP_OPER_ARP_REQUEST;
             outgoing_arp_tha_next = 48'h00_00_00_00_00_00;
@@ -359,7 +359,7 @@ always @* begin
         arp_request_timer_next = arp_request_timer_reg - 1;
         // if we got a response, it will go in the cache, so when the query succeds, we're done
         if (cache_query_response_valid  & ~cache_query_response_error) begin
-            arp_request_operation_next = 0;
+            arp_request_operation_next = 1'b0;
         end
         // timer timeout
         if (arp_request_timer_reg == 0) begin
@@ -379,8 +379,8 @@ always @* begin
                 end
             end else begin
                 // out of retries
-                arp_request_operation_next = 0;
-                arp_response_error_next = 1;
+                arp_request_operation_next = 1'b0;
+                arp_response_error_next = 1'b1;
             end
         end
     end
@@ -388,33 +388,19 @@ end
 
 always @(posedge clk) begin
     if (rst) begin
-        outgoing_frame_valid_reg <= 0;
-        outgoing_eth_dest_mac_reg <= 0;
-        outgoing_arp_oper_reg <= 0;
-        outgoing_arp_tha_reg <= 0;
-        outgoing_arp_tpa_reg <= 0;
-        cache_write_request_valid_reg <= 0;
-        cache_write_request_mac_reg <= 0;
-        cache_write_request_ip_reg <= 0;
-        arp_request_valid_reg <= 0;
-        arp_request_ip_reg <= 0;
-        arp_request_operation_reg <= 0;
-        arp_request_retry_cnt_reg <= 0;
-        arp_request_timer_reg <= 0;
-        arp_response_error_reg <= 0;
-        arp_response_broadcast_reg <= 0;
-        drop_incoming_frame_reg <= 0;
+        outgoing_frame_valid_reg <= 1'b0;
+        cache_write_request_valid_reg <= 1'b0;
+        arp_request_valid_reg <= 1'b0;
+        arp_request_operation_reg <= 1'b0;
+        arp_request_retry_cnt_reg <= 6'd0;
+        arp_request_timer_reg <= 36'd0;
+        arp_response_error_reg <= 1'b0;
+        arp_response_broadcast_reg <= 1'b0;
+        drop_incoming_frame_reg <= 1'b0;
     end else begin
         outgoing_frame_valid_reg <= outgoing_frame_valid_next;
-        outgoing_eth_dest_mac_reg <= outgoing_eth_dest_mac_next;
-        outgoing_arp_oper_reg <= outgoing_arp_oper_next;
-        outgoing_arp_tha_reg <= outgoing_arp_tha_next;
-        outgoing_arp_tpa_reg <= outgoing_arp_tpa_next;
         cache_write_request_valid_reg <= cache_write_request_valid_next;
-        cache_write_request_mac_reg <= cache_write_request_mac_next;
-        cache_write_request_ip_reg <= cache_write_request_ip_next;
         arp_request_valid_reg <= arp_request_valid_next;
-        arp_request_ip_reg <= arp_request_ip_next;
         arp_request_operation_reg <= arp_request_operation_next;
         arp_request_retry_cnt_reg <= arp_request_retry_cnt_next;
         arp_request_timer_reg <= arp_request_timer_next;
@@ -422,6 +408,14 @@ always @(posedge clk) begin
         arp_response_broadcast_reg <= arp_response_broadcast_next;
         drop_incoming_frame_reg <= drop_incoming_frame_next;
     end
+
+    outgoing_eth_dest_mac_reg <= outgoing_eth_dest_mac_next;
+    outgoing_arp_oper_reg <= outgoing_arp_oper_next;
+    outgoing_arp_tha_reg <= outgoing_arp_tha_next;
+    outgoing_arp_tpa_reg <= outgoing_arp_tpa_next;
+    cache_write_request_mac_reg <= cache_write_request_mac_next;
+    cache_write_request_ip_reg <= cache_write_request_ip_next;
+    arp_request_ip_reg <= arp_request_ip_next;
 end
 
 endmodule

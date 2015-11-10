@@ -67,31 +67,31 @@ reg [2:0] state_reg = STATE_IDLE, state_next;
 reg reset_crc;
 reg update_crc;
 
-reg [7:0] gmii_rxd_d0 = 0;
-reg [7:0] gmii_rxd_d1 = 0;
-reg [7:0] gmii_rxd_d2 = 0;
-reg [7:0] gmii_rxd_d3 = 0;
-reg [7:0] gmii_rxd_d4 = 0;
+reg [7:0] gmii_rxd_d0 = 8'd0;
+reg [7:0] gmii_rxd_d1 = 8'd0;
+reg [7:0] gmii_rxd_d2 = 8'd0;
+reg [7:0] gmii_rxd_d3 = 8'd0;
+reg [7:0] gmii_rxd_d4 = 8'd0;
 
-reg gmii_rx_dv_d0 = 0;
-reg gmii_rx_dv_d1 = 0;
-reg gmii_rx_dv_d2 = 0;
-reg gmii_rx_dv_d3 = 0;
-reg gmii_rx_dv_d4 = 0;
+reg gmii_rx_dv_d0 = 1'b0;
+reg gmii_rx_dv_d1 = 1'b0;
+reg gmii_rx_dv_d2 = 1'b0;
+reg gmii_rx_dv_d3 = 1'b0;
+reg gmii_rx_dv_d4 = 1'b0;
 
-reg gmii_rx_er_d0 = 0;
-reg gmii_rx_er_d1 = 0;
-reg gmii_rx_er_d2 = 0;
-reg gmii_rx_er_d3 = 0;
-reg gmii_rx_er_d4 = 0;
+reg gmii_rx_er_d0 = 1'b0;
+reg gmii_rx_er_d1 = 1'b0;
+reg gmii_rx_er_d2 = 1'b0;
+reg gmii_rx_er_d3 = 1'b0;
+reg gmii_rx_er_d4 = 1'b0;
 
-reg [7:0] output_axis_tdata_reg = 0, output_axis_tdata_next;
-reg output_axis_tvalid_reg = 0, output_axis_tvalid_next;
-reg output_axis_tlast_reg = 0, output_axis_tlast_next;
-reg output_axis_tuser_reg = 0, output_axis_tuser_next;
+reg [7:0] output_axis_tdata_reg = 8'd0, output_axis_tdata_next;
+reg output_axis_tvalid_reg = 1'b0, output_axis_tvalid_next;
+reg output_axis_tlast_reg = 1'b0, output_axis_tlast_next;
+reg output_axis_tuser_reg = 1'b0, output_axis_tuser_next;
 
-reg error_bad_frame_reg = 0, error_bad_frame_next;
-reg error_bad_fcs_reg = 0, error_bad_fcs_next;
+reg error_bad_frame_reg = 1'b0, error_bad_frame_next;
+reg error_bad_fcs_reg = 1'b0, error_bad_fcs_next;
 
 reg [31:0] crc_state = 32'hFFFFFFFF;
 wire [31:0] crc_next;
@@ -114,21 +114,21 @@ eth_crc_8_inst (
 always @* begin
     state_next = STATE_IDLE;
 
-    reset_crc = 0;
-    update_crc = 0;
+    reset_crc = 1'b0;
+    update_crc = 1'b0;
 
-    output_axis_tdata_next = 0;
-    output_axis_tvalid_next = 0;
-    output_axis_tlast_next = 0;
-    output_axis_tuser_next = 0;
+    output_axis_tdata_next = 8'd0;
+    output_axis_tvalid_next = 1'b0;
+    output_axis_tlast_next = 1'b0;
+    output_axis_tuser_next = 1'b0;
 
-    error_bad_frame_next = 0;
-    error_bad_fcs_next = 0;
+    error_bad_frame_next = 1'b0;
+    error_bad_fcs_next = 1'b0;
 
     case (state_reg)
         STATE_IDLE: begin
             // idle state - wait for packet
-            reset_crc = 1;
+            reset_crc = 1'b1;
 
             if (gmii_rx_dv_d4 && ~gmii_rx_er_d4 && gmii_rxd_d4 == 8'hD5) begin
                 state_next = STATE_PAYLOAD;
@@ -138,32 +138,32 @@ always @* begin
         end
         STATE_PAYLOAD: begin
             // read payload
-            update_crc = 1;
+            update_crc = 1'b1;
 
             output_axis_tdata_next = gmii_rxd_d4;
-            output_axis_tvalid_next = 1;
+            output_axis_tvalid_next = 1'b1;
 
             if (gmii_rx_dv_d4 & gmii_rx_er_d4) begin
                 // error
-                output_axis_tlast_next = 1;
-                output_axis_tuser_next = 1;
-                error_bad_frame_next = 1;
+                output_axis_tlast_next = 1'b1;
+                output_axis_tuser_next = 1'b1;
+                error_bad_frame_next = 1'b1;
                 state_next = STATE_WAIT_LAST;
             end else if (~gmii_rx_dv) begin
                 // end of packet
-                output_axis_tlast_next = 1;
+                output_axis_tlast_next = 1'b1;
                 if (gmii_rx_er_d0 | gmii_rx_er_d1 | gmii_rx_er_d2 | gmii_rx_er_d3) begin
                     // error received in FCS bytes
-                    output_axis_tuser_next = 1;
-                    error_bad_frame_next = 1;
+                    output_axis_tuser_next = 1'b1;
+                    error_bad_frame_next = 1'b1;
                 end else if ({gmii_rxd_d0, gmii_rxd_d1, gmii_rxd_d2, gmii_rxd_d3} == ~crc_next) begin
                     // FCS good
-                    output_axis_tuser_next = 0;
+                    output_axis_tuser_next = 1'b0;
                 end else begin
                     // FCS bad
-                    output_axis_tuser_next = 1;
-                    error_bad_frame_next = 1;
-                    error_bad_fcs_next = 1;
+                    output_axis_tuser_next = 1'b1;
+                    error_bad_frame_next = 1'b1;
+                    error_bad_fcs_next = 1'b1;
                 end
                 state_next = STATE_IDLE;
             end else begin
@@ -186,22 +186,22 @@ always @(posedge clk) begin
     if (rst) begin
         state_reg <= STATE_IDLE;
 
-        output_axis_tdata_reg <= 0;
-        output_axis_tvalid_reg <= 0;
-        output_axis_tlast_reg <= 0;
-        output_axis_tuser_reg <= 0;
+        output_axis_tvalid_reg <= 1'b0;
 
-        error_bad_frame_reg <= 0;
-        error_bad_fcs_reg <= 0;
+        error_bad_frame_reg <= 1'b0;
+        error_bad_fcs_reg <= 1'b0;
 
         crc_state <= 32'hFFFFFFFF;
+
+        gmii_rx_dv_d0 <= 1'b0;
+        gmii_rx_dv_d1 <= 1'b0;
+        gmii_rx_dv_d2 <= 1'b0;
+        gmii_rx_dv_d3 <= 1'b0;
+        gmii_rx_dv_d4 <= 1'b0;
     end else begin
         state_reg <= state_next;
 
-        output_axis_tdata_reg <= output_axis_tdata_next;
         output_axis_tvalid_reg <= output_axis_tvalid_next;
-        output_axis_tlast_reg <= output_axis_tlast_next;
-        output_axis_tuser_reg <= output_axis_tuser_next;
 
         error_bad_frame_reg <= error_bad_frame_next;
         error_bad_fcs_reg <= error_bad_fcs_next;
@@ -212,7 +212,17 @@ always @(posedge clk) begin
         end else if (update_crc) begin
             crc_state <= crc_next;
         end
+
+        gmii_rx_dv_d0 <= gmii_rx_dv;
+        gmii_rx_dv_d1 <= gmii_rx_dv_d0;
+        gmii_rx_dv_d2 <= gmii_rx_dv_d1;
+        gmii_rx_dv_d3 <= gmii_rx_dv_d2;
+        gmii_rx_dv_d4 <= gmii_rx_dv_d3;
     end
+
+    output_axis_tdata_reg <= output_axis_tdata_next;
+    output_axis_tlast_reg <= output_axis_tlast_next;
+    output_axis_tuser_reg <= output_axis_tuser_next;
 
     // delay input
     gmii_rxd_d0 <= gmii_rxd;
@@ -220,12 +230,6 @@ always @(posedge clk) begin
     gmii_rxd_d2 <= gmii_rxd_d1;
     gmii_rxd_d3 <= gmii_rxd_d2;
     gmii_rxd_d4 <= gmii_rxd_d3;
-
-    gmii_rx_dv_d0 <= gmii_rx_dv;
-    gmii_rx_dv_d1 <= gmii_rx_dv_d0;
-    gmii_rx_dv_d2 <= gmii_rx_dv_d1;
-    gmii_rx_dv_d3 <= gmii_rx_dv_d2;
-    gmii_rx_dv_d4 <= gmii_rx_dv_d3;
 
     gmii_rx_er_d0 <= gmii_rx_er;
     gmii_rx_er_d1 <= gmii_rx_er_d0;

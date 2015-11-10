@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014 Alex Forencich
+Copyright (c) 2014-2015 Alex Forencich
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -197,15 +197,15 @@ wire input_select_ip = (input_eth_type == 16'h0800);
 wire input_select_arp = (input_eth_type == 16'h0806);
 wire input_select_none = ~(input_select_ip | input_select_arp);
 
-reg input_select_ip_reg = 0;
-reg input_select_arp_reg = 0;
-reg input_select_none_reg = 0;
+reg input_select_ip_reg = 1'b0;
+reg input_select_arp_reg = 1'b0;
+reg input_select_none_reg = 1'b0;
 
 always @(posedge clk) begin
     if (rst) begin
-        input_select_ip_reg <= 0;
-        input_select_arp_reg <= 0;
-        input_select_none_reg <= 0;
+        input_select_ip_reg <= 1'b0;
+        input_select_arp_reg <= 1'b0;
+        input_select_none_reg <= 1'b0;
     end else begin
         if (input_eth_payload_tvalid) begin
             if ((~input_select_ip_reg & ~input_select_arp_reg & ~input_select_none_reg) |
@@ -215,9 +215,9 @@ always @(posedge clk) begin
                 input_select_none_reg <= input_select_none;
             end
         end else begin
-            input_select_ip_reg <= 0;
-            input_select_arp_reg <= 0;
-            input_select_none_reg <= 0;
+            input_select_ip_reg <= 1'b0;
+            input_select_arp_reg <= 1'b0;
+            input_select_none_reg <= 1'b0;
         end
     end
 end

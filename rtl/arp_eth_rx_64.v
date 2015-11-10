@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014 Alex Forencich
+Copyright (c) 2014-2015 Alex Forencich
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -113,28 +113,28 @@ reg store_arp_hdr_word_1;
 reg store_arp_hdr_word_2;
 reg store_arp_hdr_word_3;
 
-reg [7:0] frame_ptr_reg = 0, frame_ptr_next;
+reg [7:0] frame_ptr_reg = 8'd0, frame_ptr_next;
 
-reg input_eth_hdr_ready_reg = 0, input_eth_hdr_ready_next;
-reg input_eth_payload_tready_reg = 0, input_eth_payload_tready_next;
+reg input_eth_hdr_ready_reg = 1'b0, input_eth_hdr_ready_next;
+reg input_eth_payload_tready_reg = 1'b0, input_eth_payload_tready_next;
 
-reg output_frame_valid_reg = 0, output_frame_valid_next;
-reg [47:0] output_eth_dest_mac_reg = 0;
-reg [47:0] output_eth_src_mac_reg = 0;
-reg [15:0] output_eth_type_reg = 0;
-reg [15:0] output_arp_htype_reg = 0;
-reg [15:0] output_arp_ptype_reg = 0;
-reg [7:0]  output_arp_hlen_reg = 0;
-reg [7:0]  output_arp_plen_reg = 0;
-reg [15:0] output_arp_oper_reg = 0;
-reg [47:0] output_arp_sha_reg = 0;
-reg [31:0] output_arp_spa_reg = 0;
-reg [47:0] output_arp_tha_reg = 0;
-reg [31:0] output_arp_tpa_reg = 0;
+reg output_frame_valid_reg = 1'b0, output_frame_valid_next;
+reg [47:0] output_eth_dest_mac_reg = 48'd0;
+reg [47:0] output_eth_src_mac_reg = 48'd0;
+reg [15:0] output_eth_type_reg = 16'd0;
+reg [15:0] output_arp_htype_reg = 16'd0;
+reg [15:0] output_arp_ptype_reg = 16'd0;
+reg [7:0]  output_arp_hlen_reg = 8'd0;
+reg [7:0]  output_arp_plen_reg = 8'd0;
+reg [15:0] output_arp_oper_reg = 16'd0;
+reg [47:0] output_arp_sha_reg = 48'd0;
+reg [31:0] output_arp_spa_reg = 32'd0;
+reg [47:0] output_arp_tha_reg = 48'd0;
+reg [31:0] output_arp_tpa_reg = 32'd0;
 
-reg busy_reg = 0;
-reg error_header_early_termination_reg = 0, error_header_early_termination_next;
-reg error_invalid_header_reg = 0, error_invalid_header_next;
+reg busy_reg = 1'b0;
+reg error_header_early_termination_reg = 1'b0, error_header_early_termination_next;
+reg error_invalid_header_reg = 1'b0, error_invalid_header_next;
 
 assign input_eth_hdr_ready = input_eth_hdr_ready_reg;
 assign input_eth_payload_tready = input_eth_payload_tready_reg;
@@ -160,32 +160,32 @@ assign error_invalid_header = error_invalid_header_reg;
 always @* begin
     state_next = STATE_IDLE;
 
-    input_eth_hdr_ready_next = 0;
-    input_eth_payload_tready_next = 0;
+    input_eth_hdr_ready_next = 1'b0;
+    input_eth_payload_tready_next = 1'b0;
 
-    store_eth_hdr = 0;
-    store_arp_hdr_word_0 = 0;
-    store_arp_hdr_word_1 = 0;
-    store_arp_hdr_word_2 = 0;
-    store_arp_hdr_word_3 = 0;
+    store_eth_hdr = 1'b0;
+    store_arp_hdr_word_0 = 1'b0;
+    store_arp_hdr_word_1 = 1'b0;
+    store_arp_hdr_word_2 = 1'b0;
+    store_arp_hdr_word_3 = 1'b0;
 
     frame_ptr_next = frame_ptr_reg;
 
     output_frame_valid_next = output_frame_valid_reg & ~output_frame_ready;
 
-    error_header_early_termination_next = 0;
-    error_invalid_header_next = 0;
+    error_header_early_termination_next = 1'b0;
+    error_invalid_header_next = 1'b0;
 
     case (state_reg)
         STATE_IDLE: begin
             // idle state - wait for data
-            frame_ptr_next = 0;
+            frame_ptr_next = 8'd0;
             input_eth_hdr_ready_next = ~output_frame_valid_reg;
 
             if (input_eth_hdr_ready & input_eth_hdr_valid) begin
-                input_eth_hdr_ready_next = 0;
-                input_eth_payload_tready_next = 1;
-                store_eth_hdr = 1;
+                input_eth_hdr_ready_next = 1'b0;
+                input_eth_payload_tready_next = 1'b1;
+                store_eth_hdr = 1'b1;
                 state_next = STATE_READ_HEADER;
             end else begin
                 state_next = STATE_IDLE;
@@ -193,31 +193,31 @@ always @* begin
         end
         STATE_READ_HEADER: begin
             // read header state
-            input_eth_payload_tready_next = 1;
+            input_eth_payload_tready_next = 1'b1;
 
             if (input_eth_payload_tvalid) begin
                 // word transfer in - store it
-                frame_ptr_next = frame_ptr_reg+1;
+                frame_ptr_next = frame_ptr_reg + 8'd1;
                 state_next = STATE_READ_HEADER;
                 case (frame_ptr_reg)
-                    8'h00: store_arp_hdr_word_0 = 1;
-                    8'h01: store_arp_hdr_word_1 = 1;
-                    8'h02: store_arp_hdr_word_2 = 1;
+                    8'h00: store_arp_hdr_word_0 = 1'b1;
+                    8'h01: store_arp_hdr_word_1 = 1'b1;
+                    8'h02: store_arp_hdr_word_2 = 1'b1;
                     8'h03: begin
-                        store_arp_hdr_word_3 = 1;
+                        store_arp_hdr_word_3 = 1'b1;
                         state_next = STATE_WAIT_LAST;
                     end
                 endcase
                 if (input_eth_payload_tlast) begin
                     if (frame_ptr_reg != 8'h03 | (input_eth_payload_tkeep & 8'h0F) != 8'h0F) begin
-                        error_header_early_termination_next = 1;
-                    end else if (output_arp_hlen != 6 || output_arp_plen != 4) begin
-                        error_invalid_header_next = 1;
+                        error_header_early_termination_next = 1'b1;
+                    end else if (output_arp_hlen != 4'd6 || output_arp_plen != 4'd4) begin
+                        error_invalid_header_next = 1'b1;
                     end else begin
                         output_frame_valid_next = ~input_eth_payload_tuser;
                     end
                     input_eth_hdr_ready_next = ~output_frame_valid_reg;
-                    input_eth_payload_tready_next = 0;
+                    input_eth_payload_tready_next = 1'b0;
                     state_next = STATE_IDLE;
                 end
             end else begin
@@ -226,19 +226,19 @@ always @* begin
         end
         STATE_WAIT_LAST: begin
             // wait for end of frame; read and discard
-            input_eth_payload_tready_next = 1;
+            input_eth_payload_tready_next = 1'b1;
 
             if (input_eth_payload_tvalid) begin
                 if (input_eth_payload_tlast) begin
-                    if (output_arp_hlen != 6 || output_arp_plen != 4) begin
+                    if (output_arp_hlen != 4'd6 || output_arp_plen != 4'd4) begin
                         // lengths not valid
-                        error_invalid_header_next = 1;
+                        error_invalid_header_next = 1'b1;
                     end else begin
                         // otherwise, transfer tuser
                         output_frame_valid_next = ~input_eth_payload_tuser;
                     end
                     input_eth_hdr_ready_next = ~output_frame_valid_reg;
-                    input_eth_payload_tready_next = 0;
+                    input_eth_payload_tready_next = 1'b0;
                     state_next = STATE_IDLE;
                 end else begin
                     state_next = STATE_WAIT_LAST;
@@ -254,15 +254,12 @@ end
 always @(posedge clk) begin
     if (rst) begin
         state_reg <= STATE_IDLE;
-        frame_ptr_reg <= 0;
-        input_eth_payload_tready_reg <= 0;
-        output_frame_valid_reg <= 0;
-        output_eth_dest_mac_reg <= 0;
-        output_eth_src_mac_reg <= 0;
-        output_eth_type_reg <= 0;
-        busy_reg <= 0;
-        error_header_early_termination_reg <= 0;
-        error_invalid_header_reg <= 0;
+        frame_ptr_reg <= 8'd0;
+        input_eth_payload_tready_reg <= 1'b0;
+        output_frame_valid_reg <= 1'b0;
+        busy_reg <= 1'b0;
+        error_header_early_termination_reg <= 1'b0;
+        error_invalid_header_reg <= 1'b0;
     end else begin
         state_reg <= state_next;
 
@@ -277,50 +274,50 @@ always @(posedge clk) begin
         error_invalid_header_reg <= error_invalid_header_next;
 
         busy_reg <= state_next != STATE_IDLE;
+    end
 
-        // datapath
-        if (store_eth_hdr) begin
-            output_eth_dest_mac_reg <= input_eth_dest_mac;
-            output_eth_src_mac_reg <= input_eth_src_mac;
-            output_eth_type_reg <= input_eth_type;
-        end
+    // datapath
+    if (store_eth_hdr) begin
+        output_eth_dest_mac_reg <= input_eth_dest_mac;
+        output_eth_src_mac_reg <= input_eth_src_mac;
+        output_eth_type_reg <= input_eth_type;
+    end
 
-        if (store_arp_hdr_word_0) begin
-            output_arp_htype_reg[15: 8] <= input_eth_payload_tdata[ 7: 0];
-            output_arp_htype_reg[ 7: 0] <= input_eth_payload_tdata[15: 8];
-            output_arp_ptype_reg[15: 8] <= input_eth_payload_tdata[23:16];
-            output_arp_ptype_reg[ 7: 0] <= input_eth_payload_tdata[31:24];
-            output_arp_hlen_reg <= input_eth_payload_tdata[39:32];
-            output_arp_plen_reg <= input_eth_payload_tdata[47:40];
-            output_arp_oper_reg[15: 8] <= input_eth_payload_tdata[55:48];
-            output_arp_oper_reg[ 7: 0] <= input_eth_payload_tdata[63:56];
-        end
-        if (store_arp_hdr_word_1) begin
-            output_arp_sha_reg[47:40] <= input_eth_payload_tdata[ 7: 0];
-            output_arp_sha_reg[39:32] <= input_eth_payload_tdata[15: 8];
-            output_arp_sha_reg[31:24] <= input_eth_payload_tdata[23:16];
-            output_arp_sha_reg[23:16] <= input_eth_payload_tdata[31:24];
-            output_arp_sha_reg[15: 8] <= input_eth_payload_tdata[39:32];
-            output_arp_sha_reg[ 7: 0] <= input_eth_payload_tdata[47:40];
-            output_arp_spa_reg[31:24] <= input_eth_payload_tdata[55:48];
-            output_arp_spa_reg[23:16] <= input_eth_payload_tdata[63:56];
-        end
-        if (store_arp_hdr_word_2) begin
-            output_arp_spa_reg[15: 8] <= input_eth_payload_tdata[ 7: 0];
-            output_arp_spa_reg[ 7: 0] <= input_eth_payload_tdata[15: 8];
-            output_arp_tha_reg[47:40] <= input_eth_payload_tdata[23:16];
-            output_arp_tha_reg[39:32] <= input_eth_payload_tdata[31:24];
-            output_arp_tha_reg[31:24] <= input_eth_payload_tdata[39:32];
-            output_arp_tha_reg[23:16] <= input_eth_payload_tdata[47:40];
-            output_arp_tha_reg[15: 8] <= input_eth_payload_tdata[55:48];
-            output_arp_tha_reg[ 7: 0] <= input_eth_payload_tdata[63:56];
-        end
-        if (store_arp_hdr_word_3) begin
-            output_arp_tpa_reg[31:24] <= input_eth_payload_tdata[ 7: 0];
-            output_arp_tpa_reg[23:16] <= input_eth_payload_tdata[15: 8];
-            output_arp_tpa_reg[15: 8] <= input_eth_payload_tdata[23:16];
-            output_arp_tpa_reg[ 7: 0] <= input_eth_payload_tdata[31:24];
-        end
+    if (store_arp_hdr_word_0) begin
+        output_arp_htype_reg[15: 8] <= input_eth_payload_tdata[ 7: 0];
+        output_arp_htype_reg[ 7: 0] <= input_eth_payload_tdata[15: 8];
+        output_arp_ptype_reg[15: 8] <= input_eth_payload_tdata[23:16];
+        output_arp_ptype_reg[ 7: 0] <= input_eth_payload_tdata[31:24];
+        output_arp_hlen_reg <= input_eth_payload_tdata[39:32];
+        output_arp_plen_reg <= input_eth_payload_tdata[47:40];
+        output_arp_oper_reg[15: 8] <= input_eth_payload_tdata[55:48];
+        output_arp_oper_reg[ 7: 0] <= input_eth_payload_tdata[63:56];
+    end
+    if (store_arp_hdr_word_1) begin
+        output_arp_sha_reg[47:40] <= input_eth_payload_tdata[ 7: 0];
+        output_arp_sha_reg[39:32] <= input_eth_payload_tdata[15: 8];
+        output_arp_sha_reg[31:24] <= input_eth_payload_tdata[23:16];
+        output_arp_sha_reg[23:16] <= input_eth_payload_tdata[31:24];
+        output_arp_sha_reg[15: 8] <= input_eth_payload_tdata[39:32];
+        output_arp_sha_reg[ 7: 0] <= input_eth_payload_tdata[47:40];
+        output_arp_spa_reg[31:24] <= input_eth_payload_tdata[55:48];
+        output_arp_spa_reg[23:16] <= input_eth_payload_tdata[63:56];
+    end
+    if (store_arp_hdr_word_2) begin
+        output_arp_spa_reg[15: 8] <= input_eth_payload_tdata[ 7: 0];
+        output_arp_spa_reg[ 7: 0] <= input_eth_payload_tdata[15: 8];
+        output_arp_tha_reg[47:40] <= input_eth_payload_tdata[23:16];
+        output_arp_tha_reg[39:32] <= input_eth_payload_tdata[31:24];
+        output_arp_tha_reg[31:24] <= input_eth_payload_tdata[39:32];
+        output_arp_tha_reg[23:16] <= input_eth_payload_tdata[47:40];
+        output_arp_tha_reg[15: 8] <= input_eth_payload_tdata[55:48];
+        output_arp_tha_reg[ 7: 0] <= input_eth_payload_tdata[63:56];
+    end
+    if (store_arp_hdr_word_3) begin
+        output_arp_tpa_reg[31:24] <= input_eth_payload_tdata[ 7: 0];
+        output_arp_tpa_reg[23:16] <= input_eth_payload_tdata[15: 8];
+        output_arp_tpa_reg[15: 8] <= input_eth_payload_tdata[23:16];
+        output_arp_tpa_reg[ 7: 0] <= input_eth_payload_tdata[31:24];
     end
 end
 

@@ -102,11 +102,11 @@ if (TARGET_XILINX) begin
         .Q(phy_gmii_tx_clk),
         .C0(phy_gmii_tx_clk_int),
         .C1(~phy_gmii_tx_clk_int),
-        .CE(1),
-        .D0(0),
-        .D1(1),
-        .R(0),
-        .S(0)
+        .CE(1'b1),
+        .D0(1'b0),
+        .D1(1'b1),
+        .R(1'b0),
+        .S(1'b0)
     );
 
 end else begin
@@ -156,11 +156,11 @@ end
 
 // register RX data from PHY to MAC
 (* IOB = "TRUE" *)
-reg [7:0] gmii_rxd_reg = 0;
+reg [7:0] gmii_rxd_reg = 8'd0;
 (* IOB = "TRUE" *)
-reg gmii_rx_dv_reg = 0;
+reg gmii_rx_dv_reg = 1'b0;
 (* IOB = "TRUE" *)
-reg gmii_rx_er_reg = 0;
+reg gmii_rx_er_reg = 1'b0;
 
 always @(posedge phy_gmii_rx_clk_io) begin
     gmii_rxd_reg <= phy_gmii_rxd;
@@ -174,11 +174,11 @@ assign mac_gmii_rx_er = gmii_rx_er_reg;
 
 // register TX data from MAC to PHY
 (* IOB = "TRUE" *)
-reg [7:0] gmii_txd_reg = 0;
+reg [7:0] gmii_txd_reg = 8'd0;
 (* IOB = "TRUE" *)
-reg gmii_tx_en_reg = 0;
+reg gmii_tx_en_reg = 1'b0;
 (* IOB = "TRUE" *)
-reg gmii_tx_er_reg = 0;
+reg gmii_tx_er_reg = 1'b0;
 
 always @(posedge phy_gmii_tx_clk_int) begin
     gmii_txd_reg <= mac_gmii_txd;

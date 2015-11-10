@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014 Alex Forencich
+Copyright (c) 2014-2015 Alex Forencich
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -277,13 +277,13 @@ wire udp_tx_ip_payload_tready;
 wire input_select_udp = (ip_rx_ip_protocol == 8'h11);
 wire input_select_ip = ~input_select_udp;
 
-reg input_select_udp_reg = 0;
-reg input_select_ip_reg = 0;
+reg input_select_udp_reg = 1'b0;
+reg input_select_ip_reg = 1'b0;
 
 always @(posedge clk) begin
     if (rst) begin
-        input_select_udp_reg <= 0;
-        input_select_ip_reg <= 0;
+        input_select_udp_reg <= 1'b0;
+        input_select_ip_reg <= 1'b0;
     end else begin
         if (ip_rx_ip_payload_tvalid) begin
             if ((~input_select_udp_reg & ~input_select_ip_reg) |
@@ -292,8 +292,8 @@ always @(posedge clk) begin
                 input_select_ip_reg <= input_select_ip;
             end
         end else begin
-            input_select_udp_reg <= 0;
-            input_select_ip_reg <= 0;
+            input_select_udp_reg <= 1'b0;
+            input_select_ip_reg <= 1'b0;
         end
     end
 end
@@ -359,20 +359,20 @@ ip_arb_mux_2_inst (
     // IP frame input from UDP module
     .input_0_ip_hdr_valid(udp_tx_ip_hdr_valid),
     .input_0_ip_hdr_ready(udp_tx_ip_hdr_ready),
-    .input_0_eth_dest_mac(0),
-    .input_0_eth_src_mac(0),
-    .input_0_eth_type(0),
-    .input_0_ip_version(0),
-    .input_0_ip_ihl(0),
+    .input_0_eth_dest_mac(48'd0),
+    .input_0_eth_src_mac(48'd0),
+    .input_0_eth_type(16'd0),
+    .input_0_ip_version(4'd0),
+    .input_0_ip_ihl(4'd0),
     .input_0_ip_dscp(udp_tx_ip_dscp),
     .input_0_ip_ecn(udp_tx_ip_ecn),
     .input_0_ip_length(udp_tx_ip_length),
-    .input_0_ip_identification(0),
-    .input_0_ip_flags(0),
-    .input_0_ip_fragment_offset(0),
+    .input_0_ip_identification(16'd0),
+    .input_0_ip_flags(3'd0),
+    .input_0_ip_fragment_offset(13'd0),
     .input_0_ip_ttl(udp_tx_ip_ttl),
     .input_0_ip_protocol(udp_tx_ip_protocol),
-    .input_0_ip_header_checksum(0),
+    .input_0_ip_header_checksum(16'd0),
     .input_0_ip_source_ip(udp_tx_ip_source_ip),
     .input_0_ip_dest_ip(udp_tx_ip_dest_ip),
     .input_0_ip_payload_tdata(udp_tx_ip_payload_tdata),
@@ -383,20 +383,20 @@ ip_arb_mux_2_inst (
     // External IP frame input
     .input_1_ip_hdr_valid(input_ip_hdr_valid),
     .input_1_ip_hdr_ready(input_ip_hdr_ready),
-    .input_1_eth_dest_mac(0),
-    .input_1_eth_src_mac(0),
-    .input_1_eth_type(0),
-    .input_1_ip_version(0),
-    .input_1_ip_ihl(0),
+    .input_1_eth_dest_mac(48'd0),
+    .input_1_eth_src_mac(48'd0),
+    .input_1_eth_type(16'd0),
+    .input_1_ip_version(4'd0),
+    .input_1_ip_ihl(4'd0),
     .input_1_ip_dscp(input_ip_dscp),
     .input_1_ip_ecn(input_ip_ecn),
     .input_1_ip_length(input_ip_length),
-    .input_1_ip_identification(0),
-    .input_1_ip_flags(0),
-    .input_1_ip_fragment_offset(0),
+    .input_1_ip_identification(16'd0),
+    .input_1_ip_flags(3'd0),
+    .input_1_ip_fragment_offset(13'd0),
     .input_1_ip_ttl(input_ip_ttl),
     .input_1_ip_protocol(input_ip_protocol),
-    .input_1_ip_header_checksum(0),
+    .input_1_ip_header_checksum(16'd0),
     .input_1_ip_source_ip(input_ip_source_ip),
     .input_1_ip_dest_ip(input_ip_dest_ip),
     .input_1_ip_payload_tdata(input_ip_payload_tdata),
@@ -582,18 +582,18 @@ udp_inst (
     // UDP frame input
     .input_udp_hdr_valid(input_udp_hdr_valid),
     .input_udp_hdr_ready(input_udp_hdr_ready),
-    .input_udp_eth_dest_mac(0),
-    .input_udp_eth_src_mac(0),
-    .input_udp_eth_type(0),
-    .input_udp_ip_version(0),
-    .input_udp_ip_ihl(0),
+    .input_udp_eth_dest_mac(48'd0),
+    .input_udp_eth_src_mac(48'd0),
+    .input_udp_eth_type(16'd0),
+    .input_udp_ip_version(4'd0),
+    .input_udp_ip_ihl(4'd0),
     .input_udp_ip_dscp(input_udp_ip_dscp),
     .input_udp_ip_ecn(input_udp_ip_ecn),
-    .input_udp_ip_identification(0),
-    .input_udp_ip_flags(0),
-    .input_udp_ip_fragment_offset(0),
+    .input_udp_ip_identification(16'd0),
+    .input_udp_ip_flags(3'd0),
+    .input_udp_ip_fragment_offset(13'd0),
     .input_udp_ip_ttl(input_udp_ip_ttl),
-    .input_udp_ip_header_checksum(0),
+    .input_udp_ip_header_checksum(16'd0),
     .input_udp_ip_source_ip(input_udp_ip_source_ip),
     .input_udp_ip_dest_ip(input_udp_ip_dest_ip),
     .input_udp_source_port(input_udp_source_port),

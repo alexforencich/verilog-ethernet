@@ -66,8 +66,8 @@ localparam [2:0]
     STATE_PAYLOAD = 3'd2,
     STATE_PAD = 3'd3,
     STATE_FCS = 3'd4,
-    STATE_IFG = 3'd5,
-    STATE_WAIT_END = 3'd6;
+    STATE_WAIT_END = 3'd5,
+    STATE_IFG = 3'd6;
 
 reg [2:0] state_reg = STATE_IDLE, state_next;
 
@@ -75,13 +75,13 @@ reg [2:0] state_reg = STATE_IDLE, state_next;
 reg reset_crc;
 reg update_crc;
 
-reg [7:0] frame_ptr_reg = 0, frame_ptr_next;
+reg [15:0] frame_ptr_reg = 16'd0, frame_ptr_next;
 
-reg [7:0] gmii_txd_reg = 0, gmii_txd_next;
-reg gmii_tx_en_reg = 0, gmii_tx_en_next;
-reg gmii_tx_er_reg = 0, gmii_tx_er_next;
+reg [7:0] gmii_txd_reg = 8'd0, gmii_txd_next;
+reg gmii_tx_en_reg = 1'b0, gmii_tx_en_next;
+reg gmii_tx_er_reg = 1'b0, gmii_tx_er_next;
 
-reg input_axis_tready_reg = 0, input_axis_tready_next;
+reg input_axis_tready_reg = 1'b0, input_axis_tready_next;
 
 reg [31:0] crc_state = 32'hFFFFFFFF;
 wire [31:0] crc_next;
@@ -102,26 +102,26 @@ eth_crc_8_inst (
 always @* begin
     state_next = STATE_IDLE;
 
-    reset_crc = 0;
-    update_crc = 0;
+    reset_crc = 1'b0;
+    update_crc = 1'b0;
 
     frame_ptr_next = frame_ptr_reg;
 
-    input_axis_tready_next = 0;
+    input_axis_tready_next = 1'b0;
 
-    gmii_txd_next = 0;
-    gmii_tx_en_next = 0;
-    gmii_tx_er_next = 0;
+    gmii_txd_next = 8'd0;
+    gmii_tx_en_next = 1'b0;
+    gmii_tx_er_next = 1'b0;
 
     case (state_reg)
         STATE_IDLE: begin
             // idle state - wait for packet
-            reset_crc = 1;
+            reset_crc = 1'b1;
 
             if (input_axis_tvalid) begin
-                frame_ptr_next = 1;
+                frame_ptr_next = 16'd1;
                 gmii_txd_next = 8'h55; // Preamble
-                gmii_tx_en_next = 1;
+                gmii_tx_en_next = 1'b1;
                 state_next = STATE_PREAMBLE;
             end else begin
                 state_next = STATE_IDLE;
@@ -129,16 +129,16 @@ always @* begin
         end
         STATE_PREAMBLE: begin
             // send preamble
-            reset_crc = 1;
-            frame_ptr_next = frame_ptr_reg + 1;
+            reset_crc = 1'b1;
+            frame_ptr_next = frame_ptr_reg + 16'd1;
 
             gmii_txd_next = 8'h55; // Preamble
-            gmii_tx_en_next = 1;
+            gmii_tx_en_next = 1'b1;
 
-            if (frame_ptr_reg == 7) begin
+            if (frame_ptr_reg == 16'd7) begin
                 // end of preamble; start payload
-                frame_ptr_next = 0;
-                input_axis_tready_next = 1;
+                frame_ptr_next = 16'd0;
+                input_axis_tready_next = 1'b1;
                 gmii_txd_next = 8'hD5; // SFD
                 state_next = STATE_PAYLOAD;
             end else begin
@@ -147,26 +147,26 @@ always @* begin
         end
         STATE_PAYLOAD: begin
             // send payload
-            update_crc = 1;
-            input_axis_tready_next = 1;
+            update_crc = 1'b1;
+            input_axis_tready_next = 1'b1;
 
-            frame_ptr_next = frame_ptr_reg + 1;
+            frame_ptr_next = frame_ptr_reg + 16'd1;
 
             gmii_txd_next = input_axis_tdata;
-            gmii_tx_en_next = 1;
+            gmii_tx_en_next = 1'b1;
 
             if (input_axis_tvalid) begin
                 if (input_axis_tlast) begin
-                    input_axis_tready_next = 0;
+                    input_axis_tready_next = 1'b0;
                     if (input_axis_tuser) begin
-                        gmii_tx_er_next = 1;
-                        frame_ptr_next = 0;
+                        gmii_tx_er_next = 1'b1;
+                        frame_ptr_next = 1'b0;
                         state_next = STATE_IFG;
                     end else begin
                         if (ENABLE_PADDING && frame_ptr_reg < MIN_FRAME_LENGTH-5) begin
                             state_next = STATE_PAD;
                         end else begin
-                            frame_ptr_next = 0;
+                            frame_ptr_next = 16'd0;
                             state_next = STATE_FCS;
                         end
                     end
@@ -175,29 +175,29 @@ always @* begin
                 end
             end else begin
                 // tvalid deassert, fail frame
-                gmii_tx_er_next = 1;
-                frame_ptr_next = 0;
+                gmii_tx_er_next = 1'b1;
+                frame_ptr_next = 16'd0;
                 state_next = STATE_WAIT_END;
             end
         end
         STATE_PAD: begin
             // send padding
-            update_crc = 1;
-            frame_ptr_next = frame_ptr_reg + 1;
+            update_crc = 1'b1;
+            frame_ptr_next = frame_ptr_reg + 16'd1;
 
-            gmii_txd_next = 0;
-            gmii_tx_en_next = 1;
+            gmii_txd_next = 8'd0;
+            gmii_tx_en_next = 1'b1;
 
             if (frame_ptr_reg < MIN_FRAME_LENGTH-5) begin
                 state_next = STATE_PAD;
             end else begin
-                frame_ptr_next = 0;
+                frame_ptr_next = 16'd0;
                 state_next = STATE_FCS;
             end
         end
         STATE_FCS: begin
             // send FCS
-            frame_ptr_next = frame_ptr_reg + 1;
+            frame_ptr_next = frame_ptr_reg + 16'd1;
 
             case (frame_ptr_reg)
                 2'd0: gmii_txd_next = ~crc_state[7:0];
@@ -205,30 +205,19 @@ always @* begin
                 2'd2: gmii_txd_next = ~crc_state[23:16];
                 2'd3: gmii_txd_next = ~crc_state[31:24];
             endcase
-            gmii_tx_en_next = 1;
+            gmii_tx_en_next = 1'b1;
 
             if (frame_ptr_reg < 3) begin
                 state_next = STATE_FCS;
             end else begin
-                frame_ptr_next = 0;
+                frame_ptr_next = 16'd0;
                 state_next = STATE_IFG;
-            end
-        end
-        STATE_IFG: begin
-            // send IFG
-            frame_ptr_next = frame_ptr_reg + 1;
-            reset_crc = 1;
-
-            if (frame_ptr_reg < ifg_delay-1) begin
-                state_next = STATE_IFG;
-            end else begin
-                state_next = STATE_IDLE;
             end
         end
         STATE_WAIT_END: begin
             // wait for end of frame
-            frame_ptr_next = frame_ptr_reg + 1;
-            reset_crc = 1;
+            frame_ptr_next = frame_ptr_reg + 16'd1;
+            reset_crc = 1'b1;
 
             if (input_axis_tvalid) begin
                 if (input_axis_tlast) begin
@@ -244,6 +233,17 @@ always @* begin
                 state_next = STATE_WAIT_END;
             end
         end
+        STATE_IFG: begin
+            // send IFG
+            frame_ptr_next = frame_ptr_reg + 16'd1;
+            reset_crc = 1'b1;
+
+            if (frame_ptr_reg < ifg_delay-1) begin
+                state_next = STATE_IFG;
+            end else begin
+                state_next = STATE_IDLE;
+            end
+        end
     endcase
 end
 
@@ -251,13 +251,13 @@ always @(posedge clk) begin
     if (rst) begin
         state_reg <= STATE_IDLE;
 
-        frame_ptr_reg <= 0;
+        frame_ptr_reg <= 16'd0;
 
-        input_axis_tready_reg <= 0;
+        input_axis_tready_reg <= 1'b0;
 
-        gmii_txd_reg <= 0;
-        gmii_tx_en_reg <= 0;
-        gmii_tx_er_reg <= 0;
+        gmii_txd_reg <= 8'd0;
+        gmii_tx_en_reg <= 1'b0;
+        gmii_tx_er_reg <= 1'b0;
 
         crc_state <= 32'hFFFFFFFF;
     end else begin

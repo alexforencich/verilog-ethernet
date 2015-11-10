@@ -40,7 +40,7 @@ def generate(ports=4, name=None, output=None):
 
     t = Template(u"""/*
 
-Copyright (c) 2014 Alex Forencich
+Copyright (c) 2014-2015 Alex Forencich
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -110,22 +110,22 @@ module {{name}}
     input  wire [{{w-1}}:0]  select
 );
 
-reg [{{w-1}}:0] select_reg = 0, select_next;
-reg frame_reg = 0, frame_next;
+reg [{{w-1}}:0] select_reg = {{w}}'d0, select_next;
+reg frame_reg = 1'b0, frame_next;
 
-reg input_eth_hdr_ready_reg = 0, input_eth_hdr_ready_next;
-reg input_eth_payload_tready_reg = 0, input_eth_payload_tready_next;
+reg input_eth_hdr_ready_reg = 1'b0, input_eth_hdr_ready_next;
+reg input_eth_payload_tready_reg = 1'b0, input_eth_payload_tready_next;
 {% for p in ports %}
-reg output_{{p}}_eth_hdr_valid_reg = 0, output_{{p}}_eth_hdr_valid_next;
+reg output_{{p}}_eth_hdr_valid_reg = 1'b0, output_{{p}}_eth_hdr_valid_next;
 {%- endfor %}
-reg [47:0] output_eth_dest_mac_reg = 0, output_eth_dest_mac_next;
-reg [47:0] output_eth_src_mac_reg = 0, output_eth_src_mac_next;
-reg [15:0] output_eth_type_reg = 0, output_eth_type_next;
+reg [47:0] output_eth_dest_mac_reg = 48'd0, output_eth_dest_mac_next;
+reg [47:0] output_eth_src_mac_reg = 48'd0, output_eth_src_mac_next;
+reg [15:0] output_eth_type_reg = 16'd0, output_eth_type_next;
 
 // internal datapath
 reg [7:0] output_eth_payload_tdata_int;
 reg       output_eth_payload_tvalid_int;
-reg       output_eth_payload_tready_int = 0;
+reg       output_eth_payload_tready_int_reg = 1'b0;
 reg       output_eth_payload_tlast_int;
 reg       output_eth_payload_tuser_int;
 wire      output_eth_payload_tready_int_early;
@@ -153,6 +153,12 @@ always @* begin
             current_output_tready = output_{{p}}_eth_payload_tready;
         end
 {%- endfor %}
+        default: begin
+            current_output_eth_hdr_valid = 1'b0;
+            current_output_eth_hdr_ready = 1'b0;
+            current_output_tvalid = 1'b0;
+            current_output_tready = 1'b0;
+        end
     endcase
 end
 
@@ -161,7 +167,7 @@ always @* begin
     frame_next = frame_reg;
 
     input_eth_hdr_ready_next = input_eth_hdr_ready_reg & ~input_eth_hdr_valid;
-    input_eth_payload_tready_next = 0;
+    input_eth_payload_tready_next = 1'b0;
 
 {%- for p in ports %}
     output_{{p}}_eth_hdr_valid_next = output_{{p}}_eth_hdr_valid_reg & ~output_{{p}}_eth_hdr_ready;
@@ -177,14 +183,14 @@ always @* begin
         end
     end else if (enable & input_eth_hdr_valid & ~current_output_eth_hdr_valid & ~current_output_tvalid) begin
         // start of frame, grab select value
-        frame_next = 1;
+        frame_next = 1'b1;
         select_next = select;
 
-        input_eth_hdr_ready_next = 1;
+        input_eth_hdr_ready_next = 1'b1;
 
         case (select)
 {%- for p in ports %}
-            {{w}}'d{{p}}: output_{{p}}_eth_hdr_valid_next = 1;
+            {{w}}'d{{p}}: output_{{p}}_eth_hdr_valid_next = 1'b1;
 {%- endfor %}
         endcase
         output_eth_dest_mac_next = input_eth_dest_mac;
@@ -202,16 +208,13 @@ end
 
 always @(posedge clk) begin
     if (rst) begin
-        select_reg <= 0;
-        frame_reg <= 0;
-        input_eth_hdr_ready_reg <= 0;
-        input_eth_payload_tready_reg <= 0;
+        select_reg <= {{w}}'d0;
+        frame_reg <= 1'b0;
+        input_eth_hdr_ready_reg <= 1'b0;
+        input_eth_payload_tready_reg <= 1'b0;
 {%- for p in ports %}
-        output_{{p}}_eth_hdr_valid_reg <= 0;
+        output_{{p}}_eth_hdr_valid_reg <= 1'b0;
 {%- endfor %}
-        output_eth_dest_mac_reg <= 0;
-        output_eth_src_mac_reg <= 0;
-        output_eth_type_reg <= 0;
     end else begin
         select_reg <= select_next;
         frame_reg <= frame_next;
@@ -220,84 +223,103 @@ always @(posedge clk) begin
 {%- for p in ports %}
         output_{{p}}_eth_hdr_valid_reg <= output_{{p}}_eth_hdr_valid_next;
 {%- endfor %}
-        output_eth_dest_mac_reg <= output_eth_dest_mac_next;
-        output_eth_src_mac_reg <= output_eth_src_mac_next;
-        output_eth_type_reg <= output_eth_type_next;
     end
+
+    output_eth_dest_mac_reg <= output_eth_dest_mac_next;
+    output_eth_src_mac_reg <= output_eth_src_mac_next;
+    output_eth_type_reg <= output_eth_type_next;
 end
 
 // output datapath logic
-reg [7:0] output_eth_payload_tdata_reg = 0;
+reg [7:0] output_eth_payload_tdata_reg = 8'd0;
 {%- for p in ports %}
-reg       output_{{p}}_eth_payload_tvalid_reg = 0;
+reg       output_{{p}}_eth_payload_tvalid_reg = 1'b0, output_{{p}}_eth_payload_tvalid_next;
 {%- endfor %}
-reg       output_eth_payload_tlast_reg = 0;
-reg       output_eth_payload_tuser_reg = 0;
+reg       output_eth_payload_tlast_reg = 1'b0;
+reg       output_eth_payload_tuser_reg = 1'b0;
 
-reg [7:0] temp_eth_payload_tdata_reg = 0;
-reg       temp_eth_payload_tvalid_reg = 0;
-reg       temp_eth_payload_tlast_reg = 0;
-reg       temp_eth_payload_tuser_reg = 0;
+reg [7:0] temp_eth_payload_tdata_reg = 8'd0;
+reg       temp_eth_payload_tvalid_reg = 1'b0, temp_eth_payload_tvalid_next;
+reg       temp_eth_payload_tlast_reg = 1'b0;
+reg       temp_eth_payload_tuser_reg = 1'b0;
+
+// datapath control
+reg store_eth_payload_int_to_output;
+reg store_eth_payload_int_to_temp;
+reg store_eth_payload_temp_to_output;
 {% for p in ports %}
 assign output_{{p}}_eth_payload_tdata = output_eth_payload_tdata_reg;
 assign output_{{p}}_eth_payload_tvalid = output_{{p}}_eth_payload_tvalid_reg;
 assign output_{{p}}_eth_payload_tlast = output_eth_payload_tlast_reg;
 assign output_{{p}}_eth_payload_tuser = output_eth_payload_tuser_reg;
 {% endfor %}
-// enable ready input next cycle if output is ready or if there is space in both output registers or if there is space in the temp register that will not be filled next cycle
-assign output_eth_payload_tready_int_early = current_output_tready | (~temp_eth_payload_tvalid_reg & ~current_output_tvalid) | (~temp_eth_payload_tvalid_reg & ~output_eth_payload_tvalid_int);
+// enable ready input next cycle if output is ready or the temp reg will not be filled on the next cycle (output reg empty or no input)
+assign output_eth_payload_tready_int_early = current_output_tready | (~temp_eth_payload_tvalid_reg & (~current_output_tvalid | ~output_eth_payload_tvalid_int));
+
+always @* begin
+    // transfer sink ready state to source
+{%- for p in ports %}
+    output_{{p}}_eth_payload_tvalid_next = output_{{p}}_eth_payload_tvalid_reg;
+{%- endfor %}
+    temp_eth_payload_tvalid_next = temp_eth_payload_tvalid_reg;
+
+    store_eth_payload_int_to_output = 1'b0;
+    store_eth_payload_int_to_temp = 1'b0;
+    store_eth_payload_temp_to_output = 1'b0;
+    
+    if (output_eth_payload_tready_int_reg) begin
+        // input is ready
+        if (current_output_tready | ~current_output_tvalid) begin
+            // output is ready or currently not valid, transfer data to output
+{%- for p in ports %}
+            output_{{p}}_eth_payload_tvalid_next = output_eth_payload_tvalid_int & (select_reg == {{w}}'d{{p}});
+{%- endfor %}
+            store_eth_payload_int_to_output = 1'b1;
+        end else begin
+            // output is not ready, store input in temp
+            temp_eth_payload_tvalid_next = output_eth_payload_tvalid_int;
+            store_eth_payload_int_to_temp = 1'b1;
+        end
+    end else if (current_output_tready) begin
+        // input is not ready, but output is ready
+{%- for p in ports %}
+        output_{{p}}_eth_payload_tvalid_next = temp_eth_payload_tvalid_reg & (select_reg == {{w}}'d{{p}});
+{%- endfor %}
+        temp_eth_payload_tvalid_next = 1'b0;
+        store_eth_payload_temp_to_output = 1'b1;
+    end
+end
 
 always @(posedge clk) begin
     if (rst) begin
-        output_eth_payload_tdata_reg <= 0;
 {%- for p in ports %}
-        output_{{p}}_eth_payload_tvalid_reg <= 0;
+        output_{{p}}_eth_payload_tvalid_reg <= 1'b0;
 {%- endfor %}
-        output_eth_payload_tlast_reg <= 0;
-        output_eth_payload_tuser_reg <= 0;
-        output_eth_payload_tready_int <= 0;
-        temp_eth_payload_tdata_reg <= 0;
-        temp_eth_payload_tvalid_reg <= 0;
-        temp_eth_payload_tlast_reg <= 0;
-        temp_eth_payload_tuser_reg <= 0;
+        output_eth_payload_tready_int_reg <= 1'b0;
+        temp_eth_payload_tvalid_reg <= 1'b0;
     end else begin
-        // transfer sink ready state to source
-        output_eth_payload_tready_int <= output_eth_payload_tready_int_early;
+{%- for p in ports %}
+        output_{{p}}_eth_payload_tvalid_reg <= output_{{p}}_eth_payload_tvalid_next;
+{%- endfor %}
+        output_eth_payload_tready_int_reg <= output_eth_payload_tready_int_early;
+        temp_eth_payload_tvalid_reg <= temp_eth_payload_tvalid_next;
+    end
 
-        if (output_eth_payload_tready_int) begin
-            // input is ready
-            if (current_output_tready | ~current_output_tvalid) begin
-                // output is ready or currently not valid, transfer data to output
-                output_eth_payload_tdata_reg <= output_eth_payload_tdata_int;
-                case (select_reg)
-{%- for p in ports %}
-                    {{w}}'d{{p}}: output_{{p}}_eth_payload_tvalid_reg <= output_eth_payload_tvalid_int;
-{%- endfor %}
-                endcase
-                output_eth_payload_tlast_reg <= output_eth_payload_tlast_int;
-                output_eth_payload_tuser_reg <= output_eth_payload_tuser_int;
-            end else begin
-                // output is not ready, store input in temp
-                temp_eth_payload_tdata_reg <= output_eth_payload_tdata_int;
-                temp_eth_payload_tvalid_reg <= output_eth_payload_tvalid_int;
-                temp_eth_payload_tlast_reg <= output_eth_payload_tlast_int;
-                temp_eth_payload_tuser_reg <= output_eth_payload_tuser_int;
-            end
-        end else if (current_output_tready) begin
-            // input is not ready, but output is ready
-            output_eth_payload_tdata_reg <= temp_eth_payload_tdata_reg;
-            case (select_reg)
-{%- for p in ports %}
-                {{w}}'d{{p}}: output_{{p}}_eth_payload_tvalid_reg <= temp_eth_payload_tvalid_reg;
-{%- endfor %}
-            endcase
-            output_eth_payload_tlast_reg <= temp_eth_payload_tlast_reg;
-            output_eth_payload_tuser_reg <= temp_eth_payload_tuser_reg;
-            temp_eth_payload_tdata_reg <= 0;
-            temp_eth_payload_tvalid_reg <= 0;
-            temp_eth_payload_tlast_reg <= 0;
-            temp_eth_payload_tuser_reg <= 0;
-        end
+    // datapath
+    if (store_eth_payload_int_to_output) begin
+        output_eth_payload_tdata_reg <= output_eth_payload_tdata_int;
+        output_eth_payload_tlast_reg <= output_eth_payload_tlast_int;
+        output_eth_payload_tuser_reg <= output_eth_payload_tuser_int;
+    end else if (store_eth_payload_temp_to_output) begin
+        output_eth_payload_tdata_reg <= temp_eth_payload_tdata_reg;
+        output_eth_payload_tlast_reg <= temp_eth_payload_tlast_reg;
+        output_eth_payload_tuser_reg <= temp_eth_payload_tuser_reg;
+    end
+
+    if (store_eth_payload_int_to_temp) begin
+        temp_eth_payload_tdata_reg <= output_eth_payload_tdata_int;
+        temp_eth_payload_tlast_reg <= output_eth_payload_tlast_int;
+        temp_eth_payload_tuser_reg <= output_eth_payload_tuser_int;
     end
 end
 

@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014 Alex Forencich
+Copyright (c) 2014-2015 Alex Forencich
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -192,46 +192,46 @@ module udp_mux_64_4
     input  wire [1:0]  select
 );
 
-reg [1:0] select_reg = 0, select_next;
-reg frame_reg = 0, frame_next;
+reg [1:0] select_reg = 2'd0, select_next;
+reg frame_reg = 1'b0, frame_next;
 
-reg input_0_udp_hdr_ready_reg = 0, input_0_udp_hdr_ready_next;
-reg input_1_udp_hdr_ready_reg = 0, input_1_udp_hdr_ready_next;
-reg input_2_udp_hdr_ready_reg = 0, input_2_udp_hdr_ready_next;
-reg input_3_udp_hdr_ready_reg = 0, input_3_udp_hdr_ready_next;
+reg input_0_udp_hdr_ready_reg = 1'b0, input_0_udp_hdr_ready_next;
+reg input_1_udp_hdr_ready_reg = 1'b0, input_1_udp_hdr_ready_next;
+reg input_2_udp_hdr_ready_reg = 1'b0, input_2_udp_hdr_ready_next;
+reg input_3_udp_hdr_ready_reg = 1'b0, input_3_udp_hdr_ready_next;
 
-reg input_0_udp_payload_tready_reg = 0, input_0_udp_payload_tready_next;
-reg input_1_udp_payload_tready_reg = 0, input_1_udp_payload_tready_next;
-reg input_2_udp_payload_tready_reg = 0, input_2_udp_payload_tready_next;
-reg input_3_udp_payload_tready_reg = 0, input_3_udp_payload_tready_next;
+reg input_0_udp_payload_tready_reg = 1'b0, input_0_udp_payload_tready_next;
+reg input_1_udp_payload_tready_reg = 1'b0, input_1_udp_payload_tready_next;
+reg input_2_udp_payload_tready_reg = 1'b0, input_2_udp_payload_tready_next;
+reg input_3_udp_payload_tready_reg = 1'b0, input_3_udp_payload_tready_next;
 
 reg output_udp_hdr_valid_reg = 0, output_udp_hdr_valid_next;
-reg [47:0] output_eth_dest_mac_reg = 0, output_eth_dest_mac_next;
-reg [47:0] output_eth_src_mac_reg = 0, output_eth_src_mac_next;
-reg [15:0] output_eth_type_reg = 0, output_eth_type_next;
-reg [3:0]  output_ip_version_reg = 0, output_ip_version_next;
-reg [3:0]  output_ip_ihl_reg = 0, output_ip_ihl_next;
-reg [5:0]  output_ip_dscp_reg = 0, output_ip_dscp_next;
-reg [1:0]  output_ip_ecn_reg = 0, output_ip_ecn_next;
-reg [15:0] output_ip_length_reg = 0, output_ip_length_next;
-reg [15:0] output_ip_identification_reg = 0, output_ip_identification_next;
-reg [2:0]  output_ip_flags_reg = 0, output_ip_flags_next;
-reg [12:0] output_ip_fragment_offset_reg = 0, output_ip_fragment_offset_next;
-reg [7:0]  output_ip_ttl_reg = 0, output_ip_ttl_next;
-reg [7:0]  output_ip_protocol_reg = 0, output_ip_protocol_next;
-reg [15:0] output_ip_header_checksum_reg = 0, output_ip_header_checksum_next;
-reg [31:0] output_ip_source_ip_reg = 0, output_ip_source_ip_next;
-reg [31:0] output_ip_dest_ip_reg = 0, output_ip_dest_ip_next;
-reg [15:0] output_udp_source_port_reg = 0, output_udp_source_port_next;
-reg [15:0] output_udp_dest_port_reg = 0, output_udp_dest_port_next;
-reg [15:0] output_udp_length_reg = 0, output_udp_length_next;
-reg [15:0] output_udp_checksum_reg = 0, output_udp_checksum_next;
+reg [47:0] output_eth_dest_mac_reg = 48'd0, output_eth_dest_mac_next;
+reg [47:0] output_eth_src_mac_reg = 48'd0, output_eth_src_mac_next;
+reg [15:0] output_eth_type_reg = 16'd0, output_eth_type_next;
+reg [3:0]  output_ip_version_reg = 4'd0, output_ip_version_next;
+reg [3:0]  output_ip_ihl_reg = 4'd0, output_ip_ihl_next;
+reg [5:0]  output_ip_dscp_reg = 6'd0, output_ip_dscp_next;
+reg [1:0]  output_ip_ecn_reg = 2'd0, output_ip_ecn_next;
+reg [15:0] output_ip_length_reg = 16'd0, output_ip_length_next;
+reg [15:0] output_ip_identification_reg = 16'd0, output_ip_identification_next;
+reg [2:0]  output_ip_flags_reg = 3'd0, output_ip_flags_next;
+reg [12:0] output_ip_fragment_offset_reg = 13'd0, output_ip_fragment_offset_next;
+reg [7:0]  output_ip_ttl_reg = 8'd0, output_ip_ttl_next;
+reg [7:0]  output_ip_protocol_reg = 8'd0, output_ip_protocol_next;
+reg [15:0] output_ip_header_checksum_reg = 16'd0, output_ip_header_checksum_next;
+reg [31:0] output_ip_source_ip_reg = 32'd0, output_ip_source_ip_next;
+reg [31:0] output_ip_dest_ip_reg = 32'd0, output_ip_dest_ip_next;
+reg [15:0] output_udp_source_port_reg = 16'd0, output_udp_source_port_next;
+reg [15:0] output_udp_dest_port_reg = 16'd0, output_udp_dest_port_next;
+reg [15:0] output_udp_length_reg = 16'd0, output_udp_length_next;
+reg [15:0] output_udp_checksum_reg = 16'd0, output_udp_checksum_next;
 
 // internal datapath
 reg [63:0] output_udp_payload_tdata_int;
 reg [7:0]  output_udp_payload_tkeep_int;
 reg        output_udp_payload_tvalid_int;
-reg        output_udp_payload_tready_int = 0;
+reg        output_udp_payload_tready_int_reg = 1'b0;
 reg        output_udp_payload_tlast_int;
 reg        output_udp_payload_tuser_int;
 wire       output_udp_payload_tready_int_early;
@@ -384,6 +384,29 @@ always @* begin
             selected_input_udp_length = input_3_udp_length;
             selected_input_udp_checksum = input_3_udp_checksum;
         end
+        default: begin
+            selected_input_udp_hdr_valid = 1'b0;
+            selected_input_eth_dest_mac = 48'd0;
+            selected_input_eth_src_mac = 48'd0;
+            selected_input_eth_type = 16'd0;
+            selected_input_ip_version = 4'd0;
+            selected_input_ip_ihl = 4'd0;
+            selected_input_ip_dscp = 6'd0;
+            selected_input_ip_ecn = 2'd0;
+            selected_input_ip_length = 16'd0;
+            selected_input_ip_identification = 16'd0;
+            selected_input_ip_flags = 3'd0;
+            selected_input_ip_fragment_offset = 13'd0;
+            selected_input_ip_ttl = 8'd0;
+            selected_input_ip_protocol = 8'd0;
+            selected_input_ip_header_checksum = 16'd0;
+            selected_input_ip_source_ip = 32'd0;
+            selected_input_ip_dest_ip = 32'd0;
+            selected_input_udp_source_port = 16'd0;
+            selected_input_udp_dest_port = 16'd0;
+            selected_input_udp_length = 16'd0;
+            selected_input_udp_checksum = 16'd0;
+        end
     endcase
 end
 
@@ -428,6 +451,14 @@ always @* begin
             current_input_tlast = input_3_udp_payload_tlast;
             current_input_tuser = input_3_udp_payload_tuser;
         end
+        default: begin
+            current_input_tdata = 64'd0;
+            current_input_tkeep = 8'd0;
+            current_input_tvalid = 1'b0;
+            current_input_tready = 1'b0;
+            current_input_tlast = 1'b0;
+            current_input_tuser = 1'b0;
+        end
     endcase
 end
 
@@ -440,10 +471,10 @@ always @* begin
     input_2_udp_hdr_ready_next = input_2_udp_hdr_ready_reg & ~input_2_udp_hdr_valid;
     input_3_udp_hdr_ready_next = input_3_udp_hdr_ready_reg & ~input_3_udp_hdr_valid;
 
-    input_0_udp_payload_tready_next = 0;
-    input_1_udp_payload_tready_next = 0;
-    input_2_udp_payload_tready_next = 0;
-    input_3_udp_payload_tready_next = 0;
+    input_0_udp_payload_tready_next = 1'b0;
+    input_1_udp_payload_tready_next = 1'b0;
+    input_2_udp_payload_tready_next = 1'b0;
+    input_3_udp_payload_tready_next = 1'b0;
 
     output_udp_hdr_valid_next = output_udp_hdr_valid_reg & ~output_udp_hdr_ready;
     output_eth_dest_mac_next = output_eth_dest_mac_reg;
@@ -474,17 +505,17 @@ always @* begin
         end
     end else if (enable & ~output_udp_hdr_valid & selected_input_udp_hdr_valid) begin
         // start of frame, grab select value
-        frame_next = 1;
+        frame_next = 1'b1;
         select_next = select;
 
         case (select_next)
-            2'd0: input_0_udp_hdr_ready_next = 1;
-            2'd1: input_1_udp_hdr_ready_next = 1;
-            2'd2: input_2_udp_hdr_ready_next = 1;
-            2'd3: input_3_udp_hdr_ready_next = 1;
+            2'd0: input_0_udp_hdr_ready_next = 1'b1;
+            2'd1: input_1_udp_hdr_ready_next = 1'b1;
+            2'd2: input_2_udp_hdr_ready_next = 1'b1;
+            2'd3: input_3_udp_hdr_ready_next = 1'b1;
         endcase
 
-        output_udp_hdr_valid_next = 1;
+        output_udp_hdr_valid_next = 1'b1;
         output_eth_dest_mac_next = selected_input_eth_dest_mac;
         output_eth_src_mac_next = selected_input_eth_src_mac;
         output_eth_type_next = selected_input_eth_type;
@@ -525,37 +556,17 @@ end
 
 always @(posedge clk) begin
     if (rst) begin
-        select_reg <= 0;
-        frame_reg <= 0;
-        input_0_udp_hdr_ready_reg <= 0;
-        input_1_udp_hdr_ready_reg <= 0;
-        input_2_udp_hdr_ready_reg <= 0;
-        input_3_udp_hdr_ready_reg <= 0;
-        input_0_udp_payload_tready_reg <= 0;
-        input_1_udp_payload_tready_reg <= 0;
-        input_2_udp_payload_tready_reg <= 0;
-        input_3_udp_payload_tready_reg <= 0;
-        output_udp_hdr_valid_reg <= 0;
-        output_eth_dest_mac_reg <= 0;
-        output_eth_src_mac_reg <= 0;
-        output_eth_type_reg <= 0;
-        output_ip_version_reg <= 0;
-        output_ip_ihl_reg <= 0;
-        output_ip_dscp_reg <= 0;
-        output_ip_ecn_reg <= 0;
-        output_ip_length_reg <= 0;
-        output_ip_identification_reg <= 0;
-        output_ip_flags_reg <= 0;
-        output_ip_fragment_offset_reg <= 0;
-        output_ip_ttl_reg <= 0;
-        output_ip_protocol_reg <= 0;
-        output_ip_header_checksum_reg <= 0;
-        output_ip_source_ip_reg <= 0;
-        output_ip_dest_ip_reg <= 0;
-        output_udp_source_port_reg <= 0;
-        output_udp_dest_port_reg <= 0;
-        output_udp_length_reg <= 0;
-        output_udp_checksum_reg <= 0;
+        select_reg <= 2'd0;
+        frame_reg <= 1'b0;
+        input_0_udp_hdr_ready_reg <= 1'b0;
+        input_1_udp_hdr_ready_reg <= 1'b0;
+        input_2_udp_hdr_ready_reg <= 1'b0;
+        input_3_udp_hdr_ready_reg <= 1'b0;
+        input_0_udp_payload_tready_reg <= 1'b0;
+        input_1_udp_payload_tready_reg <= 1'b0;
+        input_2_udp_payload_tready_reg <= 1'b0;
+        input_3_udp_payload_tready_reg <= 1'b0;
+        output_udp_hdr_valid_reg <= 1'b0;
     end else begin
         select_reg <= select_next;
         frame_reg <= frame_next;
@@ -568,41 +579,47 @@ always @(posedge clk) begin
         input_2_udp_payload_tready_reg <= input_2_udp_payload_tready_next;
         input_3_udp_payload_tready_reg <= input_3_udp_payload_tready_next;
         output_udp_hdr_valid_reg <= output_udp_hdr_valid_next;
-        output_eth_dest_mac_reg <= output_eth_dest_mac_next;
-        output_eth_src_mac_reg <= output_eth_src_mac_next;
-        output_eth_type_reg <= output_eth_type_next;
-        output_ip_version_reg <= output_ip_version_next;
-        output_ip_ihl_reg <= output_ip_ihl_next;
-        output_ip_dscp_reg <= output_ip_dscp_next;
-        output_ip_ecn_reg <= output_ip_ecn_next;
-        output_ip_length_reg <= output_ip_length_next;
-        output_ip_identification_reg <= output_ip_identification_next;
-        output_ip_flags_reg <= output_ip_flags_next;
-        output_ip_fragment_offset_reg <= output_ip_fragment_offset_next;
-        output_ip_ttl_reg <= output_ip_ttl_next;
-        output_ip_protocol_reg <= output_ip_protocol_next;
-        output_ip_header_checksum_reg <= output_ip_header_checksum_next;
-        output_ip_source_ip_reg <= output_ip_source_ip_next;
-        output_ip_dest_ip_reg <= output_ip_dest_ip_next;
-        output_udp_source_port_reg <= output_udp_source_port_next;
-        output_udp_dest_port_reg <= output_udp_dest_port_next;
-        output_udp_length_reg <= output_udp_length_next;
-        output_udp_checksum_reg <= output_udp_checksum_next;
     end
+
+    output_eth_dest_mac_reg <= output_eth_dest_mac_next;
+    output_eth_src_mac_reg <= output_eth_src_mac_next;
+    output_eth_type_reg <= output_eth_type_next;
+    output_ip_version_reg <= output_ip_version_next;
+    output_ip_ihl_reg <= output_ip_ihl_next;
+    output_ip_dscp_reg <= output_ip_dscp_next;
+    output_ip_ecn_reg <= output_ip_ecn_next;
+    output_ip_length_reg <= output_ip_length_next;
+    output_ip_identification_reg <= output_ip_identification_next;
+    output_ip_flags_reg <= output_ip_flags_next;
+    output_ip_fragment_offset_reg <= output_ip_fragment_offset_next;
+    output_ip_ttl_reg <= output_ip_ttl_next;
+    output_ip_protocol_reg <= output_ip_protocol_next;
+    output_ip_header_checksum_reg <= output_ip_header_checksum_next;
+    output_ip_source_ip_reg <= output_ip_source_ip_next;
+    output_ip_dest_ip_reg <= output_ip_dest_ip_next;
+    output_udp_source_port_reg <= output_udp_source_port_next;
+    output_udp_dest_port_reg <= output_udp_dest_port_next;
+    output_udp_length_reg <= output_udp_length_next;
+    output_udp_checksum_reg <= output_udp_checksum_next;
 end
 
 // output datapath logic
-reg [63:0] output_udp_payload_tdata_reg = 0;
-reg [7:0]  output_udp_payload_tkeep_reg = 0;
-reg        output_udp_payload_tvalid_reg = 0;
-reg        output_udp_payload_tlast_reg = 0;
-reg        output_udp_payload_tuser_reg = 0;
+reg [63:0] output_udp_payload_tdata_reg = 64'd0;
+reg [7:0]  output_udp_payload_tkeep_reg = 8'd0;
+reg        output_udp_payload_tvalid_reg = 1'b0, output_udp_payload_tvalid_next;
+reg        output_udp_payload_tlast_reg = 1'b0;
+reg        output_udp_payload_tuser_reg = 1'b0;
 
-reg [63:0] temp_udp_payload_tdata_reg = 0;
-reg [7:0]  temp_udp_payload_tkeep_reg = 0;
-reg        temp_udp_payload_tvalid_reg = 0;
-reg        temp_udp_payload_tlast_reg = 0;
-reg        temp_udp_payload_tuser_reg = 0;
+reg [63:0] temp_udp_payload_tdata_reg = 64'd0;
+reg [7:0]  temp_udp_payload_tkeep_reg = 8'd0;
+reg        temp_udp_payload_tvalid_reg = 1'b0, temp_udp_payload_tvalid_next;
+reg        temp_udp_payload_tlast_reg = 1'b0;
+reg        temp_udp_payload_tuser_reg = 1'b0;
+
+// datapath control
+reg store_udp_payload_int_to_output;
+reg store_udp_payload_int_to_temp;
+reg store_udp_payload_temp_to_output;
 
 assign output_udp_payload_tdata = output_udp_payload_tdata_reg;
 assign output_udp_payload_tkeep = output_udp_payload_tkeep_reg;
@@ -610,56 +627,66 @@ assign output_udp_payload_tvalid = output_udp_payload_tvalid_reg;
 assign output_udp_payload_tlast = output_udp_payload_tlast_reg;
 assign output_udp_payload_tuser = output_udp_payload_tuser_reg;
 
-// enable ready input next cycle if output is ready or if there is space in both output registers or if there is space in the temp register that will not be filled next cycle
-assign output_udp_payload_tready_int_early = output_udp_payload_tready | (~temp_udp_payload_tvalid_reg & ~output_udp_payload_tvalid_reg) | (~temp_udp_payload_tvalid_reg & ~output_udp_payload_tvalid_int);
+// enable ready input next cycle if output is ready or the temp reg will not be filled on the next cycle (output reg empty or no input)
+assign output_udp_payload_tready_int_early = output_udp_payload_tready | (~temp_udp_payload_tvalid_reg & (~output_udp_payload_tvalid_reg | ~output_udp_payload_tvalid_int));
+
+always @* begin
+    // transfer sink ready state to source
+    output_udp_payload_tvalid_next = output_udp_payload_tvalid_reg;
+    temp_udp_payload_tvalid_next = temp_udp_payload_tvalid_reg;
+
+    store_udp_payload_int_to_output = 1'b0;
+    store_udp_payload_int_to_temp = 1'b0;
+    store_udp_payload_temp_to_output = 1'b0;
+    
+    if (output_udp_payload_tready_int_reg) begin
+        // input is ready
+        if (output_udp_payload_tready | ~output_udp_payload_tvalid_reg) begin
+            // output is ready or currently not valid, transfer data to output
+            output_udp_payload_tvalid_next = output_udp_payload_tvalid_int;
+            store_udp_payload_int_to_output = 1'b1;
+        end else begin
+            // output is not ready, store input in temp
+            temp_udp_payload_tvalid_next = output_udp_payload_tvalid_int;
+            store_udp_payload_int_to_temp = 1'b1;
+        end
+    end else if (output_udp_payload_tready) begin
+        // input is not ready, but output is ready
+        output_udp_payload_tvalid_next = temp_udp_payload_tvalid_reg;
+        temp_udp_payload_tvalid_next = 1'b0;
+        store_udp_payload_temp_to_output = 1'b1;
+    end
+end
 
 always @(posedge clk) begin
     if (rst) begin
-        output_udp_payload_tdata_reg <= 0;
-        output_udp_payload_tkeep_reg <= 0;
-        output_udp_payload_tvalid_reg <= 0;
-        output_udp_payload_tlast_reg <= 0;
-        output_udp_payload_tuser_reg <= 0;
-        output_udp_payload_tready_int <= 0;
-        temp_udp_payload_tdata_reg <= 0;
-        temp_udp_payload_tkeep_reg <= 0;
-        temp_udp_payload_tvalid_reg <= 0;
-        temp_udp_payload_tlast_reg <= 0;
-        temp_udp_payload_tuser_reg <= 0;
+        output_udp_payload_tvalid_reg <= 1'b0;
+        output_udp_payload_tready_int_reg <= 1'b0;
+        temp_udp_payload_tvalid_reg <= 1'b0;
     end else begin
-        // transfer sink ready state to source
-        output_udp_payload_tready_int <= output_udp_payload_tready_int_early;
+        output_udp_payload_tvalid_reg <= output_udp_payload_tvalid_next;
+        output_udp_payload_tready_int_reg <= output_udp_payload_tready_int_early;
+        temp_udp_payload_tvalid_reg <= temp_udp_payload_tvalid_next;
+    end
 
-        if (output_udp_payload_tready_int) begin
-            // input is ready
-            if (output_udp_payload_tready | ~output_udp_payload_tvalid_reg) begin
-                // output is ready or currently not valid, transfer data to output
-                output_udp_payload_tdata_reg <= output_udp_payload_tdata_int;
-                output_udp_payload_tkeep_reg <= output_udp_payload_tkeep_int;
-                output_udp_payload_tvalid_reg <= output_udp_payload_tvalid_int;
-                output_udp_payload_tlast_reg <= output_udp_payload_tlast_int;
-                output_udp_payload_tuser_reg <= output_udp_payload_tuser_int;
-            end else begin
-                // output is not ready, store input in temp
-                temp_udp_payload_tdata_reg <= output_udp_payload_tdata_int;
-                temp_udp_payload_tkeep_reg <= output_udp_payload_tkeep_int;
-                temp_udp_payload_tvalid_reg <= output_udp_payload_tvalid_int;
-                temp_udp_payload_tlast_reg <= output_udp_payload_tlast_int;
-                temp_udp_payload_tuser_reg <= output_udp_payload_tuser_int;
-            end
-        end else if (output_udp_payload_tready) begin
-            // input is not ready, but output is ready
-            output_udp_payload_tdata_reg <= temp_udp_payload_tdata_reg;
-            output_udp_payload_tkeep_reg <= temp_udp_payload_tkeep_reg;
-            output_udp_payload_tvalid_reg <= temp_udp_payload_tvalid_reg;
-            output_udp_payload_tlast_reg <= temp_udp_payload_tlast_reg;
-            output_udp_payload_tuser_reg <= temp_udp_payload_tuser_reg;
-            temp_udp_payload_tdata_reg <= 0;
-            temp_udp_payload_tkeep_reg <= 0;
-            temp_udp_payload_tvalid_reg <= 0;
-            temp_udp_payload_tlast_reg <= 0;
-            temp_udp_payload_tuser_reg <= 0;
-        end
+    // datapath
+    if (store_udp_payload_int_to_output) begin
+        output_udp_payload_tdata_reg <= output_udp_payload_tdata_int;
+        output_udp_payload_tkeep_reg <= output_udp_payload_tkeep_int;
+        output_udp_payload_tlast_reg <= output_udp_payload_tlast_int;
+        output_udp_payload_tuser_reg <= output_udp_payload_tuser_int;
+    end else if (store_udp_payload_temp_to_output) begin
+        output_udp_payload_tdata_reg <= temp_udp_payload_tdata_reg;
+        output_udp_payload_tkeep_reg <= temp_udp_payload_tkeep_reg;
+        output_udp_payload_tlast_reg <= temp_udp_payload_tlast_reg;
+        output_udp_payload_tuser_reg <= temp_udp_payload_tuser_reg;
+    end
+
+    if (store_udp_payload_int_to_temp) begin
+        temp_udp_payload_tdata_reg <= output_udp_payload_tdata_int;
+        temp_udp_payload_tkeep_reg <= output_udp_payload_tkeep_int;
+        temp_udp_payload_tlast_reg <= output_udp_payload_tlast_int;
+        temp_udp_payload_tuser_reg <= output_udp_payload_tuser_int;
     end
 end
 

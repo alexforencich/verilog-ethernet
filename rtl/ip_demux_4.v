@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014 Alex Forencich
+Copyright (c) 2014-2015 Alex Forencich
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -167,37 +167,37 @@ module ip_demux_4
     input  wire [1:0]  select
 );
 
-reg [1:0] select_reg = 0, select_next;
-reg frame_reg = 0, frame_next;
+reg [1:0] select_reg = 2'd0, select_next;
+reg frame_reg = 1'b0, frame_next;
 
-reg input_ip_hdr_ready_reg = 0, input_ip_hdr_ready_next;
-reg input_ip_payload_tready_reg = 0, input_ip_payload_tready_next;
+reg input_ip_hdr_ready_reg = 1'b0, input_ip_hdr_ready_next;
+reg input_ip_payload_tready_reg = 1'b0, input_ip_payload_tready_next;
 
-reg output_0_ip_hdr_valid_reg = 0, output_0_ip_hdr_valid_next;
-reg output_1_ip_hdr_valid_reg = 0, output_1_ip_hdr_valid_next;
-reg output_2_ip_hdr_valid_reg = 0, output_2_ip_hdr_valid_next;
-reg output_3_ip_hdr_valid_reg = 0, output_3_ip_hdr_valid_next;
-reg [47:0] output_eth_dest_mac_reg = 0, output_eth_dest_mac_next;
-reg [47:0] output_eth_src_mac_reg = 0, output_eth_src_mac_next;
-reg [15:0] output_eth_type_reg = 0, output_eth_type_next;
-reg [3:0]  output_ip_version_reg = 0, output_ip_version_next;
-reg [3:0]  output_ip_ihl_reg = 0, output_ip_ihl_next;
-reg [5:0]  output_ip_dscp_reg = 0, output_ip_dscp_next;
-reg [1:0]  output_ip_ecn_reg = 0, output_ip_ecn_next;
-reg [15:0] output_ip_length_reg = 0, output_ip_length_next;
-reg [15:0] output_ip_identification_reg = 0, output_ip_identification_next;
-reg [2:0]  output_ip_flags_reg = 0, output_ip_flags_next;
-reg [12:0] output_ip_fragment_offset_reg = 0, output_ip_fragment_offset_next;
-reg [7:0]  output_ip_ttl_reg = 0, output_ip_ttl_next;
-reg [7:0]  output_ip_protocol_reg = 0, output_ip_protocol_next;
-reg [15:0] output_ip_header_checksum_reg = 0, output_ip_header_checksum_next;
-reg [31:0] output_ip_source_ip_reg = 0, output_ip_source_ip_next;
-reg [31:0] output_ip_dest_ip_reg = 0, output_ip_dest_ip_next;
+reg output_0_ip_hdr_valid_reg = 1'b0, output_0_ip_hdr_valid_next;
+reg output_1_ip_hdr_valid_reg = 1'b0, output_1_ip_hdr_valid_next;
+reg output_2_ip_hdr_valid_reg = 1'b0, output_2_ip_hdr_valid_next;
+reg output_3_ip_hdr_valid_reg = 1'b0, output_3_ip_hdr_valid_next;
+reg [47:0] output_eth_dest_mac_reg = 48'd0, output_eth_dest_mac_next;
+reg [47:0] output_eth_src_mac_reg = 48'd0, output_eth_src_mac_next;
+reg [15:0] output_eth_type_reg = 16'd0, output_eth_type_next;
+reg [3:0]  output_ip_version_reg = 4'd0, output_ip_version_next;
+reg [3:0]  output_ip_ihl_reg = 4'd0, output_ip_ihl_next;
+reg [5:0]  output_ip_dscp_reg = 6'd0, output_ip_dscp_next;
+reg [1:0]  output_ip_ecn_reg = 2'd0, output_ip_ecn_next;
+reg [15:0] output_ip_length_reg = 16'd0, output_ip_length_next;
+reg [15:0] output_ip_identification_reg = 16'd0, output_ip_identification_next;
+reg [2:0]  output_ip_flags_reg = 3'd0, output_ip_flags_next;
+reg [12:0] output_ip_fragment_offset_reg = 13'd0, output_ip_fragment_offset_next;
+reg [7:0]  output_ip_ttl_reg = 8'd0, output_ip_ttl_next;
+reg [7:0]  output_ip_protocol_reg = 8'd0, output_ip_protocol_next;
+reg [15:0] output_ip_header_checksum_reg = 16'd0, output_ip_header_checksum_next;
+reg [31:0] output_ip_source_ip_reg = 32'd0, output_ip_source_ip_next;
+reg [31:0] output_ip_dest_ip_reg = 32'd0, output_ip_dest_ip_next;
 
 // internal datapath
 reg [7:0] output_ip_payload_tdata_int;
 reg       output_ip_payload_tvalid_int;
-reg       output_ip_payload_tready_int = 0;
+reg       output_ip_payload_tready_int_reg = 1'b0;
 reg       output_ip_payload_tlast_int;
 reg       output_ip_payload_tuser_int;
 wire      output_ip_payload_tready_int_early;
@@ -308,6 +308,12 @@ always @* begin
             current_output_tvalid = output_3_ip_payload_tvalid;
             current_output_tready = output_3_ip_payload_tready;
         end
+        default: begin
+            current_output_ip_hdr_valid = 1'b0;
+            current_output_ip_hdr_ready = 1'b0;
+            current_output_tvalid = 1'b0;
+            current_output_tready = 1'b0;
+        end
     endcase
 end
 
@@ -316,7 +322,7 @@ always @* begin
     frame_next = frame_reg;
 
     input_ip_hdr_ready_next = input_ip_hdr_ready_reg & ~input_ip_hdr_valid;
-    input_ip_payload_tready_next = 0;
+    input_ip_payload_tready_next = 1'b0;
     output_0_ip_hdr_valid_next = output_0_ip_hdr_valid_reg & ~output_0_ip_hdr_ready;
     output_1_ip_hdr_valid_next = output_1_ip_hdr_valid_reg & ~output_1_ip_hdr_ready;
     output_2_ip_hdr_valid_next = output_2_ip_hdr_valid_reg & ~output_2_ip_hdr_ready;
@@ -345,16 +351,16 @@ always @* begin
         end
     end else if (enable & input_ip_hdr_valid & ~current_output_ip_hdr_valid & ~current_output_tvalid) begin
         // start of frame, grab select value
-        frame_next = 1;
+        frame_next = 1'b1;
         select_next = select;
 
-        input_ip_hdr_ready_next = 1;
+        input_ip_hdr_ready_next = 1'b1;
 
         case (select)
-            2'd0: output_0_ip_hdr_valid_next = 1;
-            2'd1: output_1_ip_hdr_valid_next = 1;
-            2'd2: output_2_ip_hdr_valid_next = 1;
-            2'd3: output_3_ip_hdr_valid_next = 1;
+            2'd0: output_0_ip_hdr_valid_next = 1'b1;
+            2'd1: output_1_ip_hdr_valid_next = 1'b1;
+            2'd2: output_2_ip_hdr_valid_next = 1'b1;
+            2'd3: output_3_ip_hdr_valid_next = 1'b1;
         endcase
         output_eth_dest_mac_next = input_eth_dest_mac;
         output_eth_src_mac_next = input_eth_src_mac;
@@ -384,30 +390,14 @@ end
 
 always @(posedge clk) begin
     if (rst) begin
-        select_reg <= 0;
-        frame_reg <= 0;
-        input_ip_hdr_ready_reg <= 0;
-        input_ip_payload_tready_reg <= 0;
-        output_0_ip_hdr_valid_reg <= 0;
-        output_1_ip_hdr_valid_reg <= 0;
-        output_2_ip_hdr_valid_reg <= 0;
-        output_3_ip_hdr_valid_reg <= 0;
-        output_eth_dest_mac_reg <= 0;
-        output_eth_src_mac_reg <= 0;
-        output_eth_type_reg <= 0;
-        output_ip_version_reg <= 0;
-        output_ip_ihl_reg <= 0;
-        output_ip_dscp_reg <= 0;
-        output_ip_ecn_reg <= 0;
-        output_ip_length_reg <= 0;
-        output_ip_identification_reg <= 0;
-        output_ip_flags_reg <= 0;
-        output_ip_fragment_offset_reg <= 0;
-        output_ip_ttl_reg <= 0;
-        output_ip_protocol_reg <= 0;
-        output_ip_header_checksum_reg <= 0;
-        output_ip_source_ip_reg <= 0;
-        output_ip_dest_ip_reg <= 0;
+        select_reg <= 2'd0;
+        frame_reg <= 1'b0;
+        input_ip_hdr_ready_reg <= 1'b0;
+        input_ip_payload_tready_reg <= 1'b0;
+        output_0_ip_hdr_valid_reg <= 1'b0;
+        output_1_ip_hdr_valid_reg <= 1'b0;
+        output_2_ip_hdr_valid_reg <= 1'b0;
+        output_3_ip_hdr_valid_reg <= 1'b0;
     end else begin
         select_reg <= select_next;
         frame_reg <= frame_next;
@@ -417,38 +407,44 @@ always @(posedge clk) begin
         output_1_ip_hdr_valid_reg <= output_1_ip_hdr_valid_next;
         output_2_ip_hdr_valid_reg <= output_2_ip_hdr_valid_next;
         output_3_ip_hdr_valid_reg <= output_3_ip_hdr_valid_next;
-        output_eth_dest_mac_reg <= output_eth_dest_mac_next;
-        output_eth_src_mac_reg <= output_eth_src_mac_next;
-        output_eth_type_reg <= output_eth_type_next;
-        output_ip_version_reg <= output_ip_version_next;
-        output_ip_ihl_reg <= output_ip_ihl_next;
-        output_ip_dscp_reg <= output_ip_dscp_next;
-        output_ip_ecn_reg <= output_ip_ecn_next;
-        output_ip_length_reg <= output_ip_length_next;
-        output_ip_identification_reg <= output_ip_identification_next;
-        output_ip_flags_reg <= output_ip_flags_next;
-        output_ip_fragment_offset_reg <= output_ip_fragment_offset_next;
-        output_ip_ttl_reg <= output_ip_ttl_next;
-        output_ip_protocol_reg <= output_ip_protocol_next;
-        output_ip_header_checksum_reg <= output_ip_header_checksum_next;
-        output_ip_source_ip_reg <= output_ip_source_ip_next;
-        output_ip_dest_ip_reg <= output_ip_dest_ip_next;
     end
+
+    output_eth_dest_mac_reg <= output_eth_dest_mac_next;
+    output_eth_src_mac_reg <= output_eth_src_mac_next;
+    output_eth_type_reg <= output_eth_type_next;
+    output_ip_version_reg <= output_ip_version_next;
+    output_ip_ihl_reg <= output_ip_ihl_next;
+    output_ip_dscp_reg <= output_ip_dscp_next;
+    output_ip_ecn_reg <= output_ip_ecn_next;
+    output_ip_length_reg <= output_ip_length_next;
+    output_ip_identification_reg <= output_ip_identification_next;
+    output_ip_flags_reg <= output_ip_flags_next;
+    output_ip_fragment_offset_reg <= output_ip_fragment_offset_next;
+    output_ip_ttl_reg <= output_ip_ttl_next;
+    output_ip_protocol_reg <= output_ip_protocol_next;
+    output_ip_header_checksum_reg <= output_ip_header_checksum_next;
+    output_ip_source_ip_reg <= output_ip_source_ip_next;
+    output_ip_dest_ip_reg <= output_ip_dest_ip_next;
 end
 
 // output datapath logic
-reg [7:0] output_ip_payload_tdata_reg = 0;
-reg       output_0_ip_payload_tvalid_reg = 0;
-reg       output_1_ip_payload_tvalid_reg = 0;
-reg       output_2_ip_payload_tvalid_reg = 0;
-reg       output_3_ip_payload_tvalid_reg = 0;
-reg       output_ip_payload_tlast_reg = 0;
-reg       output_ip_payload_tuser_reg = 0;
+reg [7:0] output_ip_payload_tdata_reg = 8'd0;
+reg       output_0_ip_payload_tvalid_reg = 1'b0, output_0_ip_payload_tvalid_next;
+reg       output_1_ip_payload_tvalid_reg = 1'b0, output_1_ip_payload_tvalid_next;
+reg       output_2_ip_payload_tvalid_reg = 1'b0, output_2_ip_payload_tvalid_next;
+reg       output_3_ip_payload_tvalid_reg = 1'b0, output_3_ip_payload_tvalid_next;
+reg       output_ip_payload_tlast_reg = 1'b0;
+reg       output_ip_payload_tuser_reg = 1'b0;
 
-reg [7:0] temp_ip_payload_tdata_reg = 0;
-reg       temp_ip_payload_tvalid_reg = 0;
-reg       temp_ip_payload_tlast_reg = 0;
-reg       temp_ip_payload_tuser_reg = 0;
+reg [7:0] temp_ip_payload_tdata_reg = 8'd0;
+reg       temp_ip_payload_tvalid_reg = 1'b0, temp_ip_payload_tvalid_next;
+reg       temp_ip_payload_tlast_reg = 1'b0;
+reg       temp_ip_payload_tuser_reg = 1'b0;
+
+// datapath control
+reg store_ip_payload_int_to_output;
+reg store_ip_payload_int_to_temp;
+reg store_ip_payload_temp_to_output;
 
 assign output_0_ip_payload_tdata = output_ip_payload_tdata_reg;
 assign output_0_ip_payload_tvalid = output_0_ip_payload_tvalid_reg;
@@ -470,63 +466,78 @@ assign output_3_ip_payload_tvalid = output_3_ip_payload_tvalid_reg;
 assign output_3_ip_payload_tlast = output_ip_payload_tlast_reg;
 assign output_3_ip_payload_tuser = output_ip_payload_tuser_reg;
 
-// enable ready input next cycle if output is ready or if there is space in both output registers or if there is space in the temp register that will not be filled next cycle
-assign output_ip_payload_tready_int_early = current_output_tready | (~temp_ip_payload_tvalid_reg & ~current_output_tvalid) | (~temp_ip_payload_tvalid_reg & ~output_ip_payload_tvalid_int);
+// enable ready input next cycle if output is ready or the temp reg will not be filled on the next cycle (output reg empty or no input)
+assign output_ip_payload_tready_int_early = current_output_tready | (~temp_ip_payload_tvalid_reg & (~current_output_tvalid | ~output_ip_payload_tvalid_int));
+
+always @* begin
+    // transfer sink ready state to source
+    output_0_ip_payload_tvalid_next = output_0_ip_payload_tvalid_reg;
+    output_1_ip_payload_tvalid_next = output_1_ip_payload_tvalid_reg;
+    output_2_ip_payload_tvalid_next = output_2_ip_payload_tvalid_reg;
+    output_3_ip_payload_tvalid_next = output_3_ip_payload_tvalid_reg;
+    temp_ip_payload_tvalid_next = temp_ip_payload_tvalid_reg;
+
+    store_ip_payload_int_to_output = 1'b0;
+    store_ip_payload_int_to_temp = 1'b0;
+    store_ip_payload_temp_to_output = 1'b0;
+    
+    if (output_ip_payload_tready_int_reg) begin
+        // input is ready
+        if (current_output_tready | ~current_output_tvalid) begin
+            // output is ready or currently not valid, transfer data to output
+            output_0_ip_payload_tvalid_next = output_ip_payload_tvalid_int & (select_reg == 2'd0);
+            output_1_ip_payload_tvalid_next = output_ip_payload_tvalid_int & (select_reg == 2'd1);
+            output_2_ip_payload_tvalid_next = output_ip_payload_tvalid_int & (select_reg == 2'd2);
+            output_3_ip_payload_tvalid_next = output_ip_payload_tvalid_int & (select_reg == 2'd3);
+            store_ip_payload_int_to_output = 1'b1;
+        end else begin
+            // output is not ready, store input in temp
+            temp_ip_payload_tvalid_next = output_ip_payload_tvalid_int;
+            store_ip_payload_int_to_temp = 1'b1;
+        end
+    end else if (current_output_tready) begin
+        // input is not ready, but output is ready
+        output_0_ip_payload_tvalid_next = temp_ip_payload_tvalid_reg & (select_reg == 2'd0);
+        output_1_ip_payload_tvalid_next = temp_ip_payload_tvalid_reg & (select_reg == 2'd1);
+        output_2_ip_payload_tvalid_next = temp_ip_payload_tvalid_reg & (select_reg == 2'd2);
+        output_3_ip_payload_tvalid_next = temp_ip_payload_tvalid_reg & (select_reg == 2'd3);
+        temp_ip_payload_tvalid_next = 1'b0;
+        store_ip_payload_temp_to_output = 1'b1;
+    end
+end
 
 always @(posedge clk) begin
     if (rst) begin
-        output_ip_payload_tdata_reg <= 0;
-        output_0_ip_payload_tvalid_reg <= 0;
-        output_1_ip_payload_tvalid_reg <= 0;
-        output_2_ip_payload_tvalid_reg <= 0;
-        output_3_ip_payload_tvalid_reg <= 0;
-        output_ip_payload_tlast_reg <= 0;
-        output_ip_payload_tuser_reg <= 0;
-        output_ip_payload_tready_int <= 0;
-        temp_ip_payload_tdata_reg <= 0;
-        temp_ip_payload_tvalid_reg <= 0;
-        temp_ip_payload_tlast_reg <= 0;
-        temp_ip_payload_tuser_reg <= 0;
+        output_0_ip_payload_tvalid_reg <= 1'b0;
+        output_1_ip_payload_tvalid_reg <= 1'b0;
+        output_2_ip_payload_tvalid_reg <= 1'b0;
+        output_3_ip_payload_tvalid_reg <= 1'b0;
+        output_ip_payload_tready_int_reg <= 1'b0;
+        temp_ip_payload_tvalid_reg <= 1'b0;
     end else begin
-        // transfer sink ready state to source
-        output_ip_payload_tready_int <= output_ip_payload_tready_int_early;
+        output_0_ip_payload_tvalid_reg <= output_0_ip_payload_tvalid_next;
+        output_1_ip_payload_tvalid_reg <= output_1_ip_payload_tvalid_next;
+        output_2_ip_payload_tvalid_reg <= output_2_ip_payload_tvalid_next;
+        output_3_ip_payload_tvalid_reg <= output_3_ip_payload_tvalid_next;
+        output_ip_payload_tready_int_reg <= output_ip_payload_tready_int_early;
+        temp_ip_payload_tvalid_reg <= temp_ip_payload_tvalid_next;
+    end
 
-        if (output_ip_payload_tready_int) begin
-            // input is ready
-            if (current_output_tready | ~current_output_tvalid) begin
-                // output is ready or currently not valid, transfer data to output
-                output_ip_payload_tdata_reg <= output_ip_payload_tdata_int;
-                case (select_reg)
-                    2'd0: output_0_ip_payload_tvalid_reg <= output_ip_payload_tvalid_int;
-                    2'd1: output_1_ip_payload_tvalid_reg <= output_ip_payload_tvalid_int;
-                    2'd2: output_2_ip_payload_tvalid_reg <= output_ip_payload_tvalid_int;
-                    2'd3: output_3_ip_payload_tvalid_reg <= output_ip_payload_tvalid_int;
-                endcase
-                output_ip_payload_tlast_reg <= output_ip_payload_tlast_int;
-                output_ip_payload_tuser_reg <= output_ip_payload_tuser_int;
-            end else begin
-                // output is not ready, store input in temp
-                temp_ip_payload_tdata_reg <= output_ip_payload_tdata_int;
-                temp_ip_payload_tvalid_reg <= output_ip_payload_tvalid_int;
-                temp_ip_payload_tlast_reg <= output_ip_payload_tlast_int;
-                temp_ip_payload_tuser_reg <= output_ip_payload_tuser_int;
-            end
-        end else if (current_output_tready) begin
-            // input is not ready, but output is ready
-            output_ip_payload_tdata_reg <= temp_ip_payload_tdata_reg;
-            case (select_reg)
-                2'd0: output_0_ip_payload_tvalid_reg <= temp_ip_payload_tvalid_reg;
-                2'd1: output_1_ip_payload_tvalid_reg <= temp_ip_payload_tvalid_reg;
-                2'd2: output_2_ip_payload_tvalid_reg <= temp_ip_payload_tvalid_reg;
-                2'd3: output_3_ip_payload_tvalid_reg <= temp_ip_payload_tvalid_reg;
-            endcase
-            output_ip_payload_tlast_reg <= temp_ip_payload_tlast_reg;
-            output_ip_payload_tuser_reg <= temp_ip_payload_tuser_reg;
-            temp_ip_payload_tdata_reg <= 0;
-            temp_ip_payload_tvalid_reg <= 0;
-            temp_ip_payload_tlast_reg <= 0;
-            temp_ip_payload_tuser_reg <= 0;
-        end
+    // datapath
+    if (store_ip_payload_int_to_output) begin
+        output_ip_payload_tdata_reg <= output_ip_payload_tdata_int;
+        output_ip_payload_tlast_reg <= output_ip_payload_tlast_int;
+        output_ip_payload_tuser_reg <= output_ip_payload_tuser_int;
+    end else if (store_ip_payload_temp_to_output) begin
+        output_ip_payload_tdata_reg <= temp_ip_payload_tdata_reg;
+        output_ip_payload_tlast_reg <= temp_ip_payload_tlast_reg;
+        output_ip_payload_tuser_reg <= temp_ip_payload_tuser_reg;
+    end
+
+    if (store_ip_payload_int_to_temp) begin
+        temp_ip_payload_tdata_reg <= output_ip_payload_tdata_int;
+        temp_ip_payload_tlast_reg <= output_ip_payload_tlast_int;
+        temp_ip_payload_tuser_reg <= output_ip_payload_tuser_int;
     end
 end
 
