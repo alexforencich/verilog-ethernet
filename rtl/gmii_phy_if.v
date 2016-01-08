@@ -31,7 +31,8 @@ THE SOFTWARE.
  */
 module gmii_phy_if #
 (
-    parameter TARGET_XILINX = 0
+    // target ("SIM", "GENERIC", "XILINX", "ALTERA")
+    parameter TARGET = "GENERIC"
 )
 (
     input  wire        clk,
@@ -70,7 +71,7 @@ wire phy_gmii_tx_clk_int;
 
 generate
 
-if (TARGET_XILINX) begin
+if (TARGET == "XILINX") begin
 
     // use Xilinx clocking primitives
 
