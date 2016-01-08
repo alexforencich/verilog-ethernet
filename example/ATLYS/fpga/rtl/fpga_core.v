@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014 Alex Forencich
+Copyright (c) 2014-2016 Alex Forencich
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,46 +24,52 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
-`timescale 1 ns / 1 ps
+`timescale 1ns / 1ps
 
+/*
+ * FPGA core logic
+ */
 module fpga_core #
 (
-    parameter TARGET_XILINX = 1
+    parameter TARGET = "XILINX"
 )
 (
     /*
      * Clock: 125MHz
      * Synchronous reset
      */
-    input wire clk,
-    input wire rst,
+    input  wire       clk,
+    input  wire       rst,
+
     /*
      * GPIO
      */
-    input wire btnu,
-    input wire btnl,
-    input wire btnd,
-    input wire btnr,
-    input wire btnc,
-    input wire [7:0] sw,
+    input  wire       btnu,
+    input  wire       btnl,
+    input  wire       btnd,
+    input  wire       btnr,
+    input  wire       btnc,
+    input  wire [7:0] sw,
     output wire [7:0] led,
+
     /*
      * Ethernet: 1000BASE-T GMII
      */
-    input wire phy_rx_clk,
-    input wire [7:0] phy_rxd,
-    input wire phy_rx_dv,
-    input wire phy_rx_er,
-    output wire phy_gtx_clk,
+    input  wire       phy_rx_clk,
+    input  wire [7:0] phy_rxd,
+    input  wire       phy_rx_dv,
+    input  wire       phy_rx_er,
+    output wire       phy_gtx_clk,
     output wire [7:0] phy_txd,
-    output wire phy_tx_en,
-    output wire phy_tx_er,
-    output wire phy_reset_n,
+    output wire       phy_tx_en,
+    output wire       phy_tx_er,
+    output wire       phy_reset_n,
+
     /*
      * UART: 115200 bps, 8N1
      */
-    input wire uart_rxd,
-    output wire uart_txd
+    input  wire       uart_rxd,
+    output wire       uart_txd
 );
 
 // GMII between MAC and PHY IF
@@ -312,7 +318,7 @@ assign phy_reset_n = ~rst;
 assign uart_txd = 0;
 
 gmii_phy_if #(
-    .TARGET_XILINX(TARGET_XILINX)
+    .TARGET(TARGET)
 )
 gmii_phy_if_inst (
     .clk(clk),

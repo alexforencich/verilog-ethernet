@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014 Alex Forencich
+Copyright (c) 2014-2016 Alex Forencich
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,75 +22,162 @@ THE SOFTWARE.
 
 */
 
+// Language: Verilog 2001
+
+`timescale 1ns / 1ps
+
+/*
+ * FPGA top-level module
+ */
 module fpga (
     /*
      * Clock: 100MHz
      * Reset: Push button, active low
      */
-    input wire clk,
-    input wire reset_n,
+    input  wire       clk,
+    input  wire       reset_n,
+
     /*
      * GPIO
      */
-    input wire btnu,
-    input wire btnl,
-    input wire btnd,
-    input wire btnr,
-    input wire btnc,
-    input wire [7:0] sw,
+    input  wire       btnu,
+    input  wire       btnl,
+    input  wire       btnd,
+    input  wire       btnr,
+    input  wire       btnc,
+    input  wire [7:0] sw,
     output wire [7:0] led,
+
     /*
      * Ethernet: 1000BASE-T GMII
      */
-    input wire phy_rx_clk,
-    input wire [7:0] phy_rxd,
-    input wire phy_rx_dv,
-    input wire phy_rx_er,
-    output wire phy_gtx_clk,
+    input  wire       phy_rx_clk,
+    input  wire [7:0] phy_rxd,
+    input  wire       phy_rx_dv,
+    input  wire       phy_rx_er,
+    output wire       phy_gtx_clk,
     output wire [7:0] phy_txd,
-    output wire phy_tx_en,
-    output wire phy_tx_er,
-    output wire phy_reset_n,
+    output wire       phy_tx_en,
+    output wire       phy_tx_er,
+    output wire       phy_reset_n,
+
     /*
      * UART: 500000 bps, 8N1
      */
-    input wire uart_rxd,
-    output wire uart_txd
+    input  wire       uart_rxd,
+    output wire       uart_txd
 );
 
-/*
- * Clock: 125MHz
- * Synchronous reset
- */
+// Clock and reset
+
+wire clk_ibufg;
+wire clk_bufg;
+wire clk_dcm_out;
+
+// Internal 125 MHz clock
 wire clk_int;
 wire rst_int;
-/*
- * GPIO
- */
+
+wire dcm_rst;
+wire [7:0] dcm_status;
+wire dcm_locked;
+wire dcm_clkfx_stopped = dcm_status[2];
+
+assign dcm_rst = ~reset_n | (dcm_clkfx_stopped & ~dcm_locked);
+
+IBUFG
+clk_ibufg_inst(
+    .I(clk),
+    .O(clk_ibufg)
+);
+
+DCM_SP #(
+    .CLKIN_PERIOD(10),
+    .CLK_FEEDBACK("NONE"),
+    .CLKDV_DIVIDE(2.0),
+    .CLKFX_MULTIPLY(5.0),
+    .CLKFX_DIVIDE(4.0),
+    .PHASE_SHIFT(0),
+    .CLKOUT_PHASE_SHIFT("NONE"),
+    .DESKEW_ADJUST("SYSTEM_SYNCHRONOUS"),
+    .STARTUP_WAIT("FALSE"),
+    .CLKIN_DIVIDE_BY_2("FALSE")
+)
+clk_dcm_inst (
+    .CLKIN(clk_ibufg),
+    .CLKFB(1'b0),
+    .RST(dcm_rst),
+    .PSEN(1'b0),
+    .PSINCDEC(1'b0),
+    .PSCLK(1'b0),
+    .CLK0(),
+    .CLK90(),
+    .CLK180(),
+    .CLK270(),
+    .CLK2X(),
+    .CLK2X180(),
+    .CLKDV(),
+    .CLKFX(clk_dcm_out),
+    .CLKFX180(),
+    .STATUS(dcm_status),
+    .LOCKED(dcm_locked),
+    .PSDONE()
+);
+
+BUFG
+clk_bufg_inst (
+    .I(clk_dcm_out),
+    .O(clk_int)
+);
+
+sync_reset #(
+    .N(4)
+)
+sync_reset_inst (
+    .clk(clk_int),
+    .rst(~dcm_locked),
+    .sync_reset_out(rst_int)
+);
+
+// GPIO
 wire btnu_int;
 wire btnl_int;
 wire btnd_int;
 wire btnr_int;
 wire btnc_int;
 wire [7:0] sw_int;
-wire [7:0] led_int;
-/*
- * Ethernet: 1000BASE-T GMII
- */
-wire phy_rx_clk_int;
-wire [7:0] phy_rxd_int;
-wire phy_rx_dv_int;
-wire phy_rx_er_int;
-wire phy_gtx_clk_int;
-wire [7:0] phy_txd_int;
-wire phy_tx_en_int;
-wire phy_tx_er_int;
-wire phy_reset_n_int;
-/*
- * UART: 115200 bps, 8N1
- */
-wire uart_rxd_int;
-wire uart_txd_int;
+
+debounce_switch #(
+    .WIDTH(13),
+    .N(4),
+    .RATE(125000)
+)
+debounce_switch_inst (
+    .clk(clk_int),
+    .rst(rst_int),
+    .in({btnu,
+        btnl,
+        btnd,
+        btnr,
+        btnc,
+        sw}),
+    .out({btnu_int,
+        btnl_int,
+        btnd_int,
+        btnr_int,
+        btnc_int,
+        sw_int})
+);
+
+sync_signal #(
+    .WIDTH(1),
+    .N(2)
+)
+sync_signal_inst (
+    .clk(clk_int),
+    .in({uart_rxd}),
+    .out({uart_rxd_int})
+);
 
 fpga_core
 core_inst (
@@ -109,74 +196,24 @@ core_inst (
     .btnr(btnr_int),
     .btnc(btnc_int),
     .sw(sw_int),
-    .led(led_int),
+    .led(led),
     /*
      * Ethernet: 1000BASE-T GMII
      */
-    .phy_rx_clk(phy_rx_clk_int),
-    .phy_rxd(phy_rxd_int),
-    .phy_rx_dv(phy_rx_dv_int),
-    .phy_rx_er(phy_rx_er_int),
-    .phy_gtx_clk(phy_gtx_clk_int),
-    .phy_txd(phy_txd_int),
-    .phy_tx_en(phy_tx_en_int),
-    .phy_tx_er(phy_tx_er_int),
-    .phy_reset_n(phy_reset_n_int),
+    .phy_rx_clk(phy_rx_clk),
+    .phy_rxd(phy_rxd),
+    .phy_rx_dv(phy_rx_dv),
+    .phy_rx_er(phy_rx_er),
+    .phy_gtx_clk(phy_gtx_clk),
+    .phy_txd(phy_txd),
+    .phy_tx_en(phy_tx_en),
+    .phy_tx_er(phy_tx_er),
+    .phy_reset_n(phy_reset_n),
     /*
      * UART: 115200 bps, 8N1
      */
     .uart_rxd(uart_rxd_int),
-    .uart_txd(uart_txd_int)
-);
-
-fpga_pads
-pads_inst (
-    /*
-     * Pads
-     */
-    .clk_pad(clk),
-    .reset_n_pad(reset_n),
-    .btnu_pad(btnu),
-    .btnl_pad(btnl),
-    .btnd_pad(btnd),
-    .btnr_pad(btnr),
-    .btnc_pad(btnc),
-    .sw_pad(sw),
-    .led_pad(led),
-    .phy_rx_clk_pad(phy_rx_clk),
-    .phy_rxd_pad(phy_rxd),
-    .phy_rx_dv_pad(phy_rx_dv),
-    .phy_rx_er_pad(phy_rx_er),
-    .phy_gtx_clk_pad(phy_gtx_clk),
-    .phy_txd_pad(phy_txd),
-    .phy_tx_en_pad(phy_tx_en),
-    .phy_tx_er_pad(phy_tx_er),
-    .phy_reset_n_pad(phy_reset_n),
-    .uart_rxd_pad(uart_rxd),
-    .uart_txd_pad(uart_txd),
-    /*
-     * Internal
-     */
-    .clk_int(clk_int),
-    .rst_int(rst_int),
-    .btnu_int(btnu_int),
-    .btnl_int(btnl_int),
-    .btnd_int(btnd_int),
-    .btnr_int(btnr_int),
-    .btnc_int(btnc_int),
-    .sw_int(sw_int),
-    .led_int(led_int),
-    .phy_rx_clk_int(phy_rx_clk_int),
-    .phy_rxd_int(phy_rxd_int),
-    .phy_rx_dv_int(phy_rx_dv_int),
-    .phy_rx_er_int(phy_rx_er_int),
-    .phy_gtx_clk_int(phy_gtx_clk_int),
-    .phy_txd_int(phy_txd_int),
-    .phy_tx_en_int(phy_tx_en_int),
-    .phy_tx_er_int(phy_tx_er_int),
-    .phy_reset_n_int(phy_reset_n_int),
-    .uart_rxd_int(uart_rxd_int),
-    .uart_txd_int(uart_txd_int)
+    .uart_txd(uart_txd)
 );
 
 endmodule

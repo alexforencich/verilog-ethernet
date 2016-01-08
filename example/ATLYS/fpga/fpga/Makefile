@@ -11,7 +11,6 @@ FPGA_ARCH = spartan6
 # Files for synthesis
 SYN_FILES = rtl/fpga.v
 SYN_FILES += rtl/fpga_core.v
-SYN_FILES += rtl/fpga_pads.v
 SYN_FILES += rtl/debounce_switch.v
 SYN_FILES += rtl/sync_reset.v
 SYN_FILES += rtl/sync_signal.v
@@ -43,14 +42,14 @@ SYN_FILES += lib/eth/lib/axis/rtl/arbiter.v
 SYN_FILES += lib/eth/lib/axis/rtl/priority_encoder.v
 SYN_FILES += lib/eth/lib/axis/rtl/axis_fifo.v
 SYN_FILES += lib/eth/lib/axis/rtl/axis_async_frame_fifo.v
-SYN_FILES += coregen/dcm_i100_o125/dcm_i100_o125.v
+#SYN_FILES += coregen/dcm_i100_o125/dcm_i100_o125.v
 
 # UCF files
 UCF_FILES = fpga.ucf
 UCF_FILES += clock.ucf
 
 # NGC paths for ngdbuild
-NGC_PATHS = coregen/dcm_i100_o125
+#NGC_PATHS = coregen/dcm_i100_o125
 
 # Bitgen options
 BITGEN_OPTIONS = -g StartupClk:Cclk -g ConfigRate:26

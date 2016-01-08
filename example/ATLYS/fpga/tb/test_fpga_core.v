@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2015 Alex Forencich
+Copyright (c) 2015-2016 Alex Forencich
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -32,7 +32,7 @@ THE SOFTWARE.
 module test_fpga_core;
 
 // Parameters
-parameter TARGET_XILINX = 0;
+parameter TARGET = "SIM";
 
 // Inputs
 reg clk = 0;
@@ -90,7 +90,7 @@ initial begin
 end
 
 fpga_core #(
-    .TARGET_XILINX(TARGET_XILINX)
+    .TARGET(TARGET)
 )
 UUT (
     .clk(clk),

@@ -2,7 +2,7 @@
 TARGETS:=
 
 # Subdirectories
-SUBDIRS = coregen fpga
+SUBDIRS = fpga
 SUBDIRS_CLEAN = $(patsubst %,%.clean,$(SUBDIRS))
 
 # Rules
