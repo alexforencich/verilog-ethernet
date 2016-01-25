@@ -312,12 +312,12 @@ always @(posedge clk) begin
 end
 
 //assign led = sw;
-assign led = ~led_reg;
-assign led_bkt = ~led_reg;
-assign led_hex0_d = 7'h7F;
-assign led_hex0_dp = 1'b1;
-assign led_hex1_d = 7'h7F;
-assign led_hex1_dp = 1'b1;
+assign led = led_reg;
+assign led_bkt = led_reg;
+assign led_hex0_d = 7'h00;
+assign led_hex0_dp = 1'b0;
+assign led_hex1_d = 7'h00;
+assign led_hex1_dp = 1'b0;
 
 assign sfp_b_txd = 64'h0707070707070707;
 assign sfp_b_txc = 8'hff;

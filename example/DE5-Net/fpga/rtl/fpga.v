@@ -135,12 +135,12 @@ debounce_switch_inst (
         sw_int})
 );
 
-assign LED = led_int;
-assign LED_BRACKET = led_bkt_int;
-assign HEX0_D = led_hex0_d_int;
-assign HEX0_DP = led_hex0_dp_int;
-assign HEX1_D = led_hex1_d_int;
-assign HEX1_DP = led_hex1_dp_int;
+assign LED = ~led_int;
+assign LED_BRACKET = ~led_bkt_int;
+assign HEX0_D = ~led_hex0_d_int;
+assign HEX0_DP = ~led_hex0_dp_int;
+assign HEX1_D = ~led_hex1_d_int;
+assign HEX1_DP = ~led_hex1_dp_int;
 
 assign FAN_CTRL = 1;
 
