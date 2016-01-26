@@ -1,0 +1,269 @@
+# User Constraints File for the HTG-V6HXT-100GIG FPGA board
+
+CONFIG PART = xc6vhx565t-2ff1923;
+
+# 50 MHz clock
+NET "sys_clk" LOC = "AP33" | IOSTANDARD=LVCMOS25; # SYS_CLK, 50MHz
+NET "sys_clk" TNM_NET = "sys_clk";
+TIMESPEC "TS_sys_clk" = PERIOD "sys_clk" 20.000 ns HIGH 50% INPUT_JITTER 200.0ps;
+
+# 156.25 MHz transceiver clock
+NET "*txclk156" TNM_NET = "txclk156";
+TIMESPEC "TS_txclk156" = PERIOD "txclk156" 6400 ps;
+
+NET "*rx_clk_0" TNM_NET = "rx_clk"; 
+NET "*rx_clk_1" TNM_NET = "rx_clk"; 
+NET "*rx_clk_2" TNM_NET = "rx_clk"; 
+NET "*rx_clk_3" TNM_NET = "rx_clk"; 
+TIMESPEC "TS_rx_clk" = PERIOD "rx_clk" 6400 ps;
+
+# clock crossing constraints
+TIMESPEC "TS_txclk156_to_sys_clk" = FROM "txclk156" TO "sys_clk" 10 ns;
+TIMESPEC "TS_sys_clk_to_txclk156" = FROM "sys_clk" TO "txclk156" 10 ns;
+TIMESPEC "TS_sys_clk_to_rx_clk" = FROM "sys_clk" TO "rx_clk" 10 ns;
+TIMESPEC "TS_rx_clk_to_sys_clk" = FROM "rx_clk" TO "sys_clk" 10 ns;
+
+# PHY elastic buffer constraints
+NET "*elastic_buffer_i*rd_truegray<?>" MAXDELAY = 6.0 ns;
+NET "*elastic_buffer_i?can_insert_wra" TIG;
+NET "*wr_gray*<?>" MAXDELAY = 6.0 ns;
+NET "*rd_lastgray*<?>" MAXDELAY = 6.0 ns;
+
+TIMESPEC "TS_txclk156_to_rx_clk" = FROM "txclk156" TO "rx_clk" 10 ns;
+TIMESPEC "TS_rx_clk_to_txclk156" = FROM "rx_clk" TO "txclk156" 10 ns;
+
+# 200 MHz DDR3 clock
+#NET "clk_ddr3_p" LOC = "AL13" | IOSTANDARD=LVDS_25;
+#NET "clk_ddr3_n" LOC = "AL12" | IOSTANDARD=LVDS_25;
+#NET "clk_ddr3_p" TNM_NET = "clk_ddr3";
+#TIMESPEC "TS_clk_ddr3" = PERIOD "clk_ddr3" 5.000 ns HIGH 50% INPUT_JITTER 20.0ps;
+
+# User clock
+#NET "clk_usr_p" LOC = "J33" | IOSTANDARD=LVDS_25;
+#NET "clk_usr_n" LOC = "H33" | IOSTANDARD=LVDS_25;
+#NET "clk_usr_p" TNM_NET = "clk_usr";
+#TIMESPEC "TS_clk_usr" = PERIOD "clk_usr" 5.000 ns HIGH 50% INPUT_JITTER 20.0ps;
+
+# Button
+NET "reset_n" LOC = "AY12" | IOSTANDARD=LVCMOS25; # IO_L1N_M0_CMPMISO_2 (S7)
+
+# DIP switches
+NET "sw<0>" LOC = "BB32" | IOSTANDARD=LVCMOS25; # IO_L1N_M0_CMPMISO_2 (USER_SW0)
+NET "sw<1>" LOC = "AT30" | IOSTANDARD=LVCMOS25; # IO_L1N_M0_CMPMISO_2 (USER_SW1)
+
+# Jumpers
+NET "jp<0>" LOC = "AW34" | IOSTANDARD=LVCMOS25; # IO_L1N_M0_CMPMISO_2 (IO0, JP18)
+NET "jp<1>" LOC = "AY35" | IOSTANDARD=LVCMOS25; # IO_L1N_M0_CMPMISO_2 (IO1, JP19)
+NET "jp<2>" LOC = "AW35" | IOSTANDARD=LVCMOS25; # IO_L1N_M0_CMPMISO_2 (IO2, JP20)
+NET "jp<3>" LOC = "AV33" | IOSTANDARD=LVCMOS25; # IO_L1N_M0_CMPMISO_2 (IO3, JP21)
+
+# LEDs
+NET "led<0>" LOC = "AY33" | IOSTANDARD=LVCMOS25 | SLEW=QUIETIO | DRIVE=2; # Bank = 1, IO_L52N_M1DQ15 (D20)
+NET "led<1>" LOC = "AW33" | IOSTANDARD=LVCMOS25 | SLEW=QUIETIO | DRIVE=2; # Bank = 1, IO_L52N_M1DQ15 (D23)
+NET "led<2>" LOC = "AK35" | IOSTANDARD=LVCMOS25 | SLEW=QUIETIO | DRIVE=2; # Bank = 1, IO_L52N_M1DQ15 (D26)
+NET "led<3>" LOC = "AL35" | IOSTANDARD=LVCMOS25 | SLEW=QUIETIO | DRIVE=2; # Bank = 1, IO_L52N_M1DQ15 (D31)
+
+# Silicon Labs CP2102
+NET "uart_rst"     LOC = "D10" | IOSTANDARD=LVCMOS25 | SLEW=SLOW | DRIVE=2; #
+NET "uart_suspend" LOC = "E12" | IOSTANDARD=LVCMOS25 | SLEW=SLOW | DRIVE=2; #
+NET "uart_ri"      LOC = "B12" | IOSTANDARD=LVCMOS25 | SLEW=SLOW | DRIVE=2; #
+NET "uart_dcd"     LOC = "C11" | IOSTANDARD=LVCMOS25 | SLEW=SLOW | DRIVE=2; #
+NET "uart_dtr"     LOC = "B11" | IOSTANDARD=LVCMOS25 | SLEW=SLOW | DRIVE=2; #
+NET "uart_dsr"     LOC = "D11" | IOSTANDARD=LVCMOS25 | SLEW=SLOW | DRIVE=2; #
+NET "uart_rxd"     LOC = "E11" | IOSTANDARD=LVCMOS25 | SLEW=SLOW | DRIVE=2; # IO_L66N_SCP0
+NET "uart_txd"     LOC = "B9"  | IOSTANDARD=LVCMOS25 | SLEW=SLOW | DRIVE=2; # IO_L66P_SCP1
+NET "uart_rts"     LOC = "A9"  | IOSTANDARD=LVCMOS25 | SLEW=SLOW | DRIVE=2; #
+NET "uart_cts"     LOC = "F12" | IOSTANDARD=LVCMOS25 | SLEW=SLOW | DRIVE=2; #
+
+# Clock muxes
+NET "clk_gth_scl"   LOC = "M11";
+NET "clk_gth_sda"   LOC = "L10";
+NET "clk_gth_rst_n" LOC = "AR7";
+NET "clk_gthl_alm"  LOC = "M34";
+NET "clk_gthr_alm"  LOC = "R13";
+NET "clk_gthl_lol"  LOC = "L34";
+NET "clk_gthr_lol"  LOC = "L12";
+
+# AirMax I/O
+#NET "amh_right_io<0>"    LOC="N33";  # AMH1R_IO0 J6.TX[12]_P  mdc
+#NET "amh_right_io<1>"    LOC="J34";  # AMH1R_IO1 J6.TX[12]_N  mdio
+#NET "amh_right_io<2>"    LOC="F34";  # AMH1R_IO2 J6.TX[13]_P  
+#NET "amh_right_io<3>"    LOC="G34";  # AMH1R_IO3 J6.TX[13]_N  
+#NET "amh_right_io<4>"    LOC="K33";  # AMH1R_IO4 J6.TX[14]_P  
+#NET "amh_right_io<5>"    LOC="L33";  # AMH1R_IO5 J6.TX[14]_N  
+#NET "amh_right_io<6>"    LOC="N34";  # AMH1R_IO6 J6.TX[15]_P  
+#NET "amh_right_io<7>"    LOC="H34";  # AMH1R_IO7 J6.TX[15]_N  reset_n
+
+#NET "amh_left_io<0>"     LOC="E35";  # AMH1L_IO0 J3.TX[12]_P  mdc
+#NET "amh_left_io<1>"     LOC="B37";  # AMH1L_IO1 J3.TX[12]_N  mdio
+#NET "amh_left_io<2>"     LOC="A35";  # AMH1L_IO2 J3.TX[13]_P
+#NET "amh_left_io<3>"     LOC="B35";  # AMH1L_IO3 J3.TX[13]_N
+#NET "amh_left_io<4>"     LOC="G35";  # AMH1L_IO4 J3.TX[14]_P
+#NET "amh_left_io<5>"     LOC="F35";  # AMH1L_IO5 J3.TX[14]_N
+#NET "amh_left_io<6>"     LOC="A37";  # AMH1L_IO6 J3.TX[15]_P
+#NET "amh_left_io<7>"     LOC="B36";  # AMH1L_IO7 J3.TX[15]_N  reset_n
+
+NET "amh_right_mdc"   LOC="N33";  # AMH1R_IO0 J6.TX[12]_P  mdc
+NET "amh_right_mdio"  LOC="J34";  # AMH1R_IO1 J6.TX[12]_N  mdio
+NET "amh_right_phy_rst_n" LOC="H34" | IOSTANDARD=LVCMOS25 | SLEW=QUIETIO | DRIVE=2;
+
+NET "amh_left_mdc"    LOC="E35";  # AMH1L_IO0 J3.TX[12]_P  mdc
+NET "amh_left_mdio"   LOC="B37";  # AMH1L_IO1 J3.TX[12]_N  mdio
+NET "amh_left_phy_rst_n"  LOC="B36" | IOSTANDARD=LVCMOS25 | SLEW=QUIETIO | DRIVE=2;
+
+# 10G Ethernet interfaces
+# Quad A X0Y0
+# Ports 11, 9, 10, 8 (right)
+# SFP 0, 2, 4, 6
+NET "gth_quad_A_refclk_p" LOC = "R41";
+NET "gth_quad_A_refclk_n" LOC = "R42";
+
+NET "gth_quad_A_txp_0" LOC = "T43";
+NET "gth_quad_A_txn_0" LOC = "T44";
+NET "gth_quad_A_rxp_0" LOC = "U41";
+NET "gth_quad_A_rxn_0" LOC = "U42";
+
+NET "gth_quad_A_txp_1" LOC = "P43";
+NET "gth_quad_A_txn_1" LOC = "P44";
+NET "gth_quad_A_rxp_1" LOC = "T39";
+NET "gth_quad_A_rxn_1" LOC = "T40";
+
+NET "gth_quad_A_txp_2" LOC = "M43";
+NET "gth_quad_A_txn_2" LOC = "M44";
+NET "gth_quad_A_rxp_2" LOC = "N37";
+NET "gth_quad_A_rxn_2" LOC = "N38";
+
+NET "gth_quad_A_txp_3" LOC = "N41";
+NET "gth_quad_A_txn_3" LOC = "N42";
+NET "gth_quad_A_rxp_3" LOC = "M39";
+NET "gth_quad_A_rxn_3" LOC = "M40";
+
+# Quad B X0Y1
+# Ports 4, 6, 5, 7 (right)
+# SFP 3, 5, 1, 7
+NET "gth_quad_B_refclk_p" LOC = "J41";
+NET "gth_quad_B_refclk_n" LOC = "J42";
+
+NET "gth_quad_B_txp_0" LOC = "L41";
+NET "gth_quad_B_txn_0" LOC = "L42";
+NET "gth_quad_B_rxp_0" LOC = "K39";
+NET "gth_quad_B_rxn_0" LOC = "K40";
+
+NET "gth_quad_B_txp_1" LOC = "K43";
+NET "gth_quad_B_txn_1" LOC = "K44";
+NET "gth_quad_B_rxp_1" LOC = "L37";
+NET "gth_quad_B_rxn_1" LOC = "L38";
+
+NET "gth_quad_B_txp_2" LOC = "G41";
+NET "gth_quad_B_txn_2" LOC = "G42";
+NET "gth_quad_B_rxp_2" LOC = "H39";
+NET "gth_quad_B_rxn_2" LOC = "H40";
+
+NET "gth_quad_B_txp_3" LOC = "H43";
+NET "gth_quad_B_txn_3" LOC = "H44";
+NET "gth_quad_B_rxp_3" LOC = "J37";
+NET "gth_quad_B_rxn_3" LOC = "J38";
+
+# Quad C X0Y2
+# Ports 1, 0, 3, 2 (right)
+# SFP 8, 9, 11, 10
+NET "gth_quad_C_refclk_p" LOC = "E41";
+NET "gth_quad_C_refclk_n" LOC = "E42";
+
+NET "gth_quad_C_txp_0" LOC = "F43";
+NET "gth_quad_C_txn_0" LOC = "F44";
+NET "gth_quad_C_rxp_0" LOC = "G37";
+NET "gth_quad_C_rxn_0" LOC = "G38";
+
+NET "gth_quad_C_txp_1" LOC = "D43";
+NET "gth_quad_C_txn_1" LOC = "D44";
+NET "gth_quad_C_rxp_1" LOC = "F39";
+NET "gth_quad_C_rxn_1" LOC = "F40";
+
+NET "gth_quad_C_txp_2" LOC = "A41";
+NET "gth_quad_C_txn_2" LOC = "A42";
+NET "gth_quad_C_rxp_2" LOC = "B39";
+NET "gth_quad_C_rxn_2" LOC = "B40";
+
+NET "gth_quad_C_txp_3" LOC = "C41";
+NET "gth_quad_C_txn_3" LOC = "C42";
+NET "gth_quad_C_rxp_3" LOC = "D39";
+NET "gth_quad_C_rxn_3" LOC = "D40";
+
+# Quad D X1Y0
+# Ports 11, 9, 10, 8 (left)
+# SFP 0, 2, 4, 6
+NET "gth_quad_D_refclk_p" LOC = "R4";
+NET "gth_quad_D_refclk_n" LOC = "R3";
+
+NET "gth_quad_D_txp_0" LOC = "T2";
+NET "gth_quad_D_txn_0" LOC = "T1";
+NET "gth_quad_D_rxp_0" LOC = "U4";
+NET "gth_quad_D_rxn_0" LOC = "U3";
+
+NET "gth_quad_D_txp_1" LOC = "P2";
+NET "gth_quad_D_txn_1" LOC = "P1";
+NET "gth_quad_D_rxp_1" LOC = "T6";
+NET "gth_quad_D_rxn_1" LOC = "T5";
+
+NET "gth_quad_D_txp_2" LOC = "M2";
+NET "gth_quad_D_txn_2" LOC = "M1";
+NET "gth_quad_D_rxp_2" LOC = "N8";
+NET "gth_quad_D_rxn_2" LOC = "N7";
+
+NET "gth_quad_D_txp_3" LOC = "N4";
+NET "gth_quad_D_txn_3" LOC = "N3";
+NET "gth_quad_D_rxp_3" LOC = "M6";
+NET "gth_quad_D_rxn_3" LOC = "M5";
+
+# Quad E X1Y1
+# Ports 4, 6, 5, 7 (left)
+# SFP 3, 5, 1, 7
+NET "gth_quad_E_refclk_p" LOC = "J4";
+NET "gth_quad_E_refclk_n" LOC = "J3";
+
+NET "gth_quad_E_txp_0" LOC = "L4";
+NET "gth_quad_E_txn_0" LOC = "L3";
+NET "gth_quad_E_rxp_0" LOC = "K6";
+NET "gth_quad_E_rxn_0" LOC = "K5";
+
+NET "gth_quad_E_txp_1" LOC = "K2";
+NET "gth_quad_E_txn_1" LOC = "K1";
+NET "gth_quad_E_rxp_1" LOC = "L8";
+NET "gth_quad_E_rxn_1" LOC = "L7";
+
+NET "gth_quad_E_txp_2" LOC = "G4";
+NET "gth_quad_E_txn_2" LOC = "G3";
+NET "gth_quad_E_rxp_2" LOC = "H6";
+NET "gth_quad_E_rxn_2" LOC = "H5";
+
+NET "gth_quad_E_txp_3" LOC = "H2";
+NET "gth_quad_E_txn_3" LOC = "H1";
+NET "gth_quad_E_rxp_3" LOC = "J8";
+NET "gth_quad_E_rxn_3" LOC = "J7";
+
+# Quad F X1Y2
+# Ports 1, 0, 3, 2 (left)
+# SFP 8, 9, 11, 10
+NET "gth_quad_F_refclk_p" LOC = "E4";
+NET "gth_quad_F_refclk_n" LOC = "E3";
+
+NET "gth_quad_F_txp_0" LOC = "F2";
+NET "gth_quad_F_txn_0" LOC = "F1";
+NET "gth_quad_F_rxp_0" LOC = "G8";
+NET "gth_quad_F_rxn_0" LOC = "G7";
+
+NET "gth_quad_F_txp_1" LOC = "D2";
+NET "gth_quad_F_txn_1" LOC = "D1";
+NET "gth_quad_F_rxp_1" LOC = "F6";
+NET "gth_quad_F_rxn_1" LOC = "F5";
+
+NET "gth_quad_F_txp_2" LOC = "A4";
+NET "gth_quad_F_txn_2" LOC = "A3";
+NET "gth_quad_F_rxp_2" LOC = "B6";
+NET "gth_quad_F_rxn_2" LOC = "B5";
+
+NET "gth_quad_F_txp_3" LOC = "C4";
+NET "gth_quad_F_txn_3" LOC = "C3";
+NET "gth_quad_F_rxp_3" LOC = "D6";
+NET "gth_quad_F_rxn_3" LOC = "D5";

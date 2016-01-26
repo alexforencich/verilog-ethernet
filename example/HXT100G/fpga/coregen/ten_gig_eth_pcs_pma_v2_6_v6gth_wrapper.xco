@@ -1,0 +1,185 @@
+##############################################################
+#
+# Xilinx Core Generator version 14.7
+# Date: Wed Apr  1 18:19:03 2015
+#
+##############################################################
+#
+#  This file contains the customisation parameters for a
+#  Xilinx CORE Generator IP GUI. It is strongly recommended
+#  that you do not manually alter this file as it may cause
+#  unexpected and unsupported behavior.
+#
+##############################################################
+#
+#  Generated from component: xilinx.com:ip:v6_gthwizard:1.11
+#
+##############################################################
+#
+# BEGIN Project Options
+SET addpads = false
+SET asysymbol = true
+SET busformat = BusFormatAngleBracketNotRipped
+SET createndf = false
+SET designentry = Verilog
+SET device = xc6vhx565t
+SET devicefamily = virtex6
+SET flowvendor = Other
+SET formalverification = false
+SET foundationsym = false
+SET implementationfiletype = Ngc
+SET package = ff1923
+SET removerpms = false
+SET simulationfiles = Behavioral
+SET speedgrade = -2
+SET verilogsim = true
+SET vhdlsim = false
+# END Project Options
+# BEGIN Select
+SELECT Virtex-6_FPGA_GTH_Transceiver_Wizard xilinx.com:ip:v6_gthwizard:1.11
+# END Select
+# BEGIN Parameters
+CSET component_name=ten_gig_eth_pcs_pma_v2_6_v6gth_wrapper
+CSET config_identical=true
+CSET drp_clock=50.00
+CSET gth0_datapath_width=64
+CSET gth0_encoding=10GbE_64B/66B
+CSET gth0_line_rate=10.3125
+CSET gth0_postcursor_emphasis=0
+CSET gth0_precursor_emphasis=0
+CSET gth0_protocol_file=10GBASE-R
+CSET gth0_rxeqmix=1000
+CSET gth0_tx_swing=800
+CSET gth0_use_dfetrainctrl=false
+CSET gth0_use_lat_msr=false
+CSET gth0_use_port_powerdown=true
+CSET gth0_use_port_rxbufreset=true
+CSET gth0_use_port_rxcodeerr=true
+CSET gth0_use_port_rxctrl=true
+CSET gth0_use_port_rxdisperr=false
+CSET gth0_use_port_rxencommadet=false
+CSET gth0_use_port_rxpolarity=false
+CSET gth0_use_port_rxpowerdown=true
+CSET gth0_use_port_rxslip=false
+CSET gth0_use_port_rxvalid=false
+CSET gth0_use_port_txbufreset=true
+CSET gth0_use_port_txctrl=true
+CSET gth0_use_port_txpowerdown=true
+CSET gth1_datapath_width=64
+CSET gth1_encoding=10GbE_64B/66B
+CSET gth1_line_rate=10.3125
+CSET gth1_postcursor_emphasis=0
+CSET gth1_precursor_emphasis=0
+CSET gth1_protocol_file=10GBASE-R
+CSET gth1_rxeqmix=1000
+CSET gth1_tx_swing=800
+CSET gth1_use_dfetrainctrl=false
+CSET gth1_use_lat_msr=false
+CSET gth1_use_port_powerdown=true
+CSET gth1_use_port_rxbufreset=true
+CSET gth1_use_port_rxcodeerr=true
+CSET gth1_use_port_rxctrl=true
+CSET gth1_use_port_rxdisperr=false
+CSET gth1_use_port_rxencommadet=false
+CSET gth1_use_port_rxpolarity=false
+CSET gth1_use_port_rxpowerdown=true
+CSET gth1_use_port_rxslip=false
+CSET gth1_use_port_rxvalid=false
+CSET gth1_use_port_txbufreset=true
+CSET gth1_use_port_txctrl=true
+CSET gth1_use_port_txpowerdown=true
+CSET gth2_datapath_width=64
+CSET gth2_encoding=10GbE_64B/66B
+CSET gth2_line_rate=10.3125
+CSET gth2_postcursor_emphasis=0
+CSET gth2_precursor_emphasis=0
+CSET gth2_protocol_file=10GBASE-R
+CSET gth2_rxeqmix=1000
+CSET gth2_tx_swing=800
+CSET gth2_use_dfetrainctrl=false
+CSET gth2_use_lat_msr=false
+CSET gth2_use_port_powerdown=true
+CSET gth2_use_port_rxbufreset=true
+CSET gth2_use_port_rxcodeerr=true
+CSET gth2_use_port_rxctrl=true
+CSET gth2_use_port_rxdisperr=false
+CSET gth2_use_port_rxencommadet=false
+CSET gth2_use_port_rxpolarity=false
+CSET gth2_use_port_rxpowerdown=true
+CSET gth2_use_port_rxslip=false
+CSET gth2_use_port_rxvalid=false
+CSET gth2_use_port_txbufreset=true
+CSET gth2_use_port_txctrl=true
+CSET gth2_use_port_txpowerdown=true
+CSET gth3_datapath_width=64
+CSET gth3_encoding=10GbE_64B/66B
+CSET gth3_line_rate=10.3125
+CSET gth3_postcursor_emphasis=0
+CSET gth3_precursor_emphasis=0
+CSET gth3_protocol_file=10GBASE-R
+CSET gth3_rxeqmix=1000
+CSET gth3_tx_swing=800
+CSET gth3_use_dfetrainctrl=false
+CSET gth3_use_lat_msr=false
+CSET gth3_use_port_powerdown=true
+CSET gth3_use_port_rxbufreset=true
+CSET gth3_use_port_rxcodeerr=true
+CSET gth3_use_port_rxctrl=true
+CSET gth3_use_port_rxdisperr=false
+CSET gth3_use_port_rxencommadet=false
+CSET gth3_use_port_rxpolarity=false
+CSET gth3_use_port_rxpowerdown=true
+CSET gth3_use_port_rxslip=false
+CSET gth3_use_port_rxvalid=false
+CSET gth3_use_port_txbufreset=true
+CSET gth3_use_port_txctrl=true
+CSET gth3_use_port_txpowerdown=true
+CSET gth_column=Right_Column_(X1)
+CSET gthx4lane=false
+CSET protocol_template=10GBASE-R
+CSET refclk_x0y0=CLK_Y0
+CSET refclk_x0y1=CLK_Y1
+CSET refclk_x0y2=CLK_Y2
+CSET refclk_x1y0=CLK_Y0
+CSET refclk_x1y1=CLK_Y1
+CSET refclk_x1y2=CLK_Y2
+CSET reference_clock=156.25
+CSET target_line_rate=10.3125
+CSET use_gth0_x0y0=true
+CSET use_gth0_x0y1=true
+CSET use_gth0_x0y2=true
+CSET use_gth0_x1y0=true
+CSET use_gth0_x1y1=true
+CSET use_gth0_x1y2=true
+CSET use_gth1_x0y0=true
+CSET use_gth1_x0y1=true
+CSET use_gth1_x0y2=true
+CSET use_gth1_x1y0=true
+CSET use_gth1_x1y1=true
+CSET use_gth1_x1y2=true
+CSET use_gth2_x0y0=true
+CSET use_gth2_x0y1=true
+CSET use_gth2_x0y2=true
+CSET use_gth2_x1y0=true
+CSET use_gth2_x1y1=true
+CSET use_gth2_x1y2=true
+CSET use_gth3_x0y0=true
+CSET use_gth3_x0y1=true
+CSET use_gth3_x0y2=true
+CSET use_gth3_x1y0=true
+CSET use_gth3_x1y1=true
+CSET use_gth3_x1y2=true
+CSET use_gth_quad_x0y0=false
+CSET use_gth_quad_x0y1=false
+CSET use_gth_quad_x0y2=false
+CSET use_gth_quad_x1y0=true
+CSET use_gth_quad_x1y1=false
+CSET use_gth_quad_x1y2=false
+CSET use_no_rx=false
+CSET use_no_tx=false
+# END Parameters
+# BEGIN Extra information
+MISC pkg_timestamp=2011-04-05T17:48:34Z
+# END Extra information
+GENERATE
+# CRC: 75800c49
