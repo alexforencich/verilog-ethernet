@@ -223,6 +223,8 @@ always @(posedge clk156) begin
     gth_reset_done_reg <= resetdone_0 & resetdone_1 & resetdone_2 & resetdone_3;
 end
 
+wire disable_drp_mgmt;
+
 wire disable_drp = gth_reset_done & disable_drp_mgmt;
 
 wire lane_sel = {mgmt_gnt3, mgmt_gnt2, mgmt_gnt1, mgmt_gnt0};
