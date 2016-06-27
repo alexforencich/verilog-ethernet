@@ -69,7 +69,9 @@ module axis_frame_fifo_64 #
 
 reg [ADDR_WIDTH:0] wr_ptr_reg = {ADDR_WIDTH+1{1'b0}}, wr_ptr_next;
 reg [ADDR_WIDTH:0] wr_ptr_cur_reg = {ADDR_WIDTH+1{1'b0}}, wr_ptr_cur_next;
+reg [ADDR_WIDTH:0] wr_addr_reg = {ADDR_WIDTH+1{1'b0}};
 reg [ADDR_WIDTH:0] rd_ptr_reg = {ADDR_WIDTH+1{1'b0}}, rd_ptr_next;
+reg [ADDR_WIDTH:0] rd_addr_reg = {ADDR_WIDTH+1{1'b0}};
 
 reg [DATA_WIDTH+KEEP_WIDTH+1-1:0] mem[(2**ADDR_WIDTH)-1:0];
 reg [DATA_WIDTH+KEEP_WIDTH+1-1:0] mem_read_data_reg = {DATA_WIDTH+2{1'b0}};
@@ -171,8 +173,10 @@ always @(posedge clk) begin
         good_frame_reg <= good_frame_next;
     end
 
+    wr_addr_reg <= wr_ptr_cur_next;
+
     if (write) begin
-        mem[wr_ptr_cur_reg[ADDR_WIDTH-1:0]] <= mem_write_data;
+        mem[wr_addr_reg[ADDR_WIDTH-1:0]] <= mem_write_data;
     end
 end
 
@@ -206,8 +210,10 @@ always @(posedge clk) begin
         output_axis_tvalid_reg <= output_axis_tvalid_next;
     end
 
+    rd_addr_reg <= rd_ptr_next;
+
     if (read) begin
-        mem_read_data_reg <= mem[rd_ptr_reg[ADDR_WIDTH-1:0]];
+        mem_read_data_reg <= mem[rd_addr_reg[ADDR_WIDTH-1:0]];
     end
 end
 
