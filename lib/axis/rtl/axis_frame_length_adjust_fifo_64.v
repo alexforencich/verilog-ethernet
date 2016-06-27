@@ -31,7 +31,7 @@ THE SOFTWARE.
  */
 module axis_frame_length_adjust_fifo_64 #
 (
-    parameter DATA_WIDTH = 8,
+    parameter DATA_WIDTH = 64,
     parameter KEEP_WIDTH = (DATA_WIDTH/8),
     parameter FRAME_FIFO_ADDR_WIDTH = 12,
     parameter HEADER_FIFO_ADDR_WIDTH = 3

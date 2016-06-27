@@ -121,13 +121,6 @@ always @(posedge clk) begin
         full_reg <= 0;
         empty_reg <= 1;
     end else begin
-        if (shift) begin
-            data_reg[0] <= {input_axis_tlast, input_axis_tuser, input_axis_tkeep, input_axis_tdata};
-            for (i = 0; i < DEPTH-1; i = i + 1) begin
-                data_reg[i+1] <= data_reg[i];
-            end
-        end
-
         if (inc) begin
             ptr_reg <= ptr_reg + 1;
         end else if (dec) begin
@@ -138,6 +131,13 @@ always @(posedge clk) begin
 
         full_reg <= full_next;
         empty_reg <= empty_next;
+    end
+
+    if (shift) begin
+        data_reg[0] <= {input_axis_tlast, input_axis_tuser, input_axis_tkeep, input_axis_tdata};
+        for (i = 0; i < DEPTH-1; i = i + 1) begin
+            data_reg[i+1] <= data_reg[i];
+        end
     end
 end
 
