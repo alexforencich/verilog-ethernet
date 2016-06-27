@@ -82,12 +82,10 @@ reg output_rst_sync2_reg = 1'b1;
 reg output_rst_sync3_reg = 1'b1;
 
 reg [DATA_WIDTH+KEEP_WIDTH+2-1:0] mem[(2**ADDR_WIDTH)-1:0];
+reg [DATA_WIDTH+KEEP_WIDTH+2-1:0] mem_read_data_reg = {DATA_WIDTH+2{1'b0}};
+wire [DATA_WIDTH+KEEP_WIDTH+2-1:0] mem_write_data;
 
-reg [DATA_WIDTH-1:0] output_axis_tdata_reg = {DATA_WIDTH{1'b0}};
-reg [KEEP_WIDTH-1:0] output_axis_tkeep_reg = {KEEP_WIDTH{1'b0}};
 reg output_axis_tvalid_reg = 1'b0, output_axis_tvalid_next;
-reg output_axis_tlast_reg = 1'b0;
-reg output_axis_tuser_reg = 1'b0;
 
 // full when first TWO MSBs do NOT match, but rest matches
 // (gray code equivalent of first MSB different but rest same)
@@ -103,11 +101,10 @@ reg read;
 
 assign input_axis_tready = ~full & ~input_rst_sync3_reg;
 
-assign output_axis_tdata = output_axis_tdata_reg;
-assign output_axis_tkeep = output_axis_tkeep_reg;
 assign output_axis_tvalid = output_axis_tvalid_reg;
-assign output_axis_tlast = output_axis_tlast_reg;
-assign output_axis_tuser = output_axis_tuser_reg;
+
+assign mem_write_data = {input_axis_tlast, input_axis_tuser, input_axis_tkeep, input_axis_tdata};
+assign {output_axis_tlast, output_axis_tuser, output_axis_tkeep, output_axis_tdata} = mem_read_data_reg;
 
 // reset synchronization
 always @(posedge input_clk or posedge async_rst) begin
@@ -162,7 +159,7 @@ always @(posedge input_clk) begin
     end
 
     if (write) begin
-        mem[wr_ptr_reg[ADDR_WIDTH-1:0]] <= {input_axis_tlast, input_axis_tuser, input_axis_tkeep, input_axis_tdata};
+        mem[wr_ptr_reg[ADDR_WIDTH-1:0]] <= mem_write_data;
     end
 end
 
@@ -222,7 +219,7 @@ always @(posedge output_clk) begin
     end
 
     if (read) begin
-        {output_axis_tlast_reg, output_axis_tuser_reg, output_axis_tkeep_reg, output_axis_tdata_reg} <= mem[rd_ptr_reg[ADDR_WIDTH-1:0]];
+        mem_read_data_reg <= mem[rd_ptr_reg[ADDR_WIDTH-1:0]];
     end
 end
 

@@ -64,12 +64,10 @@ reg [ADDR_WIDTH:0] wr_ptr_reg = {ADDR_WIDTH+1{1'b0}}, wr_ptr_next;
 reg [ADDR_WIDTH:0] rd_ptr_reg = {ADDR_WIDTH+1{1'b0}}, rd_ptr_next;
 
 reg [DATA_WIDTH+KEEP_WIDTH+2-1:0] mem[(2**ADDR_WIDTH)-1:0];
+reg [DATA_WIDTH+KEEP_WIDTH+2-1:0] mem_read_data_reg = {DATA_WIDTH+2{1'b0}};
+wire [DATA_WIDTH+KEEP_WIDTH+2-1:0] mem_write_data;
 
-reg [DATA_WIDTH-1:0] output_axis_tdata_reg = {DATA_WIDTH{1'b0}};
-reg [KEEP_WIDTH-1:0] output_axis_tkeep_reg = {KEEP_WIDTH{1'b0}};
 reg output_axis_tvalid_reg = 1'b0, output_axis_tvalid_next;
-reg output_axis_tlast_reg = 1'b0;
-reg output_axis_tuser_reg = 1'b0;
 
 // full when first MSB different but rest same
 wire full = ((wr_ptr_reg[ADDR_WIDTH] != rd_ptr_reg[ADDR_WIDTH]) &&
@@ -83,11 +81,10 @@ reg read;
 
 assign input_axis_tready = ~full;
 
-assign output_axis_tdata = output_axis_tdata_reg;
-assign output_axis_tkeep = output_axis_tkeep_reg;
 assign output_axis_tvalid = output_axis_tvalid_reg;
-assign output_axis_tlast = output_axis_tlast_reg;
-assign output_axis_tuser = output_axis_tuser_reg;
+
+assign mem_write_data = {input_axis_tlast, input_axis_tuser, input_axis_tkeep, input_axis_tdata};
+assign {output_axis_tlast, output_axis_tuser, output_axis_tkeep, output_axis_tdata} = mem_read_data_reg;
 
 // FIFO write logic
 always @* begin
@@ -113,7 +110,7 @@ always @(posedge clk) begin
     end
 
     if (write) begin
-        mem[wr_ptr_reg[ADDR_WIDTH-1:0]] <= {input_axis_tlast, input_axis_tuser, input_axis_tkeep, input_axis_tdata};
+        mem[wr_ptr_reg[ADDR_WIDTH-1:0]] <= mem_write_data;
     end
 end
 
@@ -149,7 +146,7 @@ always @(posedge clk) begin
     end
 
     if (read) begin
-        {output_axis_tlast_reg, output_axis_tuser_reg, output_axis_tkeep_reg, output_axis_tdata_reg} <= mem[rd_ptr_reg[ADDR_WIDTH-1:0]];
+        mem_read_data_reg <= mem[rd_ptr_reg[ADDR_WIDTH-1:0]];
     end
 end
 
