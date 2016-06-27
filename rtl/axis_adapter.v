@@ -61,9 +61,9 @@ module axis_adapter #
     output wire                          output_axis_tuser
 );
 
-// bus word widths (must be identical)
-localparam INPUT_DATA_WORD_WIDTH = INPUT_DATA_WIDTH / INPUT_KEEP_WIDTH;
-localparam OUTPUT_DATA_WORD_WIDTH = OUTPUT_DATA_WIDTH / OUTPUT_KEEP_WIDTH;
+// bus word sizes (must be identical)
+localparam INPUT_DATA_WORD_SIZE = INPUT_DATA_WIDTH / INPUT_KEEP_WIDTH;
+localparam OUTPUT_DATA_WORD_SIZE = OUTPUT_DATA_WIDTH / OUTPUT_KEEP_WIDTH;
 // output bus is wider
 localparam EXPAND_BUS = OUTPUT_KEEP_WIDTH > INPUT_KEEP_WIDTH;
 // total data and keep widths
@@ -77,18 +77,18 @@ localparam CYCLE_KEEP_WIDTH = KEEP_WIDTH / CYCLE_COUNT;
 
 // bus width assertions
 initial begin
-    if (INPUT_DATA_WORD_WIDTH * INPUT_KEEP_WIDTH != INPUT_DATA_WIDTH) begin
+    if (INPUT_DATA_WORD_SIZE * INPUT_KEEP_WIDTH != INPUT_DATA_WIDTH) begin
         $error("Error: input data width not evenly divisble");
         $finish;
     end
 
-    if (OUTPUT_DATA_WORD_WIDTH * OUTPUT_KEEP_WIDTH != OUTPUT_DATA_WIDTH) begin
+    if (OUTPUT_DATA_WORD_SIZE * OUTPUT_KEEP_WIDTH != OUTPUT_DATA_WIDTH) begin
         $error("Error: output data width not evenly divisble");
         $finish;
     end
 
-    if (INPUT_DATA_WORD_WIDTH != OUTPUT_DATA_WORD_WIDTH) begin
-        $error("Error: word width mismatch");
+    if (INPUT_DATA_WORD_SIZE != OUTPUT_DATA_WORD_SIZE) begin
+        $error("Error: word size mismatch");
         $finish;
     end
 end
