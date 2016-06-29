@@ -318,7 +318,9 @@ assign phy_reset_n = ~rst;
 assign uart_txd = 0;
 
 gmii_phy_if #(
-    .TARGET(TARGET)
+    .TARGET(TARGET),
+    .IODDR_STYLE("IODDR2"),
+    .CLOCK_INPUT_STYLE("BUFIO2")
 )
 gmii_phy_if_inst (
     .clk(clk),

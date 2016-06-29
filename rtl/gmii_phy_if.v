@@ -32,7 +32,15 @@ THE SOFTWARE.
 module gmii_phy_if #
 (
     // target ("SIM", "GENERIC", "XILINX", "ALTERA")
-    parameter TARGET = "GENERIC"
+    parameter TARGET = "GENERIC",
+    // IODDR style ("IODDR", "IODDR2")
+    // Use IODDR for Virtex-4, Virtex-5, Virtex-6, 7 Series, Ultrascale
+    // Use IODDR2 for Spartan-6
+    parameter IODDR_STYLE = "IODDR2",
+    // Clock input style ("BUFG", "BUFR", "BUFIO", "BUFIO2")
+    // Use BUFR for Virtex-5, Virtex-6, 7-series
+    // Use BUFIO2 for Spartan-6
+    parameter CLOCK_INPUT_STYLE = "BUFIO2"
 )
 (
     input  wire        clk,
@@ -75,21 +83,83 @@ if (TARGET == "XILINX") begin
 
     // use Xilinx clocking primitives
 
-    // pass through RX clock to input buffers
-    BUFIO2
-    phy_gmii_rx_clk_bufio (
-        .I(phy_gmii_rx_clk),
-        .DIVCLK(phy_gmii_rx_clk_int),
-        .IOCLK(phy_gmii_rx_clk_io),
-        .SERDESSTROBE()
-    );
+    if (CLOCK_INPUT_STYLE == "BUFG") begin
 
-    // pass through RX clock to MAC
-    BUFG
-    phy_gmii_rx_clk_bufg (
-        .I(phy_gmii_rx_clk_int),
-        .O(mac_gmii_rx_clk)
-    );
+        // buffer RX clock
+        BUFG
+        phy_gmii_rx_clk_bufg (
+            .I(phy_gmii_rx_clk),
+            .O(phy_gmii_rx_clk_int)
+        );
+
+        // pass through RX clock to MAC and input buffers
+        assign phy_gmii_rx_clk_io = phy_gmii_rx_clk_int;
+        assign mac_gmii_rx_clk = phy_gmii_rx_clk_int;
+        
+    end else if (CLOCK_INPUT_STYLE == "BUFR") begin
+
+        assign phy_gmii_rx_clk_int = phy_gmii_rx_clk;
+
+        // pass through RX clock to input buffers
+        BUFIO
+        phy_gmii_rx_clk_bufio (
+            .I(phy_gmii_rx_clk_int),
+            .O(phy_gmii_rx_clk_io)
+        );
+
+        // pass through RX clock to MAC
+        BUFR #(
+            .BUFR_DIVIDE("BYPASS")
+        )
+        phy_gmii_rx_clk_bufr (
+            .I(phy_gmii_rx_clk_int),
+            .O(mac_gmii_rx_clk),
+            .CE(1'b1),
+            .CLR(1'b0)
+        );
+        
+    end else if (CLOCK_INPUT_STYLE == "BUFIO") begin
+
+        assign phy_gmii_rx_clk_int = phy_gmii_rx_clk;
+
+        // pass through RX clock to input buffers
+        BUFIO
+        phy_gmii_rx_clk_bufio (
+            .I(phy_gmii_rx_clk_int),
+            .O(phy_gmii_rx_clk_io)
+        );
+
+        // pass through RX clock to MAC
+        BUFG
+        phy_gmii_rx_clk_bufg (
+            .I(phy_gmii_rx_clk_int),
+            .O(mac_gmii_rx_clk)
+        );
+
+    end else if (CLOCK_INPUT_STYLE == "BUFIO2") begin
+
+        // pass through RX clock to input buffers
+        BUFIO2 #(
+            .DIVIDE(1),
+            .DIVIDE_BYPASS("TRUE"),
+            .I_INVERT("FALSE"),
+            .USE_DOUBLER("FALSE")
+        )
+        phy_gmii_rx_clk_bufio (
+            .I(phy_gmii_rx_clk),
+            .DIVCLK(phy_gmii_rx_clk_int),
+            .IOCLK(phy_gmii_rx_clk_io),
+            .SERDESSTROBE()
+        );
+
+        // pass through RX clock to MAC
+        BUFG
+        phy_gmii_rx_clk_bufg (
+            .I(phy_gmii_rx_clk_int),
+            .O(mac_gmii_rx_clk)
+        );
+        
+    end
 
     // pass through clock to MAC
     assign mac_gmii_tx_clk = clk;
@@ -98,17 +168,30 @@ if (TARGET == "XILINX") begin
     assign phy_gmii_tx_clk_int = clk;
     
     // invert to center clock edge in valid window
-    ODDR2
-    phy_gmii_tx_clk_oddr (
-        .Q(phy_gmii_tx_clk),
-        .C0(phy_gmii_tx_clk_int),
-        .C1(~phy_gmii_tx_clk_int),
-        .CE(1'b1),
-        .D0(1'b0),
-        .D1(1'b1),
-        .R(1'b0),
-        .S(1'b0)
-    );
+    if (IODDR_STYLE == "IODDR") begin
+        ODDR
+        phy_gmii_tx_clk_oddr (
+            .Q(phy_gmii_tx_clk),
+            .C(phy_gmii_tx_clk_int),
+            .CE(1'b1),
+            .D1(1'b0),
+            .D2(1'b1),
+            .R(1'b0),
+            .S(1'b0)
+        );
+    end else if (IODDR_STYLE == "IODDR2") begin
+        ODDR2
+        phy_gmii_tx_clk_oddr (
+            .Q(phy_gmii_tx_clk),
+            .C0(phy_gmii_tx_clk_int),
+            .C1(~phy_gmii_tx_clk_int),
+            .CE(1'b1),
+            .D0(1'b0),
+            .D1(1'b1),
+            .R(1'b0),
+            .S(1'b0)
+        );
+    end
 
 end else begin
 
