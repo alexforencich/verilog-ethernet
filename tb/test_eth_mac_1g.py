@@ -40,7 +40,7 @@ module = 'eth_mac_1g'
 srcs = []
 
 srcs.append("../rtl/%s.v" % module)
-srcs.append("../rtl/eth_crc_8.v")
+srcs.append("../rtl/lfsr.v")
 srcs.append("../rtl/eth_mac_1g_rx.v")
 srcs.append("../rtl/eth_mac_1g_tx.v")
 srcs.append("test_%s.v" % module)

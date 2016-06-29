@@ -68,60 +68,124 @@ assign input_axis_tready = 1'b1;
 assign output_fcs = fcs_reg;
 assign output_fcs_valid = fcs_valid_reg;
 
-eth_crc_8
-eth_crc_8_inst (
+lfsr #(
+    .LFSR_WIDTH(32),
+    .LFSR_POLY(32'h4c11db7),
+    .LFSR_CONFIG("GALOIS"),
+    .REVERSE(1),
+    .DATA_WIDTH(8),
+    .OUTPUT_WIDTH(32),
+    .STYLE("AUTO")
+)
+eth_crc_8 (
     .data_in(input_axis_tdata[7:0]),
-    .crc_state(crc_state),
-    .crc_next(crc_next0)
+    .lfsr_in(crc_state),
+    .lfsr_out(crc_next0)
 );
 
-eth_crc_16
-eth_crc_16_inst (
+lfsr #(
+    .LFSR_WIDTH(32),
+    .LFSR_POLY(32'h4c11db7),
+    .LFSR_CONFIG("GALOIS"),
+    .REVERSE(1),
+    .DATA_WIDTH(16),
+    .OUTPUT_WIDTH(32),
+    .STYLE("AUTO")
+)
+eth_crc_16 (
     .data_in(input_axis_tdata[15:0]),
-    .crc_state(crc_state),
-    .crc_next(crc_next1)
+    .lfsr_in(crc_state),
+    .lfsr_out(crc_next1)
 );
 
-eth_crc_24
-eth_crc_24_inst (
+lfsr #(
+    .LFSR_WIDTH(32),
+    .LFSR_POLY(32'h4c11db7),
+    .LFSR_CONFIG("GALOIS"),
+    .REVERSE(1),
+    .DATA_WIDTH(24),
+    .OUTPUT_WIDTH(32),
+    .STYLE("AUTO")
+)
+eth_crc_24 (
     .data_in(input_axis_tdata[23:0]),
-    .crc_state(crc_state),
-    .crc_next(crc_next2)
+    .lfsr_in(crc_state),
+    .lfsr_out(crc_next2)
 );
 
-eth_crc_32
-eth_crc_32_inst (
+lfsr #(
+    .LFSR_WIDTH(32),
+    .LFSR_POLY(32'h4c11db7),
+    .LFSR_CONFIG("GALOIS"),
+    .REVERSE(1),
+    .DATA_WIDTH(32),
+    .OUTPUT_WIDTH(32),
+    .STYLE("AUTO")
+)
+eth_crc_32 (
     .data_in(input_axis_tdata[31:0]),
-    .crc_state(crc_state),
-    .crc_next(crc_next3)
+    .lfsr_in(crc_state),
+    .lfsr_out(crc_next3)
 );
 
-eth_crc_40
-eth_crc_40_inst (
+lfsr #(
+    .LFSR_WIDTH(32),
+    .LFSR_POLY(32'h4c11db7),
+    .LFSR_CONFIG("GALOIS"),
+    .REVERSE(1),
+    .DATA_WIDTH(40),
+    .OUTPUT_WIDTH(32),
+    .STYLE("AUTO")
+)
+eth_crc_40 (
     .data_in(input_axis_tdata[39:0]),
-    .crc_state(crc_state),
-    .crc_next(crc_next4)
+    .lfsr_in(crc_state),
+    .lfsr_out(crc_next4)
 );
 
-eth_crc_48
-eth_crc_48_inst (
+lfsr #(
+    .LFSR_WIDTH(32),
+    .LFSR_POLY(32'h4c11db7),
+    .LFSR_CONFIG("GALOIS"),
+    .REVERSE(1),
+    .DATA_WIDTH(48),
+    .OUTPUT_WIDTH(32),
+    .STYLE("AUTO")
+)
+eth_crc_48 (
     .data_in(input_axis_tdata[47:0]),
-    .crc_state(crc_state),
-    .crc_next(crc_next5)
+    .lfsr_in(crc_state),
+    .lfsr_out(crc_next5)
 );
 
-eth_crc_56
-eth_crc_56_inst (
+lfsr #(
+    .LFSR_WIDTH(32),
+    .LFSR_POLY(32'h4c11db7),
+    .LFSR_CONFIG("GALOIS"),
+    .REVERSE(1),
+    .DATA_WIDTH(56),
+    .OUTPUT_WIDTH(32),
+    .STYLE("AUTO")
+)
+eth_crc_56 (
     .data_in(input_axis_tdata[55:0]),
-    .crc_state(crc_state),
-    .crc_next(crc_next6)
+    .lfsr_in(crc_state),
+    .lfsr_out(crc_next6)
 );
 
-eth_crc_64
-eth_crc_64_inst (
+lfsr #(
+    .LFSR_WIDTH(32),
+    .LFSR_POLY(32'h4c11db7),
+    .LFSR_CONFIG("GALOIS"),
+    .REVERSE(1),
+    .DATA_WIDTH(64),
+    .OUTPUT_WIDTH(32),
+    .STYLE("AUTO")
+)
+eth_crc_64 (
     .data_in(input_axis_tdata[63:0]),
-    .crc_state(crc_state),
-    .crc_next(crc_next7)
+    .lfsr_in(crc_state),
+    .lfsr_out(crc_next7)
 );
 
 always @(posedge clk) begin

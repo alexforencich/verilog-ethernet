@@ -42,14 +42,7 @@ module = 'eth_mac_10g_rx'
 srcs = []
 
 srcs.append("../rtl/%s.v" % module)
-srcs.append("../rtl/eth_crc_8.v")
-srcs.append("../rtl/eth_crc_16.v")
-srcs.append("../rtl/eth_crc_24.v")
-srcs.append("../rtl/eth_crc_32.v")
-srcs.append("../rtl/eth_crc_40.v")
-srcs.append("../rtl/eth_crc_48.v")
-srcs.append("../rtl/eth_crc_56.v")
-srcs.append("../rtl/eth_crc_64.v")
+srcs.append("../rtl/lfsr.v")
 srcs.append("test_%s.v" % module)
 
 src = ' '.join(srcs)

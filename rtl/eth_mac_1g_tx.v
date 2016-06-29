@@ -92,11 +92,19 @@ assign gmii_txd = gmii_txd_reg;
 assign gmii_tx_en = gmii_tx_en_reg;
 assign gmii_tx_er = gmii_tx_er_reg;
 
-eth_crc_8
-eth_crc_8_inst (
+lfsr #(
+    .LFSR_WIDTH(32),
+    .LFSR_POLY(32'h4c11db7),
+    .LFSR_CONFIG("GALOIS"),
+    .REVERSE(1),
+    .DATA_WIDTH(8),
+    .OUTPUT_WIDTH(32),
+    .STYLE("AUTO")
+)
+eth_crc_8 (
     .data_in(gmii_txd_next),
-    .crc_state(crc_state),
-    .crc_next(crc_next)
+    .lfsr_in(crc_state),
+    .lfsr_out(crc_next)
 );
 
 always @* begin

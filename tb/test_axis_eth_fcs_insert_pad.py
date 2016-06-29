@@ -41,7 +41,7 @@ module = 'axis_eth_fcs_insert'
 srcs = []
 
 srcs.append("../rtl/%s.v" % module)
-srcs.append("../rtl/eth_crc_8.v")
+srcs.append("../rtl/lfsr.v")
 srcs.append("test_%s_pad.v" % module)
 
 src = ' '.join(srcs)

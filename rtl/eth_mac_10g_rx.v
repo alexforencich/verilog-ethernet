@@ -116,39 +116,79 @@ assign error_bad_fcs = error_bad_fcs_reg;
 
 wire last_cycle = state_reg == STATE_LAST;
 
-eth_crc_8
-eth_crc_8_inst (
+lfsr #(
+    .LFSR_WIDTH(32),
+    .LFSR_POLY(32'h4c11db7),
+    .LFSR_CONFIG("GALOIS"),
+    .REVERSE(1),
+    .DATA_WIDTH(8),
+    .OUTPUT_WIDTH(32),
+    .STYLE("AUTO")
+)
+eth_crc_8 (
     .data_in(last_cycle ? xgmii_rxd_d1[39:32] : xgmii_rxd_d0[7:0]),
-    .crc_state(last_cycle ? crc_state3 : crc_state),
-    .crc_next(crc_next0)
+    .lfsr_in(last_cycle ? crc_state3 : crc_state),
+    .lfsr_out(crc_next0)
 );
 
-eth_crc_16
-eth_crc_16_inst (
+lfsr #(
+    .LFSR_WIDTH(32),
+    .LFSR_POLY(32'h4c11db7),
+    .LFSR_CONFIG("GALOIS"),
+    .REVERSE(1),
+    .DATA_WIDTH(16),
+    .OUTPUT_WIDTH(32),
+    .STYLE("AUTO")
+)
+eth_crc_16 (
     .data_in(last_cycle ? xgmii_rxd_d1[47:32] : xgmii_rxd_d0[15:0]),
-    .crc_state(last_cycle ? crc_state3 : crc_state),
-    .crc_next(crc_next1)
+    .lfsr_in(last_cycle ? crc_state3 : crc_state),
+    .lfsr_out(crc_next1)
 );
 
-eth_crc_24
-eth_crc_24_inst (
+lfsr #(
+    .LFSR_WIDTH(32),
+    .LFSR_POLY(32'h4c11db7),
+    .LFSR_CONFIG("GALOIS"),
+    .REVERSE(1),
+    .DATA_WIDTH(24),
+    .OUTPUT_WIDTH(32),
+    .STYLE("AUTO")
+)
+eth_crc_24 (
     .data_in(last_cycle ? xgmii_rxd_d1[55:32] : xgmii_rxd_d0[23:0]),
-    .crc_state(last_cycle ? crc_state3 : crc_state),
-    .crc_next(crc_next2)
+    .lfsr_in(last_cycle ? crc_state3 : crc_state),
+    .lfsr_out(crc_next2)
 );
 
-eth_crc_32
-eth_crc_32_inst (
+lfsr #(
+    .LFSR_WIDTH(32),
+    .LFSR_POLY(32'h4c11db7),
+    .LFSR_CONFIG("GALOIS"),
+    .REVERSE(1),
+    .DATA_WIDTH(32),
+    .OUTPUT_WIDTH(32),
+    .STYLE("AUTO")
+)
+eth_crc_32 (
     .data_in(last_cycle ? xgmii_rxd_d1[63:32] : xgmii_rxd_d0[31:0]),
-    .crc_state(last_cycle ? crc_state3 : crc_state),
-    .crc_next(crc_next3)
+    .lfsr_in(last_cycle ? crc_state3 : crc_state),
+    .lfsr_out(crc_next3)
 );
 
-eth_crc_64
-eth_crc_64_inst (
+lfsr #(
+    .LFSR_WIDTH(32),
+    .LFSR_POLY(32'h4c11db7),
+    .LFSR_CONFIG("GALOIS"),
+    .REVERSE(1),
+    .DATA_WIDTH(64),
+    .OUTPUT_WIDTH(32),
+    .STYLE("AUTO")
+)
+eth_crc_64 (
     .data_in(xgmii_rxd_d0[63:0]),
-    .crc_state(crc_state),
-    .crc_next(crc_next7)
+    .lfsr_in(crc_state),
+    .lfsr_out(crc_next7)
 );
 
 // detect control characters
