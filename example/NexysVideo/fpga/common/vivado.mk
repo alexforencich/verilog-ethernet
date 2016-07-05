@@ -13,6 +13,7 @@
 # SYN_FILES - space-separated list of source files
 # INC_FILES - space-separated list of include files
 # XDC_FILES - space-separated list of timing constraint files
+# XCI_FILES - space-separated list of IP XCI files
 # 
 # Example:
 # 
@@ -21,6 +22,7 @@
 # FPGA_DEVICE = xcvu095-ffva2104-2-e
 # SYN_FILES = rtl/fpga.v
 # XDC_FILES = fpga.xdc
+# XCI_FILES = ip/pcspma.xci
 # include ../common/vivado.mk
 # 
 ###################################################################
@@ -37,6 +39,7 @@ CONFIG ?= config.mk
 
 SYN_FILES_REL = $(patsubst %, ../%, $(SYN_FILES))
 INC_FILES_REL = $(patsubst %, ../%, $(INC_FILES))
+XCI_FILES_REL = $(patsubst %, ../%, $(XCI_FILES))
 
 ifdef XDC_FILES
   XDC_FILES_REL = $(patsubst %, ../%, $(XDC_FILES))
@@ -56,10 +59,11 @@ all: fpga
 fpga: $(FPGA_TOP).bit
 
 tmpclean:
-	-rm -rf *.log *.jou *.cache *.hw *.ip_user_files *.runs *.xpr *.tcl *.html *.xml .Xil defines.v
+	-rm -rf *.log *.jou *.cache *.hw *.ip_user_files *.runs *.xpr *.html *.xml *.sim *.srcs *.str .Xil defines.v
+	-rm -rf create_project.tcl run_synth.tcl run_impl.tcl generate_bit.tcl
 
 clean: tmpclean
-	-rm -rf *.bit
+	-rm -rf *.bit program.tcl
 
 distclean: clean
 	-rm -rf rev
@@ -69,7 +73,7 @@ distclean: clean
 ###################################################################
 
 # Vivado project file
-%.xpr: Makefile
+%.xpr: Makefile $(XCI_FILES_REL)
 	rm -rf defines.v
 	touch defines.v
 	for x in $(DEFS); do echo '`define' $$x >> defines.v; done
@@ -77,6 +81,7 @@ distclean: clean
 	echo "add_files -fileset sources_1 defines.v" >> create_project.tcl
 	for x in $(SYN_FILES_REL); do echo "add_files -fileset sources_1 $$x" >> create_project.tcl; done
 	for x in $(XDC_FILES_REL); do echo "add_files -fileset constrs_1 $$x" >> create_project.tcl; done
+	for x in $(XCI_FILES_REL); do echo "import_ip $$x" >> create_project.tcl; done
 	echo "exit" >> create_project.tcl
 	vivado -mode batch -source create_project.tcl
 
