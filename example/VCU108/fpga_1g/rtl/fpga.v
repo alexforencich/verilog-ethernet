@@ -221,26 +221,26 @@ wire phy_gmii_rx_er_int;
 
 wire [15:0] status_vector;
 
-wire [4:0] pcspma_config_vector = {
-    1'b1, // autonegotiation enable
-    1'b0, // isolate
-    1'b0, // power down
-    1'b0, // loopback enable
-    1'b0  // unidirectional enable
-};
+wire [4:0] pcspma_config_vector;
 
-wire [15:0] pcspma_an_config_vector = {
-    1'b1,    // SGMII link status
-    1'b1,    // SGMII Acknowledge
-    2'b01,   // full duplex
-    2'b10,   // SGMII speed
-    1'b0,    // reserved
-    2'b00,   // pause frames - SGMII reserved
-    1'b0,    // reserved
-    1'b0,    // full duplex - SGMII reserved
-    4'b0000, // reserved
-    1'b1     // SGMII
-};
+assign pcspma_config_vector[4] = 1'b1; // autonegotiation enable
+assign pcspma_config_vector[3] = 1'b0; // isolate
+assign pcspma_config_vector[2] = 1'b0; // power down
+assign pcspma_config_vector[1] = 1'b0; // loopback enable
+assign pcspma_config_vector[0] = 1'b0; // unidirectional enable
+
+wire [15:0] pcspma_an_config_vector;
+
+assign pcspma_an_config_vector[15]    = 1'b1;    // SGMII link status
+assign pcspma_an_config_vector[14]    = 1'b1;    // SGMII Acknowledge
+assign pcspma_an_config_vector[13:12] = 2'b01;   // full duplex
+assign pcspma_an_config_vector[11:10] = 2'b10;   // SGMII speed
+assign pcspma_an_config_vector[9]     = 1'b0;    // reserved
+assign pcspma_an_config_vector[8:7]   = 2'b00;   // pause frames - SGMII reserved
+assign pcspma_an_config_vector[6]     = 1'b0;    // reserved
+assign pcspma_an_config_vector[5]     = 1'b0;    // full duplex - SGMII reserved
+assign pcspma_an_config_vector[4:1]   = 4'b0000; // reserved
+assign pcspma_an_config_vector[0]     = 1'b1;    // SGMII
 
 gig_ethernet_pcs_pma_0 
 eth_pcspma (
