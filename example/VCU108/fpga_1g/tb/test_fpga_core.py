@@ -147,7 +147,7 @@ def bench():
     btnd = Signal(bool(0))
     btnr = Signal(bool(0))
     btnc = Signal(bool(0))
-    sw = Signal(intbv(0)[3:])
+    sw = Signal(intbv(0)[4:])
     phy_gmii_clk = Signal(bool(0))
     phy_gmii_rst = Signal(bool(0))
     phy_gmii_rxd = Signal(intbv(0)[8:])
