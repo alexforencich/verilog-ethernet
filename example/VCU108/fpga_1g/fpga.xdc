@@ -72,6 +72,7 @@ set_property -dict {LOC AT21 IOSTANDARD LVCMOS18} [get_ports phy_int_n]
 #set_property -dict {LOC AV24 IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 8} [get_ports phy_mdio]
 #set_property -dict {LOC AV21 IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 8} [get_ports phy_mdc]
 
+# 625 MHz ref clock from SGMII PHY
 create_clock -period 1.600 -name phy_sgmii_clk [get_ports phy_sgmii_clk_p]
 set_clock_groups -asynchronous -group phy_sgmii_clk
 

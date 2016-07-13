@@ -29,10 +29,7 @@ THE SOFTWARE.
 /*
  * FPGA core logic
  */
-module fpga_core #
-(
-    parameter TARGET = "XILINX"
-)
+module fpga_core
 (
     /*
      * Clock: 125MHz

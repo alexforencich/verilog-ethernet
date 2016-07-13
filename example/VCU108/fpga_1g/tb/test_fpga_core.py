@@ -136,7 +136,6 @@ def dut_fpga_core(clk,
 def bench():
 
     # Parameters
-    TARGET = "SIM"
 
     # Inputs
     clk = Signal(bool(0))

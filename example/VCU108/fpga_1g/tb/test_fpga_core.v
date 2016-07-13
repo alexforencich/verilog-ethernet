@@ -32,7 +32,6 @@ THE SOFTWARE.
 module test_fpga_core;
 
 // Parameters
-parameter TARGET = "SIM";
 
 // Inputs
 reg clk = 0;
@@ -96,9 +95,7 @@ initial begin
     $dumpvars(0, test_fpga_core);
 end
 
-fpga_core #(
-    .TARGET(TARGET)
-)
+fpga_core
 UUT (
     .clk(clk),
     .rst(rst),
