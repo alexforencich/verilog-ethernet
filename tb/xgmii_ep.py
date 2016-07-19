@@ -109,6 +109,8 @@ def XGMIISource(clk, rst,
                 fifo=None,
                 name=None):
 
+    assert len(txd) == 64
+
     @instance
     def logic():
         frame = None
@@ -209,6 +211,8 @@ def XGMIISink(clk, rst,
               rxc,
               fifo=None,
               name=None):
+
+    assert len(rxd) == 64
 
     @instance
     def logic():

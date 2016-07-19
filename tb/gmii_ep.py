@@ -88,6 +88,8 @@ def GMIISource(clk, rst,
                fifo=None,
                name=None):
 
+    assert len(txd) == 8
+
     @instance
     def logic():
         frame = None
@@ -140,6 +142,8 @@ def GMIISink(clk, rst,
              rx_er,
              fifo=None,
              name=None):
+
+    assert len(rxd) == 8
 
     @instance
     def logic():
