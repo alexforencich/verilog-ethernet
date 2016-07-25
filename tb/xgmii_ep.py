@@ -109,6 +109,10 @@ def XGMIISource(clk, rst,
                 fifo=None,
                 name=None):
 
+    assert len(txd) in [32, 64]
+
+    bw = int(len(txd)/8)
+
     @instance
     def logic():
         frame = None
@@ -123,23 +127,23 @@ def XGMIISource(clk, rst,
 
             if rst:
                 frame = None
-                txd.next = 0x0707070707070707
-                txc.next = 0xff
+                txd.next = 0x0707070707070707 if bw == 8 else 0x07070707
+                txc.next = 0xff if bw == 8 else 0xf
                 dl = []
                 cl = []
                 ifg_cnt = 0
                 deficit_idle_cnt = 0
                 nt = False
             else:
-                if ifg_cnt > 7:
-                    ifg_cnt -= 8
-                    txd.next = 0x0707070707070707
-                    txc.next = 0xff
+                if ifg_cnt > bw-1:
+                    ifg_cnt -= bw
+                    txd.next = 0x0707070707070707 if bw == 8 else 0x07070707
+                    txc.next = 0xff if bw == 8 else 0xf
                 elif len(dl) > 0 or nt:
                     d = 0
                     c = 0
 
-                    for i in range(8):
+                    for i in range(bw):
                         if len(dl) > 0:
                             d |= dl.pop(0) << (8*i)
                             c |= cl.pop(0) << i
@@ -148,7 +152,7 @@ def XGMIISource(clk, rst,
                             if nt:
                                 d |= 0xfd << (8*i)
                                 nt = False
-                                ifg_cnt = 12 - (8-i) + deficit_idle_cnt
+                                ifg_cnt = 12 - (bw-i) + deficit_idle_cnt
                             else:
                                 d |= 0x07 << (8*i)
                             c |= 1 << i
@@ -180,7 +184,7 @@ def XGMIISource(clk, rst,
                         d = 0xfb07070707
                         c = 0x1f
 
-                    for i in range(k,8):
+                    for i in range(k,bw):
                         if len(dl) > 0:
                             d |= dl.pop(0) << (8*i)
                             c |= cl.pop(0) << i
@@ -198,8 +202,8 @@ def XGMIISource(clk, rst,
                 else:
                     ifg_cnt = 0
                     deficit_idle_cnt = 0
-                    txd.next = 0x0707070707070707
-                    txc.next = 0xff
+                    txd.next = 0x0707070707070707 if bw == 8 else 0x07070707
+                    txc.next = 0xff if bw == 8 else 0xf
 
     return logic
 
@@ -209,6 +213,10 @@ def XGMIISink(clk, rst,
               rxc,
               fifo=None,
               name=None):
+
+    assert len(rxd) in [32, 64]
+
+    bw = int(len(rxd)/8)
 
     @instance
     def logic():
@@ -230,10 +238,10 @@ def XGMIISink(clk, rst,
                         frame = XGMIIFrame()
                         d = [0x55]
                         c = [0]
-                        for i in range(1,8):
+                        for i in range(1,bw):
                             d.append((int(rxd) >> (8*i)) & 0xff)
                             c.append((int(rxc) >> i) & 1)
-                    elif (rxc >> 4) & 1 and (rxd >> 32) & 0xff == 0xfb:
+                    elif bw == 8 and (rxc >> 4) & 1 and (rxd >> 32) & 0xff == 0xfb:
                         # start in lane 4
                         frame = XGMIIFrame()
                         d = [0x55]
@@ -242,7 +250,7 @@ def XGMIISink(clk, rst,
                             d.append((int(rxd) >> (8*i)) & 0xff)
                             c.append((int(rxc) >> i) & 1)
                 else:
-                    for i in range(8):
+                    for i in range(bw):
                         if (rxc >> i) & 1 and (rxd >> (8*i)) & 0xff == 0xfd:
                             # terminate
                             frame.parse(d, c)

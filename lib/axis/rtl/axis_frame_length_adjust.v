@@ -272,8 +272,8 @@ always @* begin
 
             if (input_axis_tready & input_axis_tvalid) begin
                 // transfer through
-                word_cnt = 0;
-                for (i = 0; i <= KEEP_WIDTH; i = i + 1) begin
+                word_cnt = 1;
+                for (i = 1; i <= KEEP_WIDTH; i = i + 1) begin
                     //bit_cnt = bit_cnt + monitor_axis_tkeep[i];
                     if (input_axis_tkeep == ({KEEP_WIDTH{1'b1}}) >> (KEEP_WIDTH-i)) word_cnt = i;
                 end
