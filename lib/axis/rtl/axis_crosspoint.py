@@ -11,7 +11,7 @@ from jinja2 import Template
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__.strip())
-    parser.add_argument('-p', '--ports',  type=int, default=4, help="number of ports")
+    parser.add_argument('-p', '--ports',  type=int, default=[4], nargs='+', help="number of ports")
     parser.add_argument('-n', '--name',   type=str, help="module name")
     parser.add_argument('-o', '--output', type=str, help="output file name")
 
@@ -24,8 +24,15 @@ def main():
         exit(1)
 
 def generate(ports=4, name=None, output=None):
+    if type(ports) is int:
+        m = n = ports
+    elif len(ports) == 1:
+        m = n = ports[0]
+    else:
+        m, n = ports
+
     if name is None:
-        name = "axis_crosspoint_{0}x{0}".format(ports)
+        name = "axis_crosspoint_{0}x{1}".format(m, n)
 
     if output is None:
         output = name + ".v"
@@ -34,9 +41,9 @@ def generate(ports=4, name=None, output=None):
 
     output_file = open(output, 'w')
 
-    print("Generating {0} port AXI Stream crosspoint {1}...".format(ports, name))
+    print("Generating {0}x{1} port AXI Stream crosspoint {2}...".format(m, n, name))
 
-    select_width = int(math.ceil(math.log(ports, 2)))
+    select_width = int(math.ceil(math.log(m, 2)))
 
     t = Template(u"""/*
 
@@ -67,7 +74,7 @@ THE SOFTWARE.
 `timescale 1ns / 1ps
 
 /*
- * AXI4-Stream {{n}}x{{n}} crosspoint
+ * AXI4-Stream {{m}}x{{n}} crosspoint
  */
 module {{name}} #
 (
@@ -80,7 +87,7 @@ module {{name}} #
     /*
      * AXI Stream inputs
      */
-{%- for p in ports %}
+{%- for p in range(m) %}
     input  wire [DATA_WIDTH-1:0]  input_{{p}}_axis_tdata,
     input  wire                   input_{{p}}_axis_tvalid,
     input  wire                   input_{{p}}_axis_tlast,
@@ -89,7 +96,7 @@ module {{name}} #
     /*
      * AXI Stream outputs
      */
-{%- for p in ports %}
+{%- for p in range(n) %}
     output wire [DATA_WIDTH-1:0]  output_{{p}}_axis_tdata,
     output wire                   output_{{p}}_axis_tvalid,
     output wire                   output_{{p}}_axis_tlast,
@@ -98,28 +105,28 @@ module {{name}} #
     /*
      * Control
      */
-{%- for p in ports %}
+{%- for p in range(n) %}
     input  wire [{{w-1}}:0]             output_{{p}}_select{% if not loop.last %},{% endif %}
 {%- endfor %}
 );
-{% for p in ports %}
+{% for p in range(m) %}
 reg [DATA_WIDTH-1:0]  input_{{p}}_axis_tdata_reg = {DATA_WIDTH{1'b0}};
 reg                   input_{{p}}_axis_tvalid_reg = 1'b0;
 reg                   input_{{p}}_axis_tlast_reg = 1'b0;
 reg                   input_{{p}}_axis_tuser_reg = 1'b0;
 {% endfor %}
 
-{%- for p in ports %}
+{%- for p in range(n) %}
 reg [DATA_WIDTH-1:0]  output_{{p}}_axis_tdata_reg = {DATA_WIDTH{1'b0}};
 reg                   output_{{p}}_axis_tvalid_reg = 1'b0;
 reg                   output_{{p}}_axis_tlast_reg = 1'b0;
 reg                   output_{{p}}_axis_tuser_reg = 1'b0;
 {% endfor %}
 
-{%- for p in ports %}
+{%- for p in range(n) %}
 reg [{{w-1}}:0]             output_{{p}}_select_reg = {{w}}'d0;
 {%- endfor %}
-{% for p in ports %}
+{% for p in range(n) %}
 assign output_{{p}}_axis_tdata = output_{{p}}_axis_tdata_reg;
 assign output_{{p}}_axis_tvalid = output_{{p}}_axis_tvalid_reg;
 assign output_{{p}}_axis_tlast = output_{{p}}_axis_tlast_reg;
@@ -128,41 +135,41 @@ assign output_{{p}}_axis_tuser = output_{{p}}_axis_tuser_reg;
 
 always @(posedge clk) begin
     if (rst) begin
-{%- for p in ports %}
+{%- for p in range(n) %}
         output_{{p}}_select_reg <= {{w}}'d0;
 {%- endfor %}
-{% for p in ports %}
+{% for p in range(m) %}
         input_{{p}}_axis_tvalid_reg <= 1'b0;
 {%- endfor %}
-{% for p in ports %}
+{% for p in range(n) %}
         output_{{p}}_axis_tvalid_reg <= 1'b0;
 {%- endfor %}
     end else begin
-{%- for p in ports %}
+{%- for p in range(m) %}
         input_{{p}}_axis_tvalid_reg <= input_{{p}}_axis_tvalid;
 {%- endfor %}
-{% for p in ports %}
+{% for p in range(n) %}
         output_{{p}}_select_reg <= output_{{p}}_select;
 {%- endfor %}
-{%- for p in ports %}
+{%- for p in range(n) %}
 
         case (output_{{p}}_select_reg)
-{%- for q in ports %}
+{%- for q in range(m) %}
             {{w}}'d{{q}}: output_{{p}}_axis_tvalid_reg <= input_{{q}}_axis_tvalid_reg;
 {%- endfor %}
         endcase
 {%- endfor %}
     end
-{%- for p in ports %}
+{%- for p in range(m) %}
 
     input_{{p}}_axis_tdata_reg <= input_{{p}}_axis_tdata;
     input_{{p}}_axis_tlast_reg <= input_{{p}}_axis_tlast;
     input_{{p}}_axis_tuser_reg <= input_{{p}}_axis_tuser;
 {%- endfor %}
-{%- for p in ports %}
+{%- for p in range(n) %}
 
     case (output_{{p}}_select_reg)
-{%- for q in ports %}
+{%- for q in range(m) %}
         {{w}}'d{{q}}: begin
             output_{{p}}_axis_tdata_reg <= input_{{q}}_axis_tdata_reg;
             output_{{p}}_axis_tlast_reg <= input_{{q}}_axis_tlast_reg;
@@ -178,10 +185,10 @@ endmodule
 """)
     
     output_file.write(t.render(
-        n=ports,
+        m=m,
+        n=n,
         w=select_width,
-        name=name,
-        ports=range(ports)
+        name=name
     ))
     
     print("Done")

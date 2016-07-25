@@ -205,6 +205,18 @@ AXI stream interface.  Trigger signal used to reset and dump counts out of AXI
 interface, along with tag value.  Use with axis_frame_join_N to form a single
 monolithic frame from multiple monitored points with the same trigger.
 
+### axis_switch_NxN module
+
+Frame-aware AXI stream switch with parametrizable data width.
+
+Can be generated with arbitrary port counts with axis_switch.py.
+
+### axis_switch_64_NxN module
+
+Frame-aware AXI stream switch with tkeep signal and parametrizable data width.
+
+Can be generated with arbitrary port counts with axis_mux_64.py.
+
 ### axis_tap module
 
 AXI stream tap module.  Used to make a copy of an AXI stream bus without
@@ -276,6 +288,10 @@ Parametrizable priority encoder.
     axis_srl_fifo_64.v                 : SRL-based FIFO (64 bit)
     axis_srl_register.v                : SRL-based register
     axis_srl_register_64.v             : SRL-based register (64 bit)
+    axis_switch.py                     : AXI stream switch generator
+    axis_switch_4x4.v                  : 4x4 port AXI stream switch
+    axis_switch_64.py                  : AXI stream switch generator (64 bit)
+    axis_switch_64_4x4.v               : 4x4 port AXI stream switch (64 bit)
     axis_stat_counter.v                : Statistics counter
     axis_tap.v                         : AXI stream tap
     axis_tap_64.v                      : AXI stream tap (64 bit)
