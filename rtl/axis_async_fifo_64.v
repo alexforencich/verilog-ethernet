@@ -128,7 +128,7 @@ always @(posedge output_clk or posedge async_rst) begin
         output_rst_sync3_reg <= 1'b1;
     end else begin
         output_rst_sync1_reg <= 1'b0;
-        output_rst_sync2_reg <= output_rst_sync1_reg;
+        output_rst_sync2_reg <= input_rst_sync1_reg | output_rst_sync1_reg;
         output_rst_sync3_reg <= output_rst_sync2_reg;
     end
 end
