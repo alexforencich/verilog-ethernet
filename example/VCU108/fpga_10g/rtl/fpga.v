@@ -274,6 +274,7 @@ wire [7:0]  qsfp_rxc_4_int = 8'hff;
 
 wire [535:0] configuration_vector;
 wire [447:0] status_vector;
+wire [7:0] core_status;
 
 assign configuration_vector[0]       = 1'b0; // PMA Loopback Enable
 assign configuration_vector[14:1]    = 0;
@@ -378,7 +379,7 @@ ten_gig_eth_pcs_pma_inst (
     .configuration_vector(configuration_vector),
     .status_vector(status_vector),
     .pma_pmd_type(3'b101),
-    .core_status()
+    .core_status(core_status)
 );
 
 // SGMII interface to PHY
@@ -467,6 +468,10 @@ gig_eth_pcspma (
     .signal_detect          (1'b1)
 );
 
+wire [7:0] led_int;
+
+assign led = sw[0] ? {7'd0, core_status[0]} : led_int;
+
 fpga_core
 core_inst (
     /*
@@ -484,7 +489,7 @@ core_inst (
     .btnr(btnr_int),
     .btnc(btnc_int),
     .sw(sw_int),
-    .led(led),
+    .led(led_int),
     /*
      * Ethernet: QSFP28
      */
