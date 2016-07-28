@@ -80,11 +80,11 @@ module fpga (
     // input  wire       qsfp_mgt_refclk_1_n,
     // output wire       qsfp_recclk_p,
     // output wire       qsfp_recclk_n,
-    // output wire       qsfp_modesell,
-    // output wire       qsfp_resetl,
-    // output wire       qsfp_modpresl,
-    // input  wire       qsfp_intl,
-    // output wire       qsfp_lpmode,
+    output wire       qsfp_modesell,
+    output wire       qsfp_resetl,
+    input  wire       qsfp_modprsl,
+    input  wire       qsfp_intl,
+    output wire       qsfp_lpmode,
 
     /*
      * Ethernet: 1000BASE-T SGMII
@@ -251,6 +251,10 @@ sync_signal_inst (
 );
 
 // XGMII 10G PHY
+assign qsfp_modesell = 1'b1;
+assign qsfp_resetl = 1'b1;
+assign qsfp_lpmode = 1'b0;
+
 wire [63:0] qsfp_txd_1_int;
 wire [7:0]  qsfp_txc_1_int;
 wire [63:0] qsfp_rxd_1_int;

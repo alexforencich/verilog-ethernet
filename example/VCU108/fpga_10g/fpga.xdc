@@ -99,11 +99,11 @@ set_property -dict {LOC AF39} [get_ports qsfp_mgt_refclk_0_n] ;# MGTREFCLK0N_127
 #set_property -dict {LOC AD39} [get_ports qsfp_mgt_refclk_1_n] ;# MGTREFCLK1N_127 from U57 CKOUT2 SI5328
 #set_property -dict {LOC AG34 IOSTANDARD LVDS} [get_ports qsfp_recclk_p] ;# to U57 CKIN1 SI5328
 #set_property -dict {LOC AH35 IOSTANDARD LVDS} [get_ports qsfp_recclk_n] ;# to U57 CKIN1 SI5328
-#set_property -dict {LOC AL24 IOSTANDARD LVCMOS18} [get_ports qsfp_modesell]
-#set_property -dict {LOC AM24 IOSTANDARD LVCMOS18} [get_ports qsfp_resetl]
-#set_property -dict {LOC AL25 IOSTANDARD LVCMOS18} [get_ports qsfp_modpresl]
-#set_property -dict {LOC AL21 IOSTANDARD LVCMOS18} [get_ports qsfp_intl]
-#set_property -dict {LOC AM21 IOSTANDARD LVCMOS18} [get_ports qsfp_lpmode]
+set_property -dict {LOC AL24 IOSTANDARD LVCMOS18} [get_ports qsfp_modesell]
+set_property -dict {LOC AM24 IOSTANDARD LVCMOS18} [get_ports qsfp_resetl]
+set_property -dict {LOC AL25 IOSTANDARD LVCMOS18} [get_ports qsfp_modprsl]
+set_property -dict {LOC AL21 IOSTANDARD LVCMOS18} [get_ports qsfp_intl]
+set_property -dict {LOC AM21 IOSTANDARD LVCMOS18} [get_ports qsfp_lpmode]
 
 # I2C interface
 #set_property -dict {LOC AN21 IOSTANDARD LVCMOS18} [get_ports i2c_scl]
