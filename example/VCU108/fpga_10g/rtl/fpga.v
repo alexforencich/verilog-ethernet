@@ -52,8 +52,8 @@ module fpga (
     /*
      * I2C for board management
      */
-    // inout  wire       i2c_scl,
-    // inout  wire       i2c_sda,
+    inout  wire       i2c_scl,
+    inout  wire       i2c_sda,
 
     /*
      * Ethernet: QSFP28
@@ -250,6 +250,102 @@ sync_signal_inst (
     .out({uart_rxd_int, uart_cts_int})
 );
 
+// SI570 I2C
+wire i2c_scl_i;
+wire i2c_scl_o;
+wire i2c_scl_t;
+wire i2c_sda_i;
+wire i2c_sda_o;
+wire i2c_sda_t;
+
+assign i2c_scl_i = i2c_scl;
+assign i2c_scl = i2c_scl_t ? 1'bz : i2c_scl_o;
+assign i2c_sda_i = i2c_sda;
+assign i2c_sda = i2c_sda_t ? 1'bz : i2c_sda_o;
+
+wire [6:0] si570_i2c_cmd_address;
+wire si570_i2c_cmd_start;
+wire si570_i2c_cmd_read;
+wire si570_i2c_cmd_write;
+wire si570_i2c_cmd_write_multiple;
+wire si570_i2c_cmd_stop;
+wire si570_i2c_cmd_valid;
+wire si570_i2c_cmd_ready;
+
+wire [7:0] si570_i2c_data;
+wire si570_i2c_data_valid;
+wire si570_i2c_data_ready;
+wire si570_i2c_data_last;
+
+wire si570_i2c_init_busy;
+
+// delay start by ~10 ms
+reg [20:0] si570_i2c_init_start_delay = 21'd0;
+
+always @(posedge clk_125mhz_int) begin
+    if (rst_125mhz_int) begin
+        si570_i2c_init_start_delay <= 21'd0;
+    end else begin
+        if (!si570_i2c_init_start_delay[20]) begin
+            si570_i2c_init_start_delay <= si570_i2c_init_start_delay + 21'd1;
+        end
+    end
+end
+
+si570_i2c_init
+si570_i2c_init_inst (
+    .clk(clk_125mhz_int),
+    .rst(rst_125mhz_int),
+    .cmd_address(si570_i2c_cmd_address),
+    .cmd_start(si570_i2c_cmd_start),
+    .cmd_read(si570_i2c_cmd_read),
+    .cmd_write(si570_i2c_cmd_write),
+    .cmd_write_multiple(si570_i2c_cmd_write_multiple),
+    .cmd_stop(si570_i2c_cmd_stop),
+    .cmd_valid(si570_i2c_cmd_valid),
+    .cmd_ready(si570_i2c_cmd_ready),
+    .data_out(si570_i2c_data),
+    .data_out_valid(si570_i2c_data_valid),
+    .data_out_ready(si570_i2c_data_ready),
+    .data_out_last(si570_i2c_data_last),
+    .busy(si570_i2c_init_busy),
+    .start(si570_i2c_init_start_delay[20])
+);
+
+i2c_master
+si570_i2c_master (
+    .clk(clk_125mhz_int),
+    .rst(rst_125mhz_int),
+    .cmd_address(si570_i2c_cmd_address),
+    .cmd_start(si570_i2c_cmd_start),
+    .cmd_read(si570_i2c_cmd_read),
+    .cmd_write(si570_i2c_cmd_write),
+    .cmd_write_multiple(si570_i2c_cmd_write_multiple),
+    .cmd_stop(si570_i2c_cmd_stop),
+    .cmd_valid(si570_i2c_cmd_valid),
+    .cmd_ready(si570_i2c_cmd_ready),
+    .data_in(si570_i2c_data),
+    .data_in_valid(si570_i2c_data_valid),
+    .data_in_ready(si570_i2c_data_ready),
+    .data_in_last(si570_i2c_data_last),
+    .data_out(),
+    .data_out_valid(),
+    .data_out_ready(1),
+    .data_out_last(),
+    .scl_i(i2c_scl_i),
+    .scl_o(i2c_scl_o),
+    .scl_t(i2c_scl_t),
+    .sda_i(i2c_sda_i),
+    .sda_o(i2c_sda_o),
+    .sda_t(i2c_sda_t),
+    .busy(),
+    .bus_control(),
+    .bus_active(),
+    .missed_ack(),
+    .prescale(800),
+    .stop_on_idle(1)
+);
+
 // XGMII 10G PHY
 assign qsfp_modesell = 1'b1;
 assign qsfp_resetl = 1'b1;
@@ -322,7 +418,7 @@ ten_gig_eth_pcs_pma_inst (
 
     .coreclk_out(),
 
-    .reset(rst_125mhz_int),
+    .reset(rst_125mhz_int | si570_i2c_init_busy),
 
     .sim_speedup_control(1'b0),
 

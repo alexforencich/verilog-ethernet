@@ -106,7 +106,7 @@ set_property -dict {LOC AL21 IOSTANDARD LVCMOS18} [get_ports qsfp_intl]
 set_property -dict {LOC AM21 IOSTANDARD LVCMOS18} [get_ports qsfp_lpmode]
 
 # I2C interface
-#set_property -dict {LOC AN21 IOSTANDARD LVCMOS18} [get_ports i2c_scl]
-#set_property -dict {LOC AP21 IOSTANDARD LVCMOS18} [get_ports i2c_sda]
+set_property -dict {LOC AN21 IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 8} [get_ports i2c_scl]
+set_property -dict {LOC AP21 IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 8} [get_ports i2c_sda]
 
 
