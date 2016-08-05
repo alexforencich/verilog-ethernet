@@ -238,6 +238,8 @@ def bench():
                         yield clk.posedge
                         yield clk.posedge
                         yield clk.posedge
+                        yield clk.posedge
+                        yield clk.posedge
 
                         rx_frame = None
                         if not sink_queue.empty():
@@ -276,6 +278,8 @@ def bench():
 
                         yield wait()
 
+                        yield clk.posedge
+                        yield clk.posedge
                         yield clk.posedge
                         yield clk.posedge
                         yield clk.posedge
@@ -336,6 +340,8 @@ def bench():
 
                         yield wait()
 
+                        yield clk.posedge
+                        yield clk.posedge
                         yield clk.posedge
                         yield clk.posedge
                         yield clk.posedge
