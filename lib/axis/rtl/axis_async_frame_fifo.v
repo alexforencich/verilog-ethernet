@@ -92,8 +92,11 @@ reg output_rst_sync2_reg = 1'b1;
 reg output_rst_sync3_reg = 1'b1;
 
 reg [DATA_WIDTH+1-1:0] mem[(2**ADDR_WIDTH)-1:0];
-reg [DATA_WIDTH+1-1:0] mem_read_data_reg = {DATA_WIDTH+2{1'b0}};
+reg [DATA_WIDTH+1-1:0] mem_read_data_reg = {DATA_WIDTH+1{1'b0}};
+reg mem_read_data_valid_reg = 1'b0, mem_read_data_valid_next;
 wire [DATA_WIDTH+1-1:0] mem_write_data;
+
+reg [DATA_WIDTH+1-1:0] output_data_reg = {DATA_WIDTH+1{1'b0}};
 
 reg output_axis_tvalid_reg = 1'b0, output_axis_tvalid_next;
 
@@ -111,6 +114,7 @@ wire full_cur = ((wr_ptr_reg[ADDR_WIDTH] != wr_ptr_cur_reg[ADDR_WIDTH]) &&
 // control signals
 reg write;
 reg read;
+reg store_output;
 
 reg drop_frame_reg = 1'b0, drop_frame_next;
 reg overflow_reg = 1'b0, overflow_next;
@@ -135,7 +139,7 @@ assign input_axis_tready = (~full | DROP_WHEN_FULL) & ~input_rst_sync3_reg;
 assign output_axis_tvalid = output_axis_tvalid_reg;
 
 assign mem_write_data = {input_axis_tlast, input_axis_tdata};
-assign {output_axis_tlast, output_axis_tdata} = mem_read_data_reg;
+assign {output_axis_tlast, output_axis_tdata} = output_data_reg;
 
 assign input_status_overflow = overflow_reg;
 assign input_status_bad_frame = bad_frame_reg;
@@ -308,18 +312,19 @@ always @* begin
     rd_ptr_next = rd_ptr_reg;
     rd_ptr_gray_next = rd_ptr_gray_reg;
 
-    output_axis_tvalid_next = output_axis_tvalid_reg;
+    mem_read_data_valid_next = mem_read_data_valid_reg;
 
     if (output_axis_tready | ~output_axis_tvalid) begin
         // output data not valid OR currently being transferred
         if (~empty) begin
             // not empty, perform read
             read = 1'b1;
-            output_axis_tvalid_next = 1'b1;
+            mem_read_data_valid_next = 1'b1;
             rd_ptr_next = rd_ptr_reg + 1;
             rd_ptr_gray_next = rd_ptr_next ^ (rd_ptr_next >> 1);
         end else begin
-            output_axis_tvalid_next = 1'b0;
+            // empty, invalidate
+            mem_read_data_valid_next = 1'b0;
         end
     end
 end
@@ -328,17 +333,41 @@ always @(posedge output_clk) begin
     if (output_rst_sync3_reg) begin
         rd_ptr_reg <= {ADDR_WIDTH+1{1'b0}};
         rd_ptr_gray_reg <= {ADDR_WIDTH+1{1'b0}};
-        output_axis_tvalid_reg <= 1'b0;
+        mem_read_data_valid_reg <= 1'b0;
     end else begin
         rd_ptr_reg <= rd_ptr_next;
         rd_ptr_gray_reg <= rd_ptr_gray_next;
-        output_axis_tvalid_reg <= output_axis_tvalid_next;
+        mem_read_data_valid_reg <= mem_read_data_valid_next;
     end
 
     rd_addr_reg <= rd_ptr_next;
 
     if (read) begin
         mem_read_data_reg <= mem[rd_addr_reg[ADDR_WIDTH-1:0]];
+    end
+end
+
+// Output register
+always @* begin
+    store_output = 1'b0;
+
+    output_axis_tvalid_next = output_axis_tvalid_reg;
+
+    if (output_axis_tready | ~output_axis_tvalid) begin
+        store_output = 1'b1;
+        output_axis_tvalid_next = mem_read_data_valid_reg;
+    end
+end
+
+always @(posedge output_clk) begin
+    if (output_rst_sync3_reg) begin
+        output_axis_tvalid_reg <= 1'b0;
+    end else begin
+        output_axis_tvalid_reg <= output_axis_tvalid_next;
+    end
+
+    if (store_output) begin
+        output_data_reg <= mem_read_data_reg;
     end
 end
 
