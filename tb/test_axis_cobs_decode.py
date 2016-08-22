@@ -260,7 +260,7 @@ def bench():
 
         # testbench stimulus
 
-        for payload_len in list(range(1,33))+list(range(252,261))+[512,1024]:
+        for payload_len in list(range(1,33))+list(range(253,259))+[512]:
             gen = prbs31()
             for block in [bytearray([0]*payload_len),
                         bytearray([k%255+1 for k in range(payload_len)]),
