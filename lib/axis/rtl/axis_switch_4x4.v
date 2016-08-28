@@ -220,55 +220,6 @@ assign input_1_axis_tready = input_1_axis_tready_reg;
 assign input_2_axis_tready = input_2_axis_tready_reg;
 assign input_3_axis_tready = input_3_axis_tready_reg;
 
-// mux for start of packet detection
-reg selected_input_0_axis_tvalid;
-
-always @* begin
-    case (grant_encoded_0)
-        2'd0: selected_input_0_axis_tvalid = input_0_axis_tvalid;
-        2'd1: selected_input_0_axis_tvalid = input_1_axis_tvalid;
-        2'd2: selected_input_0_axis_tvalid = input_2_axis_tvalid;
-        2'd3: selected_input_0_axis_tvalid = input_3_axis_tvalid;
-        default: selected_input_0_axis_tvalid = 1'b0;
-    endcase
-end
-
-reg selected_input_1_axis_tvalid;
-
-always @* begin
-    case (grant_encoded_1)
-        2'd0: selected_input_1_axis_tvalid = input_0_axis_tvalid;
-        2'd1: selected_input_1_axis_tvalid = input_1_axis_tvalid;
-        2'd2: selected_input_1_axis_tvalid = input_2_axis_tvalid;
-        2'd3: selected_input_1_axis_tvalid = input_3_axis_tvalid;
-        default: selected_input_1_axis_tvalid = 1'b0;
-    endcase
-end
-
-reg selected_input_2_axis_tvalid;
-
-always @* begin
-    case (grant_encoded_2)
-        2'd0: selected_input_2_axis_tvalid = input_0_axis_tvalid;
-        2'd1: selected_input_2_axis_tvalid = input_1_axis_tvalid;
-        2'd2: selected_input_2_axis_tvalid = input_2_axis_tvalid;
-        2'd3: selected_input_2_axis_tvalid = input_3_axis_tvalid;
-        default: selected_input_2_axis_tvalid = 1'b0;
-    endcase
-end
-
-reg selected_input_3_axis_tvalid;
-
-always @* begin
-    case (grant_encoded_3)
-        2'd0: selected_input_3_axis_tvalid = input_0_axis_tvalid;
-        2'd1: selected_input_3_axis_tvalid = input_1_axis_tvalid;
-        2'd2: selected_input_3_axis_tvalid = input_2_axis_tvalid;
-        2'd3: selected_input_3_axis_tvalid = input_3_axis_tvalid;
-        default: selected_input_3_axis_tvalid = 1'b0;
-    endcase
-end
-
 // mux for incoming packet
 
 reg [DATA_WIDTH-1:0] current_input_0_axis_tdata;
@@ -747,38 +698,42 @@ always @* begin
 
     // output control
 
-    if (enable_0_reg) begin
-        if (current_input_0_axis_tvalid & current_input_0_axis_tready) begin
-            enable_0_next = ~current_input_0_axis_tlast;
+    if (current_input_0_axis_tvalid & current_input_0_axis_tready) begin
+        if (current_input_0_axis_tlast) begin
+            enable_0_next = 1'b0;
         end
-    end else if (grant_valid_0 & selected_input_0_axis_tvalid) begin
+    end
+    if (~enable_0_reg & grant_valid_0) begin
         enable_0_next = 1'b1;
         select_0_next = grant_encoded_0;
     end
 
-    if (enable_1_reg) begin
-        if (current_input_1_axis_tvalid & current_input_1_axis_tready) begin
-            enable_1_next = ~current_input_1_axis_tlast;
+    if (current_input_1_axis_tvalid & current_input_1_axis_tready) begin
+        if (current_input_1_axis_tlast) begin
+            enable_1_next = 1'b0;
         end
-    end else if (grant_valid_1 & selected_input_1_axis_tvalid) begin
+    end
+    if (~enable_1_reg & grant_valid_1) begin
         enable_1_next = 1'b1;
         select_1_next = grant_encoded_1;
     end
 
-    if (enable_2_reg) begin
-        if (current_input_2_axis_tvalid & current_input_2_axis_tready) begin
-            enable_2_next = ~current_input_2_axis_tlast;
+    if (current_input_2_axis_tvalid & current_input_2_axis_tready) begin
+        if (current_input_2_axis_tlast) begin
+            enable_2_next = 1'b0;
         end
-    end else if (grant_valid_2 & selected_input_2_axis_tvalid) begin
+    end
+    if (~enable_2_reg & grant_valid_2) begin
         enable_2_next = 1'b1;
         select_2_next = grant_encoded_2;
     end
 
-    if (enable_3_reg) begin
-        if (current_input_3_axis_tvalid & current_input_3_axis_tready) begin
-            enable_3_next = ~current_input_3_axis_tlast;
+    if (current_input_3_axis_tvalid & current_input_3_axis_tready) begin
+        if (current_input_3_axis_tlast) begin
+            enable_3_next = 1'b0;
         end
-    end else if (grant_valid_3 & selected_input_3_axis_tvalid) begin
+    end
+    if (~enable_3_reg & grant_valid_3) begin
         enable_3_next = 1'b1;
         select_3_next = grant_encoded_3;
     end

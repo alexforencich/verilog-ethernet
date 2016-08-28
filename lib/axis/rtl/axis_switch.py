@@ -174,20 +174,6 @@ wire                 output_{{p}}_axis_tready_int_early;
 assign input_{{p}}_axis_tready = input_{{p}}_axis_tready_reg;
 {%- endfor %}
 
-// mux for start of packet detection
-
-{%- for p in range(n) %}
-reg selected_input_{{p}}_axis_tvalid;
-
-always @* begin
-    case (grant_encoded_{{p}})
-{%- for q in range(m) %}
-        {{cm}}'d{{q}}: selected_input_{{p}}_axis_tvalid = input_{{q}}_axis_tvalid;
-{%- endfor %}
-        default: selected_input_{{p}}_axis_tvalid = 1'b0;
-    endcase
-end
-{% endfor %}
 // mux for incoming packet
 {% for p in range(n) %}
 reg [DATA_WIDTH-1:0] current_input_{{p}}_axis_tdata;
@@ -302,11 +288,12 @@ always @* begin
 {% endfor %}
     // output control
 {% for p in range(n) %}
-    if (enable_{{p}}_reg) begin
-        if (current_input_{{p}}_axis_tvalid & current_input_{{p}}_axis_tready) begin
-            enable_{{p}}_next = ~current_input_{{p}}_axis_tlast;
+    if (current_input_{{p}}_axis_tvalid & current_input_{{p}}_axis_tready) begin
+        if (current_input_{{p}}_axis_tlast) begin
+            enable_{{p}}_next = 1'b0;
         end
-    end else if (grant_valid_{{p}} & selected_input_{{p}}_axis_tvalid) begin
+    end
+    if (~enable_{{p}}_reg & grant_valid_{{p}}) begin
         enable_{{p}}_next = 1'b1;
         select_{{p}}_next = grant_encoded_{{p}};
     end

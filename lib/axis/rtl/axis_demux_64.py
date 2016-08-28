@@ -146,12 +146,14 @@ always @* begin
 
     input_axis_tready_next = 1'b0;
 
-    if (frame_reg) begin
-        if (input_axis_tvalid & input_axis_tready) begin
-            // end of frame detection
-            frame_next = ~input_axis_tlast;
+    if (input_axis_tvalid & input_axis_tready) begin
+        // end of frame detection
+        if (input_axis_tlast) begin
+            frame_next = 1'b0;
         end
-    end else if (enable & input_axis_tvalid & ~current_output_tvalid) begin
+    end
+
+    if (~frame_reg & enable & input_axis_tvalid & ~current_output_tvalid) begin
         // start of frame, grab select value
         frame_next = 1'b1;
         select_next = select;

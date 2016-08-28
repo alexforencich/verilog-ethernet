@@ -181,12 +181,14 @@ always @* begin
     input_2_axis_tready_next = 1'b0;
     input_3_axis_tready_next = 1'b0;
 
-    if (frame_reg) begin
-        if (current_input_tvalid & current_input_tready) begin
-            // end of frame detection
-            frame_next = ~current_input_tlast;
+    if (current_input_tvalid & current_input_tready) begin
+        // end of frame detection
+        if (current_input_tlast) begin
+            frame_next = 1'b0;
         end
-    end else if (enable & selected_input_tvalid) begin
+    end
+
+    if (~frame_reg & enable & selected_input_tvalid) begin
         // start of frame, grab select value
         frame_next = 1'b1;
         select_next = select;
