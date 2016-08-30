@@ -261,12 +261,14 @@ always @* begin
     output_udp_length_next = output_udp_length_reg;
     output_udp_checksum_next = output_udp_checksum_reg;
 
-    if (frame_reg) begin
-        if (input_udp_payload_tvalid & input_udp_payload_tready) begin
-            // end of frame detection
-            frame_next = ~input_udp_payload_tlast;
+    if (input_udp_payload_tvalid & input_udp_payload_tready) begin
+        // end of frame detection
+        if (input_udp_payload_tlast) begin
+            frame_next = 1'b0;
         end
-    end else if (enable & input_udp_hdr_valid & ~current_output_udp_hdr_valid & ~current_output_tvalid) begin
+    end
+
+    if (~frame_reg & enable & input_udp_hdr_valid & ~current_output_udp_hdr_valid & ~current_output_tvalid) begin
         // start of frame, grab select value
         frame_next = 1'b1;
         select_next = select;

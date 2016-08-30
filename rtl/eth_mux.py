@@ -209,12 +209,14 @@ always @* begin
     output_eth_src_mac_next = output_eth_src_mac_reg;
     output_eth_type_next = output_eth_type_reg;
 
-    if (frame_reg) begin
-        if (current_input_tvalid & current_input_tready) begin
-            // end of frame detection
-            frame_next = ~current_input_tlast;
+    if (current_input_tvalid & current_input_tready) begin
+        // end of frame detection
+        if (current_input_tlast) begin
+            frame_next = 1'b0;
         end
-    end else if (enable & ~output_eth_hdr_valid & selected_input_eth_hdr_valid) begin
+    end
+
+    if (~frame_reg & enable & ~output_eth_hdr_valid & selected_input_eth_hdr_valid) begin
         // start of frame, grab select value
         frame_next = 1'b1;
         select_next = select;

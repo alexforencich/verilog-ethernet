@@ -207,12 +207,14 @@ always @* begin
     output_eth_src_mac_next = output_eth_src_mac_reg;
     output_eth_type_next = output_eth_type_reg;
 
-    if (frame_reg) begin
-        if (input_eth_payload_tvalid & input_eth_payload_tready) begin
-            // end of frame detection
-            frame_next = ~input_eth_payload_tlast;
+    if (input_eth_payload_tvalid & input_eth_payload_tready) begin
+        // end of frame detection
+        if (input_eth_payload_tlast) begin
+            frame_next = 1'b0;
         end
-    end else if (enable & input_eth_hdr_valid & ~current_output_eth_hdr_valid & ~current_output_tvalid) begin
+    end
+
+    if (~frame_reg & enable & input_eth_hdr_valid & ~current_output_eth_hdr_valid & ~current_output_tvalid) begin
         // start of frame, grab select value
         frame_next = 1'b1;
         select_next = select;

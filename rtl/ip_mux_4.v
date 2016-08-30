@@ -430,12 +430,14 @@ always @* begin
     output_ip_source_ip_next = output_ip_source_ip_reg;
     output_ip_dest_ip_next = output_ip_dest_ip_reg;
 
-    if (frame_reg) begin
-        if (current_input_tvalid & current_input_tready) begin
-            // end of frame detection
-            frame_next = ~current_input_tlast;
+    if (current_input_tvalid & current_input_tready) begin
+        // end of frame detection
+        if (current_input_tlast) begin
+            frame_next = 1'b0;
         end
-    end else if (enable & ~output_ip_hdr_valid & selected_input_ip_hdr_valid) begin
+    end
+
+    if (~frame_reg & enable & ~output_ip_hdr_valid & selected_input_ip_hdr_valid) begin
         // start of frame, grab select value
         frame_next = 1'b1;
         select_next = select;

@@ -345,12 +345,14 @@ always @* begin
     output_udp_length_next = output_udp_length_reg;
     output_udp_checksum_next = output_udp_checksum_reg;
 
-    if (frame_reg) begin
-        if (current_input_tvalid & current_input_tready) begin
-            // end of frame detection
-            frame_next = ~current_input_tlast;
+    if (current_input_tvalid & current_input_tready) begin
+        // end of frame detection
+        if (current_input_tlast) begin
+            frame_next = 1'b0;
         end
-    end else if (enable & ~output_udp_hdr_valid & selected_input_udp_hdr_valid) begin
+    end
+
+    if (~frame_reg & enable & ~output_udp_hdr_valid & selected_input_udp_hdr_valid) begin
         // start of frame, grab select value
         frame_next = 1;
         select_next = select;
