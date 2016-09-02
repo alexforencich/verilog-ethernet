@@ -189,7 +189,7 @@ always @* begin
 
     mem_read_data_valid_next = mem_read_data_valid_reg;
 
-    if (output_axis_tready | ~output_axis_tvalid) begin
+    if (store_output | ~mem_read_data_valid_reg) begin
         // output data not valid OR currently being transferred
         if (~empty) begin
             // not empty, perform read
