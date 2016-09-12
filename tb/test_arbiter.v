@@ -24,11 +24,14 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
-`timescale 1 ns / 1 ps
+`timescale 1ns / 1ps
 
+/*
+ * Testbench for arbiter
+ */
 module test_arbiter;
 
-// parameters
+// Parameters
 localparam PORTS = 32;
 localparam TYPE = "PRIORITY";
 localparam BLOCK = "REQUEST";
@@ -48,14 +51,18 @@ wire [$clog2(PORTS)-1:0] grant_encoded;
 
 initial begin
     // myhdl integration
-    $from_myhdl(clk,
-                rst,
-                current_test,
-                request,
-                acknowledge);
-    $to_myhdl(grant,
-              grant_valid,
-              grant_encoded);
+    $from_myhdl(
+        clk,
+        rst,
+        current_test,
+        request,
+        acknowledge
+    );
+    $to_myhdl(
+        grant,
+        grant_valid,
+        grant_encoded
+    );
 
     // dump file
     $dumpfile("test_arbiter.lxt");

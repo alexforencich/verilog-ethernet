@@ -24,16 +24,22 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
-`timescale 1 ns / 1 ps
+`timescale 1ns / 1ps
 
+/*
+ * Testbench for ll_axis_bridge
+ */
 module test_ll_axis_bridge;
+
+// Parameters
+parameter DATA_WIDTH = 8;
 
 // Inputs
 reg clk = 0;
 reg rst = 0;
 reg [7:0] current_test = 0;
 
-reg [7:0] ll_data_in = 0;
+reg [DATA_WIDTH-1:0] ll_data_in = 0;
 reg ll_sof_in_n = 1;
 reg ll_eof_in_n = 1;
 reg ll_src_rdy_in_n = 1;
@@ -41,31 +47,37 @@ reg axis_tready = 0;
 
 // Outputs
 wire ll_dst_rdy_out_n;
-wire [7:0] axis_tdata;
+wire [DATA_WIDTH-1:0] axis_tdata;
 wire axis_tvalid;
 wire axis_tlast;
 
 initial begin
     // myhdl integration
-    $from_myhdl(clk,
-                rst,
-                current_test,
-                ll_data_in,
-                ll_sof_in_n,
-                ll_eof_in_n,
-                ll_src_rdy_in_n,
-                axis_tready);
-    $to_myhdl(axis_tdata,
-              axis_tvalid,
-              axis_tlast,
-              ll_dst_rdy_out_n);
+    $from_myhdl(
+        clk,
+        rst,
+        current_test,
+        ll_data_in,
+        ll_sof_in_n,
+        ll_eof_in_n,
+        ll_src_rdy_in_n,
+        axis_tready
+    );
+    $to_myhdl(
+        axis_tdata,
+        axis_tvalid,
+        axis_tlast,
+        ll_dst_rdy_out_n
+    );
 
     // dump file
     $dumpfile("test_ll_axis_bridge.lxt");
     $dumpvars(0, test_ll_axis_bridge);
 end
 
-ll_axis_bridge
+ll_axis_bridge #(
+    .DATA_WIDTH(DATA_WIDTH)
+)
 UUT (
     .clk(clk),
     .rst(rst),

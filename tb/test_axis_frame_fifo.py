@@ -26,73 +26,33 @@ THE SOFTWARE.
 from myhdl import *
 import os
 
-try:
-    from queue import Queue
-except ImportError:
-    from Queue import Queue
-
 import axis_ep
 
 module = 'axis_frame_fifo'
+testbench = 'test_%s' % module
 
 srcs = []
 
 srcs.append("../rtl/%s.v" % module)
-srcs.append("test_%s.v" % module)
+srcs.append("%s.v" % testbench)
 
 src = ' '.join(srcs)
 
-build_cmd = "iverilog -o test_%s.vvp %s" % (module, src)
-
-def dut_axis_frame_fifo(clk,
-                 rst,
-                 current_test,
-
-                 input_axis_tdata,
-                 input_axis_tvalid,
-                 input_axis_tready,
-                 input_axis_tlast,
-                 input_axis_tuser,
-
-                 output_axis_tdata,
-                 output_axis_tvalid,
-                 output_axis_tready,
-                 output_axis_tlast,
-
-                 overflow,
-                 bad_frame,
-                 good_frame):
-
-    if os.system(build_cmd):
-        raise Exception("Error running build command")
-    return Cosimulation("vvp -m myhdl test_%s.vvp -lxt2" % module,
-                clk=clk,
-                rst=rst,
-                current_test=current_test,
-
-                input_axis_tdata=input_axis_tdata,
-                input_axis_tvalid=input_axis_tvalid,
-                input_axis_tready=input_axis_tready,
-                input_axis_tlast=input_axis_tlast,
-                input_axis_tuser=input_axis_tuser,
-
-                output_axis_tdata=output_axis_tdata,
-                output_axis_tvalid=output_axis_tvalid,
-                output_axis_tready=output_axis_tready,
-                output_axis_tlast=output_axis_tlast,
-
-                overflow=overflow,
-                bad_frame=bad_frame,
-                good_frame=good_frame)
+build_cmd = "iverilog -o %s.vvp %s" % (testbench, src)
 
 def bench():
+
+    # Parameters
+    ADDR_WIDTH = 9
+    DATA_WIDTH = 8
+    DROP_WHEN_FULL = 0
 
     # Inputs
     clk = Signal(bool(0))
     rst = Signal(bool(0))
     current_test = Signal(intbv(0)[8:])
 
-    input_axis_tdata = Signal(intbv(0)[8:])
+    input_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
     input_axis_tvalid = Signal(bool(0))
     input_axis_tlast = Signal(bool(0))
     input_axis_tuser = Signal(bool(0))
@@ -100,7 +60,7 @@ def bench():
 
     # Outputs
     input_axis_tready = Signal(bool(0))
-    output_axis_tdata = Signal(intbv(0)[8:])
+    output_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
     output_axis_tvalid = Signal(bool(0))
     output_axis_tlast = Signal(bool(0))
     overflow = Signal(bool(0))
@@ -108,51 +68,61 @@ def bench():
     good_frame = Signal(bool(0))
 
     # sources and sinks
-    source_queue = Queue()
     source_pause = Signal(bool(0))
-    sink_queue = Queue()
     sink_pause = Signal(bool(0))
 
-    source = axis_ep.AXIStreamSource(clk,
-                                    rst,
-                                    tdata=input_axis_tdata,
-                                    tvalid=input_axis_tvalid,
-                                    tready=input_axis_tready,
-                                    tlast=input_axis_tlast,
-                                    tuser=input_axis_tuser,
-                                    fifo=source_queue,
-                                    pause=source_pause,
-                                    name='source')
+    source = axis_ep.AXIStreamSource()
 
-    sink = axis_ep.AXIStreamSink(clk,
-                                rst,
-                                tdata=output_axis_tdata,
-                                tvalid=output_axis_tvalid,
-                                tready=output_axis_tready,
-                                tlast=output_axis_tlast,
-                                fifo=sink_queue,
-                                pause=sink_pause,
-                                name='sink')
+    source_logic = source.create_logic(
+        clk,
+        rst,
+        tdata=input_axis_tdata,
+        tvalid=input_axis_tvalid,
+        tready=input_axis_tready,
+        tlast=input_axis_tlast,
+        tuser=input_axis_tuser,
+        pause=source_pause,
+        name='source'
+    )
+
+    sink = axis_ep.AXIStreamSink()
+
+    sink_logic = sink.create_logic(
+        clk,
+        rst,
+        tdata=output_axis_tdata,
+        tvalid=output_axis_tvalid,
+        tready=output_axis_tready,
+        tlast=output_axis_tlast,
+        pause=sink_pause,
+        name='sink'
+    )
 
     # DUT
-    dut = dut_axis_frame_fifo(clk,
-                       rst,
-                       current_test,
+    if os.system(build_cmd):
+        raise Exception("Error running build command")
 
-                       input_axis_tdata,
-                       input_axis_tvalid,
-                       input_axis_tready,
-                       input_axis_tlast,
-                       input_axis_tuser,
+    dut = Cosimulation(
+        "vvp -m myhdl %s.vvp -lxt2" % testbench,
+        clk=clk,
+        rst=rst,
+        current_test=current_test,
 
-                       output_axis_tdata,
-                       output_axis_tvalid,
-                       output_axis_tready,
-                       output_axis_tlast,
+        input_axis_tdata=input_axis_tdata,
+        input_axis_tvalid=input_axis_tvalid,
+        input_axis_tready=input_axis_tready,
+        input_axis_tlast=input_axis_tlast,
+        input_axis_tuser=input_axis_tuser,
 
-                       overflow,
-                       bad_frame,
-                       good_frame)
+        output_axis_tdata=output_axis_tdata,
+        output_axis_tvalid=output_axis_tvalid,
+        output_axis_tready=output_axis_tready,
+        output_axis_tlast=output_axis_tlast,
+
+        overflow=overflow,
+        bad_frame=bad_frame,
+        good_frame=good_frame
+    )
 
     @always(delay(4))
     def clkgen():
@@ -197,16 +167,14 @@ def bench():
         bad_frame_asserted.next = 0
         good_frame_asserted.next = 0
 
-        source_queue.put(test_frame)
+        source.send(test_frame)
         yield clk.posedge
 
         yield output_axis_tlast.posedge
         yield clk.posedge
         yield clk.posedge
 
-        rx_frame = None
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+        rx_frame = sink.recv()
 
         assert rx_frame == test_frame
 
@@ -229,16 +197,14 @@ def bench():
         bad_frame_asserted.next = 0
         good_frame_asserted.next = 0
 
-        source_queue.put(test_frame)
+        source.send(test_frame)
         yield clk.posedge
 
         yield output_axis_tlast.posedge
         yield clk.posedge
         yield clk.posedge
 
-        rx_frame = None
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+        rx_frame = sink.recv()
 
         assert rx_frame == test_frame
 
@@ -259,7 +225,7 @@ def bench():
         bad_frame_asserted.next = 0
         good_frame_asserted.next = 0
 
-        source_queue.put(test_frame)
+        source.send(test_frame)
         yield clk.posedge
 
         yield delay(64)
@@ -280,9 +246,7 @@ def bench():
         yield clk.posedge
         yield clk.posedge
 
-        rx_frame = None
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+        rx_frame = sink.recv()
 
         assert rx_frame == test_frame
 
@@ -309,8 +273,8 @@ def bench():
         bad_frame_asserted.next = 0
         good_frame_asserted.next = 0
 
-        source_queue.put(test_frame1)
-        source_queue.put(test_frame2)
+        source.send(test_frame1)
+        source.send(test_frame2)
         yield clk.posedge
 
         yield output_axis_tlast.posedge
@@ -319,15 +283,11 @@ def bench():
         yield clk.posedge
         yield clk.posedge
 
-        rx_frame = None
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+        rx_frame = sink.recv()
 
         assert rx_frame == test_frame1
 
-        rx_frame = None
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+        rx_frame = sink.recv()
 
         assert rx_frame == test_frame2
 
@@ -354,8 +314,8 @@ def bench():
         bad_frame_asserted.next = 0
         good_frame_asserted.next = 0
 
-        source_queue.put(test_frame1)
-        source_queue.put(test_frame2)
+        source.send(test_frame1)
+        source.send(test_frame2)
         yield clk.posedge
 
         while input_axis_tvalid or output_axis_tvalid:
@@ -369,15 +329,11 @@ def bench():
         yield clk.posedge
         yield clk.posedge
 
-        rx_frame = None
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+        rx_frame = sink.recv()
 
         assert rx_frame == test_frame1
 
-        rx_frame = None
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+        rx_frame = sink.recv()
 
         assert rx_frame == test_frame2
 
@@ -404,8 +360,8 @@ def bench():
         bad_frame_asserted.next = 0
         good_frame_asserted.next = 0
 
-        source_queue.put(test_frame1)
-        source_queue.put(test_frame2)
+        source.send(test_frame1)
+        source.send(test_frame2)
         yield clk.posedge
 
         while input_axis_tvalid or output_axis_tvalid:
@@ -419,15 +375,11 @@ def bench():
         yield clk.posedge
         yield clk.posedge
 
-        rx_frame = None
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+        rx_frame = sink.recv()
 
         assert rx_frame == test_frame1
 
-        rx_frame = None
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+        rx_frame = sink.recv()
 
         assert rx_frame == test_frame2
 
@@ -451,12 +403,12 @@ def bench():
         bad_frame_asserted.next = 0
         good_frame_asserted.next = 0
 
-        source_queue.put(test_frame)
+        source.send(test_frame)
         yield clk.posedge
 
         yield delay(1000)
 
-        assert sink_queue.empty()
+        assert sink.empty()
 
         assert not overflow_asserted
         assert bad_frame_asserted
@@ -477,12 +429,12 @@ def bench():
         bad_frame_asserted.next = 0
         good_frame_asserted.next = 0
 
-        source_queue.put(test_frame)
+        source.send(test_frame)
         yield clk.posedge
 
         yield delay(10000)
 
-        assert sink_queue.empty()
+        assert sink.empty()
 
         assert overflow_asserted
         assert not bad_frame_asserted
@@ -497,7 +449,7 @@ def bench():
         test_frame = axis_ep.AXIStreamFrame(b'\x01\x02\x03')
 
         sink_pause.next = 1
-        source_queue.put(test_frame)
+        source.send(test_frame)
         yield clk.posedge
         yield clk.posedge
         yield clk.posedge
@@ -508,9 +460,7 @@ def bench():
         yield clk.posedge
         yield clk.posedge
 
-        rx_frame = None
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+        rx_frame = sink.recv()
 
         assert rx_frame == test_frame
 
@@ -523,7 +473,7 @@ def bench():
         test_frame = axis_ep.AXIStreamFrame(b'\x01\x02\x03')
 
         sink_pause.next = 1
-        source_queue.put(test_frame)
+        source.send(test_frame)
         yield clk.posedge
         yield clk.posedge
         yield clk.posedge
@@ -541,13 +491,13 @@ def bench():
         yield clk.posedge
         yield clk.posedge
 
-        assert sink_queue.empty()
+        assert sink.empty()
 
         yield delay(100)
 
         raise StopSimulation
 
-    return dut, monitor, source, sink, clkgen, check
+    return dut, monitor, source_logic, sink_logic, clkgen, check
 
 def test_bench():
     os.chdir(os.path.dirname(os.path.abspath(__file__)))

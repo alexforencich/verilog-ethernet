@@ -27,68 +27,55 @@ from myhdl import *
 import os
 
 module = 'arbiter'
+testbench = 'test_%s' % module
 
 srcs = []
 
 srcs.append("../rtl/%s.v" % module)
 srcs.append("../rtl/priority_encoder.v")
-srcs.append("test_%s_rr.v" % module)
+srcs.append("%s_rr.v" % testbench)
 
 src = ' '.join(srcs)
 
-build_cmd = "iverilog -o test_%s.vvp %s" % (module, src)
-
-def dut_arbiter_rr(clk,
-                   rst,
-                   current_test,
-
-                   request,
-                   acknowledge,
-
-                   grant,
-                   grant_valid,
-                   grant_encoded):
-
-    if os.system(build_cmd):
-        raise Exception("Error running build command")
-    return Cosimulation("vvp -m myhdl test_%s.vvp -lxt2" % module,
-                clk=clk,
-                rst=rst,
-                current_test=current_test,
-
-                request=request,
-                acknowledge=acknowledge,
-
-                grant=grant,
-                grant_valid=grant_valid,
-                grant_encoded=grant_encoded)
+build_cmd = "iverilog -o %s.vvp %s" % (testbench, src)
 
 def bench():
+
+    # Parameters
+    PORTS = 32
+    TYPE = "ROUND_ROBIN"
+    BLOCK = "REQUEST"
 
     # Inputs
     clk = Signal(bool(0))
     rst = Signal(bool(0))
     current_test = Signal(intbv(0)[8:])
 
-    request = Signal(intbv(0)[32:])
-    acknowledge = Signal(intbv(0)[32:])
+    request = Signal(intbv(0)[PORTS:])
+    acknowledge = Signal(intbv(0)[PORTS:])
 
     # Outputs
-    grant = Signal(intbv(0)[32:])
+    grant = Signal(intbv(0)[PORTS:])
     grant_valid = Signal(bool(0))
     grant_encoded = Signal(intbv(0)[5:])
 
     # DUT
-    dut = dut_arbiter_rr(clk,
-                         rst,
-                         current_test,
+    if os.system(build_cmd):
+        raise Exception("Error running build command")
 
-                         request,
-                         acknowledge,
+    dut = Cosimulation(
+        "vvp -m myhdl %s.vvp -lxt2" % testbench,
+        clk=clk,
+        rst=rst,
+        current_test=current_test,
 
-                         grant,
-                         grant_valid,
-                         grant_encoded)
+        request=request,
+        acknowledge=acknowledge,
+
+        grant=grant,
+        grant_valid=grant_valid,
+        grant_encoded=grant_encoded
+    )
 
     @always(delay(4))
     def clkgen():
@@ -173,7 +160,7 @@ def bench():
 
         print("test 3: two bits")
         current_test.next = 3
-        
+
         for i in range(32):
             for j in range(32):
                 l = [i, j]

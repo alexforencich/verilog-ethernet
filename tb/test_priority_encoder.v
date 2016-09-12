@@ -24,11 +24,14 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
-`timescale 1 ns / 1 ps
+`timescale 1ns / 1ps
 
+/*
+ * Testbench for priority_encoder
+ */
 module test_priority_encoder;
 
-// parameters
+// Parameters
 localparam WIDTH = 32;
 
 // Inputs
@@ -45,13 +48,17 @@ wire [WIDTH-1:0] output_unencoded;
 
 initial begin
     // myhdl integration
-    $from_myhdl(clk,
-                rst,
-                current_test,
-                input_unencoded);
-    $to_myhdl(output_valid,
-              output_encoded,
-              output_unencoded);
+    $from_myhdl(
+        clk,
+        rst,
+        current_test,
+        input_unencoded
+    );
+    $to_myhdl(
+        output_valid,
+        output_encoded,
+        output_unencoded
+    );
 
     // dump file
     $dumpfile("test_priority_encoder.lxt");

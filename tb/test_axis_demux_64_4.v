@@ -24,17 +24,24 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
-`timescale 1 ns / 1 ps
+`timescale 1ns / 1ps
 
+/*
+ * Testbench for axis_demux_64_4
+ */
 module test_axis_demux_64_4;
+
+// Parameters
+parameter DATA_WIDTH = 64;
+parameter KEEP_WIDTH = (DATA_WIDTH/8);
 
 // Inputs
 reg clk = 0;
 reg rst = 0;
 reg [7:0] current_test = 0;
 
-reg [63:0] input_axis_tdata = 0;
-reg [7:0] input_axis_tkeep = 0;
+reg [DATA_WIDTH-1:0] input_axis_tdata = 0;
+reg [KEEP_WIDTH-1:0] input_axis_tkeep = 0;
 reg input_axis_tvalid = 0;
 reg input_axis_tlast = 0;
 reg input_axis_tuser = 0;
@@ -50,64 +57,68 @@ reg [1:0] select = 0;
 // Outputs
 wire input_axis_tready;
 
-wire [63:0] output_0_axis_tdata;
-wire [7:0] output_0_axis_tkeep;
+wire [DATA_WIDTH-1:0] output_0_axis_tdata;
+wire [KEEP_WIDTH-1:0] output_0_axis_tkeep;
 wire output_0_axis_tvalid;
 wire output_0_axis_tlast;
 wire output_0_axis_tuser;
-wire [63:0] output_1_axis_tdata;
-wire [7:0] output_1_axis_tkeep;
+wire [DATA_WIDTH-1:0] output_1_axis_tdata;
+wire [KEEP_WIDTH-1:0] output_1_axis_tkeep;
 wire output_1_axis_tvalid;
 wire output_1_axis_tlast;
 wire output_1_axis_tuser;
-wire [63:0] output_2_axis_tdata;
-wire [7:0] output_2_axis_tkeep;
+wire [DATA_WIDTH-1:0] output_2_axis_tdata;
+wire [KEEP_WIDTH-1:0] output_2_axis_tkeep;
 wire output_2_axis_tvalid;
 wire output_2_axis_tlast;
 wire output_2_axis_tuser;
-wire [63:0] output_3_axis_tdata;
-wire [7:0] output_3_axis_tkeep;
+wire [DATA_WIDTH-1:0] output_3_axis_tdata;
+wire [KEEP_WIDTH-1:0] output_3_axis_tkeep;
 wire output_3_axis_tvalid;
 wire output_3_axis_tlast;
 wire output_3_axis_tuser;
 
 initial begin
     // myhdl integration
-    $from_myhdl(clk,
-                rst,
-                current_test,
-                input_axis_tdata,
-                input_axis_tkeep,
-                input_axis_tvalid,
-                input_axis_tlast,
-                input_axis_tuser,
-                output_0_axis_tready,
-                output_1_axis_tready,
-                output_2_axis_tready,
-                output_3_axis_tready,
-                enable,
-                select);
-    $to_myhdl(input_axis_tready,
-              output_0_axis_tdata,
-              output_0_axis_tkeep,
-              output_0_axis_tvalid,
-              output_0_axis_tlast,
-              output_0_axis_tuser,
-              output_1_axis_tdata,
-              output_1_axis_tkeep,
-              output_1_axis_tvalid,
-              output_1_axis_tlast,
-              output_1_axis_tuser,
-              output_2_axis_tdata,
-              output_2_axis_tkeep,
-              output_2_axis_tvalid,
-              output_2_axis_tlast,
-              output_2_axis_tuser,
-              output_3_axis_tdata,
-              output_3_axis_tkeep,
-              output_3_axis_tvalid,
-              output_3_axis_tlast,
-              output_3_axis_tuser);
+    $from_myhdl(
+        clk,
+        rst,
+        current_test,
+        input_axis_tdata,
+        input_axis_tkeep,
+        input_axis_tvalid,
+        input_axis_tlast,
+        input_axis_tuser,
+        output_0_axis_tready,
+        output_1_axis_tready,
+        output_2_axis_tready,
+        output_3_axis_tready,
+        enable,
+        select
+    );
+    $to_myhdl(
+        input_axis_tready,
+        output_0_axis_tdata,
+        output_0_axis_tkeep,
+        output_0_axis_tvalid,
+        output_0_axis_tlast,
+        output_0_axis_tuser,
+        output_1_axis_tdata,
+        output_1_axis_tkeep,
+        output_1_axis_tvalid,
+        output_1_axis_tlast,
+        output_1_axis_tuser,
+        output_2_axis_tdata,
+        output_2_axis_tkeep,
+        output_2_axis_tvalid,
+        output_2_axis_tlast,
+        output_2_axis_tuser,
+        output_3_axis_tdata,
+        output_3_axis_tkeep,
+        output_3_axis_tvalid,
+        output_3_axis_tlast,
+        output_3_axis_tuser
+    );
 
     // dump file
     $dumpfile("test_axis_demux_64_4.lxt");
@@ -115,7 +126,8 @@ initial begin
 end
 
 axis_demux_64_4 #(
-    .DATA_WIDTH(64)
+    .DATA_WIDTH(DATA_WIDTH),
+    .KEEP_WIDTH(KEEP_WIDTH)
 )
 UUT (
     .clk(clk),

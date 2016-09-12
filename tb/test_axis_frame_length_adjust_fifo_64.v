@@ -24,11 +24,14 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
-`timescale 1 ns / 1 ps
+`timescale 1ns / 1ps
 
+/*
+ * Testbench for axis_frame_length_adjust_fifo_64
+ */
 module test_axis_frame_length_adjust_fifo_64;
 
-// parameters
+// Parameters
 localparam DATA_WIDTH = 64;
 localparam KEEP_WIDTH = (DATA_WIDTH/8);
 localparam FRAME_FIFO_ADDR_WIDTH = 9;
@@ -64,29 +67,33 @@ wire [15:0] output_axis_hdr_original_length;
 
 initial begin
     // myhdl integration
-    $from_myhdl(clk,
-                rst,
-                current_test,
-                input_axis_tdata,
-                input_axis_tkeep,
-                input_axis_tvalid,
-                input_axis_tlast,
-                input_axis_tuser,
-                output_axis_hdr_ready,
-                output_axis_tready,
-                length_min,
-                length_max);
-    $to_myhdl(input_axis_tready,
-              output_axis_hdr_valid,
-              output_axis_hdr_pad,
-              output_axis_hdr_truncate,
-              output_axis_hdr_length,
-              output_axis_hdr_original_length,
-              output_axis_tdata,
-              output_axis_tkeep,
-              output_axis_tvalid,
-              output_axis_tlast,
-              output_axis_tuser);
+    $from_myhdl(
+        clk,
+        rst,
+        current_test,
+        input_axis_tdata,
+        input_axis_tkeep,
+        input_axis_tvalid,
+        input_axis_tlast,
+        input_axis_tuser,
+        output_axis_hdr_ready,
+        output_axis_tready,
+        length_min,
+        length_max
+    );
+    $to_myhdl(
+        input_axis_tready,
+        output_axis_hdr_valid,
+        output_axis_hdr_pad,
+        output_axis_hdr_truncate,
+        output_axis_hdr_length,
+        output_axis_hdr_original_length,
+        output_axis_tdata,
+        output_axis_tkeep,
+        output_axis_tvalid,
+        output_axis_tlast,
+        output_axis_tuser
+    );
 
     // dump file
     $dumpfile("test_axis_frame_length_adjust_fifo_64.lxt");

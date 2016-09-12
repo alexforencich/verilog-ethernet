@@ -27,63 +27,50 @@ from myhdl import *
 import os
 
 module = 'priority_encoder'
+testbench = 'test_%s' % module
 
 srcs = []
 
 srcs.append("../rtl/%s.v" % module)
-srcs.append("test_%s.v" % module)
+srcs.append("%s.v" % testbench)
 
 src = ' '.join(srcs)
 
-build_cmd = "iverilog -o test_%s.vvp %s" % (module, src)
-
-def dut_priority_encoder(clk,
-                         rst,
-                         current_test,
-
-                         input_unencoded,
-
-                         output_valid,
-                         output_encoded,
-                         output_unencoded):
-
-    if os.system(build_cmd):
-        raise Exception("Error running build command")
-    return Cosimulation("vvp -m myhdl test_%s.vvp -lxt2" % module,
-                clk=clk,
-                rst=rst,
-                current_test=current_test,
-
-                input_unencoded=input_unencoded,
-
-                output_valid=output_valid,
-                output_encoded=output_encoded,
-                output_unencoded=output_unencoded)
+build_cmd = "iverilog -o %s.vvp %s" % (testbench, src)
 
 def bench():
+
+    # Parameters
+    WIDTH = 32
 
     # Inputs
     clk = Signal(bool(0))
     rst = Signal(bool(0))
     current_test = Signal(intbv(0)[8:])
 
-    input_unencoded = Signal(intbv(0)[32:])
+    input_unencoded = Signal(intbv(0)[WIDTH:])
 
     # Outputs
     output_valid = Signal(bool(0))
     output_encoded = Signal(intbv(0)[5:])
-    output_unencoded = Signal(intbv(0)[32:])
+    output_unencoded = Signal(intbv(0)[WIDTH:])
 
     # DUT
-    dut = dut_priority_encoder(clk,
-                               rst,
-                               current_test,
+    if os.system(build_cmd):
+        raise Exception("Error running build command")
 
-                               input_unencoded,
+    dut = Cosimulation(
+        "vvp -m myhdl %s.vvp -lxt2" % testbench,
+        clk=clk,
+        rst=rst,
+        current_test=current_test,
 
-                               output_valid,
-                               output_encoded,
-                               output_unencoded)
+        input_unencoded=input_unencoded,
+
+        output_valid=output_valid,
+        output_encoded=output_encoded,
+        output_unencoded=output_unencoded
+    )
 
     @always(delay(4))
     def clkgen():
@@ -119,7 +106,7 @@ def bench():
 
         print("test 2: two bits")
         current_test.next = 2
-        
+
         for i in range(32):
             for j in range(32):
 

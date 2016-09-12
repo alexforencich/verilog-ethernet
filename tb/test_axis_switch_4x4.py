@@ -26,15 +26,10 @@ THE SOFTWARE.
 from myhdl import *
 import os
 
-try:
-    from queue import Queue
-except ImportError:
-    from Queue import Queue
-
 import axis_ep
 
 module = 'axis_switch_4x4'
-testbench = 'test_axis_switch_4x4'
+testbench = 'test_%s' % module
 
 srcs = []
 
@@ -46,117 +41,6 @@ srcs.append("%s.v" % testbench)
 src = ' '.join(srcs)
 
 build_cmd = "iverilog -o %s.vvp %s" % (testbench, src)
-
-def dut_axis_switch_4x4(clk,
-                        rst,
-                        current_test,
-
-                        input_0_axis_tdata,
-                        input_0_axis_tvalid,
-                        input_0_axis_tready,
-                        input_0_axis_tlast,
-                        input_0_axis_tdest,
-                        input_0_axis_tuser,
-                        input_1_axis_tdata,
-                        input_1_axis_tvalid,
-                        input_1_axis_tready,
-                        input_1_axis_tlast,
-                        input_1_axis_tdest,
-                        input_1_axis_tuser,
-                        input_2_axis_tdata,
-                        input_2_axis_tvalid,
-                        input_2_axis_tready,
-                        input_2_axis_tlast,
-                        input_2_axis_tdest,
-                        input_2_axis_tuser,
-                        input_3_axis_tdata,
-                        input_3_axis_tvalid,
-                        input_3_axis_tready,
-                        input_3_axis_tlast,
-                        input_3_axis_tdest,
-                        input_3_axis_tuser,
-
-                        output_0_axis_tdata,
-                        output_0_axis_tvalid,
-                        output_0_axis_tready,
-                        output_0_axis_tlast,
-                        output_0_axis_tdest,
-                        output_0_axis_tuser,
-                        output_1_axis_tdata,
-                        output_1_axis_tvalid,
-                        output_1_axis_tready,
-                        output_1_axis_tlast,
-                        output_1_axis_tdest,
-                        output_1_axis_tuser,
-                        output_2_axis_tdata,
-                        output_2_axis_tvalid,
-                        output_2_axis_tready,
-                        output_2_axis_tlast,
-                        output_2_axis_tdest,
-                        output_2_axis_tuser,
-                        output_3_axis_tdata,
-                        output_3_axis_tvalid,
-                        output_3_axis_tready,
-                        output_3_axis_tlast,
-                        output_3_axis_tdest,
-                        output_3_axis_tuser):
-
-    if os.system(build_cmd):
-        raise Exception("Error running build command")
-    return Cosimulation("vvp -m myhdl %s.vvp -lxt2" % testbench,
-                clk=clk,
-                rst=rst,
-                current_test=current_test,
-
-                input_0_axis_tdata=input_0_axis_tdata,
-                input_0_axis_tvalid=input_0_axis_tvalid,
-                input_0_axis_tready=input_0_axis_tready,
-                input_0_axis_tlast=input_0_axis_tlast,
-                input_0_axis_tdest=input_0_axis_tdest,
-                input_0_axis_tuser=input_0_axis_tuser,
-                input_1_axis_tdata=input_1_axis_tdata,
-                input_1_axis_tvalid=input_1_axis_tvalid,
-                input_1_axis_tready=input_1_axis_tready,
-                input_1_axis_tlast=input_1_axis_tlast,
-                input_1_axis_tdest=input_1_axis_tdest,
-                input_1_axis_tuser=input_1_axis_tuser,
-                input_2_axis_tdata=input_2_axis_tdata,
-                input_2_axis_tvalid=input_2_axis_tvalid,
-                input_2_axis_tready=input_2_axis_tready,
-                input_2_axis_tlast=input_2_axis_tlast,
-                input_2_axis_tdest=input_2_axis_tdest,
-                input_2_axis_tuser=input_2_axis_tuser,
-                input_3_axis_tdata=input_3_axis_tdata,
-                input_3_axis_tvalid=input_3_axis_tvalid,
-                input_3_axis_tready=input_3_axis_tready,
-                input_3_axis_tlast=input_3_axis_tlast,
-                input_3_axis_tdest=input_3_axis_tdest,
-                input_3_axis_tuser=input_3_axis_tuser,
-
-                output_0_axis_tdata=output_0_axis_tdata,
-                output_0_axis_tvalid=output_0_axis_tvalid,
-                output_0_axis_tready=output_0_axis_tready,
-                output_0_axis_tlast=output_0_axis_tlast,
-                output_0_axis_tdest=output_0_axis_tdest,
-                output_0_axis_tuser=output_0_axis_tuser,
-                output_1_axis_tdata=output_1_axis_tdata,
-                output_1_axis_tvalid=output_1_axis_tvalid,
-                output_1_axis_tready=output_1_axis_tready,
-                output_1_axis_tlast=output_1_axis_tlast,
-                output_1_axis_tdest=output_1_axis_tdest,
-                output_1_axis_tuser=output_1_axis_tuser,
-                output_2_axis_tdata=output_2_axis_tdata,
-                output_2_axis_tvalid=output_2_axis_tvalid,
-                output_2_axis_tready=output_2_axis_tready,
-                output_2_axis_tlast=output_2_axis_tlast,
-                output_2_axis_tdest=output_2_axis_tdest,
-                output_2_axis_tuser=output_2_axis_tuser,
-                output_3_axis_tdata=output_3_axis_tdata,
-                output_3_axis_tvalid=output_3_axis_tvalid,
-                output_3_axis_tready=output_3_axis_tready,
-                output_3_axis_tlast=output_3_axis_tlast,
-                output_3_axis_tdest=output_3_axis_tdest,
-                output_3_axis_tuser=output_3_axis_tuser)
 
 def bench():
 
@@ -235,165 +119,195 @@ def bench():
     output_3_axis_tuser = Signal(bool(0))
 
     # sources and sinks
-    source_0_queue = Queue()
     source_0_pause = Signal(bool(0))
-    source_1_queue = Queue()
     source_1_pause = Signal(bool(0))
-    source_2_queue = Queue()
     source_2_pause = Signal(bool(0))
-    source_3_queue = Queue()
     source_3_pause = Signal(bool(0))
-    sink_0_queue = Queue()
     sink_0_pause = Signal(bool(0))
-    sink_1_queue = Queue()
     sink_1_pause = Signal(bool(0))
-    sink_2_queue = Queue()
     sink_2_pause = Signal(bool(0))
-    sink_3_queue = Queue()
     sink_3_pause = Signal(bool(0))
 
-    source_0 = axis_ep.AXIStreamSource(clk,
-                                       rst,
-                                       tdata=input_0_axis_tdata,
-                                       tvalid=input_0_axis_tvalid,
-                                       tready=input_0_axis_tready,
-                                       tlast=input_0_axis_tlast,
-                                       tdest=input_0_axis_tdest,
-                                       tuser=input_0_axis_tuser,
-                                       fifo=source_0_queue,
-                                       pause=source_0_pause,
-                                       name='source0')
-    source_1 = axis_ep.AXIStreamSource(clk,
-                                       rst,
-                                       tdata=input_1_axis_tdata,
-                                       tvalid=input_1_axis_tvalid,
-                                       tready=input_1_axis_tready,
-                                       tlast=input_1_axis_tlast,
-                                       tdest=input_1_axis_tdest,
-                                       tuser=input_1_axis_tuser,
-                                       fifo=source_1_queue,
-                                       pause=source_1_pause,
-                                       name='source1')
-    source_2 = axis_ep.AXIStreamSource(clk,
-                                       rst,
-                                       tdata=input_2_axis_tdata,
-                                       tvalid=input_2_axis_tvalid,
-                                       tready=input_2_axis_tready,
-                                       tlast=input_2_axis_tlast,
-                                       tdest=input_2_axis_tdest,
-                                       tuser=input_2_axis_tuser,
-                                       fifo=source_2_queue,
-                                       pause=source_2_pause,
-                                       name='source2')
-    source_3 = axis_ep.AXIStreamSource(clk,
-                                       rst,
-                                       tdata=input_3_axis_tdata,
-                                       tvalid=input_3_axis_tvalid,
-                                       tready=input_3_axis_tready,
-                                       tlast=input_3_axis_tlast,
-                                       tdest=input_3_axis_tdest,
-                                       tuser=input_3_axis_tuser,
-                                       fifo=source_3_queue,
-                                       pause=source_3_pause,
-                                       name='source3')
+    source_0 = axis_ep.AXIStreamSource()
 
-    sink_0 = axis_ep.AXIStreamSink(clk,
-                                   rst,
-                                   tdata=output_0_axis_tdata,
-                                   tvalid=output_0_axis_tvalid,
-                                   tready=output_0_axis_tready,
-                                   tlast=output_0_axis_tlast,
-                                   tdest=output_0_axis_tdest,
-                                   tuser=output_0_axis_tuser,
-                                   fifo=sink_0_queue,
-                                   pause=sink_0_pause,
-                                   name='sink0')
-    sink_1 = axis_ep.AXIStreamSink(clk,
-                                   rst,
-                                   tdata=output_1_axis_tdata,
-                                   tvalid=output_1_axis_tvalid,
-                                   tready=output_1_axis_tready,
-                                   tlast=output_1_axis_tlast,
-                                   tdest=output_1_axis_tdest,
-                                   tuser=output_1_axis_tuser,
-                                   fifo=sink_1_queue,
-                                   pause=sink_1_pause,
-                                   name='sink1')
-    sink_2 = axis_ep.AXIStreamSink(clk,
-                                   rst,
-                                   tdata=output_2_axis_tdata,
-                                   tvalid=output_2_axis_tvalid,
-                                   tready=output_2_axis_tready,
-                                   tlast=output_2_axis_tlast,
-                                   tdest=output_2_axis_tdest,
-                                   tuser=output_2_axis_tuser,
-                                   fifo=sink_2_queue,
-                                   pause=sink_2_pause,
-                                   name='sink2')
-    sink_3 = axis_ep.AXIStreamSink(clk,
-                                   rst,
-                                   tdata=output_3_axis_tdata,
-                                   tvalid=output_3_axis_tvalid,
-                                   tready=output_3_axis_tready,
-                                   tlast=output_3_axis_tlast,
-                                   tdest=output_3_axis_tdest,
-                                   tuser=output_3_axis_tuser,
-                                   fifo=sink_3_queue,
-                                   pause=sink_3_pause,
-                                   name='sink3')
+    source_0_logic = source_0.create_logic(
+        clk,
+        rst,
+        tdata=input_0_axis_tdata,
+        tvalid=input_0_axis_tvalid,
+        tready=input_0_axis_tready,
+        tlast=input_0_axis_tlast,
+        tdest=input_0_axis_tdest,
+        tuser=input_0_axis_tuser,
+        pause=source_0_pause,
+        name='source_0'
+    )
+
+    source_1 = axis_ep.AXIStreamSource()
+
+    source_1_logic = source_1.create_logic(
+        clk,
+        rst,
+        tdata=input_1_axis_tdata,
+        tvalid=input_1_axis_tvalid,
+        tready=input_1_axis_tready,
+        tlast=input_1_axis_tlast,
+        tdest=input_1_axis_tdest,
+        tuser=input_1_axis_tuser,
+        pause=source_1_pause,
+        name='source_1'
+    )
+
+    source_2 = axis_ep.AXIStreamSource()
+
+    source_2_logic = source_2.create_logic(
+        clk,
+        rst,
+        tdata=input_2_axis_tdata,
+        tvalid=input_2_axis_tvalid,
+        tready=input_2_axis_tready,
+        tlast=input_2_axis_tlast,
+        tdest=input_2_axis_tdest,
+        tuser=input_2_axis_tuser,
+        pause=source_2_pause,
+        name='source_2'
+    )
+
+    source_3 = axis_ep.AXIStreamSource()
+
+    source_3_logic = source_3.create_logic(
+        clk,
+        rst,
+        tdata=input_3_axis_tdata,
+        tvalid=input_3_axis_tvalid,
+        tready=input_3_axis_tready,
+        tlast=input_3_axis_tlast,
+        tdest=input_3_axis_tdest,
+        tuser=input_3_axis_tuser,
+        pause=source_3_pause,
+        name='source_3'
+    )
+
+    sink_0 = axis_ep.AXIStreamSink()
+
+    sink_0_logic = sink_0.create_logic(
+        clk,
+        rst,
+        tdata=output_0_axis_tdata,
+        tvalid=output_0_axis_tvalid,
+        tready=output_0_axis_tready,
+        tlast=output_0_axis_tlast,
+        tdest=output_0_axis_tdest,
+        tuser=output_0_axis_tuser,
+        pause=sink_0_pause,
+        name='sink_0'
+    )
+
+    sink_1 = axis_ep.AXIStreamSink()
+
+    sink_1_logic = sink_1.create_logic(
+        clk,
+        rst,
+        tdata=output_1_axis_tdata,
+        tvalid=output_1_axis_tvalid,
+        tready=output_1_axis_tready,
+        tlast=output_1_axis_tlast,
+        tdest=output_1_axis_tdest,
+        tuser=output_1_axis_tuser,
+        pause=sink_1_pause,
+        name='sink_1'
+    )
+
+    sink_2 = axis_ep.AXIStreamSink()
+
+    sink_2_logic = sink_2.create_logic(
+        clk,
+        rst,
+        tdata=output_2_axis_tdata,
+        tvalid=output_2_axis_tvalid,
+        tready=output_2_axis_tready,
+        tlast=output_2_axis_tlast,
+        tdest=output_2_axis_tdest,
+        tuser=output_2_axis_tuser,
+        pause=sink_2_pause,
+        name='sink_2'
+    )
+
+    sink_3 = axis_ep.AXIStreamSink()
+
+    sink_3_logic = sink_3.create_logic(
+        clk,
+        rst,
+        tdata=output_3_axis_tdata,
+        tvalid=output_3_axis_tvalid,
+        tready=output_3_axis_tready,
+        tlast=output_3_axis_tlast,
+        tdest=output_3_axis_tdest,
+        tuser=output_3_axis_tuser,
+        pause=sink_3_pause,
+        name='sink_3'
+    )
 
     # DUT
-    dut = dut_axis_switch_4x4(clk,
-                              rst,
-                              current_test,
-                              input_0_axis_tdata,
-                              input_0_axis_tvalid,
-                              input_0_axis_tready,
-                              input_0_axis_tlast,
-                              input_0_axis_tdest,
-                              input_0_axis_tuser,
-                              input_1_axis_tdata,
-                              input_1_axis_tvalid,
-                              input_1_axis_tready,
-                              input_1_axis_tlast,
-                              input_1_axis_tdest,
-                              input_1_axis_tuser,
-                              input_2_axis_tdata,
-                              input_2_axis_tvalid,
-                              input_2_axis_tready,
-                              input_2_axis_tlast,
-                              input_2_axis_tdest,
-                              input_2_axis_tuser,
-                              input_3_axis_tdata,
-                              input_3_axis_tvalid,
-                              input_3_axis_tready,
-                              input_3_axis_tlast,
-                              input_3_axis_tdest,
-                              input_3_axis_tuser,
-                              output_0_axis_tdata,
-                              output_0_axis_tvalid,
-                              output_0_axis_tready,
-                              output_0_axis_tlast,
-                              output_0_axis_tdest,
-                              output_0_axis_tuser,
-                              output_1_axis_tdata,
-                              output_1_axis_tvalid,
-                              output_1_axis_tready,
-                              output_1_axis_tlast,
-                              output_1_axis_tdest,
-                              output_1_axis_tuser,
-                              output_2_axis_tdata,
-                              output_2_axis_tvalid,
-                              output_2_axis_tready,
-                              output_2_axis_tlast,
-                              output_2_axis_tdest,
-                              output_2_axis_tuser,
-                              output_3_axis_tdata,
-                              output_3_axis_tvalid,
-                              output_3_axis_tready,
-                              output_3_axis_tlast,
-                              output_3_axis_tdest,
-                              output_3_axis_tuser)
+    if os.system(build_cmd):
+        raise Exception("Error running build command")
+
+    dut = Cosimulation(
+        "vvp -m myhdl %s.vvp -lxt2" % testbench,
+        clk=clk,
+        rst=rst,
+        current_test=current_test,
+
+        input_0_axis_tdata=input_0_axis_tdata,
+        input_0_axis_tvalid=input_0_axis_tvalid,
+        input_0_axis_tready=input_0_axis_tready,
+        input_0_axis_tlast=input_0_axis_tlast,
+        input_0_axis_tdest=input_0_axis_tdest,
+        input_0_axis_tuser=input_0_axis_tuser,
+        input_1_axis_tdata=input_1_axis_tdata,
+        input_1_axis_tvalid=input_1_axis_tvalid,
+        input_1_axis_tready=input_1_axis_tready,
+        input_1_axis_tlast=input_1_axis_tlast,
+        input_1_axis_tdest=input_1_axis_tdest,
+        input_1_axis_tuser=input_1_axis_tuser,
+        input_2_axis_tdata=input_2_axis_tdata,
+        input_2_axis_tvalid=input_2_axis_tvalid,
+        input_2_axis_tready=input_2_axis_tready,
+        input_2_axis_tlast=input_2_axis_tlast,
+        input_2_axis_tdest=input_2_axis_tdest,
+        input_2_axis_tuser=input_2_axis_tuser,
+        input_3_axis_tdata=input_3_axis_tdata,
+        input_3_axis_tvalid=input_3_axis_tvalid,
+        input_3_axis_tready=input_3_axis_tready,
+        input_3_axis_tlast=input_3_axis_tlast,
+        input_3_axis_tdest=input_3_axis_tdest,
+        input_3_axis_tuser=input_3_axis_tuser,
+
+        output_0_axis_tdata=output_0_axis_tdata,
+        output_0_axis_tvalid=output_0_axis_tvalid,
+        output_0_axis_tready=output_0_axis_tready,
+        output_0_axis_tlast=output_0_axis_tlast,
+        output_0_axis_tdest=output_0_axis_tdest,
+        output_0_axis_tuser=output_0_axis_tuser,
+        output_1_axis_tdata=output_1_axis_tdata,
+        output_1_axis_tvalid=output_1_axis_tvalid,
+        output_1_axis_tready=output_1_axis_tready,
+        output_1_axis_tlast=output_1_axis_tlast,
+        output_1_axis_tdest=output_1_axis_tdest,
+        output_1_axis_tuser=output_1_axis_tuser,
+        output_2_axis_tdata=output_2_axis_tdata,
+        output_2_axis_tvalid=output_2_axis_tvalid,
+        output_2_axis_tready=output_2_axis_tready,
+        output_2_axis_tlast=output_2_axis_tlast,
+        output_2_axis_tdest=output_2_axis_tdest,
+        output_2_axis_tuser=output_2_axis_tuser,
+        output_3_axis_tdata=output_3_axis_tdata,
+        output_3_axis_tvalid=output_3_axis_tvalid,
+        output_3_axis_tready=output_3_axis_tready,
+        output_3_axis_tlast=output_3_axis_tlast,
+        output_3_axis_tdest=output_3_axis_tdest,
+        output_3_axis_tuser=output_3_axis_tuser
+    )
 
     @always(delay(4))
     def clkgen():
@@ -456,10 +370,10 @@ def bench():
         test_frame3 = axis_ep.AXIStreamFrame(b'\x01\x03\x03\xFF\x01\x02\x03\x04\x05\x06\x07\x08', dest=3)
 
         for wait in wait_normal, wait_pause_source, wait_pause_sink:
-            source_0_queue.put(test_frame0)
-            source_1_queue.put(test_frame1)
-            source_2_queue.put(test_frame2)
-            source_3_queue.put(test_frame3)
+            source_0.send(test_frame0)
+            source_1.send(test_frame1)
+            source_2.send(test_frame2)
+            source_3.send(test_frame3)
             yield clk.posedge
             yield clk.posedge
 
@@ -467,27 +381,19 @@ def bench():
             yield clk.posedge
             yield clk.posedge
 
-            rx_frame0 = None
-            if not sink_0_queue.empty():
-                rx_frame0 = sink_0_queue.get()
+            rx_frame0 = sink_0.recv()
 
             assert rx_frame0 == test_frame0
 
-            rx_frame1 = None
-            if not sink_1_queue.empty():
-                rx_frame1 = sink_1_queue.get()
+            rx_frame1 = sink_1.recv()
 
             assert rx_frame1 == test_frame1
 
-            rx_frame2 = None
-            if not sink_2_queue.empty():
-                rx_frame2 = sink_2_queue.get()
+            rx_frame2 = sink_2.recv()
 
             assert rx_frame2 == test_frame2
 
-            rx_frame3 = None
-            if not sink_3_queue.empty():
-                rx_frame3 = sink_3_queue.get()
+            rx_frame3 = sink_3.recv()
 
             assert rx_frame3 == test_frame3
 
@@ -503,10 +409,10 @@ def bench():
         test_frame3 = axis_ep.AXIStreamFrame(b'\x02\x03\x00\xFF\x01\x02\x03\x04\x05\x06\x07\x08', dest=0)
 
         for wait in wait_normal, wait_pause_source, wait_pause_sink:
-            source_0_queue.put(test_frame0)
-            source_1_queue.put(test_frame1)
-            source_2_queue.put(test_frame2)
-            source_3_queue.put(test_frame3)
+            source_0.send(test_frame0)
+            source_1.send(test_frame1)
+            source_2.send(test_frame2)
+            source_3.send(test_frame3)
             yield clk.posedge
             yield clk.posedge
 
@@ -514,27 +420,19 @@ def bench():
             yield clk.posedge
             yield clk.posedge
 
-            rx_frame0 = None
-            if not sink_0_queue.empty():
-                rx_frame0 = sink_0_queue.get()
+            rx_frame0 = sink_0.recv()
 
             assert rx_frame0 == test_frame3
 
-            rx_frame1 = None
-            if not sink_1_queue.empty():
-                rx_frame1 = sink_1_queue.get()
+            rx_frame1 = sink_1.recv()
 
             assert rx_frame1 == test_frame2
 
-            rx_frame2 = None
-            if not sink_2_queue.empty():
-                rx_frame2 = sink_2_queue.get()
+            rx_frame2 = sink_2.recv()
 
             assert rx_frame2 == test_frame1
 
-            rx_frame3 = None
-            if not sink_3_queue.empty():
-                rx_frame3 = sink_3_queue.get()
+            rx_frame3 = sink_3.recv()
 
             assert rx_frame3 == test_frame0
 
@@ -550,10 +448,10 @@ def bench():
         test_frame3 = axis_ep.AXIStreamFrame(b'\x02\x00\x03\xFF\x01\x02\x03\x04\x05\x06\x07\x08', dest=3)
 
         for wait in wait_normal, wait_pause_source, wait_pause_sink:
-            source_0_queue.put(test_frame0)
-            source_0_queue.put(test_frame1)
-            source_0_queue.put(test_frame2)
-            source_0_queue.put(test_frame3)
+            source_0.send(test_frame0)
+            source_0.send(test_frame1)
+            source_0.send(test_frame2)
+            source_0.send(test_frame3)
             yield clk.posedge
             yield clk.posedge
 
@@ -561,27 +459,19 @@ def bench():
             yield clk.posedge
             yield clk.posedge
 
-            rx_frame0 = None
-            if not sink_0_queue.empty():
-                rx_frame0 = sink_0_queue.get()
+            rx_frame0 = sink_0.recv()
 
             assert rx_frame0 == test_frame0
 
-            rx_frame1 = None
-            if not sink_1_queue.empty():
-                rx_frame1 = sink_1_queue.get()
+            rx_frame1 = sink_1.recv()
 
             assert rx_frame1 == test_frame1
 
-            rx_frame2 = None
-            if not sink_2_queue.empty():
-                rx_frame2 = sink_2_queue.get()
+            rx_frame2 = sink_2.recv()
 
             assert rx_frame2 == test_frame2
 
-            rx_frame3 = None
-            if not sink_3_queue.empty():
-                rx_frame3 = sink_3_queue.get()
+            rx_frame3 = sink_3.recv()
 
             assert rx_frame3 == test_frame3
 
@@ -595,40 +485,32 @@ def bench():
         test_frame1 = axis_ep.AXIStreamFrame(b'\x02\x01\x00\xFF\x01\x02\x03\x04\x05\x06\x07\x08', dest=0)
         test_frame2 = axis_ep.AXIStreamFrame(b'\x02\x02\x00\xFF\x01\x02\x03\x04\x05\x06\x07\x08', dest=0)
         test_frame3 = axis_ep.AXIStreamFrame(b'\x02\x03\x00\xFF\x01\x02\x03\x04\x05\x06\x07\x08', dest=0)
-        
+
         for wait in wait_normal, wait_pause_source, wait_pause_sink:
-            source_0_queue.put(test_frame0)
+            source_0.send(test_frame0)
             yield clk.posedge
-            source_1_queue.put(test_frame1)
-            source_2_queue.put(test_frame2)
-            source_3_queue.put(test_frame3)
+            source_1.send(test_frame1)
+            source_2.send(test_frame2)
+            source_3.send(test_frame3)
             yield clk.posedge
 
             yield wait()
             yield clk.posedge
             yield clk.posedge
 
-            rx_frame0 = None
-            if not sink_0_queue.empty():
-                rx_frame0 = sink_0_queue.get()
+            rx_frame0 = sink_0.recv()
 
             assert rx_frame0 == test_frame0
 
-            rx_frame1 = None
-            if not sink_0_queue.empty():
-                rx_frame1 = sink_0_queue.get()
+            rx_frame1 = sink_0.recv()
 
             assert rx_frame1 == test_frame1
 
-            rx_frame2 = None
-            if not sink_0_queue.empty():
-                rx_frame2 = sink_0_queue.get()
+            rx_frame2 = sink_0.recv()
 
             assert rx_frame2 == test_frame2
 
-            rx_frame3 = None
-            if not sink_0_queue.empty():
-                rx_frame3 = sink_0_queue.get()
+            rx_frame3 = sink_0.recv()
 
             assert rx_frame3 == test_frame3
 
@@ -644,10 +526,10 @@ def bench():
         test_frame3 = axis_ep.AXIStreamFrame(b'\x01\x03\x05\xFF\x01\x02\x03\x04\x05\x06\x07\x08', dest=5)
 
         for wait in wait_normal, wait_pause_source, wait_pause_sink:
-            source_0_queue.put(test_frame0)
-            source_1_queue.put(test_frame1)
-            source_2_queue.put(test_frame2)
-            source_3_queue.put(test_frame3)
+            source_0.send(test_frame0)
+            source_1.send(test_frame1)
+            source_2.send(test_frame2)
+            source_3.send(test_frame3)
             yield clk.posedge
             yield clk.posedge
 
@@ -655,15 +537,11 @@ def bench():
             yield clk.posedge
             yield clk.posedge
 
-            rx_frame0 = None
-            if not sink_0_queue.empty():
-                rx_frame0 = sink_0_queue.get()
+            rx_frame0 = sink_0.recv()
 
             assert rx_frame0 == test_frame0
 
-            rx_frame1 = None
-            if not sink_1_queue.empty():
-                rx_frame1 = sink_1_queue.get()
+            rx_frame1 = sink_1.recv()
 
             assert rx_frame1 == test_frame1
 
@@ -671,7 +549,7 @@ def bench():
 
         raise StopSimulation
 
-    return dut, source_0, source_1, source_2, source_3, sink_0, sink_1, sink_2, sink_3, clkgen, check
+    return dut, source_0_logic, source_1_logic, source_2_logic, source_3_logic, sink_0_logic, sink_1_logic, sink_2_logic, sink_3_logic, clkgen, check
 
 def test_bench():
     sim = Simulation(bench())
