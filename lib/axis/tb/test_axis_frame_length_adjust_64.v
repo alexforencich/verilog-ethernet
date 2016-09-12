@@ -24,11 +24,14 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
-`timescale 1 ns / 1 ps
+`timescale 1ns / 1ps
 
+/*
+ * Testbench for axis_frame_length_adjust
+ */
 module test_axis_frame_length_adjust_64;
 
-// parameters
+// Parameters
 localparam DATA_WIDTH = 64;
 localparam KEEP_WIDTH = (DATA_WIDTH/8);
 
@@ -62,29 +65,33 @@ wire [15:0] status_frame_original_length;
 
 initial begin
     // myhdl integration
-    $from_myhdl(clk,
-                rst,
-                current_test,
-                input_axis_tdata,
-                input_axis_tkeep,
-                input_axis_tvalid,
-                input_axis_tlast,
-                input_axis_tuser,
-                output_axis_tready,
-                status_ready,
-                length_min,
-                length_max);
-    $to_myhdl(input_axis_tready,
-              output_axis_tdata,
-              output_axis_tkeep,
-              output_axis_tvalid,
-              output_axis_tlast,
-              output_axis_tuser,
-              status_valid,
-              status_frame_pad,
-              status_frame_truncate,
-              status_frame_length,
-              status_frame_original_length);
+    $from_myhdl(
+        clk,
+        rst,
+        current_test,
+        input_axis_tdata,
+        input_axis_tkeep,
+        input_axis_tvalid,
+        input_axis_tlast,
+        input_axis_tuser,
+        output_axis_tready,
+        status_ready,
+        length_min,
+        length_max
+    );
+    $to_myhdl(
+        input_axis_tready,
+        output_axis_tdata,
+        output_axis_tkeep,
+        output_axis_tvalid,
+        output_axis_tlast,
+        output_axis_tuser,
+        status_valid,
+        status_frame_pad,
+        status_frame_truncate,
+        status_frame_length,
+        status_frame_original_length
+    );
 
     // dump file
     $dumpfile("test_axis_frame_length_adjust_64.lxt");

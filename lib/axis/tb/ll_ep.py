@@ -24,100 +24,139 @@ THE SOFTWARE.
 
 from myhdl import *
 
-def LocalLinkSource(clk, rst,
-                    data_out,
-                    sof_out_n,
-                    eof_out_n,
-                    src_rdy_out_n,
-                    dst_rdy_in_n,
-                    fifo,
-                    pause=0,
-                    name=None):
+class LocalLinkSource(object):
+    def __init__(self):
+        self.has_logic = False
+        self.queue = []
 
-    src_rdy_out_n_int = Signal(bool(True))
-    dst_rdy_in_n_int = Signal(bool(True))
+    def send(self, frame):
+        self.queue.append(bytearray(frame))
 
-    @always_comb
-    def pause_logic():
-        dst_rdy_in_n_int.next = dst_rdy_in_n or pause
-        src_rdy_out_n.next = src_rdy_out_n_int or pause
+    def count(self):
+        return len(self.queue)
 
-    @instance
-    def logic():
-        frame = []
+    def empty(self):
+        return self.count() == 0
 
-        while True:
-            yield clk.posedge, rst.posedge
+    def create_logic(self,
+            clk,
+            rst,
+            data_out,
+            sof_out_n,
+            eof_out_n,
+            src_rdy_out_n,
+            dst_rdy_in_n,
+            pause=0,
+            name=None):
 
-            if rst:
-                data_out.next = 0
-                src_rdy_out_n_int.next = True
-                sof_out_n.next = True
-                eof_out_n.next = True
-            else:
-                if not dst_rdy_in_n_int and not src_rdy_out_n:
-                    if len(frame) > 0:
-                        data_out.next = frame.pop(0)
-                        src_rdy_out_n_int.next = False
-                        sof_out_n.next = True
-                        eof_out_n.next = len(frame) != 0
-                    else:
-                        src_rdy_out_n_int.next = True
-                        eof_out_n.next = True
-                if (not eof_out_n and not dst_rdy_in_n_int and not src_rdy_out_n) or src_rdy_out_n_int:
-                    if not fifo.empty():
-                        frame = fifo.get()
-                        if name is not None:
-                            print("[%s] Sending frame %s" % (name, repr(frame)))
-                        data_out.next = frame.pop(0)
-                        src_rdy_out_n_int.next = False
-                        sof_out_n.next = False
-                        eof_out_n.next = len(frame) != 0
+        assert not self.has_logic
 
-    return logic, pause_logic
+        self.has_logic = True
+
+        src_rdy_out_n_int = Signal(bool(True))
+        dst_rdy_in_n_int = Signal(bool(True))
+
+        @always_comb
+        def pause_logic():
+            dst_rdy_in_n_int.next = dst_rdy_in_n or pause
+            src_rdy_out_n.next = src_rdy_out_n_int or pause
+
+        @instance
+        def logic():
+            frame = []
+
+            while True:
+                yield clk.posedge, rst.posedge
+
+                if rst:
+                    data_out.next = 0
+                    src_rdy_out_n_int.next = True
+                    sof_out_n.next = True
+                    eof_out_n.next = True
+                else:
+                    if not dst_rdy_in_n_int and not src_rdy_out_n:
+                        if len(frame) > 0:
+                            data_out.next = frame.pop(0)
+                            src_rdy_out_n_int.next = False
+                            sof_out_n.next = True
+                            eof_out_n.next = len(frame) != 0
+                        else:
+                            src_rdy_out_n_int.next = True
+                            eof_out_n.next = True
+                    if (not eof_out_n and not dst_rdy_in_n_int and not src_rdy_out_n) or src_rdy_out_n_int:
+                        if len(self.queue) > 0:
+                            frame = self.queue.pop(0)
+                            if name is not None:
+                                print("[%s] Sending frame %s" % (name, repr(frame)))
+                            data_out.next = frame.pop(0)
+                            src_rdy_out_n_int.next = False
+                            sof_out_n.next = False
+                            eof_out_n.next = len(frame) != 0
+
+        return logic, pause_logic
 
 
-def LocalLinkSink(clk, rst,
-                  data_in,
-                  sof_in_n,
-                  eof_in_n,
-                  src_rdy_in_n,
-                  dst_rdy_out_n,
-                  fifo=None,
-                  pause=0,
-                  name=None):
+class LocalLinkSink(object):
+    def __init__(self):
+        self.has_logic = False
+        self.queue = []
 
-    src_rdy_in_n_int = Signal(bool(True))
-    dst_rdy_out_n_int = Signal(bool(True))
+    def recv(self):
+        if len(self.queue) > 0:
+            return self.queue.pop(0)
+        return None
 
-    @always_comb
-    def pause_logic():
-        dst_rdy_out_n.next = dst_rdy_out_n_int or pause
-        src_rdy_in_n_int.next = src_rdy_in_n or pause
+    def count(self):
+        return len(self.queue)
 
-    @instance
-    def logic():
-        frame = []
+    def empty(self):
+        return self.count() == 0
 
-        while True:
-            yield clk.posedge, rst.posedge
+    def create_logic(self,
+            clk,
+            rst,
+            data_in,
+            sof_in_n,
+            eof_in_n,
+            src_rdy_in_n,
+            dst_rdy_out_n,
+            pause=0,
+            name=None):
 
-            if rst:
-                dst_rdy_out_n_int.next = True
-                frame = []
-            else:
-                dst_rdy_out_n_int.next = False
+        assert not self.has_logic
 
-                if not src_rdy_in_n_int:
-                    if not sof_in_n:
-                        frame = []
-                    frame.append(int(data_in))
-                    if not eof_in_n:
-                        if fifo is not None:
-                            fifo.put(frame)
-                        if name is not None:
-                            print("[%s] Got frame %s" % (name, repr(frame)))
-                        frame = []
+        self.has_logic = True
 
-    return logic, pause_logic
+        src_rdy_in_n_int = Signal(bool(True))
+        dst_rdy_out_n_int = Signal(bool(True))
+
+        @always_comb
+        def pause_logic():
+            dst_rdy_out_n.next = dst_rdy_out_n_int or pause
+            src_rdy_in_n_int.next = src_rdy_in_n or pause
+
+        @instance
+        def logic():
+            frame = []
+
+            while True:
+                yield clk.posedge, rst.posedge
+
+                if rst:
+                    dst_rdy_out_n_int.next = True
+                    frame = []
+                else:
+                    dst_rdy_out_n_int.next = False
+
+                    if not src_rdy_in_n_int:
+                        if not sof_in_n:
+                            frame = []
+                        frame.append(int(data_in))
+                        if not eof_in_n:
+                            self.queue.append(frame)
+                            if name is not None:
+                                print("[%s] Got frame %s" % (name, repr(frame)))
+                            frame = []
+
+        return logic, pause_logic
 

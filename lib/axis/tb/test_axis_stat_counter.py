@@ -25,87 +25,50 @@ THE SOFTWARE.
 
 from myhdl import *
 import os
-
-try:
-    from queue import Queue
-except ImportError:
-    from Queue import Queue
 import struct
 
 import axis_ep
 
 module = 'axis_stat_counter'
+testbench = 'test_%s' % module
 
 srcs = []
 
 srcs.append("../rtl/%s.v" % module)
-srcs.append("test_%s.v" % module)
+srcs.append("%s.v" % testbench)
 
 src = ' '.join(srcs)
 
-build_cmd = "iverilog -o test_%s.vvp %s" % (module, src)
-
-def dut_axis_stat_counter(clk,
-                 rst,
-                 current_test,
-
-                 monitor_axis_tdata,
-                 monitor_axis_tkeep,
-                 monitor_axis_tvalid,
-                 monitor_axis_tready,
-                 monitor_axis_tlast,
-                 monitor_axis_tuser,
-                 
-                 output_axis_tdata,
-                 output_axis_tvalid,
-                 output_axis_tready,
-                 output_axis_tlast,
-                 output_axis_tuser,
-
-                 tag,
-                 trigger,
-                 busy):
-
-    if os.system(build_cmd):
-        raise Exception("Error running build command")
-    return Cosimulation("vvp -m myhdl test_%s.vvp -lxt2" % module,
-                clk=clk,
-                rst=rst,
-                current_test=current_test,
-
-                monitor_axis_tdata=monitor_axis_tdata,
-                monitor_axis_tkeep=monitor_axis_tkeep,
-                monitor_axis_tvalid=monitor_axis_tvalid,
-                monitor_axis_tready=monitor_axis_tready,
-                monitor_axis_tlast=monitor_axis_tlast,
-                monitor_axis_tuser=monitor_axis_tuser,
-
-                output_axis_tdata=output_axis_tdata,
-                output_axis_tvalid=output_axis_tvalid,
-                output_axis_tready=output_axis_tready,
-                output_axis_tlast=output_axis_tlast,
-                output_axis_tuser=output_axis_tuser,
-
-                tag=tag,
-                trigger=trigger,
-                busy=busy)
+build_cmd = "iverilog -o %s.vvp %s" % (testbench, src)
 
 def bench():
+
+    # Parameters
+    DATA_WIDTH = 64
+    KEEP_WIDTH = (DATA_WIDTH/8)
+    TAG_ENABLE = 1
+    TAG_WIDTH = 16
+    TICK_COUNT_ENABLE = 1
+    TICK_COUNT_WIDTH = 32
+    BYTE_COUNT_ENABLE = 1
+    BYTE_COUNT_WIDTH = 32
+    FRAME_COUNT_ENABLE = 1
+    FRAME_COUNT_WIDTH = 32
 
     # Inputs
     clk = Signal(bool(0))
     rst = Signal(bool(0))
     current_test = Signal(intbv(0)[8:])
 
-    monitor_axis_tdata = Signal(intbv(0)[64:])
-    monitor_axis_tkeep = Signal(intbv(0)[8:])
+    monitor_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
+    monitor_axis_tkeep = Signal(intbv(0)[KEEP_WIDTH:])
     monitor_axis_tvalid = Signal(bool(0))
     monitor_axis_tready = Signal(bool(0))
     monitor_axis_tlast = Signal(bool(0))
     monitor_axis_tuser = Signal(bool(0))
     output_axis_tready = Signal(bool(0))
 
-    tag = Signal(intbv(16)[16:])
+    tag = Signal(intbv(16)[TAG_WIDTH:])
     trigger = Signal(bool(0))
 
     # Outputs
@@ -116,69 +79,81 @@ def bench():
     busy = Signal(bool(0))
 
     # sources and sinks
-    source_queue = Queue()
     source_pause = Signal(bool(0))
-    monitor_sink_queue = Queue()
     monitor_sink_pause = Signal(bool(0))
-    sink_queue = Queue()
     sink_pause = Signal(bool(0))
 
-    source = axis_ep.AXIStreamSource(clk,
-                                    rst,
-                                    tdata=monitor_axis_tdata,
-                                    tkeep=monitor_axis_tkeep,
-                                    tvalid=monitor_axis_tvalid,
-                                    tready=monitor_axis_tready,
-                                    tlast=monitor_axis_tlast,
-                                    tuser=monitor_axis_tuser,
-                                    fifo=source_queue,
-                                    pause=source_pause,
-                                    name='source')
+    source = axis_ep.AXIStreamSource()
 
-    monitor_sink = axis_ep.AXIStreamSink(clk,
-                                rst,
-                                tdata=monitor_axis_tdata,
-                                tkeep=monitor_axis_tkeep,
-                                tvalid=monitor_axis_tvalid,
-                                tready=monitor_axis_tready,
-                                tlast=monitor_axis_tlast,
-                                tuser=monitor_axis_tuser,
-                                fifo=monitor_sink_queue,
-                                pause=monitor_sink_pause,
-                                name='monitor_sink')
+    source_logic = source.create_logic(
+        clk,
+        rst,
+        tdata=monitor_axis_tdata,
+        tkeep=monitor_axis_tkeep,
+        tvalid=monitor_axis_tvalid,
+        tready=monitor_axis_tready,
+        tlast=monitor_axis_tlast,
+        tuser=monitor_axis_tuser,
+        pause=source_pause,
+        name='source'
+    )
 
-    sink = axis_ep.AXIStreamSink(clk,
-                                rst,
-                                tdata=output_axis_tdata,
-                                tvalid=output_axis_tvalid,
-                                tready=output_axis_tready,
-                                tlast=output_axis_tlast,
-                                tuser=output_axis_tuser,
-                                fifo=sink_queue,
-                                pause=sink_pause,
-                                name='sink')
+    monitor_sink = axis_ep.AXIStreamSink()
+
+    monitor_sink_logic = monitor_sink.create_logic(
+        clk,
+        rst,
+        tdata=monitor_axis_tdata,
+        tkeep=monitor_axis_tkeep,
+        tvalid=monitor_axis_tvalid,
+        tready=monitor_axis_tready,
+        tlast=monitor_axis_tlast,
+        tuser=monitor_axis_tuser,
+        pause=monitor_sink_pause,
+        name='monitor_sink'
+    )
+
+    sink = axis_ep.AXIStreamSink()
+
+    sink_logic = sink.create_logic(
+        clk,
+        rst,
+        tdata=output_axis_tdata,
+        tvalid=output_axis_tvalid,
+        tready=output_axis_tready,
+        tlast=output_axis_tlast,
+        tuser=output_axis_tuser,
+        pause=sink_pause,
+        name='sink'
+    )
 
     # DUT
-    dut = dut_axis_stat_counter(clk,
-                           rst,
-                           current_test,
+    if os.system(build_cmd):
+        raise Exception("Error running build command")
 
-                           monitor_axis_tdata,
-                           monitor_axis_tkeep,
-                           monitor_axis_tvalid,
-                           monitor_axis_tready,
-                           monitor_axis_tlast,
-                           monitor_axis_tuser,
+    dut = Cosimulation(
+        "vvp -m myhdl %s.vvp -lxt2" % testbench,
+        clk=clk,
+        rst=rst,
+        current_test=current_test,
 
-                           output_axis_tdata,
-                           output_axis_tvalid,
-                           output_axis_tready,
-                           output_axis_tlast,
-                           output_axis_tuser,
+        monitor_axis_tdata=monitor_axis_tdata,
+        monitor_axis_tkeep=monitor_axis_tkeep,
+        monitor_axis_tvalid=monitor_axis_tvalid,
+        monitor_axis_tready=monitor_axis_tready,
+        monitor_axis_tlast=monitor_axis_tlast,
+        monitor_axis_tuser=monitor_axis_tuser,
 
-                           tag,
-                           trigger,
-                           busy)
+        output_axis_tdata=output_axis_tdata,
+        output_axis_tvalid=output_axis_tvalid,
+        output_axis_tready=output_axis_tready,
+        output_axis_tlast=output_axis_tlast,
+        output_axis_tuser=output_axis_tuser,
+
+        tag=tag,
+        trigger=trigger,
+        busy=busy
+    )
 
     @always(delay(4))
     def clkgen():
@@ -223,12 +198,10 @@ def bench():
         yield clk.posedge
 
         # discard first trigger output
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+        rx_frame = sink.recv()
 
         # check second trigger output
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+        rx_frame = sink.recv()
 
         rx_frame_values = struct.unpack(">HLLL", bytes(rx_frame.data))
         cycles = (stop_time - start_time) / 8
@@ -257,7 +230,7 @@ def bench():
         trigger.next = 1
         yield clk.posedge
         trigger.next = 0
-        
+
         while trigger or output_axis_tvalid:
             sink_pause.next = True
             yield clk.posedge
@@ -270,12 +243,10 @@ def bench():
         yield clk.posedge
 
         # discard first trigger output
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+        rx_frame = sink.recv()
 
         # check second trigger output
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+        rx_frame = sink.recv()
 
         rx_frame_values = struct.unpack(">HLLL", bytes(rx_frame.data))
         cycles = (stop_time - start_time) / 8
@@ -301,7 +272,7 @@ def bench():
                                             b'\x5A\x51\x52\x53\x54\x55' +
                                             b'\x80\x00' +
                                             b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
-        source_queue.put(test_frame)
+        source.send(test_frame)
         yield clk.posedge
 
         while monitor_axis_tvalid:
@@ -323,12 +294,10 @@ def bench():
         yield clk.posedge
 
         # discard first trigger output
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+        rx_frame = sink.recv()
 
         # check second trigger output
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+        rx_frame = sink.recv()
 
         rx_frame_values = struct.unpack(">HLLL", bytes(rx_frame.data))
         cycles = (stop_time - start_time) / 8
@@ -355,7 +324,7 @@ def bench():
                                             b'\x5A\x51\x52\x53\x54\x55' +
                                             b'\x80\x00' +
                                             bytearray(range(256)))
-        source_queue.put(test_frame)
+        source.send(test_frame)
         yield clk.posedge
 
         while monitor_axis_tvalid:
@@ -377,12 +346,10 @@ def bench():
         yield clk.posedge
 
         # discard first trigger output
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+        rx_frame = sink.recv()
 
         # check second trigger output
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+        rx_frame = sink.recv()
 
         rx_frame_values = struct.unpack(">HLLL", bytes(rx_frame.data))
         cycles = (stop_time - start_time) / 8
@@ -409,7 +376,7 @@ def bench():
                                             b'\x5A\x51\x52\x53\x54\x55' +
                                             b'\x80\x00' +
                                             bytearray(range(256)))
-        source_queue.put(test_frame)
+        source.send(test_frame)
         yield clk.posedge
 
         yield delay(64)
@@ -445,12 +412,10 @@ def bench():
         yield clk.posedge
 
         # discard first trigger output
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+        rx_frame = sink.recv()
 
         # check second trigger output
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+        rx_frame = sink.recv()
 
         rx_frame_values = struct.unpack(">HLLL", bytes(rx_frame.data))
         cycles = (stop_time - start_time) / 8
@@ -481,8 +446,8 @@ def bench():
                                              b'\x5A\x51\x52\x53\x54\x55' +
                                              b'\x80\x00' +
                                              b'\x02\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
-        source_queue.put(test_frame1)
-        source_queue.put(test_frame2)
+        source.send(test_frame1)
+        source.send(test_frame2)
         yield clk.posedge
 
         while monitor_axis_tvalid:
@@ -504,12 +469,10 @@ def bench():
         yield clk.posedge
 
         # discard first trigger output
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+        rx_frame = sink.recv()
 
         # check second trigger output
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+        rx_frame = sink.recv()
 
         rx_frame_values = struct.unpack(">HLLL", bytes(rx_frame.data))
         cycles = (stop_time - start_time) / 8
@@ -540,8 +503,8 @@ def bench():
                                              b'\x5A\x51\x52\x53\x54\x55' +
                                              b'\x80\x00' +
                                              b'\x02\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
-        source_queue.put(test_frame1)
-        source_queue.put(test_frame2)
+        source.send(test_frame1)
+        source.send(test_frame2)
         yield clk.posedge
 
         while monitor_axis_tvalid:
@@ -563,12 +526,10 @@ def bench():
         yield clk.posedge
 
         # discard first trigger output
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+        rx_frame = sink.recv()
 
         # check second trigger output
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+        rx_frame = sink.recv()
 
         rx_frame_values = struct.unpack(">HLLL", bytes(rx_frame.data))
         cycles = (stop_time - start_time) / 8
@@ -599,8 +560,8 @@ def bench():
                                              b'\x5A\x51\x52\x53\x54\x55' +
                                              b'\x80\x00' +
                                              b'\x02\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
-        source_queue.put(test_frame1)
-        source_queue.put(test_frame2)
+        source.send(test_frame1)
+        source.send(test_frame2)
         yield clk.posedge
 
         while monitor_axis_tvalid:
@@ -622,12 +583,10 @@ def bench():
         yield clk.posedge
 
         # discard first trigger output
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+        rx_frame = sink.recv()
 
         # check second trigger output
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+        rx_frame = sink.recv()
 
         rx_frame_values = struct.unpack(">HLLL", bytes(rx_frame.data))
         cycles = (stop_time - start_time) / 8
@@ -660,7 +619,7 @@ def bench():
                                              bytearray(range(lens[i]))))
 
         for f in test_frame:
-            source_queue.put(f)
+            source.send(f)
         yield clk.posedge
 
         while monitor_axis_tvalid:
@@ -682,12 +641,10 @@ def bench():
         yield clk.posedge
 
         # discard first trigger output
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+        rx_frame = sink.recv()
 
         # check second trigger output
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+        rx_frame = sink.recv()
 
         rx_frame_values = struct.unpack(">HLLL", bytes(rx_frame.data))
         cycles = (stop_time - start_time) / 8
@@ -720,7 +677,7 @@ def bench():
                                              bytearray(range(lens[i]))))
 
         for f in test_frame:
-            source_queue.put(f)
+            source.send(f)
         yield clk.posedge
 
         yield delay(200)
@@ -751,16 +708,13 @@ def bench():
         yield clk.posedge
 
         # discard first trigger output
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+        rx_frame = sink.recv()
 
         # check second trigger output
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+        rx_frame = sink.recv()
 
         # check second trigger output
-        if not sink_queue.empty():
-            rx_frame2 = sink_queue.get()
+        rx_frame2 = sink.recv()
 
         rx_frame_values = struct.unpack(">HLLL", bytes(rx_frame.data))
         cycles = (stop_time - start_time) / 8
@@ -783,7 +737,7 @@ def bench():
 
         raise StopSimulation
 
-    return dut, source, monitor_sink, sink, clkgen, check
+    return dut, source_logic, monitor_sink_logic, sink_logic, clkgen, check
 
 def test_bench():
     os.chdir(os.path.dirname(os.path.abspath(__file__)))

@@ -24,11 +24,14 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
-`timescale 1 ns / 1 ps
+`timescale 1ns / 1ps
 
+/*
+ * Testbench for axis_adapter
+ */
 module test_axis_adapter_8_64;
 
-// parameters
+// Parameters
 localparam INPUT_DATA_WIDTH = 8;
 localparam INPUT_KEEP_WIDTH = (INPUT_DATA_WIDTH/8);
 localparam OUTPUT_DATA_WIDTH = 64;
@@ -56,21 +59,25 @@ wire output_axis_tuser;
 
 initial begin
     // myhdl integration
-    $from_myhdl(clk,
-                rst,
-                current_test,
-                input_axis_tdata,
-                input_axis_tkeep,
-                input_axis_tvalid,
-                input_axis_tlast,
-                input_axis_tuser,
-                output_axis_tready);
-    $to_myhdl(input_axis_tready,
-              output_axis_tdata,
-              output_axis_tkeep,
-              output_axis_tvalid,
-              output_axis_tlast,
-              output_axis_tuser);
+    $from_myhdl(
+        clk,
+        rst,
+        current_test,
+        input_axis_tdata,
+        input_axis_tkeep,
+        input_axis_tvalid,
+        input_axis_tlast,
+        input_axis_tuser,
+        output_axis_tready
+    );
+    $to_myhdl(
+        input_axis_tready,
+        output_axis_tdata,
+        output_axis_tkeep,
+        output_axis_tvalid,
+        output_axis_tlast,
+        output_axis_tuser
+    );
 
     // dump file
     $dumpfile("test_axis_adapter_8_64.lxt");

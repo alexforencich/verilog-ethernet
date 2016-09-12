@@ -24,17 +24,24 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
-`timescale 1 ns / 1 ps
+`timescale 1ns / 1ps
 
+/*
+ * Testbench for axis_tap_64
+ */
 module test_axis_tap_64;
+
+// Parameters
+parameter DATA_WIDTH = 64;
+parameter KEEP_WIDTH = (DATA_WIDTH/8);
 
 // Inputs
 reg clk = 0;
 reg rst = 0;
 reg [7:0] current_test = 0;
 
-reg [63:0] tap_axis_tdata = 0;
-reg [7:0] tap_axis_tkeep = 0;
+reg [DATA_WIDTH-1:0] tap_axis_tdata = 0;
+reg [DATA_WIDTH-1:0] tap_axis_tkeep = 0;
 reg tap_axis_tvalid = 0;
 reg tap_axis_tready = 0;
 reg tap_axis_tlast = 0;
@@ -42,29 +49,33 @@ reg tap_axis_tuser = 0;
 reg output_axis_tready = 0;
 
 // Outputs
-wire [63:0] output_axis_tdata;
-wire [7:0] output_axis_tkeep;
+wire [DATA_WIDTH-1:0] output_axis_tdata;
+wire [DATA_WIDTH-1:0] output_axis_tkeep;
 wire output_axis_tvalid;
 wire output_axis_tlast;
 wire output_axis_tuser;
 
 initial begin
     // myhdl integration
-    $from_myhdl(clk,
-                rst,
-                current_test,
-                tap_axis_tdata,
-                tap_axis_tkeep,
-                tap_axis_tvalid,
-                tap_axis_tready,
-                tap_axis_tlast,
-                tap_axis_tuser,
-                output_axis_tready);
-    $to_myhdl(output_axis_tdata,
-              output_axis_tkeep,
-              output_axis_tvalid,
-              output_axis_tlast,
-              output_axis_tuser);
+    $from_myhdl(
+        clk,
+        rst,
+        current_test,
+        tap_axis_tdata,
+        tap_axis_tkeep,
+        tap_axis_tvalid,
+        tap_axis_tready,
+        tap_axis_tlast,
+        tap_axis_tuser,
+        output_axis_tready
+    );
+    $to_myhdl(
+        output_axis_tdata,
+        output_axis_tkeep,
+        output_axis_tvalid,
+        output_axis_tlast,
+        output_axis_tuser
+    );
 
     // dump file
     $dumpfile("test_axis_tap_64.lxt");
@@ -72,8 +83,8 @@ initial begin
 end
 
 axis_tap_64 #(
-    .DATA_WIDTH(64),
-    .KEEP_WIDTH(8)
+    .DATA_WIDTH(DATA_WIDTH),
+    .KEEP_WIDTH(KEEP_WIDTH)
 )
 UUT (
     .clk(clk),

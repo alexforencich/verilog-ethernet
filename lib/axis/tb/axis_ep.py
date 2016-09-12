@@ -176,204 +176,258 @@ class AXIStreamFrame(object):
     def __iter__(self):
         return self.data.__iter__()
 
-def AXIStreamSource(clk, rst,
-                    tdata=None,
-                    tkeep=Signal(bool(True)),
-                    tvalid=Signal(bool(False)),
-                    tready=Signal(bool(True)),
-                    tlast=Signal(bool(False)),
-                    tdest=Signal(intbv(0)),
-                    tuser=Signal(bool(False)),
-                    fifo=None,
-                    pause=0,
-                    name=None):
 
-    tready_int = Signal(bool(False))
-    tvalid_int = Signal(bool(False))
+class AXIStreamSource(object):
+    def __init__(self):
+        self.has_logic = False
+        self.queue = []
 
-    @always_comb
-    def pause_logic():
-        tready_int.next = tready and not pause
-        tvalid.next = tvalid_int and not pause
+    def send(self, frame):
+        self.queue.append(AXIStreamFrame(frame))
 
-    @instance
-    def logic():
-        frame = AXIStreamFrame()
-        data = []
-        keep = []
-        dest = []
-        user = []
-        B = 0
-        N = len(tdata)
-        M = len(tkeep)
-        WL = int((len(tdata)+M-1)/M)
+    def write(self, data):
+        self.send(data)
 
-        if type(tdata) is list or type(tdata) is tuple:
-            # multiple tdata signals
-            B = len(tdata)
-            N = [len(b) for b in tdata]
-            M = 1
-            WL = [1]*B
+    def count(self):
+        return len(self.queue)
 
-        while True:
-            yield clk.posedge, rst.posedge
+    def empty(self):
+        return self.count() == 0
 
-            if rst:
-                if B > 0:
-                    for s in tdata:
-                        s.next = 0
-                else:
-                    tdata.next = 0
-                tkeep.next = 0
-                tdest.next = 0
-                tuser.next = False
-                tvalid_int.next = False
-                tlast.next = False
-            else:
-                if tready_int and tvalid:
-                    if len(data) > 0:
-                        if B > 0:
-                            l = data.pop(0)
-                            for i in range(B):
-                                tdata[i].next = l[i]
-                        else:
-                            tdata.next = data.pop(0)
-                        tkeep.next = keep.pop(0)
-                        tdest.next = dest.pop(0)
-                        tuser.next = user.pop(0)
-                        tvalid_int.next = True
-                        tlast.next = len(data) == 0
-                    else:
-                        tvalid_int.next = False
-                        tlast.next = False
-                if (tlast and tready_int and tvalid) or not tvalid_int:
-                    if not fifo.empty():
-                        frame = fifo.get()
-                        frame = AXIStreamFrame(frame)
-                        frame.B = B
-                        frame.N = N
-                        frame.M = M
-                        frame.WL = WL
-                        data, keep, dest, user = frame.build()
-                        if name is not None:
-                            print("[%s] Sending frame %s" % (name, repr(frame)))
-                        if B > 0:
-                            l = data.pop(0)
-                            for i in range(B):
-                                tdata[i].next = l[i]
-                        else:
-                            tdata.next = data.pop(0)
-                        tkeep.next = keep.pop(0)
-                        tdest.next = dest.pop(0)
-                        tuser.next = user.pop(0)
-                        tvalid_int.next = True
-                        tlast.next = len(data) == 0
+    def create_logic(self,
+                clk,
+                rst,
+                tdata=None,
+                tkeep=Signal(bool(True)),
+                tvalid=Signal(bool(False)),
+                tready=Signal(bool(True)),
+                tlast=Signal(bool(False)),
+                tdest=Signal(intbv(0)),
+                tuser=Signal(bool(False)),
+                pause=0,
+                name=None
+            ):
 
-    return logic, pause_logic
+        assert not self.has_logic
 
+        self.has_logic = True
 
-def AXIStreamSink(clk, rst,
-                  tdata=None,
-                  tkeep=Signal(bool(True)),
-                  tvalid=Signal(bool(True)),
-                  tready=Signal(bool(True)),
-                  tlast=Signal(bool(True)),
-                  tdest=Signal(intbv(0)),
-                  tuser=Signal(bool(False)),
-                  fifo=None,
-                  pause=0,
-                  name=None):
+        tready_int = Signal(bool(False))
+        tvalid_int = Signal(bool(False))
 
-    tready_int = Signal(bool(False))
-    tvalid_int = Signal(bool(False))
+        @always_comb
+        def pause_logic():
+            tready_int.next = tready and not pause
+            tvalid.next = tvalid_int and not pause
 
-    @always_comb
-    def pause_logic():
-        tready.next = tready_int and not pause
-        tvalid_int.next = tvalid and not pause
+        @instance
+        def logic():
+            frame = AXIStreamFrame()
+            data = []
+            keep = []
+            dest = []
+            user = []
+            B = 0
+            N = len(tdata)
+            M = len(tkeep)
+            WL = int((len(tdata)+M-1)/M)
 
-    @instance
-    def logic():
-        frame = AXIStreamFrame()
-        data = []
-        keep = []
-        dest = []
-        user = []
-        B = 0
-        N = len(tdata)
-        M = len(tkeep)
-        WL = int((len(tdata)+M-1)/M)
-        first = True
+            if type(tdata) is list or type(tdata) is tuple:
+                # multiple tdata signals
+                B = len(tdata)
+                N = [len(b) for b in tdata]
+                M = 1
+                WL = [1]*B
 
-        if type(tdata) is list or type(tdata) is tuple:
-            # multiple tdata signals
-            B = len(tdata)
-            N = [len(b) for b in tdata]
-            M = 1
-            WL = [1]*B
+            while True:
+                yield clk.posedge, rst.posedge
 
-        while True:
-            yield clk.posedge, rst.posedge
-
-            if rst:
-                tready_int.next = False
-                frame = AXIStreamFrame()
-                data = []
-                keep = []
-                dest = []
-                user = []
-                first = True
-            else:
-                tready_int.next = True
-
-                if tvalid_int:
-
-                    if not skip_asserts:
-                        # zero tkeep not allowed
-                        assert int(tkeep) != 0
-                        # tkeep must be contiguous
-                        # i.e. 0b00011110 allowed, but 0b00011010 not allowed
-                        b = int(tkeep)
-                        while b & 1 == 0:
-                            b = b >> 1
-                        while b & 1 == 1:
-                            b = b >> 1
-                        assert b == 0
-                        # tkeep must not have gaps across cycles
-                        if not first:
-                            # not first cycle; lowest bit must be set
-                            assert int(tkeep) & 1
-                        if not tlast:
-                            # not last cycle; highest bit must be set
-                            assert int(tkeep) & (1 << len(tkeep)-1)
-
+                if rst:
                     if B > 0:
-                        l = []
-                        for i in range(B):
-                            l.append(int(tdata[i]))
-                        data.append(l)
+                        for s in tdata:
+                            s.next = 0
                     else:
-                        data.append(int(tdata))
-                    keep.append(int(tkeep))
-                    dest.append(int(tdest))
-                    user.append(int(tuser))
-                    first = False
-                    if tlast:
-                        frame.B = B
-                        frame.N = N
-                        frame.M = M
-                        frame.WL = WL
-                        frame.parse(data, keep, dest, user)
-                        if fifo is not None:
-                            fifo.put(frame)
-                        if name is not None:
-                            print("[%s] Got frame %s" % (name, repr(frame)))
-                        frame = AXIStreamFrame()
-                        data = []
-                        keep = []
-                        dest = []
-                        user = []
-                        first = True
+                        tdata.next = 0
+                    tkeep.next = 0
+                    tdest.next = 0
+                    tuser.next = False
+                    tvalid_int.next = False
+                    tlast.next = False
+                else:
+                    if tready_int and tvalid:
+                        if len(data) > 0:
+                            if B > 0:
+                                l = data.pop(0)
+                                for i in range(B):
+                                    tdata[i].next = l[i]
+                            else:
+                                tdata.next = data.pop(0)
+                            tkeep.next = keep.pop(0)
+                            tdest.next = dest.pop(0)
+                            tuser.next = user.pop(0)
+                            tvalid_int.next = True
+                            tlast.next = len(data) == 0
+                        else:
+                            tvalid_int.next = False
+                            tlast.next = False
+                    if (tlast and tready_int and tvalid) or not tvalid_int:
+                        if len(self.queue) > 0:
+                            frame = self.queue.pop(0)
+                            frame.B = B
+                            frame.N = N
+                            frame.M = M
+                            frame.WL = WL
+                            data, keep, dest, user = frame.build()
+                            if name is not None:
+                                print("[%s] Sending frame %s" % (name, repr(frame)))
+                            if B > 0:
+                                l = data.pop(0)
+                                for i in range(B):
+                                    tdata[i].next = l[i]
+                            else:
+                                tdata.next = data.pop(0)
+                            tkeep.next = keep.pop(0)
+                            tdest.next = dest.pop(0)
+                            tuser.next = user.pop(0)
+                            tvalid_int.next = True
+                            tlast.next = len(data) == 0
 
-    return logic, pause_logic
+        return logic, pause_logic
+
+
+class AXIStreamSink(object):
+    def __init__(self):
+        self.has_logic = False
+        self.queue = []
+        self.read_queue = []
+
+    def recv(self):
+        if len(self.queue) > 0:
+            return self.queue.pop(0)
+        return None
+
+    def read(self, count=-1):
+        while len(self.queue) > 0:
+            self.read_queue.extend(self.queue.pop(0).data)
+        if count < 0:
+            count = len(self.read_queue)
+        data = self.read_queue[:count]
+        del self.read_queue[:count]
+        return data
+
+    def count(self):
+        return len(self.queue)
+
+    def empty(self):
+        return self.count() == 0
+
+    def create_logic(self,
+                clk,
+                rst,
+                tdata=None,
+                tkeep=Signal(bool(True)),
+                tvalid=Signal(bool(False)),
+                tready=Signal(bool(True)),
+                tlast=Signal(bool(True)),
+                tdest=Signal(intbv(0)),
+                tuser=Signal(bool(False)),
+                pause=0,
+                name=None
+            ):
+
+        assert not self.has_logic
+
+        self.has_logic = True
+
+        tready_int = Signal(bool(False))
+        tvalid_int = Signal(bool(False))
+
+        @always_comb
+        def pause_logic():
+            tready.next = tready_int and not pause
+            tvalid_int.next = tvalid and not pause
+
+        @instance
+        def logic():
+            frame = AXIStreamFrame()
+            data = []
+            keep = []
+            dest = []
+            user = []
+            B = 0
+            N = len(tdata)
+            M = len(tkeep)
+            WL = int((len(tdata)+M-1)/M)
+            first = True
+
+            if type(tdata) is list or type(tdata) is tuple:
+                # multiple tdata signals
+                B = len(tdata)
+                N = [len(b) for b in tdata]
+                M = 1
+                WL = [1]*B
+
+            while True:
+                yield clk.posedge, rst.posedge
+
+                if rst:
+                    tready_int.next = False
+                    frame = AXIStreamFrame()
+                    data = []
+                    keep = []
+                    dest = []
+                    user = []
+                    first = True
+                else:
+                    tready_int.next = True
+
+                    if tvalid_int:
+
+                        if not skip_asserts:
+                            # zero tkeep not allowed
+                            assert int(tkeep) != 0
+                            # tkeep must be contiguous
+                            # i.e. 0b00011110 allowed, but 0b00011010 not allowed
+                            b = int(tkeep)
+                            while b & 1 == 0:
+                                b = b >> 1
+                            while b & 1 == 1:
+                                b = b >> 1
+                            assert b == 0
+                            # tkeep must not have gaps across cycles
+                            if not first:
+                                # not first cycle; lowest bit must be set
+                                assert int(tkeep) & 1
+                            if not tlast:
+                                # not last cycle; highest bit must be set
+                                assert int(tkeep) & (1 << len(tkeep)-1)
+
+                        if B > 0:
+                            l = []
+                            for i in range(B):
+                                l.append(int(tdata[i]))
+                            data.append(l)
+                        else:
+                            data.append(int(tdata))
+                        keep.append(int(tkeep))
+                        dest.append(int(tdest))
+                        user.append(int(tuser))
+                        first = False
+                        if tlast:
+                            frame.B = B
+                            frame.N = N
+                            frame.M = M
+                            frame.WL = WL
+                            frame.parse(data, keep, dest, user)
+                            self.queue.append(frame)
+                            if name is not None:
+                                print("[%s] Got frame %s" % (name, repr(frame)))
+                            frame = AXIStreamFrame()
+                            data = []
+                            keep = []
+                            dest = []
+                            user = []
+                            first = True
+
+        return logic, pause_logic
 

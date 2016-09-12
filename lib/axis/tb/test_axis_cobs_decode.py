@@ -26,15 +26,10 @@ THE SOFTWARE.
 from myhdl import *
 import os
 
-try:
-    from queue import Queue
-except ImportError:
-    from Queue import Queue
-
 import axis_ep
 
 module = 'axis_cobs_decode'
-testbench = 'test_axis_cobs_decode'
+testbench = 'test_%s' % module
 
 srcs = []
 
@@ -44,37 +39,6 @@ srcs.append("%s.v" % testbench)
 src = ' '.join(srcs)
 
 build_cmd = "iverilog -o %s.vvp %s" % (testbench, src)
-
-def dut_axis_cobs_decode(clk,
-                         rst,
-                         current_test,
-                         input_axis_tdata,
-                         input_axis_tvalid,
-                         input_axis_tready,
-                         input_axis_tlast,
-                         input_axis_tuser,
-                         output_axis_tdata,
-                         output_axis_tvalid,
-                         output_axis_tready,
-                         output_axis_tlast,
-                         output_axis_tuser):
-
-    if os.system(build_cmd):
-        raise Exception("Error running build command")
-    return Cosimulation("vvp -m myhdl %s.vvp -lxt2" % testbench,
-                clk=clk,
-                rst=rst,
-                current_test=current_test,
-                input_axis_tdata=input_axis_tdata,
-                input_axis_tvalid=input_axis_tvalid,
-                input_axis_tready=input_axis_tready,
-                input_axis_tlast=input_axis_tlast,
-                input_axis_tuser=input_axis_tuser,
-                output_axis_tdata=output_axis_tdata,
-                output_axis_tvalid=output_axis_tvalid,
-                output_axis_tready=output_axis_tready,
-                output_axis_tlast=output_axis_tlast,
-                output_axis_tuser=output_axis_tuser)
 
 def cobs_encode(block):
     block = bytearray(block)
@@ -167,47 +131,59 @@ def bench():
     output_axis_tuser = Signal(bool(0))
 
     # sources and sinks
-    source_queue = Queue()
     source_pause = Signal(bool(0))
-    sink_queue = Queue()
     sink_pause = Signal(bool(0))
 
-    source = axis_ep.AXIStreamSource(clk,
-                                    rst,
-                                    tdata=input_axis_tdata,
-                                    tvalid=input_axis_tvalid,
-                                    tready=input_axis_tready,
-                                    tlast=input_axis_tlast,
-                                    tuser=input_axis_tuser,
-                                    fifo=source_queue,
-                                    pause=source_pause,
-                                    name='source')
+    source = axis_ep.AXIStreamSource()
 
-    sink = axis_ep.AXIStreamSink(clk,
-                                rst,
-                                tdata=output_axis_tdata,
-                                tvalid=output_axis_tvalid,
-                                tready=output_axis_tready,
-                                tlast=output_axis_tlast,
-                                tuser=output_axis_tuser,
-                                fifo=sink_queue,
-                                pause=sink_pause,
-                                name='sink')
+    source_logic = source.create_logic(
+        clk,
+        rst,
+        tdata=input_axis_tdata,
+        tvalid=input_axis_tvalid,
+        tready=input_axis_tready,
+        tlast=input_axis_tlast,
+        tuser=input_axis_tuser,
+        pause=source_pause,
+        name='source'
+    )
+
+    sink = axis_ep.AXIStreamSink()
+
+    sink_logic = sink.create_logic(
+        clk,
+        rst,
+        tdata=output_axis_tdata,
+        tvalid=output_axis_tvalid,
+        tready=output_axis_tready,
+        tlast=output_axis_tlast,
+        tuser=output_axis_tuser,
+        pause=sink_pause,
+        name='sink'
+    )
 
     # DUT
-    dut = dut_axis_cobs_decode(clk,
-                               rst,
-                               current_test,
-                               input_axis_tdata,
-                               input_axis_tvalid,
-                               input_axis_tready,
-                               input_axis_tlast,
-                               input_axis_tuser,
-                               output_axis_tdata,
-                               output_axis_tvalid,
-                               output_axis_tready,
-                               output_axis_tlast,
-                               output_axis_tuser)
+    if os.system(build_cmd):
+        raise Exception("Error running build command")
+
+    dut = Cosimulation(
+        "vvp -m myhdl %s.vvp -lxt2" % testbench,
+        clk=clk,
+        rst=rst,
+        current_test=current_test,
+
+        input_axis_tdata=input_axis_tdata,
+        input_axis_tvalid=input_axis_tvalid,
+        input_axis_tready=input_axis_tready,
+        input_axis_tlast=input_axis_tlast,
+        input_axis_tuser=input_axis_tuser,
+
+        output_axis_tdata=output_axis_tdata,
+        output_axis_tvalid=output_axis_tvalid,
+        output_axis_tready=output_axis_tready,
+        output_axis_tlast=output_axis_tlast,
+        output_axis_tuser=output_axis_tuser
+    )
 
     @always(delay(4))
     def clkgen():
@@ -217,7 +193,7 @@ def bench():
         i = 4
         while i > 0:
             i = max(0, i-1)
-            if input_axis_tvalid or output_axis_tvalid or not source_queue.empty():
+            if input_axis_tvalid or output_axis_tvalid or not source.empty():
                 i = 4
             yield clk.posedge
 
@@ -225,7 +201,7 @@ def bench():
         i = 2
         while i > 0:
             i = max(0, i-1)
-            if input_axis_tvalid or output_axis_tvalid or not source_queue.empty():
+            if input_axis_tvalid or output_axis_tvalid or not source.empty():
                 i = 2
             source_pause.next = True
             yield clk.posedge
@@ -238,7 +214,7 @@ def bench():
         i = 2
         while i > 0:
             i = max(0, i-1)
-            if input_axis_tvalid or output_axis_tvalid or not source_queue.empty():
+            if input_axis_tvalid or output_axis_tvalid or not source.empty():
                 i = 2
             sink_pause.next = True
             yield clk.posedge
@@ -266,7 +242,7 @@ def bench():
                         bytearray([k%255+1 for k in range(payload_len)]),
                         b'\x00'+bytearray([k%255+1 for k in range(payload_len)])+b'\x00',
                         bytearray([next(gen) for i in range(payload_len)])]:
-                
+
                 yield clk.posedge
                 print("test 1: test packet, length %d" % payload_len)
                 current_test.next = 1
@@ -276,7 +252,7 @@ def bench():
                 test_frame = axis_ep.AXIStreamFrame(enc)
 
                 for wait in wait_normal, wait_pause_source, wait_pause_sink:
-                    source_queue.put(test_frame)
+                    source.send(test_frame)
                     yield clk.posedge
                     yield clk.posedge
 
@@ -285,13 +261,13 @@ def bench():
                     yield clk.posedge
                     yield clk.posedge
 
-                    rx_frame = sink_queue.get(False)
+                    rx_frame = sink.recv()
 
                     assert cobs_decode(enc) == block
                     assert rx_frame.data == block
                     assert not rx_frame.user[-1]
 
-                    assert sink_queue.empty()
+                    assert sink.empty()
 
                     yield delay(100)
 
@@ -304,7 +280,7 @@ def bench():
                 test_frame = axis_ep.AXIStreamFrame(enc+b'\x00')
 
                 for wait in wait_normal, wait_pause_source, wait_pause_sink:
-                    source_queue.put(test_frame)
+                    source.send(test_frame)
                     yield clk.posedge
                     yield clk.posedge
 
@@ -313,13 +289,13 @@ def bench():
                     yield clk.posedge
                     yield clk.posedge
 
-                    rx_frame = sink_queue.get(False)
+                    rx_frame = sink.recv()
 
                     assert cobs_decode(enc) == block
                     assert rx_frame.data == block
                     assert not rx_frame.user[-1]
 
-                    assert sink_queue.empty()
+                    assert sink.empty()
 
                     yield delay(100)
 
@@ -331,8 +307,8 @@ def bench():
                 test_frame1 = axis_ep.AXIStreamFrame(enc)
 
                 for wait in wait_normal, wait_pause_source, wait_pause_sink:
-                    source_queue.put(test_frame1)
-                    source_queue.put(test_frame2)
+                    source.send(test_frame1)
+                    source.send(test_frame2)
                     yield clk.posedge
                     yield clk.posedge
 
@@ -341,19 +317,19 @@ def bench():
                     yield clk.posedge
                     yield clk.posedge
 
-                    rx_frame = sink_queue.get(False)
+                    rx_frame = sink.recv()
 
                     assert cobs_decode(enc) == block
                     assert rx_frame.data == block
                     assert not rx_frame.user[-1]
 
-                    rx_frame = sink_queue.get(False)
+                    rx_frame = sink.recv()
 
                     assert cobs_decode(enc) == block
                     assert rx_frame.data == block
                     assert not rx_frame.user[-1]
 
-                    assert sink_queue.empty()
+                    assert sink.empty()
 
                     yield delay(100)
 
@@ -364,7 +340,7 @@ def bench():
                 test_frame = axis_ep.AXIStreamFrame(enc+b'\x00'+enc+b'\x00')
 
                 for wait in wait_normal, wait_pause_source, wait_pause_sink:
-                    source_queue.put(test_frame)
+                    source.send(test_frame)
                     yield clk.posedge
                     yield clk.posedge
 
@@ -373,19 +349,19 @@ def bench():
                     yield clk.posedge
                     yield clk.posedge
 
-                    rx_frame = sink_queue.get(False)
+                    rx_frame = sink.recv()
 
                     assert cobs_decode(enc) == block
                     assert rx_frame.data == block
                     assert not rx_frame.user[-1]
 
-                    rx_frame = sink_queue.get(False)
+                    rx_frame = sink.recv()
 
                     assert cobs_decode(enc) == block
                     assert rx_frame.data == block
                     assert not rx_frame.user[-1]
 
-                    assert sink_queue.empty()
+                    assert sink.empty()
 
                     yield delay(100)
 
@@ -400,9 +376,9 @@ def bench():
                 test_frame1.user = 1
 
                 for wait in wait_normal, wait_pause_source, wait_pause_sink:
-                    source_queue.put(test_frame1)
-                    source_queue.put(test_frame2)
-                    source_queue.put(test_frame3)
+                    source.send(test_frame1)
+                    source.send(test_frame2)
+                    source.send(test_frame3)
                     yield clk.posedge
                     yield clk.posedge
 
@@ -411,21 +387,21 @@ def bench():
                     yield clk.posedge
                     yield clk.posedge
 
-                    rx_frame = sink_queue.get(False)
+                    rx_frame = sink.recv()
 
                     assert rx_frame.user[-1]
 
-                    rx_frame = sink_queue.get(False)
+                    rx_frame = sink.recv()
 
                     assert rx_frame.user[-1]
 
-                    rx_frame = sink_queue.get(False)
+                    rx_frame = sink.recv()
 
                     assert cobs_decode(enc) == block
                     assert rx_frame.data == block
                     assert not rx_frame.user[-1]
 
-                    assert sink_queue.empty()
+                    assert sink.empty()
 
                     yield delay(100)
 
@@ -440,9 +416,9 @@ def bench():
                 test_frame1.user = 1
 
                 for wait in wait_normal, wait_pause_source, wait_pause_sink:
-                    source_queue.put(test_frame1)
-                    source_queue.put(test_frame2)
-                    source_queue.put(test_frame3)
+                    source.send(test_frame1)
+                    source.send(test_frame2)
+                    source.send(test_frame3)
                     yield clk.posedge
                     yield clk.posedge
 
@@ -451,27 +427,27 @@ def bench():
                     yield clk.posedge
                     yield clk.posedge
 
-                    rx_frame = sink_queue.get(False)
+                    rx_frame = sink.recv()
 
                     assert rx_frame.user[-1]
 
-                    rx_frame = sink_queue.get(False)
+                    rx_frame = sink.recv()
 
                     assert rx_frame.user[-1]
 
-                    rx_frame = sink_queue.get(False)
+                    rx_frame = sink.recv()
 
                     assert cobs_decode(enc) == block
                     assert rx_frame.data == block
                     assert not rx_frame.user[-1]
 
-                    assert sink_queue.empty()
+                    assert sink.empty()
 
                     yield delay(100)
 
         raise StopSimulation
 
-    return dut, source, sink, clkgen, check
+    return dut, source_logic, sink_logic, clkgen, check
 
 def test_bench():
     sim = Simulation(bench())

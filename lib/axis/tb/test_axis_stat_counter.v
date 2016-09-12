@@ -24,11 +24,14 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
-`timescale 1 ns / 1 ps
+`timescale 1ns / 1ps
 
+/*
+ * Testbench for axis_stat_counter
+ */
 module test_axis_stat_counter;
 
-// parameters
+// Parameters
 parameter DATA_WIDTH = 64;
 parameter KEEP_WIDTH = (DATA_WIDTH/8);
 parameter TAG_ENABLE = 1;
@@ -45,14 +48,14 @@ reg clk = 0;
 reg rst = 0;
 reg [7:0] current_test = 0;
 
-reg [63:0] monitor_axis_tdata = 8'd0;
-reg [7:0] monitor_axis_tkeep = 8'd0;
-reg monitor_axis_tvalid = 1'b0;
-reg monitor_axis_tready = 1'b0;
-reg monitor_axis_tlast = 1'b0;
-reg monitor_axis_tuser = 1'b0;
-reg output_axis_tready = 1'b0;
-reg [15:0] tag = 0;
+reg [DATA_WIDTH-1:0] monitor_axis_tdata = 0;
+reg [KEEP_WIDTH-1:0] monitor_axis_tkeep = 0;
+reg monitor_axis_tvalid = 0;
+reg monitor_axis_tready = 0;
+reg monitor_axis_tlast = 0;
+reg monitor_axis_tuser = 0;
+reg output_axis_tready = 0;
+reg [TAG_WIDTH-1:0] tag = 0;
 reg trigger = 0;
 
 // Outputs
@@ -64,23 +67,27 @@ wire busy;
 
 initial begin
     // myhdl integration
-    $from_myhdl(clk,
-                rst,
-                current_test,
-                monitor_axis_tdata,
-                monitor_axis_tkeep,
-                monitor_axis_tvalid,
-                monitor_axis_tready,
-                monitor_axis_tlast,
-                monitor_axis_tuser,
-                output_axis_tready,
-                tag,
-                trigger);
-    $to_myhdl(output_axis_tdata,
-                output_axis_tvalid,
-                output_axis_tlast,
-                output_axis_tuser,
-                busy);
+    $from_myhdl(
+        clk,
+        rst,
+        current_test,
+        monitor_axis_tdata,
+        monitor_axis_tkeep,
+        monitor_axis_tvalid,
+        monitor_axis_tready,
+        monitor_axis_tlast,
+        monitor_axis_tuser,
+        output_axis_tready,
+        tag,
+        trigger
+    );
+    $to_myhdl(
+        output_axis_tdata,
+        output_axis_tvalid,
+        output_axis_tlast,
+        output_axis_tuser,
+        busy
+    );
 
     // dump file
     $dumpfile("test_axis_stat_counter.lxt");
