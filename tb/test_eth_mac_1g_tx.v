@@ -54,18 +54,22 @@ wire gmii_tx_er;
 
 initial begin
     // myhdl integration
-    $from_myhdl(clk,
-                rst,
-                current_test,
-                input_axis_tdata,
-                input_axis_tvalid,
-                input_axis_tlast,
-                input_axis_tuser,
-                ifg_delay);
-    $to_myhdl(input_axis_tready,
-              gmii_txd,
-              gmii_tx_en,
-              gmii_tx_er);
+    $from_myhdl(
+        clk,
+        rst,
+        current_test,
+        input_axis_tdata,
+        input_axis_tvalid,
+        input_axis_tlast,
+        input_axis_tuser,
+        ifg_delay
+    );
+    $to_myhdl(
+        input_axis_tready,
+        gmii_txd,
+        gmii_tx_en,
+        gmii_tx_er
+    );
 
     // dump file
     $dumpfile("test_eth_mac_1g_tx.lxt");

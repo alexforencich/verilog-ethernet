@@ -24,8 +24,11 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
-`timescale 1 ns / 1 ps
+`timescale 1ns / 1ps
 
+/*
+ * Testbench for eth_axis_tx_64
+ */
 module test_eth_axis_tx_64;
 
 // Inputs
@@ -56,27 +59,31 @@ wire busy;
 
 initial begin
     // myhdl integration
-    $from_myhdl(clk,
-                rst,
-                current_test,
-                input_eth_hdr_valid,
-                input_eth_dest_mac,
-                input_eth_src_mac,
-                input_eth_type,
-                input_eth_payload_tdata,
-                input_eth_payload_tkeep,
-                input_eth_payload_tvalid,
-                input_eth_payload_tlast,
-                input_eth_payload_tuser,
-                output_axis_tready);
-    $to_myhdl(input_eth_hdr_ready,
-              input_eth_payload_tready,
-              output_axis_tdata,
-              output_axis_tkeep,
-              output_axis_tvalid,
-              output_axis_tlast,
-              output_axis_tuser,
-              busy);
+    $from_myhdl(
+        clk,
+        rst,
+        current_test,
+        input_eth_hdr_valid,
+        input_eth_dest_mac,
+        input_eth_src_mac,
+        input_eth_type,
+        input_eth_payload_tdata,
+        input_eth_payload_tkeep,
+        input_eth_payload_tvalid,
+        input_eth_payload_tlast,
+        input_eth_payload_tuser,
+        output_axis_tready
+    );
+    $to_myhdl(
+        input_eth_hdr_ready,
+        input_eth_payload_tready,
+        output_axis_tdata,
+        output_axis_tkeep,
+        output_axis_tvalid,
+        output_axis_tlast,
+        output_axis_tuser,
+        busy
+    );
 
     // dump file
     $dumpfile("test_eth_axis_tx_64.lxt");

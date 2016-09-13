@@ -24,8 +24,11 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
-`timescale 1 ns / 1 ps
+`timescale 1ns / 1ps
 
+/*
+ * Testbench for arp_eth_rx_64
+ */
 module test_arp_eth_rx_64;
 
 // Inputs
@@ -66,37 +69,41 @@ wire error_invalid_header;
 
 initial begin
     // myhdl integration
-    $from_myhdl(clk,
-                rst,
-                current_test,
-                input_eth_hdr_valid,
-                input_eth_dest_mac,
-                input_eth_src_mac,
-                input_eth_type,
-                input_eth_payload_tdata,
-                input_eth_payload_tkeep,
-                input_eth_payload_tvalid,
-                input_eth_payload_tlast,
-                input_eth_payload_tuser,
-                output_frame_ready);
-    $to_myhdl(input_eth_hdr_ready,
-              input_eth_payload_tready,
-              output_frame_valid,
-              output_eth_dest_mac,
-              output_eth_src_mac,
-              output_eth_type,
-              output_arp_htype,
-              output_arp_ptype,
-              output_arp_hlen,
-              output_arp_plen,
-              output_arp_oper,
-              output_arp_sha,
-              output_arp_spa,
-              output_arp_tha,
-              output_arp_tpa,
-              busy,
-              error_header_early_termination,
-              error_invalid_header);
+    $from_myhdl(
+        clk,
+        rst,
+        current_test,
+        input_eth_hdr_valid,
+        input_eth_dest_mac,
+        input_eth_src_mac,
+        input_eth_type,
+        input_eth_payload_tdata,
+        input_eth_payload_tkeep,
+        input_eth_payload_tvalid,
+        input_eth_payload_tlast,
+        input_eth_payload_tuser,
+        output_frame_ready
+    );
+    $to_myhdl(
+        input_eth_hdr_ready,
+        input_eth_payload_tready,
+        output_frame_valid,
+        output_eth_dest_mac,
+        output_eth_src_mac,
+        output_eth_type,
+        output_arp_htype,
+        output_arp_ptype,
+        output_arp_hlen,
+        output_arp_plen,
+        output_arp_oper,
+        output_arp_sha,
+        output_arp_spa,
+        output_arp_tha,
+        output_arp_tpa,
+        busy,
+        error_header_early_termination,
+        error_invalid_header
+    );
 
     // dump file
     $dumpfile("test_arp_eth_rx_64.lxt");

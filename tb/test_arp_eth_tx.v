@@ -24,8 +24,11 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
-`timescale 1 ns / 1 ps
+`timescale 1ns / 1ps
 
+/*
+ * Testbench for arp_eth_tx
+ */
 module test_arp_eth_tx;
 
 // Inputs
@@ -61,32 +64,36 @@ wire busy;
 
 initial begin
     // myhdl integration
-    $from_myhdl(clk,
-                rst,
-                current_test,
-                input_frame_valid,
-                input_eth_dest_mac,
-                input_eth_src_mac,
-                input_eth_type,
-                input_arp_htype,
-                input_arp_ptype,
-                input_arp_oper,
-                input_arp_sha,
-                input_arp_spa,
-                input_arp_tha,
-                input_arp_tpa,
-                output_eth_hdr_ready,
-                output_eth_payload_tready);
-    $to_myhdl(input_frame_ready,
-              output_eth_hdr_valid,
-              output_eth_dest_mac,
-              output_eth_src_mac,
-              output_eth_type,
-              output_eth_payload_tdata,
-              output_eth_payload_tvalid,
-              output_eth_payload_tlast,
-              output_eth_payload_tuser,
-              busy);
+    $from_myhdl(
+        clk,
+        rst,
+        current_test,
+        input_frame_valid,
+        input_eth_dest_mac,
+        input_eth_src_mac,
+        input_eth_type,
+        input_arp_htype,
+        input_arp_ptype,
+        input_arp_oper,
+        input_arp_sha,
+        input_arp_spa,
+        input_arp_tha,
+        input_arp_tpa,
+        output_eth_hdr_ready,
+        output_eth_payload_tready
+    );
+    $to_myhdl(
+        input_frame_ready,
+        output_eth_hdr_valid,
+        output_eth_dest_mac,
+        output_eth_src_mac,
+        output_eth_type,
+        output_eth_payload_tdata,
+        output_eth_payload_tvalid,
+        output_eth_payload_tlast,
+        output_eth_payload_tuser,
+        busy
+    );
 
     // dump file
     $dumpfile("test_arp_eth_tx.lxt");

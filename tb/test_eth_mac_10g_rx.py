@@ -26,11 +26,6 @@ THE SOFTWARE.
 from myhdl import *
 import os
 
-try:
-    from queue import Queue
-except ImportError:
-    from Queue import Queue
-
 import axis_ep
 import eth_ep
 import xgmii_ep
@@ -38,51 +33,17 @@ import xgmii_ep
 axis_ep.skip_assert = True
 
 module = 'eth_mac_10g_rx'
+testbench = 'test_%s' % module
 
 srcs = []
 
 srcs.append("../rtl/%s.v" % module)
 srcs.append("../rtl/lfsr.v")
-srcs.append("test_%s.v" % module)
+srcs.append("%s.v" % testbench)
 
 src = ' '.join(srcs)
 
-build_cmd = "iverilog -o test_%s.vvp %s" % (module, src)
-
-def dut_eth_mac_10g_rx(clk,
-                       rst,
-                       current_test,
-
-                       xgmii_rxd,
-                       xgmii_rxc,
-
-                       output_axis_tdata,
-                       output_axis_tkeep,
-                       output_axis_tvalid,
-                       output_axis_tlast,
-                       output_axis_tuser,
-
-                       error_bad_frame,
-                       error_bad_fcs):
-
-    if os.system(build_cmd):
-        raise Exception("Error running build command")
-    return Cosimulation("vvp -m myhdl test_%s.vvp -lxt2" % module,
-                clk=clk,
-                rst=rst,
-                current_test=current_test,
-
-                xgmii_rxd=xgmii_rxd,
-                xgmii_rxc=xgmii_rxc,
-
-                output_axis_tdata=output_axis_tdata,
-                output_axis_tkeep=output_axis_tkeep,
-                output_axis_tvalid=output_axis_tvalid,
-                output_axis_tlast=output_axis_tlast,
-                output_axis_tuser=output_axis_tuser,
-
-                error_bad_frame=error_bad_frame,
-                error_bad_fcs=error_bad_fcs)
+build_cmd = "iverilog -o %s.vvp %s" % (testbench, src)
 
 def bench():
 
@@ -107,42 +68,51 @@ def bench():
     error_bad_fcs = Signal(bool(0))
 
     # sources and sinks
-    source_queue = Queue()
-    sink_queue = Queue()
+    source = xgmii_ep.XGMIISource()
 
-    source = xgmii_ep.XGMIISource(clk,
-                                  rst,
-                                  txd=xgmii_rxd,
-                                  txc=xgmii_rxc,
-                                  fifo=source_queue,
-                                  name='source')
+    source_logic = source.create_logic(
+        clk,
+        rst,
+        txd=xgmii_rxd,
+        txc=xgmii_rxc,
+        name='source'
+    )
 
-    sink = axis_ep.AXIStreamSink(clk,
-                                 rst,
-                                 tdata=output_axis_tdata,
-                                 tkeep=output_axis_tkeep,
-                                 tvalid=output_axis_tvalid,
-                                 tlast=output_axis_tlast,
-                                 tuser=output_axis_tuser,
-                                 fifo=sink_queue,
-                                 name='sink')
+    sink = axis_ep.AXIStreamSink()
+
+    sink_logic = sink.create_logic(
+        clk,
+        rst,
+        tdata=output_axis_tdata,
+        tkeep=output_axis_tkeep,
+        tvalid=output_axis_tvalid,
+        tlast=output_axis_tlast,
+        tuser=output_axis_tuser,
+        name='sink'
+    )
 
     # DUT
-    dut = dut_eth_mac_10g_rx(clk,
-                             rst,
-                             current_test,
+    if os.system(build_cmd):
+        raise Exception("Error running build command")
 
-                             xgmii_rxd,
-                             xgmii_rxc,
+    dut = Cosimulation(
+        "vvp -m myhdl %s.vvp -lxt2" % testbench,
+        clk=clk,
+        rst=rst,
+        current_test=current_test,
 
-                             output_axis_tdata,
-                             output_axis_tkeep,
-                             output_axis_tvalid,
-                             output_axis_tlast,
-                             output_axis_tuser,
+        xgmii_rxd=xgmii_rxd,
+        xgmii_rxc=xgmii_rxc,
 
-                             error_bad_frame,
-                             error_bad_fcs)
+        output_axis_tdata=output_axis_tdata,
+        output_axis_tkeep=output_axis_tkeep,
+        output_axis_tvalid=output_axis_tvalid,
+        output_axis_tlast=output_axis_tlast,
+        output_axis_tuser=output_axis_tuser,
+
+        error_bad_frame=error_bad_frame,
+        error_bad_fcs=error_bad_fcs
+    )
 
     @always(delay(4))
     def clkgen():
@@ -187,20 +157,18 @@ def bench():
 
             xgmii_frame = xgmii_ep.XGMIIFrame(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+bytearray(axis_frame))
 
-            source_queue.put(xgmii_frame)
+            source.send(xgmii_frame)
             yield clk.posedge
             yield clk.posedge
 
-            while xgmii_rxc != 0xff or output_axis_tvalid or not source_queue.empty():
+            while xgmii_rxc != 0xff or output_axis_tvalid or not source.empty():
                 yield clk.posedge
 
             yield clk.posedge
             yield clk.posedge
             yield clk.posedge
 
-            rx_frame = None
-            if not sink_queue.empty():
-                rx_frame = sink_queue.get()
+            rx_frame = sink.recv()
 
             eth_frame = eth_ep.EthFrame()
             eth_frame.parse_axis(rx_frame)
@@ -208,7 +176,7 @@ def bench():
 
             assert eth_frame == test_frame
 
-            assert sink_queue.empty()
+            assert sink.empty()
 
             yield delay(100)
 
@@ -235,26 +203,24 @@ def bench():
             xgmii_frame1 = xgmii_ep.XGMIIFrame(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+bytearray(axis_frame1))
             xgmii_frame2 = xgmii_ep.XGMIIFrame(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+bytearray(axis_frame2))
 
-            source_queue.put(xgmii_frame1)
-            source_queue.put(xgmii_frame2)
+            source.send(xgmii_frame1)
+            source.send(xgmii_frame2)
             yield clk.posedge
             yield clk.posedge
 
-            while xgmii_rxc != 0xff or output_axis_tvalid or not source_queue.empty():
+            while xgmii_rxc != 0xff or output_axis_tvalid or not source.empty():
                 yield clk.posedge
 
             yield clk.posedge
 
-            while xgmii_rxc != 0xff or output_axis_tvalid or not source_queue.empty():
+            while xgmii_rxc != 0xff or output_axis_tvalid or not source.empty():
                 yield clk.posedge
 
             yield clk.posedge
             yield clk.posedge
             yield clk.posedge
 
-            rx_frame = None
-            if not sink_queue.empty():
-                rx_frame = sink_queue.get()
+            rx_frame = sink.recv()
 
             eth_frame = eth_ep.EthFrame()
             eth_frame.parse_axis(rx_frame)
@@ -262,9 +228,7 @@ def bench():
 
             assert eth_frame == test_frame1
 
-            rx_frame = None
-            if not sink_queue.empty():
-                rx_frame = sink_queue.get()
+            rx_frame = sink.recv()
 
             eth_frame = eth_ep.EthFrame()
             eth_frame.parse_axis(rx_frame)
@@ -272,7 +236,7 @@ def bench():
 
             assert eth_frame == test_frame2
 
-            assert sink_queue.empty()
+            assert sink.empty()
 
             yield delay(100)
 
@@ -304,17 +268,17 @@ def bench():
             xgmii_frame1 = xgmii_ep.XGMIIFrame(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+bytearray(axis_frame1))
             xgmii_frame2 = xgmii_ep.XGMIIFrame(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+bytearray(axis_frame2))
 
-            source_queue.put(xgmii_frame1)
-            source_queue.put(xgmii_frame2)
+            source.send(xgmii_frame1)
+            source.send(xgmii_frame2)
             yield clk.posedge
             yield clk.posedge
 
-            while xgmii_rxc != 0xff or output_axis_tvalid or not source_queue.empty():
+            while xgmii_rxc != 0xff or output_axis_tvalid or not source.empty():
                 yield clk.posedge
 
             yield clk.posedge
 
-            while xgmii_rxc != 0xff or output_axis_tvalid or not source_queue.empty():
+            while xgmii_rxc != 0xff or output_axis_tvalid or not source.empty():
                 yield clk.posedge
 
             yield clk.posedge
@@ -324,15 +288,11 @@ def bench():
             assert error_bad_frame_asserted
             assert error_bad_fcs_asserted
 
-            rx_frame = None
-            if not sink_queue.empty():
-                rx_frame = sink_queue.get()
+            rx_frame = sink.recv()
 
             assert rx_frame.user[-1]
 
-            rx_frame = None
-            if not sink_queue.empty():
-                rx_frame = sink_queue.get()
+            rx_frame = sink.recv()
 
             eth_frame = eth_ep.EthFrame()
             eth_frame.parse_axis(rx_frame)
@@ -340,7 +300,7 @@ def bench():
 
             assert eth_frame == test_frame2
 
-            assert sink_queue.empty()
+            assert sink.empty()
 
             yield delay(100)
 
@@ -372,17 +332,17 @@ def bench():
 
             xgmii_frame1.error = 1
 
-            source_queue.put(xgmii_frame1)
-            source_queue.put(xgmii_frame2)
+            source.send(xgmii_frame1)
+            source.send(xgmii_frame2)
             yield clk.posedge
             yield clk.posedge
 
-            while xgmii_rxc != 0xff or output_axis_tvalid or not source_queue.empty():
+            while xgmii_rxc != 0xff or output_axis_tvalid or not source.empty():
                 yield clk.posedge
 
             yield clk.posedge
 
-            while xgmii_rxc != 0xff or output_axis_tvalid or not source_queue.empty():
+            while xgmii_rxc != 0xff or output_axis_tvalid or not source.empty():
                 yield clk.posedge
 
             yield clk.posedge
@@ -392,15 +352,11 @@ def bench():
             assert error_bad_frame_asserted
             assert not error_bad_fcs_asserted
 
-            rx_frame = None
-            if not sink_queue.empty():
-                rx_frame = sink_queue.get()
+            rx_frame = sink.recv()
 
             assert rx_frame.user[-1]
 
-            rx_frame = None
-            if not sink_queue.empty():
-                rx_frame = sink_queue.get()
+            rx_frame = sink.recv()
 
             eth_frame = eth_ep.EthFrame()
             eth_frame.parse_axis(rx_frame)
@@ -408,7 +364,7 @@ def bench():
 
             assert eth_frame == test_frame2
 
-            assert sink_queue.empty()
+            assert sink.empty()
 
             yield delay(100)
 
@@ -427,12 +383,12 @@ def bench():
 
                 axis_frame = test_frame.build_axis_fcs()
 
-                source_queue.put(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+bytearray(axis_frame))
+                source.send(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+bytearray(axis_frame))
 
             yield clk.posedge
             yield clk.posedge
 
-            while xgmii_rxc != 0xff or output_axis_tvalid or not source_queue.empty():
+            while xgmii_rxc != 0xff or output_axis_tvalid or not source.empty():
                 yield clk.posedge
 
             yield clk.posedge
@@ -443,7 +399,7 @@ def bench():
 
         raise StopSimulation
 
-    return dut, monitor, source, sink, clkgen, check
+    return dut, monitor, source_logic, sink_logic, clkgen, check
 
 def test_bench():
     sim = Simulation(bench())

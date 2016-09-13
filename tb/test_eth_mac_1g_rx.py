@@ -26,61 +26,22 @@ THE SOFTWARE.
 from myhdl import *
 import os
 
-try:
-    from queue import Queue
-except ImportError:
-    from Queue import Queue
-
 import axis_ep
 import eth_ep
 import gmii_ep
 
 module = 'eth_mac_1g_rx'
+testbench = 'test_%s' % module
 
 srcs = []
 
 srcs.append("../rtl/%s.v" % module)
 srcs.append("../rtl/lfsr.v")
-srcs.append("test_%s.v" % module)
+srcs.append("%s.v" % testbench)
 
 src = ' '.join(srcs)
 
-build_cmd = "iverilog -o test_%s.vvp %s" % (module, src)
-
-def dut_eth_mac_1g_rx(clk,
-                      rst,
-                      current_test,
-
-                      gmii_rxd,
-                      gmii_rx_dv,
-                      gmii_rx_er,
-
-                      output_axis_tdata,
-                      output_axis_tvalid,
-                      output_axis_tlast,
-                      output_axis_tuser,
-
-                      error_bad_frame,
-                      error_bad_fcs):
-
-    if os.system(build_cmd):
-        raise Exception("Error running build command")
-    return Cosimulation("vvp -m myhdl test_%s.vvp -lxt2" % module,
-                clk=clk,
-                rst=rst,
-                current_test=current_test,
-
-                gmii_rxd=gmii_rxd,
-                gmii_rx_dv=gmii_rx_dv,
-                gmii_rx_er=gmii_rx_er,
-
-                output_axis_tdata=output_axis_tdata,
-                output_axis_tvalid=output_axis_tvalid,
-                output_axis_tlast=output_axis_tlast,
-                output_axis_tuser=output_axis_tuser,
-
-                error_bad_frame=error_bad_frame,
-                error_bad_fcs=error_bad_fcs)
+build_cmd = "iverilog -o %s.vvp %s" % (testbench, src)
 
 def bench():
 
@@ -105,42 +66,51 @@ def bench():
     error_bad_fcs = Signal(bool(0))
 
     # sources and sinks
-    source_queue = Queue()
-    sink_queue = Queue()
+    source = gmii_ep.GMIISource()
 
-    source = gmii_ep.GMIISource(clk,
-                                rst,
-                                txd=gmii_rxd,
-                                tx_en=gmii_rx_dv,
-                                tx_er=gmii_rx_er,
-                                fifo=source_queue,
-                                name='source')
+    source_logic = source.create_logic(
+        clk,
+        rst,
+        txd=gmii_rxd,
+        tx_en=gmii_rx_dv,
+        tx_er=gmii_rx_er,
+        name='source'
+    )
 
-    sink = axis_ep.AXIStreamSink(clk,
-                                 rst,
-                                 tdata=output_axis_tdata,
-                                 tvalid=output_axis_tvalid,
-                                 tlast=output_axis_tlast,
-                                 tuser=output_axis_tuser,
-                                 fifo=sink_queue,
-                                 name='sink')
+    sink = axis_ep.AXIStreamSink()
+
+    sink_logic = sink.create_logic(
+        clk,
+        rst,
+        tdata=output_axis_tdata,
+        tvalid=output_axis_tvalid,
+        tlast=output_axis_tlast,
+        tuser=output_axis_tuser,
+        name='sink'
+    )
 
     # DUT
-    dut = dut_eth_mac_1g_rx(clk,
-                            rst,
-                            current_test,
+    if os.system(build_cmd):
+        raise Exception("Error running build command")
 
-                            gmii_rxd,
-                            gmii_rx_dv,
-                            gmii_rx_er,
+    dut = Cosimulation(
+        "vvp -m myhdl %s.vvp -lxt2" % testbench,
+        clk=clk,
+        rst=rst,
+        current_test=current_test,
 
-                            output_axis_tdata,
-                            output_axis_tvalid,
-                            output_axis_tlast,
-                            output_axis_tuser,
+        gmii_rxd=gmii_rxd,
+        gmii_rx_dv=gmii_rx_dv,
+        gmii_rx_er=gmii_rx_er,
 
-                            error_bad_frame,
-                            error_bad_fcs)
+        output_axis_tdata=output_axis_tdata,
+        output_axis_tvalid=output_axis_tvalid,
+        output_axis_tlast=output_axis_tlast,
+        output_axis_tuser=output_axis_tuser,
+
+        error_bad_frame=error_bad_frame,
+        error_bad_fcs=error_bad_fcs
+    )
 
     @always(delay(4))
     def clkgen():
@@ -184,20 +154,18 @@ def bench():
             axis_frame = test_frame.build_axis_fcs()
             gmii_frame = gmii_ep.GMIIFrame(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+bytearray(axis_frame))
 
-            source_queue.put(gmii_frame)
+            source.send(gmii_frame)
             yield clk.posedge
             yield clk.posedge
 
-            while gmii_rx_dv or output_axis_tvalid or not source_queue.empty():
+            while gmii_rx_dv or output_axis_tvalid or not source.empty():
                 yield clk.posedge
 
             yield clk.posedge
             yield clk.posedge
             yield clk.posedge
 
-            rx_frame = None
-            if not sink_queue.empty():
-                rx_frame = sink_queue.get()
+            rx_frame = sink.recv()
 
             eth_frame = eth_ep.EthFrame()
             eth_frame.parse_axis(rx_frame)
@@ -205,7 +173,7 @@ def bench():
 
             assert eth_frame == test_frame
 
-            assert sink_queue.empty()
+            assert sink.empty()
 
             yield delay(100)
 
@@ -231,26 +199,24 @@ def bench():
             gmii_frame1 = gmii_ep.GMIIFrame(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+bytearray(axis_frame1))
             gmii_frame2 = gmii_ep.GMIIFrame(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+bytearray(axis_frame2))
 
-            source_queue.put(gmii_frame1)
-            source_queue.put(gmii_frame2)
+            source.send(gmii_frame1)
+            source.send(gmii_frame2)
             yield clk.posedge
             yield clk.posedge
 
-            while gmii_rx_dv or output_axis_tvalid or not source_queue.empty():
+            while gmii_rx_dv or output_axis_tvalid or not source.empty():
                 yield clk.posedge
 
             yield clk.posedge
 
-            while gmii_rx_dv or output_axis_tvalid or not source_queue.empty():
+            while gmii_rx_dv or output_axis_tvalid or not source.empty():
                 yield clk.posedge
 
             yield clk.posedge
             yield clk.posedge
             yield clk.posedge
 
-            rx_frame = None
-            if not sink_queue.empty():
-                rx_frame = sink_queue.get()
+            rx_frame = sink.recv()
 
             eth_frame = eth_ep.EthFrame()
             eth_frame.parse_axis(rx_frame)
@@ -258,9 +224,7 @@ def bench():
 
             assert eth_frame == test_frame1
 
-            rx_frame = None
-            if not sink_queue.empty():
-                rx_frame = sink_queue.get()
+            rx_frame = sink.recv()
 
             eth_frame = eth_ep.EthFrame()
             eth_frame.parse_axis(rx_frame)
@@ -268,7 +232,7 @@ def bench():
 
             assert eth_frame == test_frame2
 
-            assert sink_queue.empty()
+            assert sink.empty()
 
             yield delay(100)
 
@@ -300,17 +264,17 @@ def bench():
             gmii_frame1 = gmii_ep.GMIIFrame(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+bytearray(axis_frame1))
             gmii_frame2 = gmii_ep.GMIIFrame(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+bytearray(axis_frame2))
 
-            source_queue.put(gmii_frame1)
-            source_queue.put(gmii_frame2)
+            source.send(gmii_frame1)
+            source.send(gmii_frame2)
             yield clk.posedge
             yield clk.posedge
 
-            while gmii_rx_dv or output_axis_tvalid or not source_queue.empty():
+            while gmii_rx_dv or output_axis_tvalid or not source.empty():
                 yield clk.posedge
 
             yield clk.posedge
 
-            while gmii_rx_dv or output_axis_tvalid or not source_queue.empty():
+            while gmii_rx_dv or output_axis_tvalid or not source.empty():
                 yield clk.posedge
 
             yield clk.posedge
@@ -320,15 +284,11 @@ def bench():
             assert error_bad_frame_asserted
             assert error_bad_fcs_asserted
 
-            rx_frame = None
-            if not sink_queue.empty():
-                rx_frame = sink_queue.get()
+            rx_frame = sink.recv()
 
             assert rx_frame.user[-1]
 
-            rx_frame = None
-            if not sink_queue.empty():
-                rx_frame = sink_queue.get()
+            rx_frame = sink.recv()
 
             eth_frame = eth_ep.EthFrame()
             eth_frame.parse_axis(rx_frame)
@@ -336,7 +296,7 @@ def bench():
 
             assert eth_frame == test_frame2
 
-            assert sink_queue.empty()
+            assert sink.empty()
 
             yield delay(100)
 
@@ -368,17 +328,17 @@ def bench():
 
             gmii_frame1.error = 1
 
-            source_queue.put(gmii_frame1)
-            source_queue.put(gmii_frame2)
+            source.send(gmii_frame1)
+            source.send(gmii_frame2)
             yield clk.posedge
             yield clk.posedge
 
-            while gmii_rx_dv or output_axis_tvalid or not source_queue.empty():
+            while gmii_rx_dv or output_axis_tvalid or not source.empty():
                 yield clk.posedge
 
             yield clk.posedge
 
-            while gmii_rx_dv or output_axis_tvalid or not source_queue.empty():
+            while gmii_rx_dv or output_axis_tvalid or not source.empty():
                 yield clk.posedge
 
             yield clk.posedge
@@ -388,15 +348,11 @@ def bench():
             assert error_bad_frame_asserted
             assert not error_bad_fcs_asserted
 
-            rx_frame = None
-            if not sink_queue.empty():
-                rx_frame = sink_queue.get()
+            rx_frame = sink.recv()
 
             assert rx_frame.user[-1]
 
-            rx_frame = None
-            if not sink_queue.empty():
-                rx_frame = sink_queue.get()
+            rx_frame = sink.recv()
 
             eth_frame = eth_ep.EthFrame()
             eth_frame.parse_axis(rx_frame)
@@ -404,13 +360,13 @@ def bench():
 
             assert eth_frame == test_frame2
 
-            assert sink_queue.empty()
+            assert sink.empty()
 
             yield delay(100)
 
         raise StopSimulation
 
-    return dut, monitor, source, sink, clkgen, check
+    return dut, monitor, source_logic, sink_logic, clkgen, check
 
 def test_bench():
     sim = Simulation(bench())

@@ -81,100 +81,142 @@ class GMIIFrame(object):
         return self.data.__iter__()
 
 
-def GMIISource(clk, rst,
-               txd,
-               tx_en,
-               tx_er,
-               fifo=None,
-               name=None):
+class GMIISource(object):
+    def __init__(self):
+        self.has_logic = False
+        self.queue = []
 
-    assert len(txd) == 8
+    def send(self, frame):
+        self.queue.append(GMIIFrame(frame))
 
-    @instance
-    def logic():
-        frame = None
-        d = []
-        er = []
-        ifg_cnt = 0
+    def count(self):
+        return len(self.queue)
 
-        while True:
-            yield clk.posedge, rst.posedge
+    def empty(self):
+        return self.count() == 0
 
-            if rst:
-                frame = None
-                txd.next = 0
-                tx_en.next = 0
-                tx_er.next = 0
-                d = []
-                er = []
-                ifg_cnt = 0
-            else:
-                if ifg_cnt > 0:
-                    ifg_cnt -= 1
+    def create_logic(self,
+                clk,
+                rst,
+                txd,
+                tx_en,
+                tx_er,
+                name=None
+            ):
+
+        assert not self.has_logic
+
+        self.has_logic = True
+
+        assert len(txd) == 8
+
+        @instance
+        def logic():
+            frame = None
+            d = []
+            er = []
+            ifg_cnt = 0
+
+            while True:
+                yield clk.posedge, rst.posedge
+
+                if rst:
+                    frame = None
                     txd.next = 0
-                    tx_er.next = 0
                     tx_en.next = 0
-                elif len(d) > 0:
-                    txd.next = d.pop(0)
-                    tx_er.next = er.pop(0)
-                    tx_en.next = 1
-                    if len(d) == 0:
-                        ifg_cnt = 12
-                elif not fifo.empty():
-                    frame = GMIIFrame(fifo.get())
-                    d, er = frame.build()
-                    if name is not None:
-                        print("[%s] Sending frame %s" % (name, repr(frame)))
-                    txd.next = d.pop(0)
-                    tx_er.next = er.pop(0)
-                    tx_en.next = 1
+                    tx_er.next = 0
+                    d = []
+                    er = []
+                    ifg_cnt = 0
                 else:
-                    txd.next = 0
-                    tx_er.next = 0
-                    tx_en.next = 0
-
-    return logic
-
-
-def GMIISink(clk, rst,
-             rxd,
-             rx_dv,
-             rx_er,
-             fifo=None,
-             name=None):
-
-    assert len(rxd) == 8
-
-    @instance
-    def logic():
-        frame = None
-        d = []
-        er = []
-
-        while True:
-            yield clk.posedge, rst.posedge
-
-            if rst:
-                frame = None
-                d = []
-                er = []
-            else:
-                if rx_dv:
-                    if frame is None:
-                        frame = GMIIFrame()
-                        d = []
-                        er = []
-                    d.append(int(rxd))
-                    er.append(int(rx_er))
-                elif frame is not None:
-                    if len(d) > 0:
-                        frame.parse(d, er)
-                        if fifo is not None:
-                            fifo.put(frame)
+                    if ifg_cnt > 0:
+                        ifg_cnt -= 1
+                        txd.next = 0
+                        tx_er.next = 0
+                        tx_en.next = 0
+                    elif len(d) > 0:
+                        txd.next = d.pop(0)
+                        tx_er.next = er.pop(0)
+                        tx_en.next = 1
+                        if len(d) == 0:
+                            ifg_cnt = 12
+                    elif len(self.queue) > 0:
+                        frame = GMIIFrame(self.queue.pop(0))
+                        d, er = frame.build()
                         if name is not None:
-                            print("[%s] Got frame %s" % (name, repr(frame)))
+                            print("[%s] Sending frame %s" % (name, repr(frame)))
+                        txd.next = d.pop(0)
+                        tx_er.next = er.pop(0)
+                        tx_en.next = 1
+                    else:
+                        txd.next = 0
+                        tx_er.next = 0
+                        tx_en.next = 0
+
+        return logic
+
+
+class GMIISink(object):
+    def __init__(self):
+        self.has_logic = False
+        self.queue = []
+
+    def recv(self):
+        if len(self.queue) > 0:
+            return self.queue.pop(0)
+        return None
+
+    def count(self):
+        return len(self.queue)
+
+    def empty(self):
+        return self.count() == 0
+
+    def create_logic(self,
+                clk,
+                rst,
+                rxd,
+                rx_dv,
+                rx_er,
+                name=None
+            ):
+
+        assert not self.has_logic
+
+        self.has_logic = True
+
+        assert len(rxd) == 8
+
+        @instance
+        def logic():
+            frame = None
+            d = []
+            er = []
+
+            while True:
+                yield clk.posedge, rst.posedge
+
+                if rst:
                     frame = None
                     d = []
                     er = []
+                else:
+                    if rx_dv:
+                        if frame is None:
+                            frame = GMIIFrame()
+                            d = []
+                            er = []
+                        d.append(int(rxd))
+                        er.append(int(rx_er))
+                    elif frame is not None:
+                        if len(d) > 0:
+                            frame.parse(d, er)
+                            self.queue.append(frame)
+                            if name is not None:
+                                print("[%s] Got frame %s" % (name, repr(frame)))
+                        frame = None
+                        d = []
+                        er = []
 
-    return logic
+        return logic
+

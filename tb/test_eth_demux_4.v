@@ -24,8 +24,11 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
-`timescale 1 ns / 1 ps
+`timescale 1ns / 1ps
 
+/*
+ * Testbench for eth_demux_4
+ */
 module test_eth_demux_4;
 
 // Inputs
@@ -93,61 +96,65 @@ wire output_3_eth_payload_tuser;
 
 initial begin
     // myhdl integration
-    $from_myhdl(clk,
-                rst,
-                current_test,
-                input_eth_hdr_valid,
-                input_eth_dest_mac,
-                input_eth_src_mac,
-                input_eth_type,
-                input_eth_payload_tdata,
-                input_eth_payload_tvalid,
-                input_eth_payload_tlast,
-                input_eth_payload_tuser,
-                output_0_eth_hdr_ready,
-                output_0_eth_payload_tready,
-                output_1_eth_hdr_ready,
-                output_1_eth_payload_tready,
-                output_2_eth_hdr_ready,
-                output_2_eth_payload_tready,
-                output_3_eth_hdr_ready,
-                output_3_eth_payload_tready,
-                enable,
-                select);
-    $to_myhdl(input_eth_hdr_ready,
-              input_eth_payload_tready,
-              output_0_eth_hdr_valid,
-              output_0_eth_dest_mac,
-              output_0_eth_src_mac,
-              output_0_eth_type,
-              output_0_eth_payload_tdata,
-              output_0_eth_payload_tvalid,
-              output_0_eth_payload_tlast,
-              output_0_eth_payload_tuser,
-              output_1_eth_hdr_valid,
-              output_1_eth_dest_mac,
-              output_1_eth_src_mac,
-              output_1_eth_type,
-              output_1_eth_payload_tdata,
-              output_1_eth_payload_tvalid,
-              output_1_eth_payload_tlast,
-              output_1_eth_payload_tuser,
-              output_2_eth_hdr_valid,
-              output_2_eth_dest_mac,
-              output_2_eth_src_mac,
-              output_2_eth_type,
-              output_2_eth_payload_tdata,
-              output_2_eth_payload_tvalid,
-              output_2_eth_payload_tlast,
-              output_2_eth_payload_tuser,
-              output_3_eth_hdr_valid,
-              output_3_eth_dest_mac,
-              output_3_eth_src_mac,
-              output_3_eth_type,
-              output_3_eth_payload_tdata,
-              output_3_eth_payload_tvalid,
-              output_3_eth_payload_tlast,
-              output_3_eth_payload_tuser);
+    $from_myhdl(
+        clk,
+        rst,
+        current_test,
+        input_eth_hdr_valid,
+        input_eth_dest_mac,
+        input_eth_src_mac,
+        input_eth_type,
+        input_eth_payload_tdata,
+        input_eth_payload_tvalid,
+        input_eth_payload_tlast,
+        input_eth_payload_tuser,
+        output_0_eth_hdr_ready,
+        output_0_eth_payload_tready,
+        output_1_eth_hdr_ready,
+        output_1_eth_payload_tready,
+        output_2_eth_hdr_ready,
+        output_2_eth_payload_tready,
+        output_3_eth_hdr_ready,
+        output_3_eth_payload_tready,
+        enable,
+        select
+    );
+    $to_myhdl(
+        input_eth_hdr_ready,
+        input_eth_payload_tready,
+        output_0_eth_hdr_valid,
+        output_0_eth_dest_mac,
+        output_0_eth_src_mac,
+        output_0_eth_type,
+        output_0_eth_payload_tdata,
+        output_0_eth_payload_tvalid,
+        output_0_eth_payload_tlast,
+        output_0_eth_payload_tuser,
+        output_1_eth_hdr_valid,
+        output_1_eth_dest_mac,
+        output_1_eth_src_mac,
+        output_1_eth_type,
+        output_1_eth_payload_tdata,
+        output_1_eth_payload_tvalid,
+        output_1_eth_payload_tlast,
+        output_1_eth_payload_tuser,
+        output_2_eth_hdr_valid,
+        output_2_eth_dest_mac,
+        output_2_eth_src_mac,
+        output_2_eth_type,
+        output_2_eth_payload_tdata,
+        output_2_eth_payload_tvalid,
+        output_2_eth_payload_tlast,
+        output_2_eth_payload_tuser,
+        output_3_eth_hdr_valid,
+        output_3_eth_dest_mac,
+        output_3_eth_src_mac,
+        output_3_eth_type,
+        output_3_eth_payload_tdata,
+        output_3_eth_payload_tvalid,
+        output_3_eth_payload_tlast,
+        output_3_eth_payload_tuser
+    );
 
     // dump file
     $dumpfile("test_eth_demux_4.lxt");

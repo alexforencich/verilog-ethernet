@@ -26,154 +26,19 @@ THE SOFTWARE.
 from myhdl import *
 import os
 
-try:
-    from queue import Queue
-except ImportError:
-    from Queue import Queue
-
 import eth_ep
 
 module = 'eth_mux_64_4'
+testbench = 'test_%s' % module
 
 srcs = []
 
 srcs.append("../rtl/%s.v" % module)
-srcs.append("test_%s.v" % module)
+srcs.append("%s.v" % testbench)
 
 src = ' '.join(srcs)
 
-build_cmd = "iverilog -o test_%s.vvp %s" % (module, src)
-
-def dut_eth_mux_64_4(clk,
-                 rst,
-                 current_test,
-
-                 input_0_eth_hdr_valid,
-                 input_0_eth_hdr_ready,
-                 input_0_eth_dest_mac,
-                 input_0_eth_src_mac,
-                 input_0_eth_type,
-                 input_0_eth_payload_tdata,
-                 input_0_eth_payload_tkeep,
-                 input_0_eth_payload_tvalid,
-                 input_0_eth_payload_tready,
-                 input_0_eth_payload_tlast,
-                 input_0_eth_payload_tuser,
-                 input_1_eth_hdr_valid,
-                 input_1_eth_hdr_ready,
-                 input_1_eth_dest_mac,
-                 input_1_eth_src_mac,
-                 input_1_eth_type,
-                 input_1_eth_payload_tdata,
-                 input_1_eth_payload_tkeep,
-                 input_1_eth_payload_tvalid,
-                 input_1_eth_payload_tready,
-                 input_1_eth_payload_tlast,
-                 input_1_eth_payload_tuser,
-                 input_2_eth_hdr_valid,
-                 input_2_eth_hdr_ready,
-                 input_2_eth_dest_mac,
-                 input_2_eth_src_mac,
-                 input_2_eth_type,
-                 input_2_eth_payload_tdata,
-                 input_2_eth_payload_tkeep,
-                 input_2_eth_payload_tvalid,
-                 input_2_eth_payload_tready,
-                 input_2_eth_payload_tlast,
-                 input_2_eth_payload_tuser,
-                 input_3_eth_hdr_valid,
-                 input_3_eth_hdr_ready,
-                 input_3_eth_dest_mac,
-                 input_3_eth_src_mac,
-                 input_3_eth_type,
-                 input_3_eth_payload_tdata,
-                 input_3_eth_payload_tkeep,
-                 input_3_eth_payload_tvalid,
-                 input_3_eth_payload_tready,
-                 input_3_eth_payload_tlast,
-                 input_3_eth_payload_tuser,
-
-                 output_eth_hdr_valid,
-                 output_eth_hdr_ready,
-                 output_eth_dest_mac,
-                 output_eth_src_mac,
-                 output_eth_type,
-                 output_eth_payload_tdata,
-                 output_eth_payload_tkeep,
-                 output_eth_payload_tvalid,
-                 output_eth_payload_tready,
-                 output_eth_payload_tlast,
-                 output_eth_payload_tuser,
-
-                 enable,
-                 select):
-
-    if os.system(build_cmd):
-        raise Exception("Error running build command")
-    return Cosimulation("vvp -m myhdl test_%s.vvp -lxt2" % module,
-                clk=clk,
-                rst=rst,
-                current_test=current_test,
-
-                input_0_eth_hdr_valid=input_0_eth_hdr_valid,
-                input_0_eth_hdr_ready=input_0_eth_hdr_ready,
-                input_0_eth_dest_mac=input_0_eth_dest_mac,
-                input_0_eth_src_mac=input_0_eth_src_mac,
-                input_0_eth_type=input_0_eth_type,
-                input_0_eth_payload_tdata=input_0_eth_payload_tdata,
-                input_0_eth_payload_tkeep=input_0_eth_payload_tkeep,
-                input_0_eth_payload_tvalid=input_0_eth_payload_tvalid,
-                input_0_eth_payload_tready=input_0_eth_payload_tready,
-                input_0_eth_payload_tlast=input_0_eth_payload_tlast,
-                input_0_eth_payload_tuser=input_0_eth_payload_tuser,
-                input_1_eth_hdr_valid=input_1_eth_hdr_valid,
-                input_1_eth_hdr_ready=input_1_eth_hdr_ready,
-                input_1_eth_dest_mac=input_1_eth_dest_mac,
-                input_1_eth_src_mac=input_1_eth_src_mac,
-                input_1_eth_type=input_1_eth_type,
-                input_1_eth_payload_tdata=input_1_eth_payload_tdata,
-                input_1_eth_payload_tkeep=input_1_eth_payload_tkeep,
-                input_1_eth_payload_tvalid=input_1_eth_payload_tvalid,
-                input_1_eth_payload_tready=input_1_eth_payload_tready,
-                input_1_eth_payload_tlast=input_1_eth_payload_tlast,
-                input_1_eth_payload_tuser=input_1_eth_payload_tuser,
-                input_2_eth_hdr_valid=input_2_eth_hdr_valid,
-                input_2_eth_hdr_ready=input_2_eth_hdr_ready,
-                input_2_eth_dest_mac=input_2_eth_dest_mac,
-                input_2_eth_src_mac=input_2_eth_src_mac,
-                input_2_eth_type=input_2_eth_type,
-                input_2_eth_payload_tdata=input_2_eth_payload_tdata,
-                input_2_eth_payload_tkeep=input_2_eth_payload_tkeep,
-                input_2_eth_payload_tvalid=input_2_eth_payload_tvalid,
-                input_2_eth_payload_tready=input_2_eth_payload_tready,
-                input_2_eth_payload_tlast=input_2_eth_payload_tlast,
-                input_2_eth_payload_tuser=input_2_eth_payload_tuser,
-                input_3_eth_hdr_valid=input_3_eth_hdr_valid,
-                input_3_eth_hdr_ready=input_3_eth_hdr_ready,
-                input_3_eth_dest_mac=input_3_eth_dest_mac,
-                input_3_eth_src_mac=input_3_eth_src_mac,
-                input_3_eth_type=input_3_eth_type,
-                input_3_eth_payload_tdata=input_3_eth_payload_tdata,
-                input_3_eth_payload_tkeep=input_3_eth_payload_tkeep,
-                input_3_eth_payload_tvalid=input_3_eth_payload_tvalid,
-                input_3_eth_payload_tready=input_3_eth_payload_tready,
-                input_3_eth_payload_tlast=input_3_eth_payload_tlast,
-                input_3_eth_payload_tuser=input_3_eth_payload_tuser,
-
-                output_eth_hdr_valid=output_eth_hdr_valid,
-                output_eth_hdr_ready=output_eth_hdr_ready,
-                output_eth_dest_mac=output_eth_dest_mac,
-                output_eth_src_mac=output_eth_src_mac,
-                output_eth_type=output_eth_type,
-                output_eth_payload_tdata=output_eth_payload_tdata,
-                output_eth_payload_tkeep=output_eth_payload_tkeep,
-                output_eth_payload_tvalid=output_eth_payload_tvalid,
-                output_eth_payload_tready=output_eth_payload_tready,
-                output_eth_payload_tlast=output_eth_payload_tlast,
-                output_eth_payload_tuser=output_eth_payload_tuser,
-
-                enable=enable,
-                select=select)
+build_cmd = "iverilog -o %s.vvp %s" % (testbench, src)
 
 def bench():
 
@@ -246,166 +111,182 @@ def bench():
     output_eth_payload_tuser = Signal(bool(0))
 
     # sources and sinks
-    source_0_queue = Queue()
     source_0_pause = Signal(bool(0))
-    source_1_queue = Queue()
     source_1_pause = Signal(bool(0))
-    source_2_queue = Queue()
     source_2_pause = Signal(bool(0))
-    source_3_queue = Queue()
     source_3_pause = Signal(bool(0))
-    sink_queue = Queue()
     sink_pause = Signal(bool(0))
 
-    source_0 = eth_ep.EthFrameSource(clk,
-                                     rst,
-                                     eth_hdr_ready=input_0_eth_hdr_ready,
-                                     eth_hdr_valid=input_0_eth_hdr_valid,
-                                     eth_dest_mac=input_0_eth_dest_mac,
-                                     eth_src_mac=input_0_eth_src_mac,
-                                     eth_type=input_0_eth_type,
-                                     eth_payload_tdata=input_0_eth_payload_tdata,
-                                     eth_payload_tkeep=input_0_eth_payload_tkeep,
-                                     eth_payload_tvalid=input_0_eth_payload_tvalid,
-                                     eth_payload_tready=input_0_eth_payload_tready,
-                                     eth_payload_tlast=input_0_eth_payload_tlast,
-                                     eth_payload_tuser=input_0_eth_payload_tuser,
-                                     fifo=source_0_queue,
-                                     pause=source_0_pause,
-                                     name='source0')
+    source_0 = eth_ep.EthFrameSource()
 
-    source_1 = eth_ep.EthFrameSource(clk,
-                                     rst,
-                                     eth_hdr_ready=input_1_eth_hdr_ready,
-                                     eth_hdr_valid=input_1_eth_hdr_valid,
-                                     eth_dest_mac=input_1_eth_dest_mac,
-                                     eth_src_mac=input_1_eth_src_mac,
-                                     eth_type=input_1_eth_type,
-                                     eth_payload_tdata=input_1_eth_payload_tdata,
-                                     eth_payload_tkeep=input_1_eth_payload_tkeep,
-                                     eth_payload_tvalid=input_1_eth_payload_tvalid,
-                                     eth_payload_tready=input_1_eth_payload_tready,
-                                     eth_payload_tlast=input_1_eth_payload_tlast,
-                                     eth_payload_tuser=input_1_eth_payload_tuser,
-                                     fifo=source_1_queue,
-                                     pause=source_1_pause,
-                                     name='source1')
+    source_0_logic = source_0.create_logic(
+        clk,
+        rst,
+        eth_hdr_ready=input_0_eth_hdr_ready,
+        eth_hdr_valid=input_0_eth_hdr_valid,
+        eth_dest_mac=input_0_eth_dest_mac,
+        eth_src_mac=input_0_eth_src_mac,
+        eth_type=input_0_eth_type,
+        eth_payload_tdata=input_0_eth_payload_tdata,
+        eth_payload_tkeep=input_0_eth_payload_tkeep,
+        eth_payload_tvalid=input_0_eth_payload_tvalid,
+        eth_payload_tready=input_0_eth_payload_tready,
+        eth_payload_tlast=input_0_eth_payload_tlast,
+        eth_payload_tuser=input_0_eth_payload_tuser,
+        pause=source_0_pause,
+        name='source_0'
+    )
 
-    source_2 = eth_ep.EthFrameSource(clk,
-                                     rst,
-                                     eth_hdr_ready=input_2_eth_hdr_ready,
-                                     eth_hdr_valid=input_2_eth_hdr_valid,
-                                     eth_dest_mac=input_2_eth_dest_mac,
-                                     eth_src_mac=input_2_eth_src_mac,
-                                     eth_type=input_2_eth_type,
-                                     eth_payload_tdata=input_2_eth_payload_tdata,
-                                     eth_payload_tkeep=input_2_eth_payload_tkeep,
-                                     eth_payload_tvalid=input_2_eth_payload_tvalid,
-                                     eth_payload_tready=input_2_eth_payload_tready,
-                                     eth_payload_tlast=input_2_eth_payload_tlast,
-                                     eth_payload_tuser=input_2_eth_payload_tuser,
-                                     fifo=source_2_queue,
-                                     pause=source_2_pause,
-                                     name='source2')
+    source_1 = eth_ep.EthFrameSource()
 
-    source_3 = eth_ep.EthFrameSource(clk,
-                                     rst,
-                                     eth_hdr_ready=input_3_eth_hdr_ready,
-                                     eth_hdr_valid=input_3_eth_hdr_valid,
-                                     eth_dest_mac=input_3_eth_dest_mac,
-                                     eth_src_mac=input_3_eth_src_mac,
-                                     eth_type=input_3_eth_type,
-                                     eth_payload_tdata=input_3_eth_payload_tdata,
-                                     eth_payload_tkeep=input_3_eth_payload_tkeep,
-                                     eth_payload_tvalid=input_3_eth_payload_tvalid,
-                                     eth_payload_tready=input_3_eth_payload_tready,
-                                     eth_payload_tlast=input_3_eth_payload_tlast,
-                                     eth_payload_tuser=input_3_eth_payload_tuser,
-                                     fifo=source_3_queue,
-                                     pause=source_3_pause,
-                                     name='source3')
+    source_1_logic = source_1.create_logic(
+        clk,
+        rst,
+        eth_hdr_ready=input_1_eth_hdr_ready,
+        eth_hdr_valid=input_1_eth_hdr_valid,
+        eth_dest_mac=input_1_eth_dest_mac,
+        eth_src_mac=input_1_eth_src_mac,
+        eth_type=input_1_eth_type,
+        eth_payload_tdata=input_1_eth_payload_tdata,
+        eth_payload_tkeep=input_1_eth_payload_tkeep,
+        eth_payload_tvalid=input_1_eth_payload_tvalid,
+        eth_payload_tready=input_1_eth_payload_tready,
+        eth_payload_tlast=input_1_eth_payload_tlast,
+        eth_payload_tuser=input_1_eth_payload_tuser,
+        pause=source_1_pause,
+        name='source_1'
+    )
 
-    sink = eth_ep.EthFrameSink(clk,
-                               rst,
-                               eth_hdr_ready=output_eth_hdr_ready,
-                               eth_hdr_valid=output_eth_hdr_valid,
-                               eth_dest_mac=output_eth_dest_mac,
-                               eth_src_mac=output_eth_src_mac,
-                               eth_type=output_eth_type,
-                               eth_payload_tdata=output_eth_payload_tdata,
-                               eth_payload_tkeep=output_eth_payload_tkeep,
-                               eth_payload_tvalid=output_eth_payload_tvalid,
-                               eth_payload_tready=output_eth_payload_tready,
-                               eth_payload_tlast=output_eth_payload_tlast,
-                               eth_payload_tuser=output_eth_payload_tuser,
-                               fifo=sink_queue,
-                               pause=sink_pause,
-                               name='sink')
+    source_2 = eth_ep.EthFrameSource()
+
+    source_2_logic = source_2.create_logic(
+        clk,
+        rst,
+        eth_hdr_ready=input_2_eth_hdr_ready,
+        eth_hdr_valid=input_2_eth_hdr_valid,
+        eth_dest_mac=input_2_eth_dest_mac,
+        eth_src_mac=input_2_eth_src_mac,
+        eth_type=input_2_eth_type,
+        eth_payload_tdata=input_2_eth_payload_tdata,
+        eth_payload_tkeep=input_2_eth_payload_tkeep,
+        eth_payload_tvalid=input_2_eth_payload_tvalid,
+        eth_payload_tready=input_2_eth_payload_tready,
+        eth_payload_tlast=input_2_eth_payload_tlast,
+        eth_payload_tuser=input_2_eth_payload_tuser,
+        pause=source_2_pause,
+        name='source_2'
+    )
+
+    source_3 = eth_ep.EthFrameSource()
+
+    source_3_logic = source_3.create_logic(
+        clk,
+        rst,
+        eth_hdr_ready=input_3_eth_hdr_ready,
+        eth_hdr_valid=input_3_eth_hdr_valid,
+        eth_dest_mac=input_3_eth_dest_mac,
+        eth_src_mac=input_3_eth_src_mac,
+        eth_type=input_3_eth_type,
+        eth_payload_tdata=input_3_eth_payload_tdata,
+        eth_payload_tkeep=input_3_eth_payload_tkeep,
+        eth_payload_tvalid=input_3_eth_payload_tvalid,
+        eth_payload_tready=input_3_eth_payload_tready,
+        eth_payload_tlast=input_3_eth_payload_tlast,
+        eth_payload_tuser=input_3_eth_payload_tuser,
+        pause=source_3_pause,
+        name='source_3'
+    )
+
+    sink = eth_ep.EthFrameSink()
+
+    sink_logic = sink.create_logic(
+        clk,
+        rst,
+        eth_hdr_ready=output_eth_hdr_ready,
+        eth_hdr_valid=output_eth_hdr_valid,
+        eth_dest_mac=output_eth_dest_mac,
+        eth_src_mac=output_eth_src_mac,
+        eth_type=output_eth_type,
+        eth_payload_tdata=output_eth_payload_tdata,
+        eth_payload_tkeep=output_eth_payload_tkeep,
+        eth_payload_tvalid=output_eth_payload_tvalid,
+        eth_payload_tready=output_eth_payload_tready,
+        eth_payload_tlast=output_eth_payload_tlast,
+        eth_payload_tuser=output_eth_payload_tuser,
+        pause=sink_pause,
+        name='sink'
+    )
 
     # DUT
-    dut = dut_eth_mux_64_4(clk,
-                       rst,
-                       current_test,
+    if os.system(build_cmd):
+        raise Exception("Error running build command")
 
-                       input_0_eth_hdr_valid,
-                       input_0_eth_hdr_ready,
-                       input_0_eth_dest_mac,
-                       input_0_eth_src_mac,
-                       input_0_eth_type,
-                       input_0_eth_payload_tdata,
-                       input_0_eth_payload_tkeep,
-                       input_0_eth_payload_tvalid,
-                       input_0_eth_payload_tready,
-                       input_0_eth_payload_tlast,
-                       input_0_eth_payload_tuser,
-                       input_1_eth_hdr_valid,
-                       input_1_eth_hdr_ready,
-                       input_1_eth_dest_mac,
-                       input_1_eth_src_mac,
-                       input_1_eth_type,
-                       input_1_eth_payload_tdata,
-                       input_1_eth_payload_tkeep,
-                       input_1_eth_payload_tvalid,
-                       input_1_eth_payload_tready,
-                       input_1_eth_payload_tlast,
-                       input_1_eth_payload_tuser,
-                       input_2_eth_hdr_valid,
-                       input_2_eth_hdr_ready,
-                       input_2_eth_dest_mac,
-                       input_2_eth_src_mac,
-                       input_2_eth_type,
-                       input_2_eth_payload_tdata,
-                       input_2_eth_payload_tkeep,
-                       input_2_eth_payload_tvalid,
-                       input_2_eth_payload_tready,
-                       input_2_eth_payload_tlast,
-                       input_2_eth_payload_tuser,
-                       input_3_eth_hdr_valid,
-                       input_3_eth_hdr_ready,
-                       input_3_eth_dest_mac,
-                       input_3_eth_src_mac,
-                       input_3_eth_type,
-                       input_3_eth_payload_tdata,
-                       input_3_eth_payload_tkeep,
-                       input_3_eth_payload_tvalid,
-                       input_3_eth_payload_tready,
-                       input_3_eth_payload_tlast,
-                       input_3_eth_payload_tuser,
+    dut = Cosimulation(
+        "vvp -m myhdl %s.vvp -lxt2" % testbench,
+        clk=clk,
+        rst=rst,
+        current_test=current_test,
 
-                       output_eth_hdr_valid,
-                       output_eth_hdr_ready,
-                       output_eth_dest_mac,
-                       output_eth_src_mac,
-                       output_eth_type,
-                       output_eth_payload_tdata,
-                       output_eth_payload_tkeep,
-                       output_eth_payload_tvalid,
-                       output_eth_payload_tready,
-                       output_eth_payload_tlast,
-                       output_eth_payload_tuser,
+        input_0_eth_hdr_valid=input_0_eth_hdr_valid,
+        input_0_eth_hdr_ready=input_0_eth_hdr_ready,
+        input_0_eth_dest_mac=input_0_eth_dest_mac,
+        input_0_eth_src_mac=input_0_eth_src_mac,
+        input_0_eth_type=input_0_eth_type,
+        input_0_eth_payload_tdata=input_0_eth_payload_tdata,
+        input_0_eth_payload_tkeep=input_0_eth_payload_tkeep,
+        input_0_eth_payload_tvalid=input_0_eth_payload_tvalid,
+        input_0_eth_payload_tready=input_0_eth_payload_tready,
+        input_0_eth_payload_tlast=input_0_eth_payload_tlast,
+        input_0_eth_payload_tuser=input_0_eth_payload_tuser,
+        input_1_eth_hdr_valid=input_1_eth_hdr_valid,
+        input_1_eth_hdr_ready=input_1_eth_hdr_ready,
+        input_1_eth_dest_mac=input_1_eth_dest_mac,
+        input_1_eth_src_mac=input_1_eth_src_mac,
+        input_1_eth_type=input_1_eth_type,
+        input_1_eth_payload_tdata=input_1_eth_payload_tdata,
+        input_1_eth_payload_tkeep=input_1_eth_payload_tkeep,
+        input_1_eth_payload_tvalid=input_1_eth_payload_tvalid,
+        input_1_eth_payload_tready=input_1_eth_payload_tready,
+        input_1_eth_payload_tlast=input_1_eth_payload_tlast,
+        input_1_eth_payload_tuser=input_1_eth_payload_tuser,
+        input_2_eth_hdr_valid=input_2_eth_hdr_valid,
+        input_2_eth_hdr_ready=input_2_eth_hdr_ready,
+        input_2_eth_dest_mac=input_2_eth_dest_mac,
+        input_2_eth_src_mac=input_2_eth_src_mac,
+        input_2_eth_type=input_2_eth_type,
+        input_2_eth_payload_tdata=input_2_eth_payload_tdata,
+        input_2_eth_payload_tkeep=input_2_eth_payload_tkeep,
+        input_2_eth_payload_tvalid=input_2_eth_payload_tvalid,
+        input_2_eth_payload_tready=input_2_eth_payload_tready,
+        input_2_eth_payload_tlast=input_2_eth_payload_tlast,
+        input_2_eth_payload_tuser=input_2_eth_payload_tuser,
+        input_3_eth_hdr_valid=input_3_eth_hdr_valid,
+        input_3_eth_hdr_ready=input_3_eth_hdr_ready,
+        input_3_eth_dest_mac=input_3_eth_dest_mac,
+        input_3_eth_src_mac=input_3_eth_src_mac,
+        input_3_eth_type=input_3_eth_type,
+        input_3_eth_payload_tdata=input_3_eth_payload_tdata,
+        input_3_eth_payload_tkeep=input_3_eth_payload_tkeep,
+        input_3_eth_payload_tvalid=input_3_eth_payload_tvalid,
+        input_3_eth_payload_tready=input_3_eth_payload_tready,
+        input_3_eth_payload_tlast=input_3_eth_payload_tlast,
+        input_3_eth_payload_tuser=input_3_eth_payload_tuser,
 
-                       enable,
-                       select)
+        output_eth_hdr_valid=output_eth_hdr_valid,
+        output_eth_hdr_ready=output_eth_hdr_ready,
+        output_eth_dest_mac=output_eth_dest_mac,
+        output_eth_src_mac=output_eth_src_mac,
+        output_eth_type=output_eth_type,
+        output_eth_payload_tdata=output_eth_payload_tdata,
+        output_eth_payload_tkeep=output_eth_payload_tkeep,
+        output_eth_payload_tvalid=output_eth_payload_tvalid,
+        output_eth_payload_tready=output_eth_payload_tready,
+        output_eth_payload_tlast=output_eth_payload_tlast,
+        output_eth_payload_tuser=output_eth_payload_tuser,
+
+        enable=enable,
+        select=select
+    )
 
     @always(delay(4))
     def clkgen():
@@ -437,7 +318,7 @@ def bench():
         test_frame.eth_type = 0x8000
         test_frame.payload = bytearray(range(32))
 
-        source_0_queue.put(test_frame)
+        source_0.send(test_frame)
         yield clk.posedge
         yield clk.posedge
 
@@ -446,9 +327,7 @@ def bench():
         yield clk.posedge
         yield clk.posedge
 
-        rx_frame = None
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+        rx_frame = sink.recv()
 
         assert rx_frame == test_frame
 
@@ -466,7 +345,7 @@ def bench():
         test_frame.eth_type = 0x8000
         test_frame.payload = bytearray(range(32))
 
-        source_1_queue.put(test_frame)
+        source_1.send(test_frame)
         yield clk.posedge
         yield clk.posedge
 
@@ -475,9 +354,7 @@ def bench():
         yield clk.posedge
         yield clk.posedge
 
-        rx_frame = None
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+        rx_frame = sink.recv()
 
         assert rx_frame == test_frame
 
@@ -500,8 +377,8 @@ def bench():
         test_frame2.eth_type = 0x8000
         test_frame2.payload = bytearray(range(32))
 
-        source_0_queue.put(test_frame1)
-        source_0_queue.put(test_frame2)
+        source_0.send(test_frame1)
+        source_0.send(test_frame2)
         yield clk.posedge
         yield clk.posedge
 
@@ -510,15 +387,11 @@ def bench():
         yield clk.posedge
         yield clk.posedge
 
-        rx_frame = None
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+        rx_frame = sink.recv()
 
         assert rx_frame == test_frame1
 
-        rx_frame = None
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+        rx_frame = sink.recv()
 
         assert rx_frame == test_frame2
 
@@ -541,8 +414,8 @@ def bench():
         test_frame2.eth_type = 0x8000
         test_frame2.payload = bytearray(range(32))
 
-        source_1_queue.put(test_frame1)
-        source_2_queue.put(test_frame2)
+        source_1.send(test_frame1)
+        source_2.send(test_frame2)
         yield clk.posedge
         yield clk.posedge
 
@@ -552,15 +425,11 @@ def bench():
         yield clk.posedge
         yield clk.posedge
 
-        rx_frame = None
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+        rx_frame = sink.recv()
 
         assert rx_frame == test_frame1
 
-        rx_frame = None
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+        rx_frame = sink.recv()
 
         assert rx_frame == test_frame2
 
@@ -583,8 +452,8 @@ def bench():
         test_frame2.eth_type = 0x8000
         test_frame2.payload = bytearray(range(32))
 
-        source_1_queue.put(test_frame1)
-        source_2_queue.put(test_frame2)
+        source_1.send(test_frame1)
+        source_2.send(test_frame2)
         yield clk.posedge
         yield clk.posedge
 
@@ -605,15 +474,11 @@ def bench():
         yield clk.posedge
         yield clk.posedge
 
-        rx_frame = None
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+        rx_frame = sink.recv()
 
         assert rx_frame == test_frame1
 
-        rx_frame = None
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+        rx_frame = sink.recv()
 
         assert rx_frame == test_frame2
 
@@ -636,8 +501,8 @@ def bench():
         test_frame2.eth_type = 0x8000
         test_frame2.payload = bytearray(range(32))
 
-        source_1_queue.put(test_frame1)
-        source_2_queue.put(test_frame2)
+        source_1.send(test_frame1)
+        source_2.send(test_frame2)
         yield clk.posedge
         yield clk.posedge
 
@@ -653,15 +518,11 @@ def bench():
         yield clk.posedge
         yield clk.posedge
 
-        rx_frame = None
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+        rx_frame = sink.recv()
 
         assert rx_frame == test_frame1
 
-        rx_frame = None
-        if not sink_queue.empty():
-            rx_frame = sink_queue.get()
+        rx_frame = sink.recv()
 
         assert rx_frame == test_frame2
 
@@ -669,7 +530,7 @@ def bench():
 
         raise StopSimulation
 
-    return dut, source_0, source_1, source_2, source_3, sink, clkgen, check
+    return dut, source_0_logic, source_1_logic, source_2_logic, source_3_logic, sink_logic, clkgen, check
 
 def test_bench():
     os.chdir(os.path.dirname(os.path.abspath(__file__)))

@@ -27,11 +27,6 @@ import axis_ep
 import eth_ep
 import struct
 
-try:
-    from queue import Queue
-except ImportError:
-    from Queue import Queue
-
 class IPFrame(object):
     def __init__(self, payload=b'',
                  eth_dest_mac=0,
@@ -234,102 +229,150 @@ class IPFrame(object):
                 ('ip_source_ip=0x%08x, ' % self.ip_source_ip) +
                 ('ip_dest_ip=0x%08x)' % self.ip_dest_ip))
 
-def IPFrameSource(clk, rst,
-                  ip_hdr_valid=None,
-                  ip_hdr_ready=None,
-                  eth_dest_mac=Signal(intbv(0)[48:]),
-                  eth_src_mac=Signal(intbv(0)[48:]),
-                  eth_type=Signal(intbv(0)[16:]),
-                  ip_version=Signal(intbv(4)[4:]),
-                  ip_ihl=Signal(intbv(5)[4:]),
-                  ip_dscp=Signal(intbv(0)[6:]),
-                  ip_ecn=Signal(intbv(0)[2:]),
-                  ip_length=Signal(intbv(0)[16:]),
-                  ip_identification=Signal(intbv(0)[16:]),
-                  ip_flags=Signal(intbv(0)[3:]),
-                  ip_fragment_offset=Signal(intbv(0)[13:]),
-                  ip_ttl=Signal(intbv(0)[8:]),
-                  ip_protocol=Signal(intbv(0)[8:]),
-                  ip_header_checksum=Signal(intbv(0)[16:]),
-                  ip_source_ip=Signal(intbv(0)[32:]),
-                  ip_dest_ip=Signal(intbv(0)[32:]),
-                  ip_payload_tdata=None,
-                  ip_payload_tkeep=Signal(bool(True)),
-                  ip_payload_tvalid=Signal(bool(False)),
-                  ip_payload_tready=Signal(bool(True)),
-                  ip_payload_tlast=Signal(bool(False)),
-                  ip_payload_tuser=Signal(bool(False)),
-                  fifo=None,
-                  pause=0,
-                  name=None):
 
-    ip_hdr_ready_int = Signal(bool(False))
-    ip_hdr_valid_int = Signal(bool(False))
-    ip_payload_pause = Signal(bool(False))
+class IPFrameSource():
+    def __init__(self):
+        self.has_logic = False
+        self.queue = []
+        self.payload_source = axis_ep.AXIStreamSource()
+        self.header_queue = []
 
-    ip_payload_fifo = Queue()
+    def send(self, frame):
+        frame = IPFrame(frame)
+        if len(self.header_queue) == 0:
+            self.header_queue.append(frame)
+            self.payload_source.send(frame.payload)
+        else:
+            self.queue.append(frame)
 
-    ip_payload_source = axis_ep.AXIStreamSource(clk,
-                                                rst,
-                                                tdata=ip_payload_tdata,
-                                                tkeep=ip_payload_tkeep,
-                                                tvalid=ip_payload_tvalid,
-                                                tready=ip_payload_tready,
-                                                tlast=ip_payload_tlast,
-                                                tuser=ip_payload_tuser,
-                                                fifo=ip_payload_fifo,
-                                                pause=ip_payload_pause)
+    def count(self):
+        return len(self.queue)
 
-    @always_comb
-    def pause_logic():
-        ip_hdr_ready_int.next = ip_hdr_ready and not pause
-        ip_hdr_valid.next = ip_hdr_valid_int and not pause
-        ip_payload_pause.next = pause # or ip_hdr_valid_int
+    def empty(self):
+        return self.count() == 0
 
-    @instance
-    def logic():
-        frame = dict()
+    def create_logic(self,
+                clk,
+                rst,
+                ip_hdr_valid=None,
+                ip_hdr_ready=None,
+                eth_dest_mac=Signal(intbv(0)[48:]),
+                eth_src_mac=Signal(intbv(0)[48:]),
+                eth_type=Signal(intbv(0)[16:]),
+                ip_version=Signal(intbv(4)[4:]),
+                ip_ihl=Signal(intbv(5)[4:]),
+                ip_dscp=Signal(intbv(0)[6:]),
+                ip_ecn=Signal(intbv(0)[2:]),
+                ip_length=Signal(intbv(0)[16:]),
+                ip_identification=Signal(intbv(0)[16:]),
+                ip_flags=Signal(intbv(0)[3:]),
+                ip_fragment_offset=Signal(intbv(0)[13:]),
+                ip_ttl=Signal(intbv(0)[8:]),
+                ip_protocol=Signal(intbv(0)[8:]),
+                ip_header_checksum=Signal(intbv(0)[16:]),
+                ip_source_ip=Signal(intbv(0)[32:]),
+                ip_dest_ip=Signal(intbv(0)[32:]),
+                ip_payload_tdata=None,
+                ip_payload_tkeep=Signal(bool(True)),
+                ip_payload_tvalid=Signal(bool(False)),
+                ip_payload_tready=Signal(bool(True)),
+                ip_payload_tlast=Signal(bool(False)),
+                ip_payload_tuser=Signal(bool(False)),
+                pause=0,
+                name=None
+            ):
 
-        while True:
-            yield clk.posedge, rst.posedge
+        assert not self.has_logic
 
-            if rst:
-                ip_hdr_valid_int.next = False
-            else:
-                if ip_hdr_ready_int:
+        self.has_logic = True
+
+        ip_hdr_ready_int = Signal(bool(False))
+        ip_hdr_valid_int = Signal(bool(False))
+        ip_payload_pause = Signal(bool(False))
+
+        ip_payload_source = self.payload_source.create_logic(
+            clk=clk,
+            rst=rst,
+            tdata=ip_payload_tdata,
+            tkeep=ip_payload_tkeep,
+            tvalid=ip_payload_tvalid,
+            tready=ip_payload_tready,
+            tlast=ip_payload_tlast,
+            tuser=ip_payload_tuser,
+            pause=ip_payload_pause,
+        )
+
+        @always_comb
+        def pause_logic():
+            ip_hdr_ready_int.next = ip_hdr_ready and not pause
+            ip_hdr_valid.next = ip_hdr_valid_int and not pause
+            ip_payload_pause.next = pause
+
+        @instance
+        def logic():
+            while True:
+                yield clk.posedge, rst.posedge
+
+                if rst:
                     ip_hdr_valid_int.next = False
-                if (ip_payload_tlast and ip_hdr_ready_int and ip_hdr_valid) or not ip_hdr_valid_int:
-                    if not fifo.empty():
-                        frame = fifo.get()
-                        frame = IPFrame(frame)
-                        frame.build()
-                        eth_dest_mac.next = frame.eth_dest_mac
-                        eth_src_mac.next = frame.eth_src_mac
-                        eth_type.next = frame.eth_type
-                        ip_version.next = frame.ip_version
-                        ip_ihl.next = frame.ip_ihl
-                        ip_dscp.next = frame.ip_dscp
-                        ip_ecn.next = frame.ip_ecn
-                        ip_length.next = frame.ip_length
-                        ip_identification.next = frame.ip_identification
-                        ip_flags.next = frame.ip_flags
-                        ip_fragment_offset.next = frame.ip_fragment_offset
-                        ip_ttl.next = frame.ip_ttl
-                        ip_protocol.next = frame.ip_protocol
-                        ip_header_checksum.next = frame.ip_header_checksum
-                        ip_source_ip.next = frame.ip_source_ip
-                        ip_dest_ip.next = frame.ip_dest_ip
-                        ip_payload_fifo.put(frame.payload)
+                else:
+                    if ip_hdr_ready_int:
+                        ip_hdr_valid_int.next = False
+                    if (ip_hdr_ready_int and ip_hdr_valid) or not ip_hdr_valid_int:
+                        if len(self.header_queue) > 0:
+                            frame = self.header_queue.pop(0)
+                            frame.build()
+                            eth_dest_mac.next = frame.eth_dest_mac
+                            eth_src_mac.next = frame.eth_src_mac
+                            eth_type.next = frame.eth_type
+                            ip_version.next = frame.ip_version
+                            ip_ihl.next = frame.ip_ihl
+                            ip_dscp.next = frame.ip_dscp
+                            ip_ecn.next = frame.ip_ecn
+                            ip_length.next = frame.ip_length
+                            ip_identification.next = frame.ip_identification
+                            ip_flags.next = frame.ip_flags
+                            ip_fragment_offset.next = frame.ip_fragment_offset
+                            ip_ttl.next = frame.ip_ttl
+                            ip_protocol.next = frame.ip_protocol
+                            ip_header_checksum.next = frame.ip_header_checksum
+                            ip_source_ip.next = frame.ip_source_ip
+                            ip_dest_ip.next = frame.ip_dest_ip
 
-                        if name is not None:
-                            print("[%s] Sending frame %s" % (name, repr(frame)))
+                            if name is not None:
+                                print("[%s] Sending frame %s" % (name, repr(frame)))
 
-                        ip_hdr_valid_int.next = True
+                            ip_hdr_valid_int.next = True
 
-    return logic, pause_logic, ip_payload_source
+                    if len(self.queue) > 0 and len(self.header_queue) == 0:
+                        frame = self.queue.pop(0)
+                        self.header_queue.append(frame)
+                        self.payload_source.send(frame.payload)
+
+        return logic, pause_logic, ip_payload_source
 
 
-def IPFrameSink(clk, rst,
+class IPFrameSink():
+    def __init__(self):
+        self.has_logic = False
+        self.queue = []
+        self.payload_sink = axis_ep.AXIStreamSink()
+        self.header_queue = []
+
+    def recv(self):
+        if len(self.queue) > 0:
+            return self.queue.pop(0)
+        return None
+
+    def count(self):
+        return len(self.queue)
+
+    def empty(self):
+        return self.count() == 0
+
+    def create_logic(self,
+                clk,
+                rst,
                 ip_hdr_valid=None,
                 ip_hdr_ready=None,
                 eth_dest_mac=Signal(intbv(0)[48:]),
@@ -354,80 +397,77 @@ def IPFrameSink(clk, rst,
                 ip_payload_tready=Signal(bool(True)),
                 ip_payload_tlast=Signal(bool(True)),
                 ip_payload_tuser=Signal(bool(False)),
-                fifo=None,
                 pause=0,
-                name=None):
+                name=None
+            ):
 
-    ip_hdr_ready_int = Signal(bool(False))
-    ip_hdr_valid_int = Signal(bool(False))
-    ip_payload_pause = Signal(bool(False))
+        assert not self.has_logic
 
-    ip_payload_fifo = Queue()
-    ip_header_fifo = Queue()
+        self.has_logic = True
 
-    ip_payload_sink = axis_ep.AXIStreamSink(clk,
-                                            rst,
-                                            tdata=ip_payload_tdata,
-                                            tkeep=ip_payload_tkeep,
-                                            tvalid=ip_payload_tvalid,
-                                            tready=ip_payload_tready,
-                                            tlast=ip_payload_tlast,
-                                            tuser=ip_payload_tuser,
-                                            fifo=ip_payload_fifo,
-                                            pause=ip_payload_pause)
+        ip_hdr_ready_int = Signal(bool(False))
+        ip_hdr_valid_int = Signal(bool(False))
+        ip_payload_pause = Signal(bool(False))
 
-    @always_comb
-    def pause_logic():
-        ip_hdr_ready.next = ip_hdr_ready_int and not pause
-        ip_hdr_valid_int.next = ip_hdr_valid and not pause
-        ip_payload_pause.next = pause # or ip_hdr_valid_int
+        ip_payload_sink = self.payload_sink.create_logic(
+            clk=clk,
+            rst=rst,
+            tdata=ip_payload_tdata,
+            tkeep=ip_payload_tkeep,
+            tvalid=ip_payload_tvalid,
+            tready=ip_payload_tready,
+            tlast=ip_payload_tlast,
+            tuser=ip_payload_tuser,
+            pause=ip_payload_pause
+        )
 
-    @instance
-    def logic():
-        frame = IPFrame()
+        @always_comb
+        def pause_logic():
+            ip_hdr_ready.next = ip_hdr_ready_int and not pause
+            ip_hdr_valid_int.next = ip_hdr_valid and not pause
+            ip_payload_pause.next = pause # or ip_hdr_valid_int
 
-        while True:
-            yield clk.posedge, rst.posedge
+        @instance
+        def logic():
+            while True:
+                yield clk.posedge, rst.posedge
 
-            if rst:
-                ip_hdr_ready_int.next = False
-                frame = IPFrame()
-            else:
-                ip_hdr_ready_int.next = True
+                if rst:
+                    ip_hdr_ready_int.next = False
+                else:
+                    ip_hdr_ready_int.next = True
 
-                if ip_hdr_ready_int and ip_hdr_valid_int:
-                    frame = IPFrame()
-                    frame.eth_dest_mac = int(eth_dest_mac)
-                    frame.eth_src_mac = int(eth_src_mac)
-                    frame.eth_type = int(eth_type)
-                    frame.ip_version = int(ip_version)
-                    frame.ip_ihl = int(ip_ihl)
-                    frame.ip_dscp = int(ip_dscp)
-                    frame.ip_ecn = int(ip_ecn)
-                    frame.ip_length = int(ip_length)
-                    frame.ip_identification = int(ip_identification)
-                    frame.ip_flags = int(ip_flags)
-                    frame.ip_fragment_offset = int(ip_fragment_offset)
-                    frame.ip_ttl = int(ip_ttl)
-                    frame.ip_protocol = int(ip_protocol)
-                    frame.ip_header_checksum = int(ip_header_checksum)
-                    frame.ip_source_ip = int(ip_source_ip)
-                    frame.ip_dest_ip = int(ip_dest_ip)
-                    ip_header_fifo.put(frame)
+                    if ip_hdr_ready_int and ip_hdr_valid_int:
+                        frame = IPFrame()
+                        frame.eth_dest_mac = int(eth_dest_mac)
+                        frame.eth_src_mac = int(eth_src_mac)
+                        frame.eth_type = int(eth_type)
+                        frame.ip_version = int(ip_version)
+                        frame.ip_ihl = int(ip_ihl)
+                        frame.ip_dscp = int(ip_dscp)
+                        frame.ip_ecn = int(ip_ecn)
+                        frame.ip_length = int(ip_length)
+                        frame.ip_identification = int(ip_identification)
+                        frame.ip_flags = int(ip_flags)
+                        frame.ip_fragment_offset = int(ip_fragment_offset)
+                        frame.ip_ttl = int(ip_ttl)
+                        frame.ip_protocol = int(ip_protocol)
+                        frame.ip_header_checksum = int(ip_header_checksum)
+                        frame.ip_source_ip = int(ip_source_ip)
+                        frame.ip_dest_ip = int(ip_dest_ip)
+                        self.header_queue.append(frame)
 
-                if not ip_payload_fifo.empty() and not ip_header_fifo.empty():
-                    frame = ip_header_fifo.get()
-                    frame.payload = ip_payload_fifo.get()
-                    fifo.put(frame)
+                    if not self.payload_sink.empty() and len(self.header_queue) > 0:
+                        frame = self.header_queue.pop(0)
+                        frame.payload = self.payload_sink.recv()
+                        self.queue.append(frame)
 
-                    # ensure all payloads have been matched to headers
-                    if ip_header_fifo.empty():
-                        assert ip_payload_fifo.empty()
+                        if name is not None:
+                            print("[%s] Got frame %s" % (name, repr(frame)))
 
-                    if name is not None:
-                        print("[%s] Got frame %s" % (name, repr(frame)))
+                        # ensure all payloads have been matched to headers
+                        if len(self.header_queue) == 0:
+                            assert self.payload_sink.empty()
 
-                    frame = dict()
-
-    return logic, pause_logic, ip_payload_sink
+        return logic, pause_logic, ip_payload_sink
 

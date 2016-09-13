@@ -24,8 +24,11 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
-`timescale 1 ns / 1 ps
+`timescale 1ns / 1ps
 
+/*
+ * Testbench for ip_eth_tx
+ */
 module test_ip_eth_tx;
 
 // Inputs
@@ -70,41 +73,45 @@ wire error_payload_early_termination;
 
 initial begin
     // myhdl integration
-    $from_myhdl(clk,
-                rst,
-                current_test,
-                input_ip_hdr_valid,
-                input_eth_dest_mac,
-                input_eth_src_mac,
-                input_eth_type,
-                input_ip_dscp,
-                input_ip_ecn,
-                input_ip_length,
-                input_ip_identification,
-                input_ip_flags,
-                input_ip_fragment_offset,
-                input_ip_ttl,
-                input_ip_protocol,
-                input_ip_source_ip,
-                input_ip_dest_ip,
-                input_ip_payload_tdata,
-                input_ip_payload_tvalid,
-                input_ip_payload_tlast,
-                input_ip_payload_tuser,
-                output_eth_hdr_ready,
-                output_eth_payload_tready);
-    $to_myhdl(input_ip_hdr_ready,
-              input_ip_payload_tready,
-              output_eth_hdr_valid,
-              output_eth_dest_mac,
-              output_eth_src_mac,
-              output_eth_type,
-              output_eth_payload_tdata,
-              output_eth_payload_tvalid,
-              output_eth_payload_tlast,
-              output_eth_payload_tuser,
-              busy,
-              error_payload_early_termination);
+    $from_myhdl(
+        clk,
+        rst,
+        current_test,
+        input_ip_hdr_valid,
+        input_eth_dest_mac,
+        input_eth_src_mac,
+        input_eth_type,
+        input_ip_dscp,
+        input_ip_ecn,
+        input_ip_length,
+        input_ip_identification,
+        input_ip_flags,
+        input_ip_fragment_offset,
+        input_ip_ttl,
+        input_ip_protocol,
+        input_ip_source_ip,
+        input_ip_dest_ip,
+        input_ip_payload_tdata,
+        input_ip_payload_tvalid,
+        input_ip_payload_tlast,
+        input_ip_payload_tuser,
+        output_eth_hdr_ready,
+        output_eth_payload_tready
+    );
+    $to_myhdl(
+        input_ip_hdr_ready,
+        input_ip_payload_tready,
+        output_eth_hdr_valid,
+        output_eth_dest_mac,
+        output_eth_src_mac,
+        output_eth_type,
+        output_eth_payload_tdata,
+        output_eth_payload_tvalid,
+        output_eth_payload_tlast,
+        output_eth_payload_tuser,
+        busy,
+        error_payload_early_termination
+    );
 
     // dump file
     $dumpfile("test_ip_eth_tx.lxt");

@@ -27,54 +27,16 @@ from myhdl import *
 import os
 
 module = 'arp_cache'
+testbench = 'test_%s' % module
 
 srcs = []
 
 srcs.append("../rtl/%s.v" % module)
-srcs.append("test_%s.v" % module)
+srcs.append("%s.v" % testbench)
 
 src = ' '.join(srcs)
 
-build_cmd = "iverilog -o test_%s.vvp %s" % (module, src)
-
-def dut_arp_cache(clk,
-                  rst,
-                  current_test,
-
-                  query_request_valid,
-                  query_request_ip,
-                  query_response_valid,
-                  query_response_error,
-                  query_response_mac,
-
-                  write_request_valid,
-                  write_request_ip,
-                  write_request_mac,
-                  write_in_progress,
-                  write_complete,
-
-                  clear_cache):
-
-    if os.system(build_cmd):
-        raise Exception("Error running build command")
-    return Cosimulation("vvp -m myhdl test_%s.vvp -lxt2" % module,
-                clk=clk,
-                rst=rst,
-                current_test=current_test,
-
-                query_request_valid=query_request_valid,
-                query_request_ip=query_request_ip,
-                query_response_valid=query_response_valid,
-                query_response_error=query_response_error,
-                query_response_mac=query_response_mac,
-
-                write_request_valid=write_request_valid,
-                write_request_ip=write_request_ip,
-                write_request_mac=write_request_mac,
-                write_in_progress=write_in_progress,
-                write_complete=write_complete,
-
-                clear_cache=clear_cache)
+build_cmd = "iverilog -o %s.vvp %s" % (testbench, src)
 
 def bench():
 
@@ -101,23 +63,29 @@ def bench():
     write_complete = Signal(bool(0))
 
     # DUT
-    dut = dut_arp_cache(clk,
-                        rst,
-                        current_test,
+    if os.system(build_cmd):
+        raise Exception("Error running build command")
 
-                        query_request_valid,
-                        query_request_ip,
-                        query_response_valid,
-                        query_response_error,
-                        query_response_mac,
+    dut = Cosimulation(
+        "vvp -m myhdl %s.vvp -lxt2" % testbench,
+        clk=clk,
+        rst=rst,
+        current_test=current_test,
 
-                        write_request_valid,
-                        write_request_ip,
-                        write_request_mac,
-                        write_in_progress,
-                        write_complete,
+        query_request_valid=query_request_valid,
+        query_request_ip=query_request_ip,
+        query_response_valid=query_response_valid,
+        query_response_error=query_response_error,
+        query_response_mac=query_response_mac,
 
-                        clear_cache)
+        write_request_valid=write_request_valid,
+        write_request_ip=write_request_ip,
+        write_request_mac=write_request_mac,
+        write_in_progress=write_in_progress,
+        write_complete=write_complete,
+
+        clear_cache=clear_cache
+    )
 
     @always(delay(4))
     def clkgen():

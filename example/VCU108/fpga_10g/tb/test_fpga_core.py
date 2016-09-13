@@ -26,11 +26,6 @@ THE SOFTWARE.
 from myhdl import *
 import os
 
-try:
-    from queue import Queue
-except ImportError:
-    from Queue import Queue
-
 import eth_ep
 import arp_ep
 import udp_ep
@@ -38,6 +33,7 @@ import gmii_ep
 import xgmii_ep
 
 module = 'fpga_core'
+testbench = 'test_%s' % module
 
 srcs = []
 
@@ -79,104 +75,11 @@ srcs.append("../lib/eth/lib/axis/rtl/axis_fifo_64.v")
 srcs.append("../lib/eth/lib/axis/rtl/axis_switch_64_4x4.v")
 srcs.append("../lib/eth/lib/axis/rtl/axis_async_frame_fifo.v")
 srcs.append("../lib/eth/lib/axis/rtl/axis_async_frame_fifo_64.v")
-srcs.append("test_%s.v" % module)
+srcs.append("%s.v" % testbench)
 
 src = ' '.join(srcs)
 
-build_cmd = "iverilog -o test_%s.vvp %s" % (module, src)
-
-def dut_fpga_core(clk,
-                  rst,
-                  current_test,
-
-                  btnu,
-                  btnl,
-                  btnd,
-                  btnr,
-                  btnc,
-                  sw,
-                  led,
-
-                  qsfp_txd_1,
-                  qsfp_txc_1,
-                  qsfp_rxd_1,
-                  qsfp_rxc_1,
-                  qsfp_txd_2,
-                  qsfp_txc_2,
-                  qsfp_rxd_2,
-                  qsfp_rxc_2,
-                  qsfp_txd_3,
-                  qsfp_txc_3,
-                  qsfp_rxd_3,
-                  qsfp_rxc_3,
-                  qsfp_txd_4,
-                  qsfp_txc_4,
-                  qsfp_rxd_4,
-                  qsfp_rxc_4,
-
-                  phy_gmii_clk,
-                  phy_gmii_rst,
-                  phy_gmii_rxd,
-                  phy_gmii_rx_dv,
-                  phy_gmii_rx_er,
-                  phy_gmii_txd,
-                  phy_gmii_tx_en,
-                  phy_gmii_tx_er,
-                  phy_reset_n,
-                  phy_int_n,
-
-                  uart_rxd,
-                  uart_txd,
-                  uart_rts,
-                  uart_cts):
-
-    if os.system(build_cmd):
-        raise Exception("Error running build command")
-    return Cosimulation("vvp -m myhdl test_%s.vvp -lxt2" % module,
-                clk=clk,
-                rst=rst,
-                current_test=current_test,
-
-                btnu=btnu,
-                btnl=btnl,
-                btnd=btnd,
-                btnr=btnr,
-                btnc=btnc,
-                sw=sw,
-                led=led,
-
-                qsfp_txd_1=qsfp_txd_1,
-                qsfp_txc_1=qsfp_txc_1,
-                qsfp_rxd_1=qsfp_rxd_1,
-                qsfp_rxc_1=qsfp_rxc_1,
-                qsfp_txd_2=qsfp_txd_2,
-                qsfp_txc_2=qsfp_txc_2,
-                qsfp_rxd_2=qsfp_rxd_2,
-                qsfp_rxc_2=qsfp_rxc_2,
-                qsfp_txd_3=qsfp_txd_3,
-                qsfp_txc_3=qsfp_txc_3,
-                qsfp_rxd_3=qsfp_rxd_3,
-                qsfp_rxc_3=qsfp_rxc_3,
-                qsfp_txd_4=qsfp_txd_4,
-                qsfp_txc_4=qsfp_txc_4,
-                qsfp_rxd_4=qsfp_rxd_4,
-                qsfp_rxc_4=qsfp_rxc_4,
-
-                phy_gmii_clk=phy_gmii_clk,
-                phy_gmii_rst=phy_gmii_rst,
-                phy_gmii_rxd=phy_gmii_rxd,
-                phy_gmii_rx_dv=phy_gmii_rx_dv,
-                phy_gmii_rx_er=phy_gmii_rx_er,
-                phy_gmii_txd=phy_gmii_txd,
-                phy_gmii_tx_en=phy_gmii_tx_en,
-                phy_gmii_tx_er=phy_gmii_tx_er,
-                phy_reset_n=phy_reset_n,
-                phy_int_n=phy_int_n,
-
-                uart_rxd=uart_rxd,
-                uart_txd=uart_txd,
-                uart_rts=uart_rts,
-                uart_cts=uart_cts)
+build_cmd = "iverilog -o %s.vvp %s" % (testbench, src)
 
 def bench():
 
@@ -229,134 +132,103 @@ def bench():
     uart_rts = Signal(bool(0))
 
     # sources and sinks
-    xgmii_1_source_queue = Queue()
-    xgmii_1_sink_queue = Queue()
-    xgmii_2_source_queue = Queue()
-    xgmii_2_sink_queue = Queue()
-    xgmii_3_source_queue = Queue()
-    xgmii_3_sink_queue = Queue()
-    xgmii_4_source_queue = Queue()
-    xgmii_4_sink_queue = Queue()
-    gmii_source_queue = Queue()
-    gmii_sink_queue = Queue()
+    qsfp_1_source = xgmii_ep.XGMIISource()
+    qsfp_1_source_logic = qsfp_1_source.create_logic(clk, rst, txd=qsfp_rxd_1, txc=qsfp_rxc_1, name='qsfp_1_source')
 
-    xgmii_1_source = xgmii_ep.XGMIISource(clk,
-                                          rst,
-                                          txd=qsfp_rxd_1,
-                                          txc=qsfp_rxc_1,
-                                          fifo=xgmii_1_source_queue,
-                                          name='xgmii_1_source')
+    qsfp_1_sink = xgmii_ep.XGMIISink()
+    qsfp_1_sink_logic = qsfp_1_sink.create_logic(clk, rst, rxd=qsfp_txd_1, rxc=qsfp_txc_1, name='qsfp_1_sink')
 
-    xgmii_1_sink = xgmii_ep.XGMIISink(clk,
-                                      rst,
-                                      rxd=qsfp_txd_1,
-                                      rxc=qsfp_txc_1,
-                                      fifo=xgmii_1_sink_queue,
-                                      name='xgmii_1_sink')
+    qsfp_2_source = xgmii_ep.XGMIISource()
+    qsfp_2_source_logic = qsfp_2_source.create_logic(clk, rst, txd=qsfp_rxd_2, txc=qsfp_rxc_2, name='qsfp_2_source')
 
-    xgmii_2_source = xgmii_ep.XGMIISource(clk,
-                                          rst,
-                                          txd=qsfp_rxd_2,
-                                          txc=qsfp_rxc_2,
-                                          fifo=xgmii_2_source_queue,
-                                          name='xgmii_2_source')
+    qsfp_2_sink = xgmii_ep.XGMIISink()
+    qsfp_2_sink_logic = qsfp_2_sink.create_logic(clk, rst, rxd=qsfp_txd_2, rxc=qsfp_txc_2, name='qsfp_2_sink')
 
-    xgmii_2_sink = xgmii_ep.XGMIISink(clk,
-                                      rst,
-                                      rxd=qsfp_txd_2,
-                                      rxc=qsfp_txc_2,
-                                      fifo=xgmii_2_sink_queue,
-                                      name='xgmii_2_sink')
+    qsfp_3_source = xgmii_ep.XGMIISource()
+    qsfp_3_source_logic = qsfp_3_source.create_logic(clk, rst, txd=qsfp_rxd_3, txc=qsfp_rxc_3, name='qsfp_3_source')
 
-    xgmii_3_source = xgmii_ep.XGMIISource(clk,
-                                          rst,
-                                          txd=qsfp_rxd_3,
-                                          txc=qsfp_rxc_3,
-                                          fifo=xgmii_3_source_queue,
-                                          name='xgmii_3_source')
+    qsfp_3_sink = xgmii_ep.XGMIISink()
+    qsfp_3_sink_logic = qsfp_3_sink.create_logic(clk, rst, rxd=qsfp_txd_3, rxc=qsfp_txc_3, name='qsfp_3_sink')
 
-    xgmii_3_sink = xgmii_ep.XGMIISink(clk,
-                                      rst,
-                                      rxd=qsfp_txd_3,
-                                      rxc=qsfp_txc_3,
-                                      fifo=xgmii_3_sink_queue,
-                                      name='xgmii_3_sink')
+    qsfp_4_source = xgmii_ep.XGMIISource()
+    qsfp_4_source_logic = qsfp_4_source.create_logic(clk, rst, txd=qsfp_rxd_4, txc=qsfp_rxc_4, name='qsfp_4_source')
 
-    xgmii_4_source = xgmii_ep.XGMIISource(clk,
-                                          rst,
-                                          txd=qsfp_rxd_4,
-                                          txc=qsfp_rxc_4,
-                                          fifo=xgmii_4_source_queue,
-                                          name='xgmii_4_source')
+    qsfp_4_sink = xgmii_ep.XGMIISink()
+    qsfp_4_sink_logic = qsfp_4_sink.create_logic(clk, rst, rxd=qsfp_txd_4, rxc=qsfp_txc_4, name='qsfp_4_sink')
 
-    xgmii_4_sink = xgmii_ep.XGMIISink(clk,
-                                      rst,
-                                      rxd=qsfp_txd_4,
-                                      rxc=qsfp_txc_4,
-                                      fifo=xgmii_4_sink_queue,
-                                      name='xgmii_4_sink')
+    gmii_source = gmii_ep.GMIISource()
 
-    gmii_source = gmii_ep.GMIISource(phy_gmii_clk,
-                                     phy_gmii_rst,
-                                     txd=phy_gmii_rxd,
-                                     tx_en=phy_gmii_rx_dv,
-                                     tx_er=phy_gmii_rx_er,
-                                     fifo=gmii_source_queue,
-                                     name='gmii_source')
+    gmii_source_logic = gmii_source.create_logic(
+        phy_gmii_clk,
+        phy_gmii_rst,
+        txd=phy_gmii_rxd,
+        tx_en=phy_gmii_rx_dv,
+        tx_er=phy_gmii_rx_er,
+        name='gmii_source'
+    )
 
-    gmii_sink = gmii_ep.GMIISink(phy_gmii_clk,
-                                 phy_gmii_rst,
-                                 rxd=phy_gmii_txd,
-                                 rx_dv=phy_gmii_tx_en,
-                                 rx_er=phy_gmii_tx_er,
-                                 fifo=gmii_sink_queue,
-                                 name='gmii_sink')
+    gmii_sink = gmii_ep.GMIISink()
+
+    gmii_sink_logic = gmii_sink.create_logic(
+        phy_gmii_clk,
+        phy_gmii_rst,
+        rxd=phy_gmii_txd,
+        rx_dv=phy_gmii_tx_en,
+        rx_er=phy_gmii_tx_er,
+        name='gmii_sink'
+    )
 
     # DUT
-    dut = dut_fpga_core(clk,
-                        rst,
-                        current_test,
+    if os.system(build_cmd):
+        raise Exception("Error running build command")
 
-                        btnu,
-                        btnl,
-                        btnd,
-                        btnr,
-                        btnc,
-                        sw,
-                        led,
+    dut = Cosimulation(
+        "vvp -m myhdl %s.vvp -lxt2" % testbench,
+        clk=clk,
+        rst=rst,
+        current_test=current_test,
 
-                        qsfp_txd_1,
-                        qsfp_txc_1,
-                        qsfp_rxd_1,
-                        qsfp_rxc_1,
-                        qsfp_txd_2,
-                        qsfp_txc_2,
-                        qsfp_rxd_2,
-                        qsfp_rxc_2,
-                        qsfp_txd_3,
-                        qsfp_txc_3,
-                        qsfp_rxd_3,
-                        qsfp_rxc_3,
-                        qsfp_txd_4,
-                        qsfp_txc_4,
-                        qsfp_rxd_4,
-                        qsfp_rxc_4,
+        btnu=btnu,
+        btnl=btnl,
+        btnd=btnd,
+        btnr=btnr,
+        btnc=btnc,
+        sw=sw,
+        led=led,
 
-                        phy_gmii_clk,
-                        phy_gmii_rst,
-                        phy_gmii_rxd,
-                        phy_gmii_rx_dv,
-                        phy_gmii_rx_er,
-                        phy_gmii_txd,
-                        phy_gmii_tx_en,
-                        phy_gmii_tx_er,
-                        phy_reset_n,
-                        phy_int_n,
+        qsfp_txd_1=qsfp_txd_1,
+        qsfp_txc_1=qsfp_txc_1,
+        qsfp_rxd_1=qsfp_rxd_1,
+        qsfp_rxc_1=qsfp_rxc_1,
+        qsfp_txd_2=qsfp_txd_2,
+        qsfp_txc_2=qsfp_txc_2,
+        qsfp_rxd_2=qsfp_rxd_2,
+        qsfp_rxc_2=qsfp_rxc_2,
+        qsfp_txd_3=qsfp_txd_3,
+        qsfp_txc_3=qsfp_txc_3,
+        qsfp_rxd_3=qsfp_rxd_3,
+        qsfp_rxc_3=qsfp_rxc_3,
+        qsfp_txd_4=qsfp_txd_4,
+        qsfp_txc_4=qsfp_txc_4,
+        qsfp_rxd_4=qsfp_rxd_4,
+        qsfp_rxc_4=qsfp_rxc_4,
 
-                        uart_rxd,
-                        uart_txd,
-                        uart_rts,
-                        uart_cts)
+        phy_gmii_clk=phy_gmii_clk,
+        phy_gmii_rst=phy_gmii_rst,
+        phy_gmii_rxd=phy_gmii_rxd,
+        phy_gmii_rx_dv=phy_gmii_rx_dv,
+        phy_gmii_rx_er=phy_gmii_rx_er,
+        phy_gmii_txd=phy_gmii_txd,
+        phy_gmii_tx_en=phy_gmii_tx_en,
+        phy_gmii_tx_er=phy_gmii_tx_er,
+        phy_reset_n=phy_reset_n,
+        phy_int_n=phy_int_n,
+
+        uart_rxd=uart_rxd,
+        uart_txd=uart_txd,
+        uart_rts=uart_rts,
+        uart_cts=uart_cts
+    )
 
     @always(delay(4))
     def clkgen():
@@ -404,13 +276,13 @@ def bench():
         test_frame.payload = bytearray(range(32))
         test_frame.build()
 
-        xgmii_1_source_queue.put(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+test_frame.build_eth().build_axis_fcs().data)
+        qsfp_1_source.send(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+test_frame.build_eth().build_axis_fcs().data)
 
         # wait for ARP request packet
-        while xgmii_1_sink_queue.empty():
+        while qsfp_1_sink.empty():
             yield clk.posedge
 
-        rx_frame = xgmii_1_sink_queue.get(False)
+        rx_frame = qsfp_1_sink.recv()
         check_eth_frame = eth_ep.EthFrame()
         check_eth_frame.parse_axis_fcs(rx_frame.data[8:])
         check_frame = arp_ep.ARPFrame()
@@ -446,12 +318,12 @@ def bench():
         arp_frame.arp_tha = 0x020000000000
         arp_frame.arp_tpa = 0xc0a80180
 
-        xgmii_1_source_queue.put(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+arp_frame.build_eth().build_axis_fcs().data)
+        qsfp_1_source.send(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+arp_frame.build_eth().build_axis_fcs().data)
 
-        while xgmii_1_sink_queue.empty():
+        while qsfp_1_sink.empty():
             yield clk.posedge
 
-        rx_frame = xgmii_1_sink_queue.get(False)
+        rx_frame = qsfp_1_sink.recv()
         check_eth_frame = eth_ep.EthFrame()
         check_eth_frame.parse_axis_fcs(rx_frame.data[8:])
         check_frame = udp_ep.UDPFrame()
@@ -477,8 +349,8 @@ def bench():
         assert check_frame.udp_dest_port == 5678
         assert check_frame.payload.data == bytearray(range(32))
 
-        assert xgmii_1_source_queue.empty()
-        assert xgmii_1_sink_queue.empty()
+        assert qsfp_1_source.empty()
+        assert qsfp_1_sink.empty()
 
         yield delay(100)
 
@@ -510,18 +382,18 @@ def bench():
         test_frame.payload = bytearray(range(32))
         test_frame.build()
 
-        gmii_source_queue.put(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+test_frame.build_eth().build_axis_fcs().data)
+        gmii_source.send(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+test_frame.build_eth().build_axis_fcs().data)
 
         # loop packet back through on XGMII interface
-        while xgmii_1_sink_queue.empty():
+        while qsfp_1_sink.empty():
             yield clk.posedge
 
-        xgmii_1_source_queue.put(xgmii_1_sink_queue.get())
+        qsfp_1_source.send(qsfp_1_sink.recv())
 
-        while gmii_sink_queue.empty():
+        while gmii_sink.empty():
             yield clk.posedge
 
-        rx_frame = gmii_sink_queue.get(False)
+        rx_frame = gmii_sink.recv()
         check_eth_frame = eth_ep.EthFrame()
         check_eth_frame.parse_axis_fcs(rx_frame.data[8:])
         check_frame = udp_ep.UDPFrame()
@@ -547,10 +419,10 @@ def bench():
         assert check_frame.udp_dest_port == 5678
         assert check_frame.payload.data == bytearray(range(32))
 
-        assert gmii_source_queue.empty()
-        assert gmii_sink_queue.empty()
-        assert xgmii_1_source_queue.empty()
-        assert xgmii_1_sink_queue.empty()
+        assert gmii_source.empty()
+        assert gmii_sink.empty()
+        assert qsfp_1_source.empty()
+        assert qsfp_1_sink.empty()
 
         yield delay(100)
 
@@ -578,18 +450,18 @@ def bench():
         test_frame.payload = bytearray(range(32))
         test_frame.build()
 
-        gmii_source_queue.put(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+test_frame.build_eth().build_axis_fcs().data)
+        gmii_source.send(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+test_frame.build_eth().build_axis_fcs().data)
 
         # loop packet back through on XGMII interface
-        while xgmii_1_sink_queue.empty():
+        while qsfp_1_sink.empty():
             yield clk.posedge
 
-        xgmii_1_source_queue.put(xgmii_1_sink_queue.get())
+        qsfp_1_source.send(qsfp_1_sink.recv())
 
-        while gmii_sink_queue.empty():
+        while gmii_sink.empty():
             yield clk.posedge
 
-        rx_frame = gmii_sink_queue.get(False)
+        rx_frame = gmii_sink.recv()
         check_eth_frame = eth_ep.EthFrame()
         check_eth_frame.parse_axis_fcs(rx_frame.data[8:])
         check_frame = udp_ep.UDPFrame()
@@ -615,16 +487,16 @@ def bench():
         assert check_frame.udp_dest_port == 5678
         assert check_frame.payload.data == bytearray(range(32))
 
-        assert gmii_source_queue.empty()
-        assert gmii_sink_queue.empty()
-        assert xgmii_1_source_queue.empty()
-        assert xgmii_1_sink_queue.empty()
+        assert gmii_source.empty()
+        assert gmii_sink.empty()
+        assert qsfp_1_source.empty()
+        assert qsfp_1_sink.empty()
 
         yield delay(100)
 
         raise StopSimulation
 
-    return dut, xgmii_1_source, xgmii_1_sink, xgmii_2_source, xgmii_2_sink, xgmii_3_source, xgmii_3_sink, xgmii_4_source, xgmii_4_sink, gmii_source, gmii_sink, clkgen, check
+    return dut, qsfp_1_source_logic, qsfp_1_sink_logic, qsfp_2_source_logic, qsfp_2_sink_logic, qsfp_3_source_logic, qsfp_3_sink_logic, qsfp_4_source_logic, qsfp_4_sink_logic, gmii_source_logic, gmii_sink_logic, clkgen, check
 
 def test_bench():
     sim = Simulation(bench())

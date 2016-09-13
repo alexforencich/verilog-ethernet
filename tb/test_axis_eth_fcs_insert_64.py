@@ -28,68 +28,21 @@ import os
 import struct
 import zlib
 
-try:
-    from queue import Queue
-except ImportError:
-    from Queue import Queue
-
 import axis_ep
 import eth_ep
 
 module = 'axis_eth_fcs_insert_64'
+testbench = 'test_%s' % module
 
 srcs = []
 
 srcs.append("../rtl/%s.v" % module)
 srcs.append("../rtl/lfsr.v")
-srcs.append("test_%s.v" % module)
+srcs.append("%s.v" % testbench)
 
 src = ' '.join(srcs)
 
-build_cmd = "iverilog -o test_%s.vvp %s" % (module, src)
-
-def dut_axis_eth_fcs_insert_64(clk,
-                               rst,
-                               current_test,
-
-                               input_axis_tdata,
-                               input_axis_tkeep,
-                               input_axis_tvalid,
-                               input_axis_tready,
-                               input_axis_tlast,
-                               input_axis_tuser,
-
-                               output_axis_tdata,
-                               output_axis_tkeep,
-                               output_axis_tvalid,
-                               output_axis_tready,
-                               output_axis_tlast,
-                               output_axis_tuser,
-
-                               busy):
-
-    if os.system(build_cmd):
-        raise Exception("Error running build command")
-    return Cosimulation("vvp -m myhdl test_%s.vvp -lxt2" % module,
-                clk=clk,
-                rst=rst,
-                current_test=current_test,
-
-                input_axis_tdata=input_axis_tdata,
-                input_axis_tkeep=input_axis_tkeep,
-                input_axis_tvalid=input_axis_tvalid,
-                input_axis_tready=input_axis_tready,
-                input_axis_tlast=input_axis_tlast,
-                input_axis_tuser=input_axis_tuser,
-
-                output_axis_tdata=output_axis_tdata,
-                output_axis_tkeep=output_axis_tkeep,
-                output_axis_tvalid=output_axis_tvalid,
-                output_axis_tready=output_axis_tready,
-                output_axis_tlast=output_axis_tlast,
-                output_axis_tuser=output_axis_tuser,
-
-                busy=busy)
+build_cmd = "iverilog -o %s.vvp %s" % (testbench, src)
 
 def bench():
 
@@ -119,55 +72,65 @@ def bench():
     busy = Signal(bool(0))
 
     # sources and sinks
-    source_queue = Queue()
     source_pause = Signal(bool(0))
-    sink_queue = Queue()
     sink_pause = Signal(bool(0))
 
-    source = axis_ep.AXIStreamSource(clk,
-                                     rst,
-                                     tdata=input_axis_tdata,
-                                     tkeep=input_axis_tkeep,
-                                     tvalid=input_axis_tvalid,
-                                     tready=input_axis_tready,
-                                     tlast=input_axis_tlast,
-                                     tuser=input_axis_tuser,
-                                     fifo=source_queue,
-                                     pause=source_pause,
-                                     name='source')
+    source = axis_ep.AXIStreamSource()
 
-    sink = axis_ep.AXIStreamSink(clk,
-                                rst,
-                                tdata=output_axis_tdata,
-                                tkeep=output_axis_tkeep,
-                                tvalid=output_axis_tvalid,
-                                tready=output_axis_tready,
-                                tlast=output_axis_tlast,
-                                tuser=output_axis_tuser,
-                                fifo=sink_queue,
-                                pause=sink_pause,
-                                name='sink')
+    source_logic = source.create_logic(
+        clk,
+        rst,
+        tdata=input_axis_tdata,
+        tkeep=input_axis_tkeep,
+        tvalid=input_axis_tvalid,
+        tready=input_axis_tready,
+        tlast=input_axis_tlast,
+        tuser=input_axis_tuser,
+        pause=source_pause,
+        name='source'
+    )
+
+    sink = axis_ep.AXIStreamSink()
+
+    sink_logic = sink.create_logic(
+        clk,
+        rst,
+        tdata=output_axis_tdata,
+        tkeep=output_axis_tkeep,
+        tvalid=output_axis_tvalid,
+        tready=output_axis_tready,
+        tlast=output_axis_tlast,
+        tuser=output_axis_tuser,
+        pause=sink_pause,
+        name='sink'
+    )
 
     # DUT
-    dut = dut_axis_eth_fcs_insert_64(clk,
-                                     rst,
-                                     current_test,
+    if os.system(build_cmd):
+        raise Exception("Error running build command")
 
-                                     input_axis_tdata,
-                                     input_axis_tkeep,
-                                     input_axis_tvalid,
-                                     input_axis_tready,
-                                     input_axis_tlast,
-                                     input_axis_tuser,
+    dut = Cosimulation(
+        "vvp -m myhdl %s.vvp -lxt2" % testbench,
+        clk=clk,
+        rst=rst,
+        current_test=current_test,
 
-                                     output_axis_tdata,
-                                     output_axis_tkeep,
-                                     output_axis_tvalid,
-                                     output_axis_tready,
-                                     output_axis_tlast,
-                                     output_axis_tuser,
+        input_axis_tdata=input_axis_tdata,
+        input_axis_tkeep=input_axis_tkeep,
+        input_axis_tvalid=input_axis_tvalid,
+        input_axis_tready=input_axis_tready,
+        input_axis_tlast=input_axis_tlast,
+        input_axis_tuser=input_axis_tuser,
 
-                                     busy)
+        output_axis_tdata=output_axis_tdata,
+        output_axis_tkeep=output_axis_tkeep,
+        output_axis_tvalid=output_axis_tvalid,
+        output_axis_tready=output_axis_tready,
+        output_axis_tlast=output_axis_tlast,
+        output_axis_tuser=output_axis_tuser,
+
+        busy=busy
+    )
 
     @always(delay(4))
     def clkgen():
@@ -223,7 +186,7 @@ def bench():
             axis_frame = test_frame.build_axis()
 
             for wait in wait_normal, wait_pause_source, wait_pause_sink:
-                source_queue.put(axis_frame)
+                source.send(axis_frame)
                 yield clk.posedge
                 yield clk.posedge
 
@@ -233,9 +196,7 @@ def bench():
                 yield clk.posedge
                 yield clk.posedge
 
-                rx_frame = None
-                if not sink_queue.empty():
-                    rx_frame = sink_queue.get()
+                rx_frame = sink.recv()
 
                 eth_frame = eth_ep.EthFrame()
                 eth_frame.parse_axis_fcs(rx_frame)
@@ -250,7 +211,7 @@ def bench():
                 assert eth_frame.eth_type == test_frame.eth_type
                 assert eth_frame.payload.data.index(test_frame.payload.data) == 0
 
-                assert sink_queue.empty()
+                assert sink.empty()
 
                 yield delay(100)
 
@@ -275,8 +236,8 @@ def bench():
             axis_frame2 = test_frame2.build_axis()
 
             for wait in wait_normal, wait_pause_source, wait_pause_sink:
-                source_queue.put(axis_frame1)
-                source_queue.put(axis_frame2)
+                source.send(axis_frame1)
+                source.send(axis_frame2)
                 yield clk.posedge
                 yield clk.posedge
 
@@ -286,9 +247,7 @@ def bench():
                 yield clk.posedge
                 yield clk.posedge
 
-                rx_frame = None
-                if not sink_queue.empty():
-                    rx_frame = sink_queue.get()
+                rx_frame = sink.recv()
 
                 eth_frame = eth_ep.EthFrame()
                 eth_frame.parse_axis_fcs(rx_frame)
@@ -303,9 +262,7 @@ def bench():
                 assert eth_frame.eth_type == test_frame1.eth_type
                 assert eth_frame.payload.data.index(test_frame1.payload.data) == 0
 
-                rx_frame = None
-                if not sink_queue.empty():
-                    rx_frame = sink_queue.get()
+                rx_frame = sink.recv()
 
                 eth_frame = eth_ep.EthFrame()
                 eth_frame.parse_axis_fcs(rx_frame)
@@ -320,7 +277,7 @@ def bench():
                 assert eth_frame.eth_type == test_frame2.eth_type
                 assert eth_frame.payload.data.index(test_frame2.payload.data) == 0
 
-                assert sink_queue.empty()
+                assert sink.empty()
 
                 yield delay(100)
 
@@ -347,8 +304,8 @@ def bench():
             axis_frame1.user = 1
 
             for wait in wait_normal, wait_pause_source, wait_pause_sink:
-                source_queue.put(axis_frame1)
-                source_queue.put(axis_frame2)
+                source.send(axis_frame1)
+                source.send(axis_frame2)
                 yield clk.posedge
                 yield clk.posedge
 
@@ -358,15 +315,11 @@ def bench():
                 yield clk.posedge
                 yield clk.posedge
 
-                rx_frame = None
-                if not sink_queue.empty():
-                    rx_frame = sink_queue.get()
+                rx_frame = sink.recv()
 
                 assert rx_frame.user[-1]
 
-                rx_frame = None
-                if not sink_queue.empty():
-                    rx_frame = sink_queue.get()
+                rx_frame = sink.recv()
 
                 eth_frame = eth_ep.EthFrame()
                 eth_frame.parse_axis_fcs(rx_frame)
@@ -381,7 +334,7 @@ def bench():
                 assert eth_frame.eth_type == test_frame2.eth_type
                 assert eth_frame.payload.data.index(test_frame2.payload.data) == 0
 
-                assert sink_queue.empty()
+                assert sink.empty()
 
                 yield delay(100)
 
@@ -393,7 +346,7 @@ def bench():
             test_frame = bytearray(range(payload_len))
 
             for wait in wait_normal, wait_pause_source, wait_pause_sink:
-                source_queue.put(test_frame)
+                source.send(test_frame)
                 yield clk.posedge
                 yield clk.posedge
 
@@ -403,9 +356,7 @@ def bench():
                 yield clk.posedge
                 yield clk.posedge
 
-                rx_frame = None
-                if not sink_queue.empty():
-                    rx_frame = sink_queue.get()
+                rx_frame = sink.recv()
 
                 payload = rx_frame.data[:-4]
                 fcs = struct.unpack('<L', rx_frame.data[-4:])[0]
@@ -417,13 +368,13 @@ def bench():
                 assert test_frame == payload
                 assert check_fcs == fcs
 
-                assert sink_queue.empty()
+                assert sink.empty()
 
                 yield delay(100)
 
         raise StopSimulation
 
-    return dut, source, sink, clkgen, check
+    return dut, source_logic, sink_logic, clkgen, check
 
 def test_bench():
     sim = Simulation(bench())

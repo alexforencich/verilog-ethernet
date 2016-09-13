@@ -24,8 +24,11 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
-`timescale 1 ns / 1 ps
+`timescale 1ns / 1ps
 
+/*
+ * Testbench for arp
+ */
 module test_arp;
 
 // Inputs
@@ -73,39 +76,43 @@ wire [47:0] arp_response_mac;
 
 initial begin
     // myhdl integration
-    $from_myhdl(clk,
-                rst,
-                current_test,
-                input_eth_hdr_valid,
-                input_eth_dest_mac,
-                input_eth_src_mac,
-                input_eth_type,
-                input_eth_payload_tdata,
-                input_eth_payload_tvalid,
-                input_eth_payload_tlast,
-                input_eth_payload_tuser,
-                output_eth_hdr_ready,
-                output_eth_payload_tready,
-                arp_request_valid,
-                arp_request_ip,
-                local_mac,
-                local_ip,
-                gateway_ip,
-                subnet_mask,
-                clear_cache);
-    $to_myhdl(input_eth_hdr_ready,
-              input_eth_payload_tready,
-              output_eth_hdr_valid,
-              output_eth_dest_mac,
-              output_eth_src_mac,
-              output_eth_type,
-              output_eth_payload_tdata,
-              output_eth_payload_tvalid,
-              output_eth_payload_tlast,
-              output_eth_payload_tuser,
-              arp_response_valid,
-              arp_response_error,
-              arp_response_mac);
+    $from_myhdl(
+        clk,
+        rst,
+        current_test,
+        input_eth_hdr_valid,
+        input_eth_dest_mac,
+        input_eth_src_mac,
+        input_eth_type,
+        input_eth_payload_tdata,
+        input_eth_payload_tvalid,
+        input_eth_payload_tlast,
+        input_eth_payload_tuser,
+        output_eth_hdr_ready,
+        output_eth_payload_tready,
+        arp_request_valid,
+        arp_request_ip,
+        local_mac,
+        local_ip,
+        gateway_ip,
+        subnet_mask,
+        clear_cache
+    );
+    $to_myhdl(
+        input_eth_hdr_ready,
+        input_eth_payload_tready,
+        output_eth_hdr_valid,
+        output_eth_dest_mac,
+        output_eth_src_mac,
+        output_eth_type,
+        output_eth_payload_tdata,
+        output_eth_payload_tvalid,
+        output_eth_payload_tlast,
+        output_eth_payload_tuser,
+        arp_response_valid,
+        arp_response_error,
+        arp_response_mac
+    );
 
     // dump file
     $dumpfile("test_arp.lxt");

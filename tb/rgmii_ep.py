@@ -26,65 +26,76 @@ from myhdl import *
 
 import gmii_ep
 
-def RGMIISource(clk, rst,
-               txd,
-               tx_ctl,
-               fifo=None,
-               name=None):
+class RGMIISource(gmii_ep.GMIISource):
+    def create_logic(self,
+                clk,
+                rst,
+                txd,
+                tx_ctl,
+                name=None
+            ):
 
-    gmii_txd = Signal(intbv(0)[8:])
-    gmii_tx_en = Signal(bool(0))
-    gmii_tx_er = Signal(bool(0))
+        assert not self.has_logic
 
-    gmii_txd_reg = Signal(intbv(0)[8:])
-    gmii_tx_en_reg = Signal(bool(0))
-    gmii_tx_er_reg = Signal(bool(0))
+        gmii_txd = Signal(intbv(0)[8:])
+        gmii_tx_en = Signal(bool(0))
+        gmii_tx_er = Signal(bool(0))
 
-    gmii_source = gmii_ep.GMIISource(clk, rst, gmii_txd, gmii_tx_en, gmii_tx_er, fifo, name)
+        gmii_txd_reg = Signal(intbv(0)[8:])
+        gmii_tx_en_reg = Signal(bool(0))
+        gmii_tx_er_reg = Signal(bool(0))
 
-    @instance
-    def logic():
-        while True:
-            yield clk.negedge
-            txd.next = gmii_txd_reg[4:0]
-            tx_ctl.next = gmii_tx_en_reg
-            yield clk.posedge
-            txd.next = gmii_txd_reg[8:4]
-            tx_ctl.next = gmii_tx_en_reg ^ gmii_tx_er_reg
-            gmii_txd_reg.next = gmii_txd
-            gmii_tx_en_reg.next = gmii_tx_en
-            gmii_tx_er_reg.next = gmii_tx_er
+        gmii_source = super(RGMIISource, self).create_logic(clk, rst, gmii_txd, gmii_tx_en, gmii_tx_er, name)
 
-    return gmii_source, logic
+        @instance
+        def logic():
+            while True:
+                yield clk.negedge
+                txd.next = gmii_txd_reg[4:0]
+                tx_ctl.next = gmii_tx_en_reg
+                yield clk.posedge
+                txd.next = gmii_txd_reg[8:4]
+                tx_ctl.next = gmii_tx_en_reg ^ gmii_tx_er_reg
+                gmii_txd_reg.next = gmii_txd
+                gmii_tx_en_reg.next = gmii_tx_en
+                gmii_tx_er_reg.next = gmii_tx_er
+
+        return gmii_source, logic
 
 
-def RGMIISink(clk, rst,
-             rxd,
-             rx_ctl,
-             fifo=None,
-             name=None):
+class RGMIISink(gmii_ep.GMIISink):
+    def create_logic(self,
+                clk,
+                rst,
+                rxd,
+                rx_ctl,
+                name=None
+            ):
 
-    gmii_rxd = Signal(intbv(0)[8:])
-    gmii_rx_dv = Signal(bool(0))
-    gmii_rx_er = Signal(bool(0))
+        assert not self.has_logic
 
-    gmii_sink = gmii_ep.GMIISink(clk, rst, gmii_rxd, gmii_rx_dv, gmii_rx_er, fifo, name)
+        gmii_rxd = Signal(intbv(0)[8:])
+        gmii_rx_dv = Signal(bool(0))
+        gmii_rx_er = Signal(bool(0))
 
-    @instance
-    def logic():
-        dat = 0
-        ctl1 = 0
-        ctl2 = 0
+        gmii_sink = super(RGMIISink, self).create_logic(clk, rst, gmii_rxd, gmii_rx_dv, gmii_rx_er, name)
 
-        while True:
-            yield clk.posedge
-            gmii_rxd.next = dat
-            gmii_rx_dv.next = ctl1
-            gmii_rx_er.next = ctl1 ^ ctl2
-            dat = int(rxd.val)
-            ctl1 = int(rx_ctl.val)
-            yield clk.negedge
-            dat |= int(rxd.val) << 4
-            ctl2 = int(rx_ctl.val)
+        @instance
+        def logic():
+            dat = 0
+            ctl1 = 0
+            ctl2 = 0
 
-    return gmii_sink, logic
+            while True:
+                yield clk.posedge
+                gmii_rxd.next = dat
+                gmii_rx_dv.next = ctl1
+                gmii_rx_er.next = ctl1 ^ ctl2
+                dat = int(rxd.val)
+                ctl1 = int(rx_ctl.val)
+                yield clk.negedge
+                dat |= int(rxd.val) << 4
+                ctl2 = int(rx_ctl.val)
+
+        return gmii_sink, logic
+

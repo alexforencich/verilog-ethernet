@@ -67,33 +67,37 @@ wire [7:0] sfp_d_txc;
 
 initial begin
     // myhdl integration
-    $from_myhdl(clk,
-                rst,
-                current_test,
-                btn,
-                sw,
-                sfp_a_rxd,
-                sfp_a_rxc,
-                sfp_b_rxd,
-                sfp_b_rxc,
-                sfp_c_rxd,
-                sfp_c_rxc,
-                sfp_d_rxd,
-                sfp_d_rxc);
-    $to_myhdl(led,
-              led_bkt,
-              led_hex0_d,
-              led_hex0_dp,
-              led_hex1_d,
-              led_hex1_dp,
-              sfp_a_txd,
-              sfp_a_txc,
-              sfp_b_txd,
-              sfp_b_txc,
-              sfp_c_txd,
-              sfp_c_txc,
-              sfp_d_txd,
-              sfp_d_txc);
+    $from_myhdl(
+        clk,
+        rst,
+        current_test,
+        btn,
+        sw,
+        sfp_a_rxd,
+        sfp_a_rxc,
+        sfp_b_rxd,
+        sfp_b_rxc,
+        sfp_c_rxd,
+        sfp_c_rxc,
+        sfp_d_rxd,
+        sfp_d_rxc
+    );
+    $to_myhdl(
+        led,
+        led_bkt,
+        led_hex0_d,
+        led_hex0_dp,
+        led_hex1_d,
+        led_hex1_dp,
+        sfp_a_txd,
+        sfp_a_txc,
+        sfp_b_txd,
+        sfp_b_txc,
+        sfp_c_txd,
+        sfp_c_txc,
+        sfp_d_txd,
+        sfp_d_txc
+    );
 
     // dump file
     $dumpfile("test_fpga_core.lxt");

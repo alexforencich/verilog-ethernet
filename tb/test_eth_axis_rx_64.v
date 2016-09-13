@@ -24,8 +24,11 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
-`timescale 1 ns / 1 ps
+`timescale 1ns / 1ps
 
+/*
+ * Testbench for eth_axis_rx_64
+ */
 module test_eth_axis_rx_64;
 
 // Inputs
@@ -57,28 +60,32 @@ wire error_header_early_termination;
 
 initial begin
     // myhdl integration
-    $from_myhdl(clk,
-                rst,
-                current_test,
-                input_axis_tdata,
-                input_axis_tkeep,
-                input_axis_tvalid,
-                input_axis_tlast,
-                input_axis_tuser,
-                output_eth_hdr_ready,
-                output_eth_payload_tready);
-    $to_myhdl(input_axis_tready,
-              output_eth_hdr_valid,
-              output_eth_dest_mac,
-              output_eth_src_mac,
-              output_eth_type,
-              output_eth_payload_tdata,
-              output_eth_payload_tkeep,
-              output_eth_payload_tvalid,
-              output_eth_payload_tlast,
-              output_eth_payload_tuser,
-              busy,
-              error_header_early_termination);
+    $from_myhdl(
+        clk,
+        rst,
+        current_test,
+        input_axis_tdata,
+        input_axis_tkeep,
+        input_axis_tvalid,
+        input_axis_tlast,
+        input_axis_tuser,
+        output_eth_hdr_ready,
+        output_eth_payload_tready
+    );
+    $to_myhdl(
+        input_axis_tready,
+        output_eth_hdr_valid,
+        output_eth_dest_mac,
+        output_eth_src_mac,
+        output_eth_type,
+        output_eth_payload_tdata,
+        output_eth_payload_tkeep,
+        output_eth_payload_tvalid,
+        output_eth_payload_tlast,
+        output_eth_payload_tuser,
+        busy,
+        error_header_early_termination
+    );
 
     // dump file
     $dumpfile("test_eth_axis_rx_64.lxt");

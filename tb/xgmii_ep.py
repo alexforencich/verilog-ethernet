@@ -103,168 +103,209 @@ class XGMIIFrame(object):
         return self.data.__iter__()
 
 
-def XGMIISource(clk, rst,
+class XGMIISource(object):
+    def __init__(self):
+        self.has_logic = False
+        self.queue = []
+
+    def send(self, frame):
+        self.queue.append(XGMIIFrame(frame))
+
+    def count(self):
+        return len(self.queue)
+
+    def empty(self):
+        return self.count() == 0
+
+    def create_logic(self,
+                clk,
+                rst,
                 txd,
                 txc,
-                fifo=None,
-                name=None):
+                name=None
+            ):
 
-    assert len(txd) in [32, 64]
+        assert not self.has_logic
 
-    bw = int(len(txd)/8)
+        self.has_logic = True
 
-    @instance
-    def logic():
-        frame = None
-        dl = []
-        cl = []
-        ifg_cnt = 0
-        deficit_idle_cnt = 0
-        nt = False
+        assert len(txd) in [32, 64]
 
-        while True:
-            yield clk.posedge, rst.posedge
+        bw = int(len(txd)/8)
 
-            if rst:
-                frame = None
-                txd.next = 0x0707070707070707 if bw == 8 else 0x07070707
-                txc.next = 0xff if bw == 8 else 0xf
-                dl = []
-                cl = []
-                ifg_cnt = 0
-                deficit_idle_cnt = 0
-                nt = False
-            else:
-                if ifg_cnt > bw-1:
-                    ifg_cnt -= bw
+        @instance
+        def logic():
+            frame = None
+            dl = []
+            cl = []
+            ifg_cnt = 0
+            deficit_idle_cnt = 0
+            nt = False
+
+            while True:
+                yield clk.posedge, rst.posedge
+
+                if rst:
+                    frame = None
                     txd.next = 0x0707070707070707 if bw == 8 else 0x07070707
                     txc.next = 0xff if bw == 8 else 0xf
-                elif len(dl) > 0 or nt:
-                    d = 0
-                    c = 0
-
-                    for i in range(bw):
-                        if len(dl) > 0:
-                            d |= dl.pop(0) << (8*i)
-                            c |= cl.pop(0) << i
-                            nt = True
-                        else:
-                            if nt:
-                                d |= 0xfd << (8*i)
-                                nt = False
-                                ifg_cnt = 12 - (bw-i) + deficit_idle_cnt
-                            else:
-                                d |= 0x07 << (8*i)
-                            c |= 1 << i
-
-                    txd.next = d
-                    txc.next = c
-                elif not fifo.empty():
-                    frame = XGMIIFrame(fifo.get())
-                    dl, cl = frame.build()
-                    if name is not None:
-                        print("[%s] Sending frame %s" % (name, repr(frame)))
-                    
-                    if ifg_cnt >= 4:
-                        deficit_idle_cnt = ifg_cnt - 4
-                    else:
-                        deficit_idle_cnt = ifg_cnt
-                        ifg_cnt = 0
-
-                    assert len(dl) > 0
-                    assert dl.pop(0) == 0x55
-                    cl.pop(0)
-
-                    k = 1
-                    d = 0xfb
-                    c = 1
-
-                    if ifg_cnt > 0:
-                        k = 5
-                        d = 0xfb07070707
-                        c = 0x1f
-
-                    for i in range(k,bw):
-                        if len(dl) > 0:
-                            d |= dl.pop(0) << (8*i)
-                            c |= cl.pop(0) << i
-                            nt = True
-                        else:
-                            if nt:
-                                d |= 0xfd << (8*i)
-                                nt = False
-                            else:
-                                d |= 0x07 << (8*i)
-                            c |= 1 << i
-
-                    txd.next = d
-                    txc.next = c
-                else:
+                    dl = []
+                    cl = []
                     ifg_cnt = 0
                     deficit_idle_cnt = 0
-                    txd.next = 0x0707070707070707 if bw == 8 else 0x07070707
-                    txc.next = 0xff if bw == 8 else 0xf
-
-    return logic
-
-
-def XGMIISink(clk, rst,
-              rxd,
-              rxc,
-              fifo=None,
-              name=None):
-
-    assert len(rxd) in [32, 64]
-
-    bw = int(len(rxd)/8)
-
-    @instance
-    def logic():
-        frame = None
-        d = []
-        c = []
-
-        while True:
-            yield clk.posedge, rst.posedge
-
-            if rst:
-                frame = None
-                d = []
-                c = []
-            else:
-                if frame is None:
-                    if rxc & 1 and rxd & 0xff == 0xfb:
-                        # start in lane 0
-                        frame = XGMIIFrame()
-                        d = [0x55]
-                        c = [0]
-                        for i in range(1,bw):
-                            d.append((int(rxd) >> (8*i)) & 0xff)
-                            c.append((int(rxc) >> i) & 1)
-                    elif bw == 8 and (rxc >> 4) & 1 and (rxd >> 32) & 0xff == 0xfb:
-                        # start in lane 4
-                        frame = XGMIIFrame()
-                        d = [0x55]
-                        c = [0]
-                        for i in range(5,8):
-                            d.append((int(rxd) >> (8*i)) & 0xff)
-                            c.append((int(rxc) >> i) & 1)
+                    nt = False
                 else:
-                    for i in range(bw):
-                        if (rxc >> i) & 1 and (rxd >> (8*i)) & 0xff == 0xfd:
-                            # terminate
-                            frame.parse(d, c)
-                            if fifo is not None:
-                                fifo.put(frame)
-                            if name is not None:
-                                print("[%s] Got frame %s" % (name, repr(frame)))
-                            frame = None
-                            d = []
-                            c = []
-                            break
-                        else:
-                            d.append((int(rxd) >> (8*i)) & 0xff)
-                            c.append((int(rxc) >> i) & 1)
+                    if ifg_cnt > bw-1:
+                        ifg_cnt -= bw
+                        txd.next = 0x0707070707070707 if bw == 8 else 0x07070707
+                        txc.next = 0xff if bw == 8 else 0xf
+                    elif len(dl) > 0 or nt:
+                        d = 0
+                        c = 0
 
-    return logic
+                        for i in range(bw):
+                            if len(dl) > 0:
+                                d |= dl.pop(0) << (8*i)
+                                c |= cl.pop(0) << i
+                                nt = True
+                            else:
+                                if nt:
+                                    d |= 0xfd << (8*i)
+                                    nt = False
+                                    ifg_cnt = 12 - (bw-i) + deficit_idle_cnt
+                                else:
+                                    d |= 0x07 << (8*i)
+                                c |= 1 << i
+
+                        txd.next = d
+                        txc.next = c
+                    elif len(self.queue) > 0:
+                        frame = self.queue.pop(0)
+                        dl, cl = frame.build()
+                        if name is not None:
+                            print("[%s] Sending frame %s" % (name, repr(frame)))
+
+                        if ifg_cnt >= 4:
+                            deficit_idle_cnt = ifg_cnt - 4
+                        else:
+                            deficit_idle_cnt = ifg_cnt
+                            ifg_cnt = 0
+
+                        assert len(dl) > 0
+                        assert dl.pop(0) == 0x55
+                        cl.pop(0)
+
+                        k = 1
+                        d = 0xfb
+                        c = 1
+
+                        if ifg_cnt > 0:
+                            k = 5
+                            d = 0xfb07070707
+                            c = 0x1f
+
+                        for i in range(k,bw):
+                            if len(dl) > 0:
+                                d |= dl.pop(0) << (8*i)
+                                c |= cl.pop(0) << i
+                                nt = True
+                            else:
+                                if nt:
+                                    d |= 0xfd << (8*i)
+                                    nt = False
+                                else:
+                                    d |= 0x07 << (8*i)
+                                c |= 1 << i
+
+                        txd.next = d
+                        txc.next = c
+                    else:
+                        ifg_cnt = 0
+                        deficit_idle_cnt = 0
+                        txd.next = 0x0707070707070707 if bw == 8 else 0x07070707
+                        txc.next = 0xff if bw == 8 else 0xf
+
+        return logic
+
+
+class XGMIISink(object):
+    def __init__(self):
+        self.has_logic = False
+        self.queue = []
+
+    def recv(self):
+        if len(self.queue) > 0:
+            return self.queue.pop(0)
+        return None
+
+    def count(self):
+        return len(self.queue)
+
+    def empty(self):
+        return self.count() == 0
+
+    def create_logic(self,
+                clk,
+                rst,
+                rxd,
+                rxc,
+                name=None
+            ):
+
+        assert not self.has_logic
+
+        self.has_logic = True
+
+        assert len(rxd) in [32, 64]
+
+        bw = int(len(rxd)/8)
+
+        @instance
+        def logic():
+            frame = None
+            d = []
+            c = []
+
+            while True:
+                yield clk.posedge, rst.posedge
+
+                if rst:
+                    frame = None
+                    d = []
+                    c = []
+                else:
+                    if frame is None:
+                        if rxc & 1 and rxd & 0xff == 0xfb:
+                            # start in lane 0
+                            frame = XGMIIFrame()
+                            d = [0x55]
+                            c = [0]
+                            for i in range(1,bw):
+                                d.append((int(rxd) >> (8*i)) & 0xff)
+                                c.append((int(rxc) >> i) & 1)
+                        elif bw == 8 and (rxc >> 4) & 1 and (rxd >> 32) & 0xff == 0xfb:
+                            # start in lane 4
+                            frame = XGMIIFrame()
+                            d = [0x55]
+                            c = [0]
+                            for i in range(5,8):
+                                d.append((int(rxd) >> (8*i)) & 0xff)
+                                c.append((int(rxc) >> i) & 1)
+                    else:
+                        for i in range(bw):
+                            if (rxc >> i) & 1 and (rxd >> (8*i)) & 0xff == 0xfd:
+                                # terminate
+                                frame.parse(d, c)
+                                self.queue.append(frame)
+                                if name is not None:
+                                    print("[%s] Got frame %s" % (name, repr(frame)))
+                                frame = None
+                                d = []
+                                c = []
+                                break
+                            else:
+                                d.append((int(rxd) >> (8*i)) & 0xff)
+                                c.append((int(rxc) >> i) & 1)
+
+        return logic
 

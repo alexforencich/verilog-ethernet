@@ -63,28 +63,32 @@ wire uart_txd;
 
 initial begin
     // myhdl integration
-    $from_myhdl(clk,
-                clk90,
-                rst,
-                current_test,
-                btnu,
-                btnl,
-                btnd,
-                btnr,
-                btnc,
-                sw,
-                phy_rx_clk,
-                phy_rxd,
-                phy_rx_ctl,
-                phy_int_n,
-                phy_pme_n,
-                uart_rxd);
-    $to_myhdl(led,
-              phy_tx_clk,
-              phy_txd,
-              phy_tx_ctl,
-              phy_reset_n,
-              uart_txd);
+    $from_myhdl(
+        clk,
+        clk90,
+        rst,
+        current_test,
+        btnu,
+        btnl,
+        btnd,
+        btnr,
+        btnc,
+        sw,
+        phy_rx_clk,
+        phy_rxd,
+        phy_rx_ctl,
+        phy_int_n,
+        phy_pme_n,
+        uart_rxd
+    );
+    $to_myhdl(
+        led,
+        phy_tx_clk,
+        phy_txd,
+        phy_tx_ctl,
+        phy_reset_n,
+        uart_txd
+    );
 
     // dump file
     $dumpfile("test_fpga_core.lxt");

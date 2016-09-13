@@ -26,16 +26,12 @@ THE SOFTWARE.
 from myhdl import *
 import os
 
-try:
-    from queue import Queue
-except ImportError:
-    from Queue import Queue
-
 import axis_ep
 import eth_ep
 import gmii_ep
 
 module = 'eth_mac_1g'
+testbench = 'test_%s' % module
 
 srcs = []
 
@@ -43,80 +39,11 @@ srcs.append("../rtl/%s.v" % module)
 srcs.append("../rtl/lfsr.v")
 srcs.append("../rtl/eth_mac_1g_rx.v")
 srcs.append("../rtl/eth_mac_1g_tx.v")
-srcs.append("test_%s.v" % module)
+srcs.append("%s.v" % testbench)
 
 src = ' '.join(srcs)
 
-build_cmd = "iverilog -o test_%s.vvp %s" % (module, src)
-
-def dut_eth_mac_1g(clk,
-                   rst,
-                   current_test,
-
-                   rx_clk,
-                   rx_rst,
-                   tx_clk,
-                   tx_rst,
-
-                   tx_axis_tdata,
-                   tx_axis_tvalid,
-                   tx_axis_tready,
-                   tx_axis_tlast,
-                   tx_axis_tuser,
-
-                   rx_axis_tdata,
-                   rx_axis_tvalid,
-                   rx_axis_tlast,
-                   rx_axis_tuser,
-
-                   gmii_rxd,
-                   gmii_rx_dv,
-                   gmii_rx_er,
-
-                   gmii_txd,
-                   gmii_tx_en,
-                   gmii_tx_er,
-
-                   rx_error_bad_frame,
-                   rx_error_bad_fcs,
-
-                   ifg_delay):
-
-    if os.system(build_cmd):
-        raise Exception("Error running build command")
-    return Cosimulation("vvp -m myhdl test_%s.vvp -lxt2" % module,
-                clk=clk,
-                rst=rst,
-                current_test=current_test,
-
-                rx_clk=rx_clk,
-                rx_rst=rx_rst,
-                tx_clk=tx_clk,
-                tx_rst=tx_rst,
-
-                tx_axis_tdata=tx_axis_tdata,
-                tx_axis_tvalid=tx_axis_tvalid,
-                tx_axis_tready=tx_axis_tready,
-                tx_axis_tlast=tx_axis_tlast,
-                tx_axis_tuser=tx_axis_tuser,
-
-                rx_axis_tdata=rx_axis_tdata,
-                rx_axis_tvalid=rx_axis_tvalid,
-                rx_axis_tlast=rx_axis_tlast,
-                rx_axis_tuser=rx_axis_tuser,
-
-                gmii_rxd=gmii_rxd,
-                gmii_rx_dv=gmii_rx_dv,
-                gmii_rx_er=gmii_rx_er,
-
-                gmii_txd=gmii_txd,
-                gmii_tx_en=gmii_tx_en,
-                gmii_tx_er=gmii_tx_er,
-
-                rx_error_bad_frame=rx_error_bad_frame,
-                rx_error_bad_fcs=rx_error_bad_fcs,
-
-                ifg_delay=ifg_delay)
+build_cmd = "iverilog -o %s.vvp %s" % (testbench, src)
 
 def bench():
 
@@ -155,81 +82,95 @@ def bench():
     rx_error_bad_fcs = Signal(bool(0))
 
     # sources and sinks
-    gmii_source_queue = Queue()
-    gmii_sink_queue = Queue()
-    axis_source_queue = Queue()
     axis_source_pause = Signal(bool(0))
-    axis_sink_queue = Queue()
 
-    gmii_source = gmii_ep.GMIISource(rx_clk,
-                                     rx_rst,
-                                     txd=gmii_rxd,
-                                     tx_en=gmii_rx_dv,
-                                     tx_er=gmii_rx_er,
-                                     fifo=gmii_source_queue,
-                                     name='gmii_source')
+    gmii_source = gmii_ep.GMIISource()
 
-    gmii_sink = gmii_ep.GMIISink(tx_clk,
-                                 tx_rst,
-                                 rxd=gmii_txd,
-                                 rx_dv=gmii_tx_en,
-                                 rx_er=gmii_tx_er,
-                                 fifo=gmii_sink_queue,
-                                 name='gmii_sink')
+    gmii_source_logic = gmii_source.create_logic(
+        clk,
+        rst,
+        txd=gmii_rxd,
+        tx_en=gmii_rx_dv,
+        tx_er=gmii_rx_er,
+        name='gmii_source'
+    )
 
-    axis_source = axis_ep.AXIStreamSource(tx_clk,
-                                          tx_rst,
-                                          tdata=tx_axis_tdata,
-                                          tvalid=tx_axis_tvalid,
-                                          tready=tx_axis_tready,
-                                          tlast=tx_axis_tlast,
-                                          tuser=tx_axis_tuser,
-                                          fifo=axis_source_queue,
-                                          pause=axis_source_pause,
-                                          name='axis_source')
+    gmii_sink = gmii_ep.GMIISink()
 
-    axis_sink = axis_ep.AXIStreamSink(rx_clk,
-                                      rx_rst,
-                                      tdata=rx_axis_tdata,
-                                      tvalid=rx_axis_tvalid,
-                                      tlast=rx_axis_tlast,
-                                      tuser=rx_axis_tuser,
-                                      fifo=axis_sink_queue,
-                                      name='axis_sink')
+    gmii_sink_logic = gmii_sink.create_logic(
+        clk,
+        rst,
+        rxd=gmii_txd,
+        rx_dv=gmii_tx_en,
+        rx_er=gmii_tx_er,
+        name='gmii_sink'
+    )
+
+    axis_source = axis_ep.AXIStreamSource()
+
+    axis_source_logic = axis_source.create_logic(
+        clk,
+        rst,
+        tdata=tx_axis_tdata,
+        tvalid=tx_axis_tvalid,
+        tready=tx_axis_tready,
+        tlast=tx_axis_tlast,
+        tuser=tx_axis_tuser,
+        pause=axis_source_pause,
+        name='axis_source'
+    )
+
+    axis_sink = axis_ep.AXIStreamSink()
+
+    axis_sink_logic = axis_sink.create_logic(
+        clk,
+        rst,
+        tdata=rx_axis_tdata,
+        tvalid=rx_axis_tvalid,
+        tlast=rx_axis_tlast,
+        tuser=rx_axis_tuser,
+        name='axis_sink'
+    )
 
     # DUT
-    dut = dut_eth_mac_1g(clk,
-                         rst,
-                         current_test,
+    if os.system(build_cmd):
+        raise Exception("Error running build command")
 
-                         rx_clk,
-                         rx_rst,
-                         tx_clk,
-                         tx_rst,
+    dut = Cosimulation(
+        "vvp -m myhdl %s.vvp -lxt2" % testbench,
+        clk=clk,
+        rst=rst,
+        current_test=current_test,
 
-                         tx_axis_tdata,
-                         tx_axis_tvalid,
-                         tx_axis_tready,
-                         tx_axis_tlast,
-                         tx_axis_tuser,
+        rx_clk=rx_clk,
+        rx_rst=rx_rst,
+        tx_clk=tx_clk,
+        tx_rst=tx_rst,
 
-                         rx_axis_tdata,
-                         rx_axis_tvalid,
-                         rx_axis_tlast,
-                         rx_axis_tuser,
+        tx_axis_tdata=tx_axis_tdata,
+        tx_axis_tvalid=tx_axis_tvalid,
+        tx_axis_tready=tx_axis_tready,
+        tx_axis_tlast=tx_axis_tlast,
+        tx_axis_tuser=tx_axis_tuser,
 
-                         gmii_rxd,
-                         gmii_rx_dv,
-                         gmii_rx_er,
+        rx_axis_tdata=rx_axis_tdata,
+        rx_axis_tvalid=rx_axis_tvalid,
+        rx_axis_tlast=rx_axis_tlast,
+        rx_axis_tuser=rx_axis_tuser,
 
-                         gmii_txd,
-                         gmii_tx_en,
-                         gmii_tx_er,
+        gmii_rxd=gmii_rxd,
+        gmii_rx_dv=gmii_rx_dv,
+        gmii_rx_er=gmii_rx_er,
 
-                         rx_error_bad_frame,
-                         rx_error_bad_fcs,
+        gmii_txd=gmii_txd,
+        gmii_tx_en=gmii_tx_en,
+        gmii_tx_er=gmii_tx_er,
 
-                         ifg_delay)
+        rx_error_bad_frame=rx_error_bad_frame,
+        rx_error_bad_fcs=rx_error_bad_fcs,
+
+        ifg_delay=ifg_delay
+    )
 
     @always(delay(4))
     def clkgen():
@@ -269,7 +210,7 @@ def bench():
 
         axis_frame = test_frame.build_axis_fcs()
 
-        gmii_source_queue.put(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+bytearray(axis_frame))
+        gmii_source.send(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+bytearray(axis_frame))
         yield clk.posedge
         yield clk.posedge
 
@@ -279,9 +220,7 @@ def bench():
         yield clk.posedge
         yield clk.posedge
 
-        rx_frame = None
-        if not axis_sink_queue.empty():
-            rx_frame = axis_sink_queue.get()
+        rx_frame = axis_sink.recv()
 
         eth_frame = eth_ep.EthFrame()
         eth_frame.parse_axis(rx_frame)
@@ -304,7 +243,7 @@ def bench():
 
         axis_frame = test_frame.build_axis()
 
-        axis_source_queue.put(axis_frame)
+        axis_source.send(axis_frame)
         yield clk.posedge
         yield clk.posedge
 
@@ -314,12 +253,10 @@ def bench():
         yield clk.posedge
         yield clk.posedge
 
-        rx_frame = None
-        if not gmii_sink_queue.empty():
-            rx_frame = gmii_sink_queue.get()
+        rx_frame = gmii_sink.recv()
 
         assert rx_frame.data[0:8] == bytearray(b'\x55\x55\x55\x55\x55\x55\x55\xD5')
-        
+
         eth_frame = eth_ep.EthFrame()
         eth_frame.parse_axis_fcs(rx_frame.data[8:])
 
@@ -337,7 +274,7 @@ def bench():
 
         raise StopSimulation
 
-    return dut, axis_source, axis_sink, gmii_source, gmii_sink, clkgen, check
+    return dut, axis_source_logic, axis_sink_logic, gmii_source_logic, gmii_sink_logic, clkgen, check
 
 def test_bench():
     sim = Simulation(bench())

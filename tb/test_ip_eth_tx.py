@@ -26,105 +26,20 @@ THE SOFTWARE.
 from myhdl import *
 import os
 
-try:
-    from queue import Queue
-except ImportError:
-    from Queue import Queue
-
 import eth_ep
 import ip_ep
 
 module = 'ip_eth_tx'
+testbench = 'test_%s' % module
 
 srcs = []
 
 srcs.append("../rtl/%s.v" % module)
-srcs.append("test_%s.v" % module)
+srcs.append("%s.v" % testbench)
 
 src = ' '.join(srcs)
 
-build_cmd = "iverilog -o test_%s.vvp %s" % (module, src)
-
-def dut_ip_eth_tx(clk,
-                    rst,
-                    current_test,
-
-                    input_ip_hdr_valid,
-                    input_ip_hdr_ready,
-                    input_eth_dest_mac,
-                    input_eth_src_mac,
-                    input_eth_type,
-                    input_ip_dscp,
-                    input_ip_ecn,
-                    input_ip_length,
-                    input_ip_identification,
-                    input_ip_flags,
-                    input_ip_fragment_offset,
-                    input_ip_ttl,
-                    input_ip_protocol,
-                    input_ip_source_ip,
-                    input_ip_dest_ip,
-                    input_ip_payload_tdata,
-                    input_ip_payload_tvalid,
-                    input_ip_payload_tready,
-                    input_ip_payload_tlast,
-                    input_ip_payload_tuser,
-
-                    output_eth_hdr_valid,
-                    output_eth_hdr_ready,
-                    output_eth_dest_mac,
-                    output_eth_src_mac,
-                    output_eth_type,
-                    output_eth_payload_tdata,
-                    output_eth_payload_tvalid,
-                    output_eth_payload_tready,
-                    output_eth_payload_tlast,
-                    output_eth_payload_tuser,
-
-                    busy,
-                    error_payload_early_termination):
-
-    if os.system(build_cmd):
-        raise Exception("Error running build command")
-    return Cosimulation("vvp -m myhdl test_%s.vvp -lxt2" % module,
-                clk=clk,
-                rst=rst,
-                current_test=current_test,
-
-                input_ip_hdr_valid=input_ip_hdr_valid,
-                input_ip_hdr_ready=input_ip_hdr_ready,
-                input_eth_dest_mac=input_eth_dest_mac,
-                input_eth_src_mac=input_eth_src_mac,
-                input_eth_type=input_eth_type,
-                input_ip_dscp=input_ip_dscp,
-                input_ip_ecn=input_ip_ecn,
-                input_ip_length=input_ip_length,
-                input_ip_identification=input_ip_identification,
-                input_ip_flags=input_ip_flags,
-                input_ip_fragment_offset=input_ip_fragment_offset,
-                input_ip_ttl=input_ip_ttl,
-                input_ip_protocol=input_ip_protocol,
-                input_ip_source_ip=input_ip_source_ip,
-                input_ip_dest_ip=input_ip_dest_ip,
-                input_ip_payload_tdata=input_ip_payload_tdata,
-                input_ip_payload_tvalid=input_ip_payload_tvalid,
-                input_ip_payload_tready=input_ip_payload_tready,
-                input_ip_payload_tlast=input_ip_payload_tlast,
-                input_ip_payload_tuser=input_ip_payload_tuser,
-
-                output_eth_hdr_valid=output_eth_hdr_valid,
-                output_eth_hdr_ready=output_eth_hdr_ready,
-                output_eth_dest_mac=output_eth_dest_mac,
-                output_eth_src_mac=output_eth_src_mac,
-                output_eth_type=output_eth_type,
-                output_eth_payload_tdata=output_eth_payload_tdata,
-                output_eth_payload_tvalid=output_eth_payload_tvalid,
-                output_eth_payload_tready=output_eth_payload_tready,
-                output_eth_payload_tlast=output_eth_payload_tlast,
-                output_eth_payload_tuser=output_eth_payload_tuser,
-
-                busy=busy,
-                error_payload_early_termination=error_payload_early_termination)
+build_cmd = "iverilog -o %s.vvp %s" % (testbench, src)
 
 def bench():
 
@@ -169,92 +84,102 @@ def bench():
     error_payload_early_termination = Signal(bool(0))
 
     # sources and sinks
-    source_queue = Queue()
     source_pause = Signal(bool(0))
-    sink_queue = Queue()
     sink_pause = Signal(bool(0))
 
-    source = ip_ep.IPFrameSource(clk,
-                                 rst,
-                                 ip_hdr_valid=input_ip_hdr_valid,
-                                 ip_hdr_ready=input_ip_hdr_ready,
-                                 eth_dest_mac=input_eth_dest_mac,
-                                 eth_src_mac=input_eth_src_mac,
-                                 eth_type=input_eth_type,
-                                 ip_dscp=input_ip_dscp,
-                                 ip_ecn=input_ip_ecn,
-                                 ip_length=input_ip_length,
-                                 ip_identification=input_ip_identification,
-                                 ip_flags=input_ip_flags,
-                                 ip_fragment_offset=input_ip_fragment_offset,
-                                 ip_ttl=input_ip_ttl,
-                                 ip_protocol=input_ip_protocol,
-                                 ip_source_ip=input_ip_source_ip,
-                                 ip_dest_ip=input_ip_dest_ip,
-                                 ip_payload_tdata=input_ip_payload_tdata,
-                                 ip_payload_tvalid=input_ip_payload_tvalid,
-                                 ip_payload_tready=input_ip_payload_tready,
-                                 ip_payload_tlast=input_ip_payload_tlast,
-                                 ip_payload_tuser=input_ip_payload_tuser,
-                                 fifo=source_queue,
-                                 pause=source_pause,
-                                 name='source')
+    source = ip_ep.IPFrameSource()
 
-    sink = eth_ep.EthFrameSink(clk,
-                               rst,
-                               eth_hdr_ready=output_eth_hdr_ready,
-                               eth_hdr_valid=output_eth_hdr_valid,
-                               eth_dest_mac=output_eth_dest_mac,
-                               eth_src_mac=output_eth_src_mac,
-                               eth_type=output_eth_type,
-                               eth_payload_tdata=output_eth_payload_tdata,
-                               eth_payload_tvalid=output_eth_payload_tvalid,
-                               eth_payload_tready=output_eth_payload_tready,
-                               eth_payload_tlast=output_eth_payload_tlast,
-                               eth_payload_tuser=output_eth_payload_tuser,
-                               fifo=sink_queue,
-                               pause=sink_pause,
-                               name='sink')
+    source_logic = source.create_logic(
+        clk,
+        rst,
+        ip_hdr_ready=input_ip_hdr_ready,
+        ip_hdr_valid=input_ip_hdr_valid,
+        eth_dest_mac=input_eth_dest_mac,
+        eth_src_mac=input_eth_src_mac,
+        eth_type=input_eth_type,
+        ip_dscp=input_ip_dscp,
+        ip_ecn=input_ip_ecn,
+        ip_length=input_ip_length,
+        ip_identification=input_ip_identification,
+        ip_flags=input_ip_flags,
+        ip_fragment_offset=input_ip_fragment_offset,
+        ip_ttl=input_ip_ttl,
+        ip_protocol=input_ip_protocol,
+        ip_source_ip=input_ip_source_ip,
+        ip_dest_ip=input_ip_dest_ip,
+        ip_payload_tdata=input_ip_payload_tdata,
+        ip_payload_tvalid=input_ip_payload_tvalid,
+        ip_payload_tready=input_ip_payload_tready,
+        ip_payload_tlast=input_ip_payload_tlast,
+        ip_payload_tuser=input_ip_payload_tuser,
+        pause=source_pause,
+        name='source'
+    )
+
+    sink = eth_ep.EthFrameSink()
+
+    sink_logic = sink.create_logic(
+        clk,
+        rst,
+        eth_hdr_ready=output_eth_hdr_ready,
+        eth_hdr_valid=output_eth_hdr_valid,
+        eth_dest_mac=output_eth_dest_mac,
+        eth_src_mac=output_eth_src_mac,
+        eth_type=output_eth_type,
+        eth_payload_tdata=output_eth_payload_tdata,
+        eth_payload_tvalid=output_eth_payload_tvalid,
+        eth_payload_tready=output_eth_payload_tready,
+        eth_payload_tlast=output_eth_payload_tlast,
+        eth_payload_tuser=output_eth_payload_tuser,
+        pause=sink_pause,
+        name='sink'
+    )
 
     # DUT
-    dut = dut_ip_eth_tx(clk,
-                          rst,
-                          current_test,
+    if os.system(build_cmd):
+        raise Exception("Error running build command")
 
-                          input_ip_hdr_valid,
-                          input_ip_hdr_ready,
-                          input_eth_dest_mac,
-                          input_eth_src_mac,
-                          input_eth_type,
-                          input_ip_dscp,
-                          input_ip_ecn,
-                          input_ip_length,
-                          input_ip_identification,
-                          input_ip_flags,
-                          input_ip_fragment_offset,
-                          input_ip_ttl,
-                          input_ip_protocol,
-                          input_ip_source_ip,
-                          input_ip_dest_ip,
-                          input_ip_payload_tdata,
-                          input_ip_payload_tvalid,
-                          input_ip_payload_tready,
-                          input_ip_payload_tlast,
-                          input_ip_payload_tuser,
+    dut = Cosimulation(
+        "vvp -m myhdl %s.vvp -lxt2" % testbench,
+        clk=clk,
+        rst=rst,
+        current_test=current_test,
 
-                          output_eth_hdr_valid,
-                          output_eth_hdr_ready,
-                          output_eth_dest_mac,
-                          output_eth_src_mac,
-                          output_eth_type,
-                          output_eth_payload_tdata,
-                          output_eth_payload_tvalid,
-                          output_eth_payload_tready,
-                          output_eth_payload_tlast,
-                          output_eth_payload_tuser,
+        input_ip_hdr_valid=input_ip_hdr_valid,
+        input_ip_hdr_ready=input_ip_hdr_ready,
+        input_eth_dest_mac=input_eth_dest_mac,
+        input_eth_src_mac=input_eth_src_mac,
+        input_eth_type=input_eth_type,
+        input_ip_dscp=input_ip_dscp,
+        input_ip_ecn=input_ip_ecn,
+        input_ip_length=input_ip_length,
+        input_ip_identification=input_ip_identification,
+        input_ip_flags=input_ip_flags,
+        input_ip_fragment_offset=input_ip_fragment_offset,
+        input_ip_ttl=input_ip_ttl,
+        input_ip_protocol=input_ip_protocol,
+        input_ip_source_ip=input_ip_source_ip,
+        input_ip_dest_ip=input_ip_dest_ip,
+        input_ip_payload_tdata=input_ip_payload_tdata,
+        input_ip_payload_tvalid=input_ip_payload_tvalid,
+        input_ip_payload_tready=input_ip_payload_tready,
+        input_ip_payload_tlast=input_ip_payload_tlast,
+        input_ip_payload_tuser=input_ip_payload_tuser,
 
-                          busy,
-                          error_payload_early_termination)
+        output_eth_hdr_valid=output_eth_hdr_valid,
+        output_eth_hdr_ready=output_eth_hdr_ready,
+        output_eth_dest_mac=output_eth_dest_mac,
+        output_eth_src_mac=output_eth_src_mac,
+        output_eth_type=output_eth_type,
+        output_eth_payload_tdata=output_eth_payload_tdata,
+        output_eth_payload_tvalid=output_eth_payload_tvalid,
+        output_eth_payload_tready=output_eth_payload_tready,
+        output_eth_payload_tlast=output_eth_payload_tlast,
+        output_eth_payload_tuser=output_eth_payload_tuser,
+
+        busy=busy,
+        error_payload_early_termination=error_payload_early_termination
+    )
 
     @always(delay(4))
     def clkgen():
@@ -324,7 +249,7 @@ def bench():
             test_frame.build()
 
             for wait in wait_normal, wait_pause_source, wait_pause_sink:
-                source_queue.put(test_frame)
+                source.send(test_frame)
                 yield clk.posedge
                 yield clk.posedge
 
@@ -334,16 +259,14 @@ def bench():
                 yield clk.posedge
                 yield clk.posedge
 
-                rx_frame = None
-                if not sink_queue.empty():
-                    rx_frame = sink_queue.get()
+                rx_frame = sink.recv()
 
                 check_frame = ip_ep.IPFrame()
                 check_frame.parse_eth(rx_frame)
 
                 assert check_frame == test_frame
 
-                assert sink_queue.empty()
+                assert sink.empty()
 
                 yield delay(100)
 
@@ -387,8 +310,8 @@ def bench():
             test_frame2.build()
 
             for wait in wait_normal, wait_pause_source, wait_pause_sink:
-                source_queue.put(test_frame1)
-                source_queue.put(test_frame2)
+                source.send(test_frame1)
+                source.send(test_frame2)
                 yield clk.posedge
                 yield clk.posedge
 
@@ -398,25 +321,21 @@ def bench():
                 yield clk.posedge
                 yield clk.posedge
 
-                rx_frame = None
-                if not sink_queue.empty():
-                    rx_frame = sink_queue.get()
+                rx_frame = sink.recv()
 
                 check_frame = ip_ep.IPFrame()
                 check_frame.parse_eth(rx_frame)
 
                 assert check_frame == test_frame1
 
-                rx_frame = None
-                if not sink_queue.empty():
-                    rx_frame = sink_queue.get()
+                rx_frame = sink.recv()
 
                 check_frame = ip_ep.IPFrame()
                 check_frame.parse_eth(rx_frame)
 
                 assert check_frame == test_frame2
 
-                assert sink_queue.empty()
+                assert sink.empty()
 
                 yield delay(100)
 
@@ -462,8 +381,8 @@ def bench():
             test_frame1.payload.user = 1
 
             for wait in wait_normal, wait_pause_source, wait_pause_sink:
-                source_queue.put(test_frame1)
-                source_queue.put(test_frame2)
+                source.send(test_frame1)
+                source.send(test_frame2)
                 yield clk.posedge
                 yield clk.posedge
 
@@ -473,9 +392,7 @@ def bench():
                 yield clk.posedge
                 yield clk.posedge
 
-                rx_frame = None
-                if not sink_queue.empty():
-                    rx_frame = sink_queue.get()
+                rx_frame = sink.recv()
 
                 check_frame = ip_ep.IPFrame()
                 check_frame.parse_eth(rx_frame)
@@ -483,16 +400,14 @@ def bench():
                 assert check_frame == test_frame1
                 assert rx_frame.payload.user[-1]
 
-                rx_frame = None
-                if not sink_queue.empty():
-                    rx_frame = sink_queue.get()
+                rx_frame = sink.recv()
 
                 check_frame = ip_ep.IPFrame()
                 check_frame.parse_eth(rx_frame)
 
                 assert check_frame == test_frame2
 
-                assert sink_queue.empty()
+                assert sink.empty()
 
                 yield delay(100)
 
@@ -539,8 +454,8 @@ def bench():
             test_frame1a.payload.data += bytearray(b'\x00')
 
             for wait in wait_normal, wait_pause_source, wait_pause_sink:
-                source_queue.put(test_frame1a)
-                source_queue.put(test_frame2)
+                source.send(test_frame1a)
+                source.send(test_frame2)
                 yield clk.posedge
                 yield clk.posedge
 
@@ -550,25 +465,21 @@ def bench():
                 yield clk.posedge
                 yield clk.posedge
 
-                rx_frame = None
-                if not sink_queue.empty():
-                    rx_frame = sink_queue.get()
+                rx_frame = sink.recv()
 
                 check_frame = ip_ep.IPFrame()
                 check_frame.parse_eth(rx_frame)
 
                 assert check_frame == test_frame1
 
-                rx_frame = None
-                if not sink_queue.empty():
-                    rx_frame = sink_queue.get()
+                rx_frame = sink.recv()
 
                 check_frame = ip_ep.IPFrame()
                 check_frame.parse_eth(rx_frame)
 
                 assert check_frame == test_frame2
 
-                assert sink_queue.empty()
+                assert sink.empty()
 
                 yield delay(100)
 
@@ -615,8 +526,8 @@ def bench():
             test_frame1a.payload.data += bytearray(b'\x00'*10)
 
             for wait in wait_normal, wait_pause_source, wait_pause_sink:
-                source_queue.put(test_frame1a)
-                source_queue.put(test_frame2)
+                source.send(test_frame1a)
+                source.send(test_frame2)
                 yield clk.posedge
                 yield clk.posedge
 
@@ -626,25 +537,21 @@ def bench():
                 yield clk.posedge
                 yield clk.posedge
 
-                rx_frame = None
-                if not sink_queue.empty():
-                    rx_frame = sink_queue.get()
+                rx_frame = sink.recv()
 
                 check_frame = ip_ep.IPFrame()
                 check_frame.parse_eth(rx_frame)
 
                 assert check_frame == test_frame1
 
-                rx_frame = None
-                if not sink_queue.empty():
-                    rx_frame = sink_queue.get()
+                rx_frame = sink.recv()
 
                 check_frame = ip_ep.IPFrame()
                 check_frame.parse_eth(rx_frame)
 
                 assert check_frame == test_frame2
 
-                assert sink_queue.empty()
+                assert sink.empty()
 
                 yield delay(100)
 
@@ -692,8 +599,8 @@ def bench():
             test_frame1a.payload.user = 1
 
             for wait in wait_normal, wait_pause_source, wait_pause_sink:
-                source_queue.put(test_frame1a)
-                source_queue.put(test_frame2)
+                source.send(test_frame1a)
+                source.send(test_frame2)
                 yield clk.posedge
                 yield clk.posedge
 
@@ -703,9 +610,7 @@ def bench():
                 yield clk.posedge
                 yield clk.posedge
 
-                rx_frame = None
-                if not sink_queue.empty():
-                    rx_frame = sink_queue.get()
+                rx_frame = sink.recv()
 
                 check_frame = ip_ep.IPFrame()
                 check_frame.parse_eth(rx_frame)
@@ -713,16 +618,14 @@ def bench():
                 assert check_frame == test_frame1
                 assert rx_frame.payload.user[-1]
 
-                rx_frame = None
-                if not sink_queue.empty():
-                    rx_frame = sink_queue.get()
+                rx_frame = sink.recv()
 
                 check_frame = ip_ep.IPFrame()
                 check_frame.parse_eth(rx_frame)
 
                 assert check_frame == test_frame2
 
-                assert sink_queue.empty()
+                assert sink.empty()
 
                 yield delay(100)
 
@@ -770,8 +673,8 @@ def bench():
             test_frame1a.payload.user = 1
 
             for wait in wait_normal, wait_pause_source, wait_pause_sink:
-                source_queue.put(test_frame1a)
-                source_queue.put(test_frame2)
+                source.send(test_frame1a)
+                source.send(test_frame2)
                 yield clk.posedge
                 yield clk.posedge
 
@@ -781,9 +684,7 @@ def bench():
                 yield clk.posedge
                 yield clk.posedge
 
-                rx_frame = None
-                if not sink_queue.empty():
-                    rx_frame = sink_queue.get()
+                rx_frame = sink.recv()
 
                 check_frame = ip_ep.IPFrame()
                 check_frame.parse_eth(rx_frame)
@@ -791,16 +692,14 @@ def bench():
                 assert check_frame == test_frame1
                 assert rx_frame.payload.user[-1]
 
-                rx_frame = None
-                if not sink_queue.empty():
-                    rx_frame = sink_queue.get()
+                rx_frame = sink.recv()
 
                 check_frame = ip_ep.IPFrame()
                 check_frame.parse_eth(rx_frame)
 
                 assert check_frame == test_frame2
 
-                assert sink_queue.empty()
+                assert sink.empty()
 
                 yield delay(100)
 
@@ -849,8 +748,8 @@ def bench():
             for wait in wait_normal, wait_pause_source, wait_pause_sink:
                 error_payload_early_termination_asserted.next = 0
 
-                source_queue.put(test_frame1a)
-                source_queue.put(test_frame2)
+                source.send(test_frame1a)
+                source.send(test_frame2)
                 yield clk.posedge
                 yield clk.posedge
 
@@ -860,23 +759,19 @@ def bench():
                 yield clk.posedge
                 yield clk.posedge
 
-                rx_frame = None
-                if not sink_queue.empty():
-                    rx_frame = sink_queue.get()
+                rx_frame = sink.recv()
 
                 assert rx_frame.payload.user[-1]
                 assert error_payload_early_termination_asserted
 
-                rx_frame = None
-                if not sink_queue.empty():
-                    rx_frame = sink_queue.get()
+                rx_frame = sink.recv()
 
                 check_frame = ip_ep.IPFrame()
                 check_frame.parse_eth(rx_frame)
 
                 assert check_frame == test_frame2
 
-                assert sink_queue.empty()
+                assert sink.empty()
 
                 yield delay(100)
 
@@ -925,8 +820,8 @@ def bench():
             for wait in wait_normal, wait_pause_source, wait_pause_sink:
                 error_payload_early_termination_asserted.next = 0
 
-                source_queue.put(test_frame1a)
-                source_queue.put(test_frame2)
+                source.send(test_frame1a)
+                source.send(test_frame2)
                 yield clk.posedge
                 yield clk.posedge
 
@@ -936,29 +831,25 @@ def bench():
                 yield clk.posedge
                 yield clk.posedge
 
-                rx_frame = None
-                if not sink_queue.empty():
-                    rx_frame = sink_queue.get()
+                rx_frame = sink.recv()
 
                 assert rx_frame.payload.user[-1]
                 assert error_payload_early_termination_asserted
 
-                rx_frame = None
-                if not sink_queue.empty():
-                    rx_frame = sink_queue.get()
+                rx_frame = sink.recv()
 
                 check_frame = ip_ep.IPFrame()
                 check_frame.parse_eth(rx_frame)
 
                 assert check_frame == test_frame2
 
-                assert sink_queue.empty()
+                assert sink.empty()
 
                 yield delay(100)
 
         raise StopSimulation
 
-    return dut, source, sink, clkgen, monitor, check
+    return dut, source_logic, sink_logic, clkgen, monitor, check
 
 def test_bench():
     sim = Simulation(bench())

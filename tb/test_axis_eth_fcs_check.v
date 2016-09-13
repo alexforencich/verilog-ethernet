@@ -55,21 +55,25 @@ wire error_bad_fcs;
 
 initial begin
     // myhdl integration
-    $from_myhdl(clk,
-                rst,
-                current_test,
-                input_axis_tdata,
-                input_axis_tvalid,
-                input_axis_tlast,
-                input_axis_tuser,
-                output_axis_tready);
-    $to_myhdl(input_axis_tready,
-              output_axis_tdata,
-              output_axis_tvalid,
-              output_axis_tlast,
-              output_axis_tuser,
-              busy,
-              error_bad_fcs);
+    $from_myhdl(
+        clk,
+        rst,
+        current_test,
+        input_axis_tdata,
+        input_axis_tvalid,
+        input_axis_tlast,
+        input_axis_tuser,
+        output_axis_tready
+    );
+    $to_myhdl(
+        input_axis_tready,
+        output_axis_tdata,
+        output_axis_tvalid,
+        output_axis_tlast,
+        output_axis_tuser,
+        busy,
+        error_bad_fcs
+    );
 
     // dump file
     $dumpfile("test_axis_eth_fcs_check.lxt");

@@ -68,31 +68,35 @@ wire rx_error_bad_fcs;
 
 initial begin
     // myhdl integration
-    $from_myhdl(clk,
-                rst,
-                current_test,
-                rx_clk,
-                rx_rst,
-                tx_clk,
-                tx_rst,
-                tx_axis_tdata,
-                tx_axis_tkeep,
-                tx_axis_tvalid,
-                tx_axis_tlast,
-                tx_axis_tuser,
-                xgmii_rxd,
-                xgmii_rxc,
-                ifg_delay);
-    $to_myhdl(tx_axis_tready,
-              rx_axis_tdata,
-              rx_axis_tkeep,
-              rx_axis_tvalid,
-              rx_axis_tlast,
-              rx_axis_tuser,
-              xgmii_txd,
-              xgmii_txc,
-              rx_error_bad_frame,
-              rx_error_bad_fcs);
+    $from_myhdl(
+        clk,
+        rst,
+        current_test,
+        rx_clk,
+        rx_rst,
+        tx_clk,
+        tx_rst,
+        tx_axis_tdata,
+        tx_axis_tkeep,
+        tx_axis_tvalid,
+        tx_axis_tlast,
+        tx_axis_tuser,
+        xgmii_rxd,
+        xgmii_rxc,
+        ifg_delay
+    );
+    $to_myhdl(
+        tx_axis_tready,
+        rx_axis_tdata,
+        rx_axis_tkeep,
+        rx_axis_tvalid,
+        rx_axis_tlast,
+        rx_axis_tuser,
+        xgmii_txd,
+        xgmii_txc,
+        rx_error_bad_frame,
+        rx_error_bad_fcs
+    );
 
     // dump file
     $dumpfile("test_eth_mac_10g.lxt");

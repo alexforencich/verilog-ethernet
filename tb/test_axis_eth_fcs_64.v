@@ -51,17 +51,21 @@ wire output_fcs_valid;
 
 initial begin
     // myhdl integration
-    $from_myhdl(clk,
-                rst,
-                current_test,
-                input_axis_tdata,
-                input_axis_tkeep,
-                input_axis_tvalid,
-                input_axis_tlast,
-                input_axis_tuser);
-    $to_myhdl(input_axis_tready,
-              output_fcs,
-              output_fcs_valid);
+    $from_myhdl(
+        clk,
+        rst,
+        current_test,
+        input_axis_tdata,
+        input_axis_tkeep,
+        input_axis_tvalid,
+        input_axis_tlast,
+        input_axis_tuser
+    );
+    $to_myhdl(
+        input_axis_tready,
+        output_fcs,
+        output_fcs_valid
+    );
 
     // dump file
     $dumpfile("test_axis_eth_fcs_64.lxt");

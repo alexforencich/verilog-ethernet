@@ -27,11 +27,6 @@ import axis_ep
 import eth_ep
 import struct
 
-try:
-    from queue import Queue
-except ImportError:
-    from Queue import Queue
-
 class ARPFrame(object):
     def __init__(self,
                  eth_dest_mac=0,
@@ -154,130 +149,166 @@ class ARPFrame(object):
                  ('arp_tha=0x%012x, ' % self.arp_tha) +
                  ('arp_tpa=0x%08x)' % self.arp_tpa))
 
-def ARPFrameSource(clk, rst,
-                   frame_valid=None,
-                   frame_ready=None,
-                   eth_dest_mac=Signal(intbv(0)[48:]),
-                   eth_src_mac=Signal(intbv(0)[48:]),
-                   eth_type=Signal(intbv(0)[16:]),
-                   arp_htype=Signal(intbv(0)[16:]),
-                   arp_ptype=Signal(intbv(0)[16:]),
-                   arp_hlen=Signal(intbv(6)[8:]),
-                   arp_plen=Signal(intbv(4)[8:]),
-                   arp_oper=Signal(intbv(0)[16:]),
-                   arp_sha=Signal(intbv(0)[48:]),
-                   arp_spa=Signal(intbv(0)[32:]),
-                   arp_tha=Signal(intbv(0)[48:]),
-                   arp_tpa=Signal(intbv(0)[32:]),
-                   fifo=None,
-                   pause=0,
-                   name=None):
 
-    frame_ready_int = Signal(bool(False))
-    frame_valid_int = Signal(bool(False))
+class ARPFrameSource():
+    def __init__(self):
+        self.has_logic = False
+        self.queue = []
 
-    @always_comb
-    def pause_logic():
-        frame_ready_int.next = frame_ready and not pause
-        frame_valid.next = frame_valid_int and not pause
+    def send(self, frame):
+        self.queue.append(ARPFrame(frame))
 
-    @instance
-    def logic():
-        frame = dict()
+    def count(self):
+        return len(self.queue)
 
-        while True:
-            yield clk.posedge, rst.posedge
+    def empty(self):
+        return self.count() == 0
 
-            if rst:
-                frame_valid_int.next = False
-            else:
-                if frame_ready_int:
+    def create_logic(self,
+                clk,
+                rst,
+                frame_valid=None,
+                frame_ready=None,
+                eth_dest_mac=Signal(intbv(0)[48:]),
+                eth_src_mac=Signal(intbv(0)[48:]),
+                eth_type=Signal(intbv(0)[16:]),
+                arp_htype=Signal(intbv(0)[16:]),
+                arp_ptype=Signal(intbv(0)[16:]),
+                arp_hlen=Signal(intbv(6)[8:]),
+                arp_plen=Signal(intbv(4)[8:]),
+                arp_oper=Signal(intbv(0)[16:]),
+                arp_sha=Signal(intbv(0)[48:]),
+                arp_spa=Signal(intbv(0)[32:]),
+                arp_tha=Signal(intbv(0)[48:]),
+                arp_tpa=Signal(intbv(0)[32:]),
+                pause=0,
+                name=None
+            ):
+
+        assert not self.has_logic
+
+        self.has_logic = True
+
+        frame_ready_int = Signal(bool(False))
+        frame_valid_int = Signal(bool(False))
+
+        @always_comb
+        def pause_logic():
+            frame_ready_int.next = frame_ready and not pause
+            frame_valid.next = frame_valid_int and not pause
+
+        @instance
+        def logic():
+            frame = dict()
+
+            while True:
+                yield clk.posedge, rst.posedge
+
+                if rst:
                     frame_valid_int.next = False
-                if (frame_ready_int and frame_valid) or not frame_valid_int:
-                    if not fifo.empty():
-                        frame = fifo.get()
-                        frame = ARPFrame(frame)
-                        eth_dest_mac.next = frame.eth_dest_mac
-                        eth_src_mac.next = frame.eth_src_mac
-                        eth_type.next = frame.eth_type
-                        arp_htype.next = frame.arp_htype
-                        arp_ptype.next = frame.arp_ptype
-                        arp_hlen.next = frame.arp_hlen
-                        arp_plen.next = frame.arp_plen
-                        arp_oper.next = frame.arp_oper
-                        arp_sha.next = frame.arp_sha
-                        arp_spa.next = frame.arp_spa
-                        arp_tha.next = frame.arp_tha
-                        arp_tpa.next = frame.arp_tpa
+                else:
+                    if frame_ready_int:
+                        frame_valid_int.next = False
+                    if (frame_ready_int and frame_valid) or not frame_valid_int:
+                        if len(self.queue) > 0:
+                            frame = self.queue.pop(0)
+                            eth_dest_mac.next = frame.eth_dest_mac
+                            eth_src_mac.next = frame.eth_src_mac
+                            eth_type.next = frame.eth_type
+                            arp_htype.next = frame.arp_htype
+                            arp_ptype.next = frame.arp_ptype
+                            arp_hlen.next = frame.arp_hlen
+                            arp_plen.next = frame.arp_plen
+                            arp_oper.next = frame.arp_oper
+                            arp_sha.next = frame.arp_sha
+                            arp_spa.next = frame.arp_spa
+                            arp_tha.next = frame.arp_tha
+                            arp_tpa.next = frame.arp_tpa
+
+                            if name is not None:
+                                print("[%s] Sending frame %s" % (name, repr(frame)))
+
+                            frame_valid_int.next = True
+
+        return logic, pause_logic
+
+
+class ARPFrameSink():
+    def __init__(self):
+        self.has_logic = False
+        self.queue = []
+
+    def recv(self):
+        if len(self.queue) > 0:
+            return self.queue.pop(0)
+
+    def count(self):
+        return len(self.queue)
+
+    def empty(self):
+        return self.count() == 0
+
+    def create_logic(self,
+                clk,
+                rst,
+                frame_valid=None,
+                frame_ready=None,
+                eth_dest_mac=Signal(intbv(0)[48:]),
+                eth_src_mac=Signal(intbv(0)[48:]),
+                eth_type=Signal(intbv(0)[16:]),
+                arp_htype=Signal(intbv(0)[16:]),
+                arp_ptype=Signal(intbv(0)[16:]),
+                arp_hlen=Signal(intbv(6)[8:]),
+                arp_plen=Signal(intbv(4)[8:]),
+                arp_oper=Signal(intbv(0)[16:]),
+                arp_sha=Signal(intbv(0)[48:]),
+                arp_spa=Signal(intbv(0)[32:]),
+                arp_tha=Signal(intbv(0)[48:]),
+                arp_tpa=Signal(intbv(0)[32:]),
+                pause=0,
+                name=None
+            ):
+
+        assert not self.has_logic
+
+        self.has_logic = True
+
+        frame_ready_int = Signal(bool(False))
+        frame_valid_int = Signal(bool(False))
+
+        @always_comb
+        def pause_logic():
+            frame_ready.next = frame_ready_int and not pause
+            frame_valid_int.next = frame_valid and not pause
+
+        @instance
+        def logic():
+            while True:
+                yield clk.posedge, rst.posedge
+
+                if rst:
+                    frame_ready_int.next = False
+                else:
+                    frame_ready_int.next = True
+
+                    if frame_ready_int and frame_valid_int:
+                        frame = ARPFrame()
+                        frame.eth_dest_mac = int(eth_dest_mac)
+                        frame.eth_src_mac = int(eth_src_mac)
+                        frame.eth_type = int(eth_type)
+                        frame.arp_htype = int(arp_htype)
+                        frame.arp_ptype = int(arp_ptype)
+                        frame.arp_hlen = int(arp_hlen)
+                        frame.arp_plen = int(arp_plen)
+                        frame.arp_oper = int(arp_oper)
+                        frame.arp_sha = int(arp_sha)
+                        frame.arp_spa = int(arp_spa)
+                        frame.arp_tha = int(arp_tha)
+                        frame.arp_tpa = int(arp_tpa)
+                        self.queue.append(frame)
 
                         if name is not None:
-                            print("[%s] Sending frame %s" % (name, repr(frame)))
+                            print("[%s] Got frame %s" % (name, repr(frame)))
 
-                        frame_valid_int.next = True
-
-    return logic, pause_logic
-
-
-def ARPFrameSink(clk, rst,
-                 frame_valid=None,
-                 frame_ready=None,
-                 eth_dest_mac=Signal(intbv(0)[48:]),
-                 eth_src_mac=Signal(intbv(0)[48:]),
-                 eth_type=Signal(intbv(0)[16:]),
-                 arp_htype=Signal(intbv(0)[16:]),
-                 arp_ptype=Signal(intbv(0)[16:]),
-                 arp_hlen=Signal(intbv(6)[8:]),
-                 arp_plen=Signal(intbv(4)[8:]),
-                 arp_oper=Signal(intbv(0)[16:]),
-                 arp_sha=Signal(intbv(0)[48:]),
-                 arp_spa=Signal(intbv(0)[32:]),
-                 arp_tha=Signal(intbv(0)[48:]),
-                 arp_tpa=Signal(intbv(0)[32:]),
-                 fifo=None,
-                 pause=0,
-                 name=None):
-
-    frame_ready_int = Signal(bool(False))
-    frame_valid_int = Signal(bool(False))
-
-    @always_comb
-    def pause_logic():
-        frame_ready.next = frame_ready_int and not pause
-        frame_valid_int.next = frame_valid and not pause
-
-    @instance
-    def logic():
-        frame = ARPFrame()
-
-        while True:
-            yield clk.posedge, rst.posedge
-
-            if rst:
-                frame_ready_int.next = False
-                frame = ARPFrame()
-            else:
-                frame_ready_int.next = True
-
-                if frame_ready_int and frame_valid_int:
-                    frame = ARPFrame()
-                    frame.eth_dest_mac = int(eth_dest_mac)
-                    frame.eth_src_mac = int(eth_src_mac)
-                    frame.eth_type = int(eth_type)
-                    frame.arp_htype = int(arp_htype)
-                    frame.arp_ptype = int(arp_ptype)
-                    frame.arp_hlen = int(arp_hlen)
-                    frame.arp_plen = int(arp_plen)
-                    frame.arp_oper = int(arp_oper)
-                    frame.arp_sha = int(arp_sha)
-                    frame.arp_spa = int(arp_spa)
-                    frame.arp_tha = int(arp_tha)
-                    frame.arp_tpa = int(arp_tpa)
-                    fifo.put(frame)
-
-                    if name is not None:
-                        print("[%s] Got frame %s" % (name, repr(frame)))
-
-                    frame = dict()
-
-    return logic, pause_logic
+        return logic, pause_logic
 

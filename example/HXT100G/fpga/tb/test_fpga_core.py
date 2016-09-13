@@ -26,17 +26,13 @@ THE SOFTWARE.
 from myhdl import *
 import os
 
-try:
-    from queue import Queue
-except ImportError:
-    from Queue import Queue
-
 import eth_ep
 import arp_ep
 import udp_ep
 import xgmii_ep
 
 module = 'fpga_core'
+testbench = 'test_%s' % module
 
 srcs = []
 
@@ -68,264 +64,11 @@ srcs.append("../lib/eth/lib/axis/rtl/arbiter.v")
 srcs.append("../lib/eth/lib/axis/rtl/priority_encoder.v")
 srcs.append("../lib/eth/lib/axis/rtl/axis_fifo_64.v")
 srcs.append("../lib/eth/lib/axis/rtl/axis_async_frame_fifo_64.v")
-srcs.append("test_%s.v" % module)
+srcs.append("%s.v" % testbench)
 
 src = ' '.join(srcs)
 
-build_cmd = "iverilog -o test_%s.vvp %s" % (module, src)
-
-def dut_fpga_core(clk,
-                  rst,
-                  current_test,
-
-                  sw,
-                  jp,
-                  led,
-
-                  uart_rst,
-                  uart_suspend,
-                  uart_ri,
-                  uart_dcd,
-                  uart_dtr,
-                  uart_dsr,
-                  uart_txd,
-                  uart_rxd,
-                  uart_rts,
-                  uart_cts,
-
-                  amh_right_mdc,
-                  amh_right_mdio_i,
-                  amh_right_mdio_o,
-                  amh_right_mdio_t,
-                  amh_left_mdc,
-                  amh_left_mdio_i,
-                  amh_left_mdio_o,
-                  amh_left_mdio_t,
-
-                  eth_r0_txd,
-                  eth_r0_txc,
-                  eth_r0_rxd,
-                  eth_r0_rxc,
-                  eth_r1_txd,
-                  eth_r1_txc,
-                  eth_r1_rxd,
-                  eth_r1_rxc,
-                  eth_r2_txd,
-                  eth_r2_txc,
-                  eth_r2_rxd,
-                  eth_r2_rxc,
-                  eth_r3_txd,
-                  eth_r3_txc,
-                  eth_r3_rxd,
-                  eth_r3_rxc,
-                  eth_r4_txd,
-                  eth_r4_txc,
-                  eth_r4_rxd,
-                  eth_r4_rxc,
-                  eth_r5_txd,
-                  eth_r5_txc,
-                  eth_r5_rxd,
-                  eth_r5_rxc,
-                  eth_r6_txd,
-                  eth_r6_txc,
-                  eth_r6_rxd,
-                  eth_r6_rxc,
-                  eth_r7_txd,
-                  eth_r7_txc,
-                  eth_r7_rxd,
-                  eth_r7_rxc,
-                  eth_r8_txd,
-                  eth_r8_txc,
-                  eth_r8_rxd,
-                  eth_r8_rxc,
-                  eth_r9_txd,
-                  eth_r9_txc,
-                  eth_r9_rxd,
-                  eth_r9_rxc,
-                  eth_r10_txd,
-                  eth_r10_txc,
-                  eth_r10_rxd,
-                  eth_r10_rxc,
-                  eth_r11_txd,
-                  eth_r11_txc,
-                  eth_r11_rxd,
-                  eth_r11_rxc,
-                  eth_l0_txd,
-                  eth_l0_txc,
-                  eth_l0_rxd,
-                  eth_l0_rxc,
-                  eth_l1_txd,
-                  eth_l1_txc,
-                  eth_l1_rxd,
-                  eth_l1_rxc,
-                  eth_l2_txd,
-                  eth_l2_txc,
-                  eth_l2_rxd,
-                  eth_l2_rxc,
-                  eth_l3_txd,
-                  eth_l3_txc,
-                  eth_l3_rxd,
-                  eth_l3_rxc,
-                  eth_l4_txd,
-                  eth_l4_txc,
-                  eth_l4_rxd,
-                  eth_l4_rxc,
-                  eth_l5_txd,
-                  eth_l5_txc,
-                  eth_l5_rxd,
-                  eth_l5_rxc,
-                  eth_l6_txd,
-                  eth_l6_txc,
-                  eth_l6_rxd,
-                  eth_l6_rxc,
-                  eth_l7_txd,
-                  eth_l7_txc,
-                  eth_l7_rxd,
-                  eth_l7_rxc,
-                  eth_l8_txd,
-                  eth_l8_txc,
-                  eth_l8_rxd,
-                  eth_l8_rxc,
-                  eth_l9_txd,
-                  eth_l9_txc,
-                  eth_l9_rxd,
-                  eth_l9_rxc,
-                  eth_l10_txd,
-                  eth_l10_txc,
-                  eth_l10_rxd,
-                  eth_l10_rxc,
-                  eth_l11_txd,
-                  eth_l11_txc,
-                  eth_l11_rxd,
-                  eth_l11_rxc):
-
-    if os.system(build_cmd):
-        raise Exception("Error running build command")
-    return Cosimulation("vvp -m myhdl test_%s.vvp -lxt2" % module,
-                clk=clk,
-                rst=rst,
-                current_test=current_test,
-
-                sw=sw,
-                jp=jp,
-                led=led,
-
-                uart_rst=uart_rst,
-                uart_suspend=uart_suspend,
-                uart_ri=uart_ri,
-                uart_dcd=uart_dcd,
-                uart_dtr=uart_dtr,
-                uart_dsr=uart_dsr,
-                uart_txd=uart_txd,
-                uart_rxd=uart_rxd,
-                uart_rts=uart_rts,
-                uart_cts=uart_cts,
-
-                amh_right_mdc=amh_right_mdc,
-                amh_right_mdio_i=amh_right_mdio_i,
-                amh_right_mdio_o=amh_right_mdio_o,
-                amh_right_mdio_t=amh_right_mdio_t,
-                amh_left_mdc=amh_left_mdc,
-                amh_left_mdio_i=amh_left_mdio_i,
-                amh_left_mdio_o=amh_left_mdio_o,
-                amh_left_mdio_t=amh_left_mdio_t,
-
-                eth_r0_txd=eth_r0_txd,
-                eth_r0_txc=eth_r0_txc,
-                eth_r0_rxd=eth_r0_rxd,
-                eth_r0_rxc=eth_r0_rxc,
-                eth_r1_txd=eth_r1_txd,
-                eth_r1_txc=eth_r1_txc,
-                eth_r1_rxd=eth_r1_rxd,
-                eth_r1_rxc=eth_r1_rxc,
-                eth_r2_txd=eth_r2_txd,
-                eth_r2_txc=eth_r2_txc,
-                eth_r2_rxd=eth_r2_rxd,
-                eth_r2_rxc=eth_r2_rxc,
-                eth_r3_txd=eth_r3_txd,
-                eth_r3_txc=eth_r3_txc,
-                eth_r3_rxd=eth_r3_rxd,
-                eth_r3_rxc=eth_r3_rxc,
-                eth_r4_txd=eth_r4_txd,
-                eth_r4_txc=eth_r4_txc,
-                eth_r4_rxd=eth_r4_rxd,
-                eth_r4_rxc=eth_r4_rxc,
-                eth_r5_txd=eth_r5_txd,
-                eth_r5_txc=eth_r5_txc,
-                eth_r5_rxd=eth_r5_rxd,
-                eth_r5_rxc=eth_r5_rxc,
-                eth_r6_txd=eth_r6_txd,
-                eth_r6_txc=eth_r6_txc,
-                eth_r6_rxd=eth_r6_rxd,
-                eth_r6_rxc=eth_r6_rxc,
-                eth_r7_txd=eth_r7_txd,
-                eth_r7_txc=eth_r7_txc,
-                eth_r7_rxd=eth_r7_rxd,
-                eth_r7_rxc=eth_r7_rxc,
-                eth_r8_txd=eth_r8_txd,
-                eth_r8_txc=eth_r8_txc,
-                eth_r8_rxd=eth_r8_rxd,
-                eth_r8_rxc=eth_r8_rxc,
-                eth_r9_txd=eth_r9_txd,
-                eth_r9_txc=eth_r9_txc,
-                eth_r9_rxd=eth_r9_rxd,
-                eth_r9_rxc=eth_r9_rxc,
-                eth_r10_txd=eth_r10_txd,
-                eth_r10_txc=eth_r10_txc,
-                eth_r10_rxd=eth_r10_rxd,
-                eth_r10_rxc=eth_r10_rxc,
-                eth_r11_txd=eth_r11_txd,
-                eth_r11_txc=eth_r11_txc,
-                eth_r11_rxd=eth_r11_rxd,
-                eth_r11_rxc=eth_r11_rxc,
-                eth_l0_txd=eth_l0_txd,
-                eth_l0_txc=eth_l0_txc,
-                eth_l0_rxd=eth_l0_rxd,
-                eth_l0_rxc=eth_l0_rxc,
-                eth_l1_txd=eth_l1_txd,
-                eth_l1_txc=eth_l1_txc,
-                eth_l1_rxd=eth_l1_rxd,
-                eth_l1_rxc=eth_l1_rxc,
-                eth_l2_txd=eth_l2_txd,
-                eth_l2_txc=eth_l2_txc,
-                eth_l2_rxd=eth_l2_rxd,
-                eth_l2_rxc=eth_l2_rxc,
-                eth_l3_txd=eth_l3_txd,
-                eth_l3_txc=eth_l3_txc,
-                eth_l3_rxd=eth_l3_rxd,
-                eth_l3_rxc=eth_l3_rxc,
-                eth_l4_txd=eth_l4_txd,
-                eth_l4_txc=eth_l4_txc,
-                eth_l4_rxd=eth_l4_rxd,
-                eth_l4_rxc=eth_l4_rxc,
-                eth_l5_txd=eth_l5_txd,
-                eth_l5_txc=eth_l5_txc,
-                eth_l5_rxd=eth_l5_rxd,
-                eth_l5_rxc=eth_l5_rxc,
-                eth_l6_txd=eth_l6_txd,
-                eth_l6_txc=eth_l6_txc,
-                eth_l6_rxd=eth_l6_rxd,
-                eth_l6_rxc=eth_l6_rxc,
-                eth_l7_txd=eth_l7_txd,
-                eth_l7_txc=eth_l7_txc,
-                eth_l7_rxd=eth_l7_rxd,
-                eth_l7_rxc=eth_l7_rxc,
-                eth_l8_txd=eth_l8_txd,
-                eth_l8_txc=eth_l8_txc,
-                eth_l8_rxd=eth_l8_rxd,
-                eth_l8_rxc=eth_l8_rxc,
-                eth_l9_txd=eth_l9_txd,
-                eth_l9_txc=eth_l9_txc,
-                eth_l9_rxd=eth_l9_rxd,
-                eth_l9_rxc=eth_l9_rxc,
-                eth_l10_txd=eth_l10_txd,
-                eth_l10_txc=eth_l10_txc,
-                eth_l10_rxd=eth_l10_rxd,
-                eth_l10_rxc=eth_l10_rxc,
-                eth_l11_txd=eth_l11_txd,
-                eth_l11_txc=eth_l11_txc,
-                eth_l11_rxd=eth_l11_rxd,
-                eth_l11_rxc=eth_l11_rxc)
+build_cmd = "iverilog -o %s.vvp %s" % (testbench, src)
 
 def bench():
 
@@ -458,516 +201,281 @@ def bench():
     eth_l11_txc = Signal(intbv(0xff)[8:])
 
     # sources and sinks
-    eth_r0_source_queue = Queue()
-    eth_r0_sink_queue = Queue()
-    eth_r1_source_queue = Queue()
-    eth_r1_sink_queue = Queue()
-    eth_r2_source_queue = Queue()
-    eth_r2_sink_queue = Queue()
-    eth_r3_source_queue = Queue()
-    eth_r3_sink_queue = Queue()
-    eth_r4_source_queue = Queue()
-    eth_r4_sink_queue = Queue()
-    eth_r5_source_queue = Queue()
-    eth_r5_sink_queue = Queue()
-    eth_r6_source_queue = Queue()
-    eth_r6_sink_queue = Queue()
-    eth_r7_source_queue = Queue()
-    eth_r7_sink_queue = Queue()
-    eth_r8_source_queue = Queue()
-    eth_r8_sink_queue = Queue()
-    eth_r9_source_queue = Queue()
-    eth_r9_sink_queue = Queue()
-    eth_r10_source_queue = Queue()
-    eth_r10_sink_queue = Queue()
-    eth_r11_source_queue = Queue()
-    eth_r11_sink_queue = Queue()
-    eth_l0_source_queue = Queue()
-    eth_l0_sink_queue = Queue()
-    eth_l1_source_queue = Queue()
-    eth_l1_sink_queue = Queue()
-    eth_l2_source_queue = Queue()
-    eth_l2_sink_queue = Queue()
-    eth_l3_source_queue = Queue()
-    eth_l3_sink_queue = Queue()
-    eth_l4_source_queue = Queue()
-    eth_l4_sink_queue = Queue()
-    eth_l5_source_queue = Queue()
-    eth_l5_sink_queue = Queue()
-    eth_l6_source_queue = Queue()
-    eth_l6_sink_queue = Queue()
-    eth_l7_source_queue = Queue()
-    eth_l7_sink_queue = Queue()
-    eth_l8_source_queue = Queue()
-    eth_l8_sink_queue = Queue()
-    eth_l9_source_queue = Queue()
-    eth_l9_sink_queue = Queue()
-    eth_l10_source_queue = Queue()
-    eth_l10_sink_queue = Queue()
-    eth_l11_source_queue = Queue()
-    eth_l11_sink_queue = Queue()
+    eth_r0_source = xgmii_ep.XGMIISource()
+    eth_r0_source_logic = eth_r0_source.create_logic(clk, rst, txd=eth_r0_rxd, txc=eth_r0_rxc, name='eth_r0_source')
 
-    eth_r0_source = xgmii_ep.XGMIISource(clk,
-                                         rst,
-                                         txd=eth_r0_rxd,
-                                         txc=eth_r0_rxc,
-                                         fifo=eth_r0_source_queue,
-                                         name='eth_r0_source')
+    eth_r0_sink = xgmii_ep.XGMIISink()
+    eth_r0_sink_logic = eth_r0_sink.create_logic(clk, rst, rxd=eth_r0_txd, rxc=eth_r0_txc, name='eth_r0_sink')
 
-    eth_r0_sink = xgmii_ep.XGMIISink(clk,
-                                     rst,
-                                     rxd=eth_r0_txd,
-                                     rxc=eth_r0_txc,
-                                     fifo=eth_r0_sink_queue,
-                                     name='eth_r0_sink')
+    eth_r1_source = xgmii_ep.XGMIISource()
+    eth_r1_source_logic = eth_r1_source.create_logic(clk, rst, txd=eth_r1_rxd, txc=eth_r1_rxc, name='eth_r1_source')
 
-    eth_r1_source = xgmii_ep.XGMIISource(clk,
-                                         rst,
-                                         txd=eth_r1_rxd,
-                                         txc=eth_r1_rxc,
-                                         fifo=eth_r1_source_queue,
-                                         name='eth_r1_source')
+    eth_r1_sink = xgmii_ep.XGMIISink()
+    eth_r1_sink_logic = eth_r1_sink.create_logic(clk, rst, rxd=eth_r1_txd, rxc=eth_r1_txc, name='eth_r1_sink')
 
-    eth_r1_sink = xgmii_ep.XGMIISink(clk,
-                                     rst,
-                                     rxd=eth_r1_txd,
-                                     rxc=eth_r1_txc,
-                                     fifo=eth_r1_sink_queue,
-                                     name='eth_r1_sink')
+    eth_r2_source = xgmii_ep.XGMIISource()
+    eth_r2_source_logic = eth_r2_source.create_logic(clk, rst, txd=eth_r2_rxd, txc=eth_r2_rxc, name='eth_r2_source')
 
-    eth_r2_source = xgmii_ep.XGMIISource(clk,
-                                         rst,
-                                         txd=eth_r2_rxd,
-                                         txc=eth_r2_rxc,
-                                         fifo=eth_r2_source_queue,
-                                         name='eth_r2_source')
+    eth_r2_sink = xgmii_ep.XGMIISink()
+    eth_r2_sink_logic = eth_r2_sink.create_logic(clk, rst, rxd=eth_r2_txd, rxc=eth_r2_txc, name='eth_r2_sink')
 
-    eth_r2_sink = xgmii_ep.XGMIISink(clk,
-                                     rst,
-                                     rxd=eth_r2_txd,
-                                     rxc=eth_r2_txc,
-                                     fifo=eth_r2_sink_queue,
-                                     name='eth_r2_sink')
+    eth_r3_source = xgmii_ep.XGMIISource()
+    eth_r3_source_logic = eth_r3_source.create_logic(clk, rst, txd=eth_r3_rxd, txc=eth_r3_rxc, name='eth_r3_source')
 
-    eth_r3_source = xgmii_ep.XGMIISource(clk,
-                                         rst,
-                                         txd=eth_r3_rxd,
-                                         txc=eth_r3_rxc,
-                                         fifo=eth_r3_source_queue,
-                                         name='eth_r3_source')
+    eth_r3_sink = xgmii_ep.XGMIISink()
+    eth_r3_sink_logic = eth_r3_sink.create_logic(clk, rst, rxd=eth_r3_txd, rxc=eth_r3_txc, name='eth_r3_sink')
 
-    eth_r3_sink = xgmii_ep.XGMIISink(clk,
-                                     rst,
-                                     rxd=eth_r3_txd,
-                                     rxc=eth_r3_txc,
-                                     fifo=eth_r3_sink_queue,
-                                     name='eth_r3_sink')
+    eth_r4_source = xgmii_ep.XGMIISource()
+    eth_r4_source_logic = eth_r4_source.create_logic(clk, rst, txd=eth_r4_rxd, txc=eth_r4_rxc, name='eth_r4_source')
 
-    eth_r4_source = xgmii_ep.XGMIISource(clk,
-                                         rst,
-                                         txd=eth_r4_rxd,
-                                         txc=eth_r4_rxc,
-                                         fifo=eth_r4_source_queue,
-                                         name='eth_r4_source')
+    eth_r4_sink = xgmii_ep.XGMIISink()
+    eth_r4_sink_logic = eth_r4_sink.create_logic(clk, rst, rxd=eth_r4_txd, rxc=eth_r4_txc, name='eth_r4_sink')
 
-    eth_r4_sink = xgmii_ep.XGMIISink(clk,
-                                     rst,
-                                     rxd=eth_r4_txd,
-                                     rxc=eth_r4_txc,
-                                     fifo=eth_r4_sink_queue,
-                                     name='eth_r4_sink')
+    eth_r5_source = xgmii_ep.XGMIISource()
+    eth_r5_source_logic = eth_r5_source.create_logic(clk, rst, txd=eth_r5_rxd, txc=eth_r5_rxc, name='eth_r5_source')
 
-    eth_r5_source = xgmii_ep.XGMIISource(clk,
-                                         rst,
-                                         txd=eth_r5_rxd,
-                                         txc=eth_r5_rxc,
-                                         fifo=eth_r5_source_queue,
-                                         name='eth_r5_source')
+    eth_r5_sink = xgmii_ep.XGMIISink()
+    eth_r5_sink_logic = eth_r5_sink.create_logic(clk, rst, rxd=eth_r5_txd, rxc=eth_r5_txc, name='eth_r5_sink')
 
-    eth_r5_sink = xgmii_ep.XGMIISink(clk,
-                                     rst,
-                                     rxd=eth_r5_txd,
-                                     rxc=eth_r5_txc,
-                                     fifo=eth_r5_sink_queue,
-                                     name='eth_r5_sink')
+    eth_r6_source = xgmii_ep.XGMIISource()
+    eth_r6_source_logic = eth_r6_source.create_logic(clk, rst, txd=eth_r6_rxd, txc=eth_r6_rxc, name='eth_r6_source')
 
-    eth_r6_source = xgmii_ep.XGMIISource(clk,
-                                         rst,
-                                         txd=eth_r6_rxd,
-                                         txc=eth_r6_rxc,
-                                         fifo=eth_r6_source_queue,
-                                         name='eth_r6_source')
+    eth_r6_sink = xgmii_ep.XGMIISink()
+    eth_r6_sink_logic = eth_r6_sink.create_logic(clk, rst, rxd=eth_r6_txd, rxc=eth_r6_txc, name='eth_r6_sink')
 
-    eth_r6_sink = xgmii_ep.XGMIISink(clk,
-                                     rst,
-                                     rxd=eth_r6_txd,
-                                     rxc=eth_r6_txc,
-                                     fifo=eth_r6_sink_queue,
-                                     name='eth_r6_sink')
+    eth_r7_source = xgmii_ep.XGMIISource()
+    eth_r7_source_logic = eth_r7_source.create_logic(clk, rst, txd=eth_r7_rxd, txc=eth_r7_rxc, name='eth_r7_source')
 
-    eth_r7_source = xgmii_ep.XGMIISource(clk,
-                                         rst,
-                                         txd=eth_r7_rxd,
-                                         txc=eth_r7_rxc,
-                                         fifo=eth_r7_source_queue,
-                                         name='eth_r7_source')
+    eth_r7_sink = xgmii_ep.XGMIISink()
+    eth_r7_sink_logic = eth_r7_sink.create_logic(clk, rst, rxd=eth_r7_txd, rxc=eth_r7_txc, name='eth_r7_sink')
 
-    eth_r7_sink = xgmii_ep.XGMIISink(clk,
-                                     rst,
-                                     rxd=eth_r7_txd,
-                                     rxc=eth_r7_txc,
-                                     fifo=eth_r7_sink_queue,
-                                     name='eth_r7_sink')
+    eth_r8_source = xgmii_ep.XGMIISource()
+    eth_r8_source_logic = eth_r8_source.create_logic(clk, rst, txd=eth_r8_rxd, txc=eth_r8_rxc, name='eth_r8_source')
 
-    eth_r8_source = xgmii_ep.XGMIISource(clk,
-                                         rst,
-                                         txd=eth_r8_rxd,
-                                         txc=eth_r8_rxc,
-                                         fifo=eth_r8_source_queue,
-                                         name='eth_r8_source')
+    eth_r8_sink = xgmii_ep.XGMIISink()
+    eth_r8_sink_logic = eth_r8_sink.create_logic(clk, rst, rxd=eth_r8_txd, rxc=eth_r8_txc, name='eth_r8_sink')
 
-    eth_r8_sink = xgmii_ep.XGMIISink(clk,
-                                     rst,
-                                     rxd=eth_r8_txd,
-                                     rxc=eth_r8_txc,
-                                     fifo=eth_r8_sink_queue,
-                                     name='eth_r8_sink')
+    eth_r9_source = xgmii_ep.XGMIISource()
+    eth_r9_source_logic = eth_r9_source.create_logic(clk, rst, txd=eth_r9_rxd, txc=eth_r9_rxc, name='eth_r9_source')
 
-    eth_r9_source = xgmii_ep.XGMIISource(clk,
-                                         rst,
-                                         txd=eth_r9_rxd,
-                                         txc=eth_r9_rxc,
-                                         fifo=eth_r9_source_queue,
-                                         name='eth_r9_source')
+    eth_r9_sink = xgmii_ep.XGMIISink()
+    eth_r9_sink_logic = eth_r9_sink.create_logic(clk, rst, rxd=eth_r9_txd, rxc=eth_r9_txc, name='eth_r9_sink')
 
-    eth_r9_sink = xgmii_ep.XGMIISink(clk,
-                                     rst,
-                                     rxd=eth_r9_txd,
-                                     rxc=eth_r9_txc,
-                                     fifo=eth_r9_sink_queue,
-                                     name='eth_r9_sink')
+    eth_r10_source = xgmii_ep.XGMIISource()
+    eth_r10_source_logic = eth_r10_source.create_logic(clk, rst, txd=eth_r10_rxd, txc=eth_r10_rxc, name='eth_r10_source')
 
-    eth_r10_source = xgmii_ep.XGMIISource(clk,
-                                         rst,
-                                         txd=eth_r10_rxd,
-                                         txc=eth_r10_rxc,
-                                         fifo=eth_r10_source_queue,
-                                         name='eth_r10_source')
+    eth_r10_sink = xgmii_ep.XGMIISink()
+    eth_r10_sink_logic = eth_r10_sink.create_logic(clk, rst, rxd=eth_r10_txd, rxc=eth_r10_txc, name='eth_r10_sink')
 
-    eth_r10_sink = xgmii_ep.XGMIISink(clk,
-                                     rst,
-                                     rxd=eth_r10_txd,
-                                     rxc=eth_r10_txc,
-                                     fifo=eth_r10_sink_queue,
-                                     name='eth_r10_sink')
+    eth_r11_source = xgmii_ep.XGMIISource()
+    eth_r11_source_logic = eth_r11_source.create_logic(clk, rst, txd=eth_r11_rxd, txc=eth_r11_rxc, name='eth_r11_source')
 
-    eth_r11_source = xgmii_ep.XGMIISource(clk,
-                                         rst,
-                                         txd=eth_r11_rxd,
-                                         txc=eth_r11_rxc,
-                                         fifo=eth_r11_source_queue,
-                                         name='eth_r11_source')
+    eth_r11_sink = xgmii_ep.XGMIISink()
+    eth_r11_sink_logic = eth_r11_sink.create_logic(clk, rst, rxd=eth_r11_txd, rxc=eth_r11_txc, name='eth_r11_sink')
 
-    eth_r11_sink = xgmii_ep.XGMIISink(clk,
-                                     rst,
-                                     rxd=eth_r11_txd,
-                                     rxc=eth_r11_txc,
-                                     fifo=eth_r11_sink_queue,
-                                     name='eth_r11_sink')
+    eth_l0_source = xgmii_ep.XGMIISource()
+    eth_l0_source_logic = eth_l0_source.create_logic(clk, rst, txd=eth_l0_rxd, txc=eth_l0_rxc, name='eth_l0_source')
 
-    eth_l0_source = xgmii_ep.XGMIISource(clk,
-                                         rst,
-                                         txd=eth_l0_rxd,
-                                         txc=eth_l0_rxc,
-                                         fifo=eth_l0_source_queue,
-                                         name='eth_l0_source')
+    eth_l0_sink = xgmii_ep.XGMIISink()
+    eth_l0_sink_logic = eth_l0_sink.create_logic(clk, rst, rxd=eth_l0_txd, rxc=eth_l0_txc, name='eth_l0_sink')
 
-    eth_l0_sink = xgmii_ep.XGMIISink(clk,
-                                     rst,
-                                     rxd=eth_l0_txd,
-                                     rxc=eth_l0_txc,
-                                     fifo=eth_l0_sink_queue,
-                                     name='eth_l0_sink')
+    eth_l1_source = xgmii_ep.XGMIISource()
+    eth_l1_source_logic = eth_l1_source.create_logic(clk, rst, txd=eth_l1_rxd, txc=eth_l1_rxc, name='eth_l1_source')
 
-    eth_l1_source = xgmii_ep.XGMIISource(clk,
-                                         rst,
-                                         txd=eth_l1_rxd,
-                                         txc=eth_l1_rxc,
-                                         fifo=eth_l1_source_queue,
-                                         name='eth_l1_source')
+    eth_l1_sink = xgmii_ep.XGMIISink()
+    eth_l1_sink_logic = eth_l1_sink.create_logic(clk, rst, rxd=eth_l1_txd, rxc=eth_l1_txc, name='eth_l1_sink')
 
-    eth_l1_sink = xgmii_ep.XGMIISink(clk,
-                                     rst,
-                                     rxd=eth_l1_txd,
-                                     rxc=eth_l1_txc,
-                                     fifo=eth_l1_sink_queue,
-                                     name='eth_l1_sink')
+    eth_l2_source = xgmii_ep.XGMIISource()
+    eth_l2_source_logic = eth_l2_source.create_logic(clk, rst, txd=eth_l2_rxd, txc=eth_l2_rxc, name='eth_l2_source')
 
-    eth_l2_source = xgmii_ep.XGMIISource(clk,
-                                         rst,
-                                         txd=eth_l2_rxd,
-                                         txc=eth_l2_rxc,
-                                         fifo=eth_l2_source_queue,
-                                         name='eth_l2_source')
+    eth_l2_sink = xgmii_ep.XGMIISink()
+    eth_l2_sink_logic = eth_l2_sink.create_logic(clk, rst, rxd=eth_l2_txd, rxc=eth_l2_txc, name='eth_l2_sink')
 
-    eth_l2_sink = xgmii_ep.XGMIISink(clk,
-                                     rst,
-                                     rxd=eth_l2_txd,
-                                     rxc=eth_l2_txc,
-                                     fifo=eth_l2_sink_queue,
-                                     name='eth_l2_sink')
+    eth_l3_source = xgmii_ep.XGMIISource()
+    eth_l3_source_logic = eth_l3_source.create_logic(clk, rst, txd=eth_l3_rxd, txc=eth_l3_rxc, name='eth_l3_source')
 
-    eth_l3_source = xgmii_ep.XGMIISource(clk,
-                                         rst,
-                                         txd=eth_l3_rxd,
-                                         txc=eth_l3_rxc,
-                                         fifo=eth_l3_source_queue,
-                                         name='eth_l3_source')
+    eth_l3_sink = xgmii_ep.XGMIISink()
+    eth_l3_sink_logic = eth_l3_sink.create_logic(clk, rst, rxd=eth_l3_txd, rxc=eth_l3_txc, name='eth_l3_sink')
 
-    eth_l3_sink = xgmii_ep.XGMIISink(clk,
-                                     rst,
-                                     rxd=eth_l3_txd,
-                                     rxc=eth_l3_txc,
-                                     fifo=eth_l3_sink_queue,
-                                     name='eth_l3_sink')
+    eth_l4_source = xgmii_ep.XGMIISource()
+    eth_l4_source_logic = eth_l4_source.create_logic(clk, rst, txd=eth_l4_rxd, txc=eth_l4_rxc, name='eth_l4_source')
 
-    eth_l4_source = xgmii_ep.XGMIISource(clk,
-                                         rst,
-                                         txd=eth_l4_rxd,
-                                         txc=eth_l4_rxc,
-                                         fifo=eth_l4_source_queue,
-                                         name='eth_l4_source')
+    eth_l4_sink = xgmii_ep.XGMIISink()
+    eth_l4_sink_logic = eth_l4_sink.create_logic(clk, rst, rxd=eth_l4_txd, rxc=eth_l4_txc, name='eth_l4_sink')
 
-    eth_l4_sink = xgmii_ep.XGMIISink(clk,
-                                     rst,
-                                     rxd=eth_l4_txd,
-                                     rxc=eth_l4_txc,
-                                     fifo=eth_l4_sink_queue,
-                                     name='eth_l4_sink')
+    eth_l5_source = xgmii_ep.XGMIISource()
+    eth_l5_source_logic = eth_l5_source.create_logic(clk, rst, txd=eth_l5_rxd, txc=eth_l5_rxc, name='eth_l5_source')
 
-    eth_l5_source = xgmii_ep.XGMIISource(clk,
-                                         rst,
-                                         txd=eth_l5_rxd,
-                                         txc=eth_l5_rxc,
-                                         fifo=eth_l5_source_queue,
-                                         name='eth_l5_source')
+    eth_l5_sink = xgmii_ep.XGMIISink()
+    eth_l5_sink_logic = eth_l5_sink.create_logic(clk, rst, rxd=eth_l5_txd, rxc=eth_l5_txc, name='eth_l5_sink')
 
-    eth_l5_sink = xgmii_ep.XGMIISink(clk,
-                                     rst,
-                                     rxd=eth_l5_txd,
-                                     rxc=eth_l5_txc,
-                                     fifo=eth_l5_sink_queue,
-                                     name='eth_l5_sink')
+    eth_l6_source = xgmii_ep.XGMIISource()
+    eth_l6_source_logic = eth_l6_source.create_logic(clk, rst, txd=eth_l6_rxd, txc=eth_l6_rxc, name='eth_l6_source')
 
-    eth_l6_source = xgmii_ep.XGMIISource(clk,
-                                         rst,
-                                         txd=eth_l6_rxd,
-                                         txc=eth_l6_rxc,
-                                         fifo=eth_l6_source_queue,
-                                         name='eth_l6_source')
+    eth_l6_sink = xgmii_ep.XGMIISink()
+    eth_l6_sink_logic = eth_l6_sink.create_logic(clk, rst, rxd=eth_l6_txd, rxc=eth_l6_txc, name='eth_l6_sink')
 
-    eth_l6_sink = xgmii_ep.XGMIISink(clk,
-                                     rst,
-                                     rxd=eth_l6_txd,
-                                     rxc=eth_l6_txc,
-                                     fifo=eth_l6_sink_queue,
-                                     name='eth_l6_sink')
+    eth_l7_source = xgmii_ep.XGMIISource()
+    eth_l7_source_logic = eth_l7_source.create_logic(clk, rst, txd=eth_l7_rxd, txc=eth_l7_rxc, name='eth_l7_source')
 
-    eth_l7_source = xgmii_ep.XGMIISource(clk,
-                                         rst,
-                                         txd=eth_l7_rxd,
-                                         txc=eth_l7_rxc,
-                                         fifo=eth_l7_source_queue,
-                                         name='eth_l7_source')
+    eth_l7_sink = xgmii_ep.XGMIISink()
+    eth_l7_sink_logic = eth_l7_sink.create_logic(clk, rst, rxd=eth_l7_txd, rxc=eth_l7_txc, name='eth_l7_sink')
 
-    eth_l7_sink = xgmii_ep.XGMIISink(clk,
-                                     rst,
-                                     rxd=eth_l7_txd,
-                                     rxc=eth_l7_txc,
-                                     fifo=eth_l7_sink_queue,
-                                     name='eth_l7_sink')
+    eth_l8_source = xgmii_ep.XGMIISource()
+    eth_l8_source_logic = eth_l8_source.create_logic(clk, rst, txd=eth_l8_rxd, txc=eth_l8_rxc, name='eth_l8_source')
 
-    eth_l8_source = xgmii_ep.XGMIISource(clk,
-                                         rst,
-                                         txd=eth_l8_rxd,
-                                         txc=eth_l8_rxc,
-                                         fifo=eth_l8_source_queue,
-                                         name='eth_l8_source')
+    eth_l8_sink = xgmii_ep.XGMIISink()
+    eth_l8_sink_logic = eth_l8_sink.create_logic(clk, rst, rxd=eth_l8_txd, rxc=eth_l8_txc, name='eth_l8_sink')
 
-    eth_l8_sink = xgmii_ep.XGMIISink(clk,
-                                     rst,
-                                     rxd=eth_l8_txd,
-                                     rxc=eth_l8_txc,
-                                     fifo=eth_l8_sink_queue,
-                                     name='eth_l8_sink')
+    eth_l9_source = xgmii_ep.XGMIISource()
+    eth_l9_source_logic = eth_l9_source.create_logic(clk, rst, txd=eth_l9_rxd, txc=eth_l9_rxc, name='eth_l9_source')
 
-    eth_l9_source = xgmii_ep.XGMIISource(clk,
-                                         rst,
-                                         txd=eth_l9_rxd,
-                                         txc=eth_l9_rxc,
-                                         fifo=eth_l9_source_queue,
-                                         name='eth_l9_source')
+    eth_l9_sink = xgmii_ep.XGMIISink()
+    eth_l9_sink_logic = eth_l9_sink.create_logic(clk, rst, rxd=eth_l9_txd, rxc=eth_l9_txc, name='eth_l9_sink')
 
-    eth_l9_sink = xgmii_ep.XGMIISink(clk,
-                                     rst,
-                                     rxd=eth_l9_txd,
-                                     rxc=eth_l9_txc,
-                                     fifo=eth_l9_sink_queue,
-                                     name='eth_l9_sink')
+    eth_l10_source = xgmii_ep.XGMIISource()
+    eth_l10_source_logic = eth_l10_source.create_logic(clk, rst, txd=eth_l10_rxd, txc=eth_l10_rxc, name='eth_l10_source')
 
-    eth_l10_source = xgmii_ep.XGMIISource(clk,
-                                         rst,
-                                         txd=eth_l10_rxd,
-                                         txc=eth_l10_rxc,
-                                         fifo=eth_l10_source_queue,
-                                         name='eth_l10_source')
+    eth_l10_sink = xgmii_ep.XGMIISink()
+    eth_l10_sink_logic = eth_l10_sink.create_logic(clk, rst, rxd=eth_l10_txd, rxc=eth_l10_txc, name='eth_l10_sink')
 
-    eth_l10_sink = xgmii_ep.XGMIISink(clk,
-                                     rst,
-                                     rxd=eth_l10_txd,
-                                     rxc=eth_l10_txc,
-                                     fifo=eth_l10_sink_queue,
-                                     name='eth_l10_sink')
+    eth_l11_source = xgmii_ep.XGMIISource()
+    eth_l11_source_logic = eth_l11_source.create_logic(clk, rst, txd=eth_l11_rxd, txc=eth_l11_rxc, name='eth_l11_source')
 
-    eth_l11_source = xgmii_ep.XGMIISource(clk,
-                                         rst,
-                                         txd=eth_l11_rxd,
-                                         txc=eth_l11_rxc,
-                                         fifo=eth_l11_source_queue,
-                                         name='eth_l11_source')
-
-    eth_l11_sink = xgmii_ep.XGMIISink(clk,
-                                     rst,
-                                     rxd=eth_l11_txd,
-                                     rxc=eth_l11_txc,
-                                     fifo=eth_l11_sink_queue,
-                                     name='eth_l11_sink')
+    eth_l11_sink = xgmii_ep.XGMIISink()
+    eth_l11_sink_logic = eth_l11_sink.create_logic(clk, rst, rxd=eth_l11_txd, rxc=eth_l11_txc, name='eth_l11_sink')
 
     # DUT
-    dut = dut_fpga_core(clk,
-                        rst,
-                        current_test,
+    if os.system(build_cmd):
+        raise Exception("Error running build command")
 
-                        sw,
-                        jp,
-                        led,
+    dut = Cosimulation(
+        "vvp -m myhdl %s.vvp -lxt2" % testbench,
+        clk=clk,
+        rst=rst,
+        current_test=current_test,
 
-                        uart_rst,
-                        uart_suspend,
-                        uart_ri,
-                        uart_dcd,
-                        uart_dtr,
-                        uart_dsr,
-                        uart_txd,
-                        uart_rxd,
-                        uart_rts,
-                        uart_cts,
+        sw=sw,
+        jp=jp,
+        led=led,
 
-                        amh_right_mdc,
-                        amh_right_mdio_i,
-                        amh_right_mdio_o,
-                        amh_right_mdio_t,
-                        amh_left_mdc,
-                        amh_left_mdio_i,
-                        amh_left_mdio_o,
-                        amh_left_mdio_t,
+        uart_rst=uart_rst,
+        uart_suspend=uart_suspend,
+        uart_ri=uart_ri,
+        uart_dcd=uart_dcd,
+        uart_dtr=uart_dtr,
+        uart_dsr=uart_dsr,
+        uart_txd=uart_txd,
+        uart_rxd=uart_rxd,
+        uart_rts=uart_rts,
+        uart_cts=uart_cts,
 
-                        eth_r0_txd,
-                        eth_r0_txc,
-                        eth_r0_rxd,
-                        eth_r0_rxc,
-                        eth_r1_txd,
-                        eth_r1_txc,
-                        eth_r1_rxd,
-                        eth_r1_rxc,
-                        eth_r2_txd,
-                        eth_r2_txc,
-                        eth_r2_rxd,
-                        eth_r2_rxc,
-                        eth_r3_txd,
-                        eth_r3_txc,
-                        eth_r3_rxd,
-                        eth_r3_rxc,
-                        eth_r4_txd,
-                        eth_r4_txc,
-                        eth_r4_rxd,
-                        eth_r4_rxc,
-                        eth_r5_txd,
-                        eth_r5_txc,
-                        eth_r5_rxd,
-                        eth_r5_rxc,
-                        eth_r6_txd,
-                        eth_r6_txc,
-                        eth_r6_rxd,
-                        eth_r6_rxc,
-                        eth_r7_txd,
-                        eth_r7_txc,
-                        eth_r7_rxd,
-                        eth_r7_rxc,
-                        eth_r8_txd,
-                        eth_r8_txc,
-                        eth_r8_rxd,
-                        eth_r8_rxc,
-                        eth_r9_txd,
-                        eth_r9_txc,
-                        eth_r9_rxd,
-                        eth_r9_rxc,
-                        eth_r10_txd,
-                        eth_r10_txc,
-                        eth_r10_rxd,
-                        eth_r10_rxc,
-                        eth_r11_txd,
-                        eth_r11_txc,
-                        eth_r11_rxd,
-                        eth_r11_rxc,
-                        eth_l0_txd,
-                        eth_l0_txc,
-                        eth_l0_rxd,
-                        eth_l0_rxc,
-                        eth_l1_txd,
-                        eth_l1_txc,
-                        eth_l1_rxd,
-                        eth_l1_rxc,
-                        eth_l2_txd,
-                        eth_l2_txc,
-                        eth_l2_rxd,
-                        eth_l2_rxc,
-                        eth_l3_txd,
-                        eth_l3_txc,
-                        eth_l3_rxd,
-                        eth_l3_rxc,
-                        eth_l4_txd,
-                        eth_l4_txc,
-                        eth_l4_rxd,
-                        eth_l4_rxc,
-                        eth_l5_txd,
-                        eth_l5_txc,
-                        eth_l5_rxd,
-                        eth_l5_rxc,
-                        eth_l6_txd,
-                        eth_l6_txc,
-                        eth_l6_rxd,
-                        eth_l6_rxc,
-                        eth_l7_txd,
-                        eth_l7_txc,
-                        eth_l7_rxd,
-                        eth_l7_rxc,
-                        eth_l8_txd,
-                        eth_l8_txc,
-                        eth_l8_rxd,
-                        eth_l8_rxc,
-                        eth_l9_txd,
-                        eth_l9_txc,
-                        eth_l9_rxd,
-                        eth_l9_rxc,
-                        eth_l10_txd,
-                        eth_l10_txc,
-                        eth_l10_rxd,
-                        eth_l10_rxc,
-                        eth_l11_txd,
-                        eth_l11_txc,
-                        eth_l11_rxd,
-                        eth_l11_rxc)
+        amh_right_mdc=amh_right_mdc,
+        amh_right_mdio_i=amh_right_mdio_i,
+        amh_right_mdio_o=amh_right_mdio_o,
+        amh_right_mdio_t=amh_right_mdio_t,
+        amh_left_mdc=amh_left_mdc,
+        amh_left_mdio_i=amh_left_mdio_i,
+        amh_left_mdio_o=amh_left_mdio_o,
+        amh_left_mdio_t=amh_left_mdio_t,
+
+        eth_r0_txd=eth_r0_txd,
+        eth_r0_txc=eth_r0_txc,
+        eth_r0_rxd=eth_r0_rxd,
+        eth_r0_rxc=eth_r0_rxc,
+        eth_r1_txd=eth_r1_txd,
+        eth_r1_txc=eth_r1_txc,
+        eth_r1_rxd=eth_r1_rxd,
+        eth_r1_rxc=eth_r1_rxc,
+        eth_r2_txd=eth_r2_txd,
+        eth_r2_txc=eth_r2_txc,
+        eth_r2_rxd=eth_r2_rxd,
+        eth_r2_rxc=eth_r2_rxc,
+        eth_r3_txd=eth_r3_txd,
+        eth_r3_txc=eth_r3_txc,
+        eth_r3_rxd=eth_r3_rxd,
+        eth_r3_rxc=eth_r3_rxc,
+        eth_r4_txd=eth_r4_txd,
+        eth_r4_txc=eth_r4_txc,
+        eth_r4_rxd=eth_r4_rxd,
+        eth_r4_rxc=eth_r4_rxc,
+        eth_r5_txd=eth_r5_txd,
+        eth_r5_txc=eth_r5_txc,
+        eth_r5_rxd=eth_r5_rxd,
+        eth_r5_rxc=eth_r5_rxc,
+        eth_r6_txd=eth_r6_txd,
+        eth_r6_txc=eth_r6_txc,
+        eth_r6_rxd=eth_r6_rxd,
+        eth_r6_rxc=eth_r6_rxc,
+        eth_r7_txd=eth_r7_txd,
+        eth_r7_txc=eth_r7_txc,
+        eth_r7_rxd=eth_r7_rxd,
+        eth_r7_rxc=eth_r7_rxc,
+        eth_r8_txd=eth_r8_txd,
+        eth_r8_txc=eth_r8_txc,
+        eth_r8_rxd=eth_r8_rxd,
+        eth_r8_rxc=eth_r8_rxc,
+        eth_r9_txd=eth_r9_txd,
+        eth_r9_txc=eth_r9_txc,
+        eth_r9_rxd=eth_r9_rxd,
+        eth_r9_rxc=eth_r9_rxc,
+        eth_r10_txd=eth_r10_txd,
+        eth_r10_txc=eth_r10_txc,
+        eth_r10_rxd=eth_r10_rxd,
+        eth_r10_rxc=eth_r10_rxc,
+        eth_r11_txd=eth_r11_txd,
+        eth_r11_txc=eth_r11_txc,
+        eth_r11_rxd=eth_r11_rxd,
+        eth_r11_rxc=eth_r11_rxc,
+        eth_l0_txd=eth_l0_txd,
+        eth_l0_txc=eth_l0_txc,
+        eth_l0_rxd=eth_l0_rxd,
+        eth_l0_rxc=eth_l0_rxc,
+        eth_l1_txd=eth_l1_txd,
+        eth_l1_txc=eth_l1_txc,
+        eth_l1_rxd=eth_l1_rxd,
+        eth_l1_rxc=eth_l1_rxc,
+        eth_l2_txd=eth_l2_txd,
+        eth_l2_txc=eth_l2_txc,
+        eth_l2_rxd=eth_l2_rxd,
+        eth_l2_rxc=eth_l2_rxc,
+        eth_l3_txd=eth_l3_txd,
+        eth_l3_txc=eth_l3_txc,
+        eth_l3_rxd=eth_l3_rxd,
+        eth_l3_rxc=eth_l3_rxc,
+        eth_l4_txd=eth_l4_txd,
+        eth_l4_txc=eth_l4_txc,
+        eth_l4_rxd=eth_l4_rxd,
+        eth_l4_rxc=eth_l4_rxc,
+        eth_l5_txd=eth_l5_txd,
+        eth_l5_txc=eth_l5_txc,
+        eth_l5_rxd=eth_l5_rxd,
+        eth_l5_rxc=eth_l5_rxc,
+        eth_l6_txd=eth_l6_txd,
+        eth_l6_txc=eth_l6_txc,
+        eth_l6_rxd=eth_l6_rxd,
+        eth_l6_rxc=eth_l6_rxc,
+        eth_l7_txd=eth_l7_txd,
+        eth_l7_txc=eth_l7_txc,
+        eth_l7_rxd=eth_l7_rxd,
+        eth_l7_rxc=eth_l7_rxc,
+        eth_l8_txd=eth_l8_txd,
+        eth_l8_txc=eth_l8_txc,
+        eth_l8_rxd=eth_l8_rxd,
+        eth_l8_rxc=eth_l8_rxc,
+        eth_l9_txd=eth_l9_txd,
+        eth_l9_txc=eth_l9_txc,
+        eth_l9_rxd=eth_l9_rxd,
+        eth_l9_rxc=eth_l9_rxc,
+        eth_l10_txd=eth_l10_txd,
+        eth_l10_txc=eth_l10_txc,
+        eth_l10_rxd=eth_l10_rxd,
+        eth_l10_rxc=eth_l10_rxc,
+        eth_l11_txd=eth_l11_txd,
+        eth_l11_txc=eth_l11_txc,
+        eth_l11_rxd=eth_l11_rxd,
+        eth_l11_rxc=eth_l11_rxc
+    )
 
     @always(delay(4))
     def clkgen():
@@ -1012,13 +520,13 @@ def bench():
         test_frame.payload = bytearray(range(32))
         test_frame.build()
 
-        eth_l0_source_queue.put(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+test_frame.build_eth().build_axis_fcs().data)
+        eth_l0_source.send(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+test_frame.build_eth().build_axis_fcs().data)
 
         # wait for ARP request packet
-        while eth_l0_sink_queue.empty():
+        while eth_l0_sink.empty():
             yield clk.posedge
 
-        rx_frame = eth_l0_sink_queue.get(False)
+        rx_frame = eth_l0_sink.recv()
         check_eth_frame = eth_ep.EthFrame()
         check_eth_frame.parse_axis_fcs(rx_frame.data[8:])
         check_frame = arp_ep.ARPFrame()
@@ -1054,12 +562,12 @@ def bench():
         arp_frame.arp_tha = 0x020000000000
         arp_frame.arp_tpa = 0xc0a80180
 
-        eth_l0_source_queue.put(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+arp_frame.build_eth().build_axis_fcs().data)
+        eth_l0_source.send(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+arp_frame.build_eth().build_axis_fcs().data)
 
-        while eth_l0_sink_queue.empty():
+        while eth_l0_sink.empty():
             yield clk.posedge
 
-        rx_frame = eth_l0_sink_queue.get(False)
+        rx_frame = eth_l0_sink.recv()
         check_eth_frame = eth_ep.EthFrame()
         check_eth_frame.parse_axis_fcs(rx_frame.data[8:])
         check_frame = udp_ep.UDPFrame()
@@ -1085,21 +593,21 @@ def bench():
         assert check_frame.udp_dest_port == 5678
         assert check_frame.payload.data == bytearray(range(32))
 
-        assert eth_l0_source_queue.empty()
-        assert eth_l0_sink_queue.empty()
+        assert eth_l0_source.empty()
+        assert eth_l0_sink.empty()
 
         yield delay(100)
 
         raise StopSimulation
 
-    return (dut, clkgen, check, eth_r0_source, eth_r0_sink, eth_r1_source, eth_r1_sink, eth_r2_source, eth_r2_sink,
-        eth_r3_source, eth_r3_sink, eth_r4_source, eth_r4_sink, eth_r5_source, eth_r5_sink,
-        eth_r6_source, eth_r6_sink, eth_r7_source, eth_r7_sink, eth_r8_source, eth_r8_sink,
-        eth_r9_source, eth_r9_sink, eth_r10_source, eth_r10_sink, eth_r11_source, eth_r11_sink,
-        eth_l0_source, eth_l0_sink, eth_l1_source, eth_l1_sink, eth_l2_source, eth_l2_sink,
-        eth_l3_source, eth_l3_sink, eth_l4_source, eth_l4_sink, eth_l5_source, eth_l5_sink,
-        eth_l6_source, eth_l6_sink, eth_l7_source, eth_l7_sink, eth_l8_source, eth_l8_sink,
-        eth_l9_source, eth_l9_sink, eth_l10_source, eth_l10_sink, eth_l11_source, eth_l11_sink)
+    return (dut, clkgen, check, eth_r0_source_logic, eth_r0_sink_logic, eth_r1_source_logic, eth_r1_sink_logic, eth_r2_source_logic, eth_r2_sink_logic,
+        eth_r3_source_logic, eth_r3_sink_logic, eth_r4_source_logic, eth_r4_sink_logic, eth_r5_source_logic, eth_r5_sink_logic,
+        eth_r6_source_logic, eth_r6_sink_logic, eth_r7_source_logic, eth_r7_sink_logic, eth_r8_source_logic, eth_r8_sink_logic,
+        eth_r9_source_logic, eth_r9_sink_logic, eth_r10_source_logic, eth_r10_sink_logic, eth_r11_source_logic, eth_r11_sink_logic,
+        eth_l0_source_logic, eth_l0_sink_logic, eth_l1_source_logic, eth_l1_sink_logic, eth_l2_source_logic, eth_l2_sink_logic,
+        eth_l3_source_logic, eth_l3_sink_logic, eth_l4_source_logic, eth_l4_sink_logic, eth_l5_source_logic, eth_l5_sink_logic,
+        eth_l6_source_logic, eth_l6_sink_logic, eth_l7_source_logic, eth_l7_sink_logic, eth_l8_source_logic, eth_l8_sink_logic,
+        eth_l9_source_logic, eth_l9_sink_logic, eth_l10_source_logic, eth_l10_sink_logic, eth_l11_source_logic, eth_l11_sink_logic)
 
 def test_bench():
     sim = Simulation(bench())

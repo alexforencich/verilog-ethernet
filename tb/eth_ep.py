@@ -27,11 +27,6 @@ import axis_ep
 import struct
 import zlib
 
-try:
-    from queue import Queue
-except ImportError:
-    from Queue import Queue
-
 class EthFrame(object):
     def __init__(self, payload=b'', eth_dest_mac=0, eth_src_mac=0, eth_type=0, eth_fcs=None):
         self._payload = axis_ep.AXIStreamFrame()
@@ -121,143 +116,181 @@ class EthFrame(object):
             fcs = '0x%08x' % self.eth_fcs
         return 'EthFrame(payload=%s, eth_dest_mac=0x%012x, eth_src_mac=0x%012x, eth_type=0x%04x, eth_fcs=%s)' % (repr(self.payload), self.eth_dest_mac, self.eth_src_mac, self.eth_type, fcs)
 
-def EthFrameSource(clk, rst,
-                   eth_hdr_valid=None,
-                   eth_hdr_ready=None,
-                   eth_dest_mac=Signal(intbv(0)[48:]),
-                   eth_src_mac=Signal(intbv(0)[48:]),
-                   eth_type=Signal(intbv(0)[16:]),
-                   eth_payload_tdata=None,
-                   eth_payload_tkeep=Signal(bool(True)),
-                   eth_payload_tvalid=Signal(bool(False)),
-                   eth_payload_tready=Signal(bool(True)),
-                   eth_payload_tlast=Signal(bool(False)),
-                   eth_payload_tuser=Signal(bool(False)),
-                   fifo=None,
-                   pause=0,
-                   name=None):
 
-    eth_hdr_ready_int = Signal(bool(False))
-    eth_hdr_valid_int = Signal(bool(False))
-    eth_payload_pause = Signal(bool(False))
+class EthFrameSource():
+    def __init__(self):
+        self.has_logic = False
+        self.queue = []
+        self.payload_source = axis_ep.AXIStreamSource()
 
-    eth_payload_fifo = Queue()
+    def send(self, frame):
+        self.queue.append(EthFrame(frame))
 
-    eth_payload_source = axis_ep.AXIStreamSource(clk,
-                                                rst,
-                                                tdata=eth_payload_tdata,
-                                                tkeep=eth_payload_tkeep,
-                                                tvalid=eth_payload_tvalid,
-                                                tready=eth_payload_tready,
-                                                tlast=eth_payload_tlast,
-                                                tuser=eth_payload_tuser,
-                                                fifo=eth_payload_fifo,
-                                                pause=eth_payload_pause)
+    def count(self):
+        return len(self.queue)
 
-    @always_comb
-    def pause_logic():
-        eth_hdr_ready_int.next = eth_hdr_ready and not pause
-        eth_hdr_valid.next = eth_hdr_valid_int and not pause
-        eth_payload_pause.next = pause # or eth_hdr_valid_int
+    def empty(self):
+        return self.count() == 0
 
-    @instance
-    def logic():
-        frame = dict()
+    def create_logic(self,
+                clk,
+                rst,
+                eth_hdr_valid=None,
+                eth_hdr_ready=None,
+                eth_dest_mac=Signal(intbv(0)[48:]),
+                eth_src_mac=Signal(intbv(0)[48:]),
+                eth_type=Signal(intbv(0)[16:]),
+                eth_payload_tdata=None,
+                eth_payload_tkeep=Signal(bool(True)),
+                eth_payload_tvalid=Signal(bool(False)),
+                eth_payload_tready=Signal(bool(True)),
+                eth_payload_tlast=Signal(bool(False)),
+                eth_payload_tuser=Signal(bool(False)),
+                pause=0,
+                name=None
+            ):
 
-        while True:
-            yield clk.posedge, rst.posedge
+        assert not self.has_logic
 
-            if rst:
-                eth_hdr_valid_int.next = False
-            else:
-                if eth_hdr_ready_int:
+        self.has_logic = True
+
+        eth_hdr_ready_int = Signal(bool(False))
+        eth_hdr_valid_int = Signal(bool(False))
+        eth_payload_pause = Signal(bool(False))
+
+        eth_payload_source = self.payload_source.create_logic(
+            clk=clk,
+            rst=rst,
+            tdata=eth_payload_tdata,
+            tkeep=eth_payload_tkeep,
+            tvalid=eth_payload_tvalid,
+            tready=eth_payload_tready,
+            tlast=eth_payload_tlast,
+            tuser=eth_payload_tuser,
+            pause=eth_payload_pause,
+        )
+
+        @always_comb
+        def pause_logic():
+            eth_hdr_ready_int.next = eth_hdr_ready and not pause
+            eth_hdr_valid.next = eth_hdr_valid_int and not pause
+            eth_payload_pause.next = pause # or eth_hdr_valid_int
+
+        @instance
+        def logic():
+            frame = EthFrame()
+
+            while True:
+                yield clk.posedge, rst.posedge
+
+                if rst:
                     eth_hdr_valid_int.next = False
-                if (eth_payload_tlast and eth_hdr_ready_int and eth_hdr_valid) or not eth_hdr_valid_int:
-                    if not fifo.empty():
-                        frame = fifo.get()
-                        frame = EthFrame(frame)
-                        eth_dest_mac.next = frame.eth_dest_mac
-                        eth_src_mac.next = frame.eth_src_mac
-                        eth_type.next = frame.eth_type
-                        eth_payload_fifo.put(frame.payload)
+                else:
+                    if eth_hdr_ready_int:
+                        eth_hdr_valid_int.next = False
+                    if (eth_payload_tlast and eth_hdr_ready_int and eth_hdr_valid) or not eth_hdr_valid_int:
+                        if len(self.queue) > 0:
+                            frame = self.queue.pop(0)
+                            eth_dest_mac.next = frame.eth_dest_mac
+                            eth_src_mac.next = frame.eth_src_mac
+                            eth_type.next = frame.eth_type
+                            self.payload_source.send(frame.payload)
+
+                            if name is not None:
+                                print("[%s] Sending frame %s" % (name, repr(frame)))
+
+                            eth_hdr_valid_int.next = True
+
+        return logic, pause_logic, eth_payload_source
+
+
+class EthFrameSink():
+    def __init__(self):
+        self.has_logic = False
+        self.queue = []
+        self.payload_sink = axis_ep.AXIStreamSink()
+
+    def recv(self):
+        if len(self.queue) > 0:
+            return self.queue.pop(0)
+        return None
+
+    def count(self):
+        return len(self.queue)
+
+    def empty(self):
+        return self.count() == 0
+
+    def create_logic(self,
+                clk,
+                rst,
+                eth_hdr_valid=None,
+                eth_hdr_ready=None,
+                eth_dest_mac=Signal(intbv(0)[48:]),
+                eth_src_mac=Signal(intbv(0)[48:]),
+                eth_type=Signal(intbv(0)[16:]),
+                eth_payload_tdata=None,
+                eth_payload_tkeep=Signal(bool(True)),
+                eth_payload_tvalid=Signal(bool(True)),
+                eth_payload_tready=Signal(bool(True)),
+                eth_payload_tlast=Signal(bool(True)),
+                eth_payload_tuser=Signal(bool(False)),
+                pause=0,
+                name=None
+            ):
+
+        assert not self.has_logic
+
+        self.has_logic = True
+
+        eth_hdr_ready_int = Signal(bool(False))
+        eth_hdr_valid_int = Signal(bool(False))
+        eth_payload_pause = Signal(bool(False))
+
+        eth_header_queue = []
+
+        eth_payload_sink = self.payload_sink.create_logic(
+            clk=clk,
+            rst=rst,
+            tdata=eth_payload_tdata,
+            tkeep=eth_payload_tkeep,
+            tvalid=eth_payload_tvalid,
+            tready=eth_payload_tready,
+            tlast=eth_payload_tlast,
+            tuser=eth_payload_tuser,
+            pause=eth_payload_pause
+        )
+
+        @always_comb
+        def pause_logic():
+            eth_hdr_ready.next = eth_hdr_ready_int and not pause
+            eth_hdr_valid_int.next = eth_hdr_valid and not pause
+            eth_payload_pause.next = pause # or eth_hdr_valid_int
+
+        @instance
+        def logic():
+            while True:
+                yield clk.posedge, rst.posedge
+
+                if rst:
+                    eth_hdr_ready_int.next = False
+                else:
+                    eth_hdr_ready_int.next = True
+
+                    if eth_hdr_ready_int and eth_hdr_valid_int:
+                        frame = EthFrame()
+                        frame.eth_dest_mac = int(eth_dest_mac)
+                        frame.eth_src_mac = int(eth_src_mac)
+                        frame.eth_type = int(eth_type)
+                        eth_header_queue.append(frame)
+
+                    if not self.payload_sink.empty() and len(eth_header_queue) > 0:
+                        frame = eth_header_queue.pop(0)
+                        frame.payload = self.payload_sink.recv()
+                        self.queue.append(frame)
 
                         if name is not None:
-                            print("[%s] Sending frame %s" % (name, repr(frame)))
+                            print("[%s] Got frame %s" % (name, repr(frame)))
 
-                        eth_hdr_valid_int.next = True
-
-    return logic, pause_logic, eth_payload_source
-
-
-def EthFrameSink(clk, rst,
-                 eth_hdr_valid=None,
-                 eth_hdr_ready=None,
-                 eth_dest_mac=Signal(intbv(0)[48:]),
-                 eth_src_mac=Signal(intbv(0)[48:]),
-                 eth_type=Signal(intbv(0)[16:]),
-                 eth_payload_tdata=None,
-                 eth_payload_tkeep=Signal(bool(True)),
-                 eth_payload_tvalid=Signal(bool(True)),
-                 eth_payload_tready=Signal(bool(True)),
-                 eth_payload_tlast=Signal(bool(True)),
-                 eth_payload_tuser=Signal(bool(False)),
-                 fifo=None,
-                 pause=0,
-                 name=None):
-
-    eth_hdr_ready_int = Signal(bool(False))
-    eth_hdr_valid_int = Signal(bool(False))
-    eth_payload_pause = Signal(bool(False))
-
-    eth_payload_fifo = Queue()
-    eth_header_fifo = Queue()
-
-    eth_payload_sink = axis_ep.AXIStreamSink(clk,
-                                            rst,
-                                            tdata=eth_payload_tdata,
-                                            tkeep=eth_payload_tkeep,
-                                            tvalid=eth_payload_tvalid,
-                                            tready=eth_payload_tready,
-                                            tlast=eth_payload_tlast,
-                                            tuser=eth_payload_tuser,
-                                            fifo=eth_payload_fifo,
-                                            pause=eth_payload_pause)
-
-    @always_comb
-    def pause_logic():
-        eth_hdr_ready.next = eth_hdr_ready_int and not pause
-        eth_hdr_valid_int.next = eth_hdr_valid and not pause
-        eth_payload_pause.next = pause # or eth_hdr_valid_int
-
-    @instance
-    def logic():
-        frame = EthFrame()
-
-        while True:
-            yield clk.posedge, rst.posedge
-
-            if rst:
-                eth_hdr_ready_int.next = False
-                frame = EthFrame()
-            else:
-                eth_hdr_ready_int.next = True
-
-                if eth_hdr_ready_int and eth_hdr_valid_int:
-                    frame = EthFrame()
-                    frame.eth_dest_mac = int(eth_dest_mac)
-                    frame.eth_src_mac = int(eth_src_mac)
-                    frame.eth_type = int(eth_type)
-                    eth_header_fifo.put(frame)
-
-                if not eth_payload_fifo.empty() and not eth_header_fifo.empty():
-                    frame = eth_header_fifo.get()
-                    frame.payload = eth_payload_fifo.get()
-                    fifo.put(frame)
-
-                    if name is not None:
-                        print("[%s] Got frame %s" % (name, repr(frame)))
-
-                    frame = dict()
-
-    return logic, pause_logic, eth_payload_sink
+        return logic, pause_logic, eth_payload_sink
 

@@ -26,17 +26,13 @@ THE SOFTWARE.
 from myhdl import *
 import os
 
-try:
-    from queue import Queue
-except ImportError:
-    from Queue import Queue
-
 import eth_ep
 import arp_ep
 import udp_ep
 import gmii_ep
 
 module = 'fpga_core'
+testbench = 'test_%s' % module
 
 srcs = []
 
@@ -69,64 +65,11 @@ srcs.append("../lib/eth/lib/axis/rtl/arbiter.v")
 srcs.append("../lib/eth/lib/axis/rtl/priority_encoder.v")
 srcs.append("../lib/eth/lib/axis/rtl/axis_fifo.v")
 srcs.append("../lib/eth/lib/axis/rtl/axis_async_frame_fifo.v")
-srcs.append("test_%s.v" % module)
+srcs.append("%s.v" % testbench)
 
 src = ' '.join(srcs)
 
-build_cmd = "iverilog -o test_%s.vvp %s" % (module, src)
-
-def dut_fpga_core(clk,
-                  rst,
-
-                  current_test,
-                  btnu,
-                  btnl,
-                  btnd,
-                  btnr,
-                  btnc,
-                  sw,
-                  led,
-
-                  phy_rx_clk,
-                  phy_rxd,
-                  phy_rx_dv,
-                  phy_rx_er,
-                  phy_gtx_clk,
-                  phy_txd,
-                  phy_tx_en,
-                  phy_tx_er,
-                  phy_reset_n,
-
-                  uart_rxd,
-                  uart_txd):
-
-    if os.system(build_cmd):
-        raise Exception("Error running build command")
-    return Cosimulation("vvp -m myhdl test_%s.vvp -lxt2" % module,
-                clk=clk,
-                rst=rst,
-                current_test=current_test,
-
-                btnu=btnu,
-                btnl=btnl,
-                btnd=btnd,
-                btnr=btnr,
-                btnc=btnc,
-                sw=sw,
-                led=led,
-
-                phy_rx_clk=phy_rx_clk,
-                phy_rxd=phy_rxd,
-                phy_rx_dv=phy_rx_dv,
-                phy_rx_er=phy_rx_er,
-                phy_gtx_clk=phy_gtx_clk,
-                phy_txd=phy_txd,
-                phy_tx_en=phy_tx_en,
-                phy_tx_er=phy_tx_er,
-                phy_reset_n=phy_reset_n,
-
-                uart_rxd=uart_rxd,
-                uart_txd=uart_txd)
+build_cmd = "iverilog -o %s.vvp %s" % (testbench, src)
 
 def bench():
 
@@ -160,50 +103,59 @@ def bench():
     uart_txd = Signal(bool(0))
 
     # sources and sinks
-    gmii_source_queue = Queue()
-    gmii_sink_queue = Queue()
+    gmii_source = gmii_ep.GMIISource()
 
-    gmii_source = gmii_ep.GMIISource(phy_rx_clk,
-                                     rst,
-                                     txd=phy_rxd,
-                                     tx_en=phy_rx_dv,
-                                     tx_er=phy_rx_er,
-                                     fifo=gmii_source_queue,
-                                     name='gmii_source')
+    gmii_source_logic = gmii_source.create_logic(
+        phy_rx_clk,
+        rst,
+        txd=phy_rxd,
+        tx_en=phy_rx_dv,
+        tx_er=phy_rx_er,
+        name='gmii_source'
+    )
 
-    gmii_sink = gmii_ep.GMIISink(phy_gtx_clk,
-                                 rst,
-                                 rxd=phy_txd,
-                                 rx_dv=phy_tx_en,
-                                 rx_er=phy_tx_er,
-                                 fifo=gmii_sink_queue,
-                                 name='gmii_sink')
+    gmii_sink = gmii_ep.GMIISink()
+
+    gmii_sink_logic = gmii_sink.create_logic(
+        phy_gtx_clk,
+        rst,
+        rxd=phy_txd,
+        rx_dv=phy_tx_en,
+        rx_er=phy_tx_er,
+        name='gmii_sink'
+    )
 
     # DUT
-    dut = dut_fpga_core(clk,
-                        rst,
-                        current_test,
+    if os.system(build_cmd):
+        raise Exception("Error running build command")
 
-                        btnu,
-                        btnl,
-                        btnd,
-                        btnr,
-                        btnc,
-                        sw,
-                        led,
+    dut = Cosimulation(
+        "vvp -m myhdl %s.vvp -lxt2" % testbench,
+        clk=clk,
+        rst=rst,
+        current_test=current_test,
 
-                        phy_rx_clk,
-                        phy_rxd,
-                        phy_rx_dv,
-                        phy_rx_er,
-                        phy_gtx_clk,
-                        phy_txd,
-                        phy_tx_en,
-                        phy_tx_er,
-                        phy_reset_n,
+        btnu=btnu,
+        btnl=btnl,
+        btnd=btnd,
+        btnr=btnr,
+        btnc=btnc,
+        sw=sw,
+        led=led,
 
-                        uart_rxd,
-                        uart_txd)
+        phy_rx_clk=phy_rx_clk,
+        phy_rxd=phy_rxd,
+        phy_rx_dv=phy_rx_dv,
+        phy_rx_er=phy_rx_er,
+        phy_gtx_clk=phy_gtx_clk,
+        phy_txd=phy_txd,
+        phy_tx_en=phy_tx_en,
+        phy_tx_er=phy_tx_er,
+        phy_reset_n=phy_reset_n,
+
+        uart_rxd=uart_rxd,
+        uart_txd=uart_txd
+    )
 
     @always(delay(4))
     def clkgen():
@@ -249,13 +201,13 @@ def bench():
         test_frame.payload = bytearray(range(32))
         test_frame.build()
 
-        gmii_source_queue.put(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+test_frame.build_eth().build_axis_fcs().data)
+        gmii_source.send(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+test_frame.build_eth().build_axis_fcs().data)
 
         # wait for ARP request packet
-        while gmii_sink_queue.empty():
+        while gmii_sink.empty():
             yield clk.posedge
 
-        rx_frame = gmii_sink_queue.get(False)
+        rx_frame = gmii_sink.recv()
         check_eth_frame = eth_ep.EthFrame()
         check_eth_frame.parse_axis_fcs(rx_frame.data[8:])
         check_frame = arp_ep.ARPFrame()
@@ -291,12 +243,12 @@ def bench():
         arp_frame.arp_tha = 0x020000000000
         arp_frame.arp_tpa = 0xc0a80180
 
-        gmii_source_queue.put(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+arp_frame.build_eth().build_axis_fcs().data)
+        gmii_source.send(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+arp_frame.build_eth().build_axis_fcs().data)
 
-        while gmii_sink_queue.empty():
+        while gmii_sink.empty():
             yield clk.posedge
 
-        rx_frame = gmii_sink_queue.get(False)
+        rx_frame = gmii_sink.recv()
         check_eth_frame = eth_ep.EthFrame()
         check_eth_frame.parse_axis_fcs(rx_frame.data[8:])
         check_frame = udp_ep.UDPFrame()
@@ -322,14 +274,14 @@ def bench():
         assert check_frame.udp_dest_port == 5678
         assert check_frame.payload.data == bytearray(range(32))
 
-        assert gmii_source_queue.empty()
-        assert gmii_sink_queue.empty()
+        assert gmii_source.empty()
+        assert gmii_sink.empty()
 
         yield delay(100)
 
         raise StopSimulation
 
-    return dut, gmii_source, gmii_sink, clkgen, check
+    return dut, gmii_source_logic, gmii_sink_logic, clkgen, check
 
 def test_bench():
     sim = Simulation(bench())

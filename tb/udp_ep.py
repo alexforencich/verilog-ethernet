@@ -28,11 +28,6 @@ import eth_ep
 import ip_ep
 import struct
 
-try:
-    from queue import Queue
-except ImportError:
-    from Queue import Queue
-
 class UDPFrame(object):
     def __init__(self, payload=b'',
                  eth_dest_mac=0,
@@ -317,216 +312,262 @@ class UDPFrame(object):
                 ('udp_length=%d, ' % self.udp_length) +
                 ('udp_checksum=%04x)' % self.udp_checksum))
 
-def UDPFrameSource(clk, rst,
-                   udp_hdr_valid=None,
-                   udp_hdr_ready=None,
-                   eth_dest_mac=Signal(intbv(0)[48:]),
-                   eth_src_mac=Signal(intbv(0)[48:]),
-                   eth_type=Signal(intbv(0)[16:]),
-                   ip_version=Signal(intbv(4)[4:]),
-                   ip_ihl=Signal(intbv(5)[4:]),
-                   ip_dscp=Signal(intbv(0)[6:]),
-                   ip_ecn=Signal(intbv(0)[2:]),
-                   ip_length=Signal(intbv(0)[16:]),
-                   ip_identification=Signal(intbv(0)[16:]),
-                   ip_flags=Signal(intbv(0)[3:]),
-                   ip_fragment_offset=Signal(intbv(0)[13:]),
-                   ip_ttl=Signal(intbv(0)[8:]),
-                   ip_protocol=Signal(intbv(0)[8:]),
-                   ip_header_checksum=Signal(intbv(0)[16:]),
-                   ip_source_ip=Signal(intbv(0)[32:]),
-                   ip_dest_ip=Signal(intbv(0)[32:]),
-                   udp_source_port=(intbv(0)[16:]),
-                   udp_dest_port=(intbv(0)[16:]),
-                   udp_length=(intbv(0)[16:]),
-                   udp_checksum=(intbv(0)[16:]),
-                   udp_payload_tdata=None,
-                   udp_payload_tkeep=Signal(bool(True)),
-                   udp_payload_tvalid=Signal(bool(False)),
-                   udp_payload_tready=Signal(bool(True)),
-                   udp_payload_tlast=Signal(bool(False)),
-                   udp_payload_tuser=Signal(bool(False)),
-                   fifo=None,
-                   pause=0,
-                   name=None):
 
-    udp_hdr_ready_int = Signal(bool(False))
-    udp_hdr_valid_int = Signal(bool(False))
-    udp_payload_pause = Signal(bool(False))
+class UDPFrameSource():
+    def __init__(self):
+        self.has_logic = False
+        self.queue = []
+        self.payload_source = axis_ep.AXIStreamSource()
+        self.header_queue = []
 
-    udp_payload_fifo = Queue()
+    def send(self, frame):
+        frame = UDPFrame(frame)
+        if len(self.header_queue) == 0:
+            self.header_queue.append(frame)
+            self.payload_source.send(frame.payload)
+        else:
+            self.queue.append(frame)
 
-    udp_payload_source = axis_ep.AXIStreamSource(clk,
-                                                rst,
-                                                tdata=udp_payload_tdata,
-                                                tkeep=udp_payload_tkeep,
-                                                tvalid=udp_payload_tvalid,
-                                                tready=udp_payload_tready,
-                                                tlast=udp_payload_tlast,
-                                                tuser=udp_payload_tuser,
-                                                fifo=udp_payload_fifo,
-                                                pause=udp_payload_pause)
+    def count(self):
+        return len(self.queue)
 
-    @always_comb
-    def pause_logic():
-        udp_hdr_ready_int.next = udp_hdr_ready and not pause
-        udp_hdr_valid.next = udp_hdr_valid_int and not pause
-        udp_payload_pause.next = pause # or udp_hdr_valid_int
+    def empty(self):
+        return self.count() == 0
 
-    @instance
-    def logic():
-        frame = dict()
+    def create_logic(self,
+                clk,
+                rst,
+                udp_hdr_valid=None,
+                udp_hdr_ready=None,
+                eth_dest_mac=Signal(intbv(0)[48:]),
+                eth_src_mac=Signal(intbv(0)[48:]),
+                eth_type=Signal(intbv(0)[16:]),
+                ip_version=Signal(intbv(4)[4:]),
+                ip_ihl=Signal(intbv(5)[4:]),
+                ip_dscp=Signal(intbv(0)[6:]),
+                ip_ecn=Signal(intbv(0)[2:]),
+                ip_length=Signal(intbv(0)[16:]),
+                ip_identification=Signal(intbv(0)[16:]),
+                ip_flags=Signal(intbv(0)[3:]),
+                ip_fragment_offset=Signal(intbv(0)[13:]),
+                ip_ttl=Signal(intbv(0)[8:]),
+                ip_protocol=Signal(intbv(0)[8:]),
+                ip_header_checksum=Signal(intbv(0)[16:]),
+                ip_source_ip=Signal(intbv(0)[32:]),
+                ip_dest_ip=Signal(intbv(0)[32:]),
+                udp_source_port=(intbv(0)[16:]),
+                udp_dest_port=(intbv(0)[16:]),
+                udp_length=(intbv(0)[16:]),
+                udp_checksum=(intbv(0)[16:]),
+                udp_payload_tdata=None,
+                udp_payload_tkeep=Signal(bool(True)),
+                udp_payload_tvalid=Signal(bool(False)),
+                udp_payload_tready=Signal(bool(True)),
+                udp_payload_tlast=Signal(bool(False)),
+                udp_payload_tuser=Signal(bool(False)),
+                pause=0,
+                name=None
+            ):
 
-        while True:
-            yield clk.posedge, rst.posedge
+        assert not self.has_logic
 
-            if rst:
-                udp_hdr_valid_int.next = False
-            else:
-                if udp_hdr_ready_int:
+        self.has_logic = True
+
+        udp_hdr_ready_int = Signal(bool(False))
+        udp_hdr_valid_int = Signal(bool(False))
+        udp_payload_pause = Signal(bool(False))
+
+        udp_payload_source = self.payload_source.create_logic(
+            clk=clk,
+            rst=rst,
+            tdata=udp_payload_tdata,
+            tkeep=udp_payload_tkeep,
+            tvalid=udp_payload_tvalid,
+            tready=udp_payload_tready,
+            tlast=udp_payload_tlast,
+            tuser=udp_payload_tuser,
+            pause=udp_payload_pause,
+        )
+
+        @always_comb
+        def pause_logic():
+            udp_hdr_ready_int.next = udp_hdr_ready and not pause
+            udp_hdr_valid.next = udp_hdr_valid_int and not pause
+            udp_payload_pause.next = pause
+
+        @instance
+        def logic():
+            while True:
+                yield clk.posedge, rst.posedge
+
+                if rst:
                     udp_hdr_valid_int.next = False
-                if (udp_payload_tlast and udp_hdr_ready_int and udp_hdr_valid) or not udp_hdr_valid_int:
-                    if not fifo.empty():
-                        frame = fifo.get()
-                        frame = UDPFrame(frame)
-                        frame.build()
-                        eth_dest_mac.next = frame.eth_dest_mac
-                        eth_src_mac.next = frame.eth_src_mac
-                        eth_type.next = frame.eth_type
-                        ip_version.next = frame.ip_version
-                        ip_ihl.next = frame.ip_ihl
-                        ip_dscp.next = frame.ip_dscp
-                        ip_ecn.next = frame.ip_ecn
-                        ip_length.next = frame.ip_length
-                        ip_identification.next = frame.ip_identification
-                        ip_flags.next = frame.ip_flags
-                        ip_fragment_offset.next = frame.ip_fragment_offset
-                        ip_ttl.next = frame.ip_ttl
-                        ip_protocol.next = frame.ip_protocol
-                        ip_header_checksum.next = frame.ip_header_checksum
-                        ip_source_ip.next = frame.ip_source_ip
-                        ip_dest_ip.next = frame.ip_dest_ip
-                        udp_source_port.next = frame.udp_source_port
-                        udp_dest_port.next = frame.udp_dest_port
-                        udp_length.next = frame.udp_length
-                        udp_checksum.next = frame.udp_checksum
-                        udp_payload_fifo.put(frame.payload)
+                else:
+                    if udp_hdr_ready_int:
+                        udp_hdr_valid_int.next = False
+                    if (udp_hdr_ready_int and udp_hdr_valid) or not udp_hdr_valid_int:
+                        if len(self.header_queue) > 0:
+                            frame = self.header_queue.pop(0)
+                            frame.build()
+                            eth_dest_mac.next = frame.eth_dest_mac
+                            eth_src_mac.next = frame.eth_src_mac
+                            eth_type.next = frame.eth_type
+                            ip_version.next = frame.ip_version
+                            ip_ihl.next = frame.ip_ihl
+                            ip_dscp.next = frame.ip_dscp
+                            ip_ecn.next = frame.ip_ecn
+                            ip_length.next = frame.ip_length
+                            ip_identification.next = frame.ip_identification
+                            ip_flags.next = frame.ip_flags
+                            ip_fragment_offset.next = frame.ip_fragment_offset
+                            ip_ttl.next = frame.ip_ttl
+                            ip_protocol.next = frame.ip_protocol
+                            ip_header_checksum.next = frame.ip_header_checksum
+                            ip_source_ip.next = frame.ip_source_ip
+                            ip_dest_ip.next = frame.ip_dest_ip
+                            udp_source_port.next = frame.udp_source_port
+                            udp_dest_port.next = frame.udp_dest_port
+                            udp_length.next = frame.udp_length
+                            udp_checksum.next = frame.udp_checksum
+
+                            if name is not None:
+                                print("[%s] Sending frame %s" % (name, repr(frame)))
+
+                            udp_hdr_valid_int.next = True
+
+                    if len(self.queue) > 0 and len(self.header_queue) == 0:
+                        frame = self.queue.pop(0)
+                        self.header_queue.append(frame)
+                        self.payload_source.send(frame.payload)
+
+        return logic, pause_logic, udp_payload_source
+
+
+class UDPFrameSink():
+    def __init__(self):
+        self.has_logic = False
+        self.queue = []
+        self.payload_sink = axis_ep.AXIStreamSink()
+        self.header_queue = []
+
+    def recv(self):
+        if len(self.queue) > 0:
+            return self.queue.pop(0)
+        return None
+
+    def count(self):
+        return len(self.queue)
+
+    def empty(self):
+        return self.count() == 0
+
+    def create_logic(self,
+                clk,
+                rst,
+                udp_hdr_valid=None,
+                udp_hdr_ready=None,
+                eth_dest_mac=Signal(intbv(0)[48:]),
+                eth_src_mac=Signal(intbv(0)[48:]),
+                eth_type=Signal(intbv(0)[16:]),
+                ip_version=Signal(intbv(4)[4:]),
+                ip_ihl=Signal(intbv(5)[4:]),
+                ip_dscp=Signal(intbv(0)[6:]),
+                ip_ecn=Signal(intbv(0)[2:]),
+                ip_length=Signal(intbv(0)[16:]),
+                ip_identification=Signal(intbv(0)[16:]),
+                ip_flags=Signal(intbv(0)[3:]),
+                ip_fragment_offset=Signal(intbv(0)[13:]),
+                ip_ttl=Signal(intbv(0)[8:]),
+                ip_protocol=Signal(intbv(0)[8:]),
+                ip_header_checksum=Signal(intbv(0)[16:]),
+                ip_source_ip=Signal(intbv(0)[32:]),
+                ip_dest_ip=Signal(intbv(0)[32:]),
+                udp_source_port=(intbv(0)[16:]),
+                udp_dest_port=(intbv(0)[16:]),
+                udp_length=(intbv(0)[16:]),
+                udp_checksum=(intbv(0)[16:]),
+                udp_payload_tdata=None,
+                udp_payload_tkeep=Signal(bool(True)),
+                udp_payload_tvalid=Signal(bool(True)),
+                udp_payload_tready=Signal(bool(True)),
+                udp_payload_tlast=Signal(bool(True)),
+                udp_payload_tuser=Signal(bool(False)),
+                pause=0,
+                name=None
+            ):
+
+        assert not self.has_logic
+
+        self.has_logic = True
+
+        udp_hdr_ready_int = Signal(bool(False))
+        udp_hdr_valid_int = Signal(bool(False))
+        udp_payload_pause = Signal(bool(False))
+
+        udp_payload_sink = self.payload_sink.create_logic(
+            clk=clk,
+            rst=rst,
+            tdata=udp_payload_tdata,
+            tkeep=udp_payload_tkeep,
+            tvalid=udp_payload_tvalid,
+            tready=udp_payload_tready,
+            tlast=udp_payload_tlast,
+            tuser=udp_payload_tuser,
+            pause=udp_payload_pause
+        )
+
+        @always_comb
+        def pause_logic():
+            udp_hdr_ready.next = udp_hdr_ready_int and not pause
+            udp_hdr_valid_int.next = udp_hdr_valid and not pause
+            udp_payload_pause.next = pause # or udp_hdr_valid_int
+
+        @instance
+        def logic():
+            while True:
+                yield clk.posedge, rst.posedge
+
+                if rst:
+                    udp_hdr_ready_int.next = False
+                    frame = UDPFrame()
+                else:
+                    udp_hdr_ready_int.next = True
+
+                    if udp_hdr_ready_int and udp_hdr_valid_int:
+                        frame = UDPFrame()
+                        frame.eth_dest_mac = int(eth_dest_mac)
+                        frame.eth_src_mac = int(eth_src_mac)
+                        frame.eth_type = int(eth_type)
+                        frame.ip_version = int(ip_version)
+                        frame.ip_ihl = int(ip_ihl)
+                        frame.ip_dscp = int(ip_dscp)
+                        frame.ip_ecn = int(ip_ecn)
+                        frame.ip_length = int(ip_length)
+                        frame.ip_identification = int(ip_identification)
+                        frame.ip_flags = int(ip_flags)
+                        frame.ip_fragment_offset = int(ip_fragment_offset)
+                        frame.ip_ttl = int(ip_ttl)
+                        frame.ip_protocol = int(ip_protocol)
+                        frame.ip_header_checksum = int(ip_header_checksum)
+                        frame.ip_source_ip = int(ip_source_ip)
+                        frame.ip_dest_ip = int(ip_dest_ip)
+                        frame.udp_source_port = int(udp_source_port)
+                        frame.udp_dest_port = int(udp_dest_port)
+                        frame.udp_length = int(udp_length)
+                        frame.udp_checksum = int(udp_checksum)
+                        self.header_queue.append(frame)
+
+                    if not self.payload_sink.empty() and len(self.header_queue) > 0:
+                        frame = self.header_queue.pop(0)
+                        frame.payload = self.payload_sink.recv()
+                        self.queue.append(frame)
 
                         if name is not None:
-                            print("[%s] Sending frame %s" % (name, repr(frame)))
+                            print("[%s] Got frame %s" % (name, repr(frame)))
 
-                        udp_hdr_valid_int.next = True
+                        # ensure all payloads have been matched to headers
+                        if len(self.header_queue) == 0:
+                            assert self.payload_sink.empty()
 
-    return logic, pause_logic, udp_payload_source
-
-
-def UDPFrameSink(clk, rst,
-                 udp_hdr_valid=None,
-                 udp_hdr_ready=None,
-                 eth_dest_mac=Signal(intbv(0)[48:]),
-                 eth_src_mac=Signal(intbv(0)[48:]),
-                 eth_type=Signal(intbv(0)[16:]),
-                 ip_version=Signal(intbv(4)[4:]),
-                 ip_ihl=Signal(intbv(5)[4:]),
-                 ip_dscp=Signal(intbv(0)[6:]),
-                 ip_ecn=Signal(intbv(0)[2:]),
-                 ip_length=Signal(intbv(0)[16:]),
-                 ip_identification=Signal(intbv(0)[16:]),
-                 ip_flags=Signal(intbv(0)[3:]),
-                 ip_fragment_offset=Signal(intbv(0)[13:]),
-                 ip_ttl=Signal(intbv(0)[8:]),
-                 ip_protocol=Signal(intbv(0)[8:]),
-                 ip_header_checksum=Signal(intbv(0)[16:]),
-                 ip_source_ip=Signal(intbv(0)[32:]),
-                 ip_dest_ip=Signal(intbv(0)[32:]),
-                 udp_source_port=(intbv(0)[16:]),
-                 udp_dest_port=(intbv(0)[16:]),
-                 udp_length=(intbv(0)[16:]),
-                 udp_checksum=(intbv(0)[16:]),
-                 udp_payload_tdata=None,
-                 udp_payload_tkeep=Signal(bool(True)),
-                 udp_payload_tvalid=Signal(bool(True)),
-                 udp_payload_tready=Signal(bool(True)),
-                 udp_payload_tlast=Signal(bool(True)),
-                 udp_payload_tuser=Signal(bool(False)),
-                 fifo=None,
-                 pause=0,
-                 name=None):
-
-    udp_hdr_ready_int = Signal(bool(False))
-    udp_hdr_valid_int = Signal(bool(False))
-    udp_payload_pause = Signal(bool(False))
-
-    udp_payload_fifo = Queue()
-    udp_header_fifo = Queue()
-
-    udp_payload_sink = axis_ep.AXIStreamSink(clk,
-                                            rst,
-                                            tdata=udp_payload_tdata,
-                                            tkeep=udp_payload_tkeep,
-                                            tvalid=udp_payload_tvalid,
-                                            tready=udp_payload_tready,
-                                            tlast=udp_payload_tlast,
-                                            tuser=udp_payload_tuser,
-                                            fifo=udp_payload_fifo,
-                                            pause=udp_payload_pause)
-
-    @always_comb
-    def pause_logic():
-        udp_hdr_ready.next = udp_hdr_ready_int and not pause
-        udp_hdr_valid_int.next = udp_hdr_valid and not pause
-        udp_payload_pause.next = pause # or udp_hdr_valid_int
-
-    @instance
-    def logic():
-        frame = UDPFrame()
-
-        while True:
-            yield clk.posedge, rst.posedge
-
-            if rst:
-                udp_hdr_ready_int.next = False
-                frame = UDPFrame()
-            else:
-                udp_hdr_ready_int.next = True
-
-                if udp_hdr_ready_int and udp_hdr_valid_int:
-                    frame = UDPFrame()
-                    frame.eth_dest_mac = int(eth_dest_mac)
-                    frame.eth_src_mac = int(eth_src_mac)
-                    frame.eth_type = int(eth_type)
-                    frame.ip_version = int(ip_version)
-                    frame.ip_ihl = int(ip_ihl)
-                    frame.ip_dscp = int(ip_dscp)
-                    frame.ip_ecn = int(ip_ecn)
-                    frame.ip_length = int(ip_length)
-                    frame.ip_identification = int(ip_identification)
-                    frame.ip_flags = int(ip_flags)
-                    frame.ip_fragment_offset = int(ip_fragment_offset)
-                    frame.ip_ttl = int(ip_ttl)
-                    frame.ip_protocol = int(ip_protocol)
-                    frame.ip_header_checksum = int(ip_header_checksum)
-                    frame.ip_source_ip = int(ip_source_ip)
-                    frame.ip_dest_ip = int(ip_dest_ip)
-                    frame.udp_source_port = int(udp_source_port)
-                    frame.udp_dest_port = int(udp_dest_port)
-                    frame.udp_length = int(udp_length)
-                    frame.udp_checksum = int(udp_checksum)
-                    udp_header_fifo.put(frame)
-
-                if not udp_payload_fifo.empty() and not udp_header_fifo.empty():
-                    frame = udp_header_fifo.get()
-                    frame.payload = udp_payload_fifo.get()
-                    fifo.put(frame)
-
-                    # ensure all payloads have been matched to headers
-                    if udp_header_fifo.empty():
-                        assert udp_payload_fifo.empty()
-
-                    if name is not None:
-                        print("[%s] Got frame %s" % (name, repr(frame)))
-
-                    frame = dict()
-
-    return logic, pause_logic, udp_payload_sink
+        return logic, pause_logic, udp_payload_sink
 

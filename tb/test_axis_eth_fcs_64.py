@@ -26,56 +26,21 @@ THE SOFTWARE.
 from myhdl import *
 import os
 
-try:
-    from queue import Queue
-except ImportError:
-    from Queue import Queue
-
 import axis_ep
 import eth_ep
 
 module = 'axis_eth_fcs_64'
+testbench = 'test_%s' % module
 
 srcs = []
 
 srcs.append("../rtl/%s.v" % module)
 srcs.append("../rtl/lfsr.v")
-srcs.append("test_%s.v" % module)
+srcs.append("%s.v" % testbench)
 
 src = ' '.join(srcs)
 
-build_cmd = "iverilog -o test_%s.vvp %s" % (module, src)
-
-def dut_axis_eth_fcs_64(clk,
-                        rst,
-                        current_test,
-
-                        input_axis_tdata,
-                        input_axis_tkeep,
-                        input_axis_tvalid,
-                        input_axis_tready,
-                        input_axis_tlast,
-                        input_axis_tuser,
-
-                        output_fcs,
-                        output_fcs_valid):
-
-    if os.system(build_cmd):
-        raise Exception("Error running build command")
-    return Cosimulation("vvp -m myhdl test_%s.vvp -lxt2" % module,
-                clk=clk,
-                rst=rst,
-                current_test=current_test,
-
-                input_axis_tdata=input_axis_tdata,
-                input_axis_tkeep=input_axis_tkeep,
-                input_axis_tvalid=input_axis_tvalid,
-                input_axis_tready=input_axis_tready,
-                input_axis_tlast=input_axis_tlast,
-                input_axis_tuser=input_axis_tuser,
-
-                output_fcs=output_fcs,
-                output_fcs_valid=output_fcs_valid)
+build_cmd = "iverilog -o %s.vvp %s" % (testbench, src)
 
 def bench():
 
@@ -99,35 +64,43 @@ def bench():
     output_fcs_valid = Signal(bool(0))
 
     # sources and sinks
-    source_queue = Queue()
     source_pause = Signal(bool(0))
 
-    source = axis_ep.AXIStreamSource(clk,
-                                     rst,
-                                     tdata=input_axis_tdata,
-                                     tkeep=input_axis_tkeep,
-                                     tvalid=input_axis_tvalid,
-                                     tready=input_axis_tready,
-                                     tlast=input_axis_tlast,
-                                     tuser=input_axis_tuser,
-                                     fifo=source_queue,
-                                     pause=source_pause,
-                                     name='source')
+    source = axis_ep.AXIStreamSource()
+
+    source_logic = source.create_logic(
+        clk,
+        rst,
+        tdata=input_axis_tdata,
+        tkeep=input_axis_tkeep,
+        tvalid=input_axis_tvalid,
+        tready=input_axis_tready,
+        tlast=input_axis_tlast,
+        tuser=input_axis_tuser,
+        pause=source_pause,
+        name='source'
+    )
 
     # DUT
-    dut = dut_axis_eth_fcs_64(clk,
-                              rst,
-                              current_test,
+    if os.system(build_cmd):
+        raise Exception("Error running build command")
 
-                              input_axis_tdata,
-                              input_axis_tkeep,
-                              input_axis_tvalid,
-                              input_axis_tready,
-                              input_axis_tlast,
-                              input_axis_tuser,
+    dut = Cosimulation(
+        "vvp -m myhdl %s.vvp -lxt2" % testbench,
+        clk=clk,
+        rst=rst,
+        current_test=current_test,
 
-                              output_fcs,
-                              output_fcs_valid)
+        input_axis_tdata=input_axis_tdata,
+        input_axis_tkeep=input_axis_tkeep,
+        input_axis_tvalid=input_axis_tvalid,
+        input_axis_tready=input_axis_tready,
+        input_axis_tlast=input_axis_tlast,
+        input_axis_tuser=input_axis_tuser,
+
+        output_fcs=output_fcs,
+        output_fcs_valid=output_fcs_valid
+    )
 
     @always(delay(4))
     def clkgen():
@@ -160,7 +133,7 @@ def bench():
 
             axis_frame = test_frame.build_axis()
 
-            source_queue.put(axis_frame)
+            source.send(axis_frame)
             yield clk.posedge
             yield clk.posedge
 
@@ -175,7 +148,7 @@ def bench():
 
         raise StopSimulation
 
-    return dut, source, clkgen, check
+    return dut, source_logic, clkgen, check
 
 def test_bench():
     sim = Simulation(bench())

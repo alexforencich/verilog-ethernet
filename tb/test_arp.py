@@ -26,15 +26,11 @@ THE SOFTWARE.
 from myhdl import *
 import os
 
-try:
-    from queue import Queue
-except ImportError:
-    from Queue import Queue
-
 import eth_ep
 import arp_ep
 
 module = 'arp'
+testbench = 'test_%s' % module
 
 srcs = []
 
@@ -42,90 +38,11 @@ srcs.append("../rtl/%s.v" % module)
 srcs.append("../rtl/arp_cache.v")
 srcs.append("../rtl/arp_eth_rx.v")
 srcs.append("../rtl/arp_eth_tx.v")
-srcs.append("test_%s.v" % module)
+srcs.append("%s.v" % testbench)
 
 src = ' '.join(srcs)
 
-build_cmd = "iverilog -o test_%s.vvp %s" % (module, src)
-
-def dut_arp(clk,
-            rst,
-            current_test,
-
-            input_eth_hdr_valid,
-            input_eth_hdr_ready,
-            input_eth_dest_mac,
-            input_eth_src_mac,
-            input_eth_type,
-            input_eth_payload_tdata,
-            input_eth_payload_tvalid,
-            input_eth_payload_tready,
-            input_eth_payload_tlast,
-            input_eth_payload_tuser,
-
-            output_eth_hdr_valid,
-            output_eth_hdr_ready,
-            output_eth_dest_mac,
-            output_eth_src_mac,
-            output_eth_type,
-            output_eth_payload_tdata,
-            output_eth_payload_tvalid,
-            output_eth_payload_tready,
-            output_eth_payload_tlast,
-            output_eth_payload_tuser,
-
-            arp_request_valid,
-            arp_request_ip,
-            arp_response_valid,
-            arp_response_error,
-            arp_response_mac,
-
-            local_mac,
-            local_ip,
-            gateway_ip,
-            subnet_mask,
-            clear_cache):
-
-    if os.system(build_cmd):
-        raise Exception("Error running build command")
-    return Cosimulation("vvp -m myhdl test_%s.vvp -lxt2" % module,
-                clk=clk,
-                rst=rst,
-                current_test=current_test,
-
-                input_eth_hdr_valid=input_eth_hdr_valid,
-                input_eth_hdr_ready=input_eth_hdr_ready,
-                input_eth_dest_mac=input_eth_dest_mac,
-                input_eth_src_mac=input_eth_src_mac,
-                input_eth_type=input_eth_type,
-                input_eth_payload_tdata=input_eth_payload_tdata,
-                input_eth_payload_tvalid=input_eth_payload_tvalid,
-                input_eth_payload_tready=input_eth_payload_tready,
-                input_eth_payload_tlast=input_eth_payload_tlast,
-                input_eth_payload_tuser=input_eth_payload_tuser,
-
-                output_eth_hdr_valid=output_eth_hdr_valid,
-                output_eth_hdr_ready=output_eth_hdr_ready,
-                output_eth_dest_mac=output_eth_dest_mac,
-                output_eth_src_mac=output_eth_src_mac,
-                output_eth_type=output_eth_type,
-                output_eth_payload_tdata=output_eth_payload_tdata,
-                output_eth_payload_tvalid=output_eth_payload_tvalid,
-                output_eth_payload_tready=output_eth_payload_tready,
-                output_eth_payload_tlast=output_eth_payload_tlast,
-                output_eth_payload_tuser=output_eth_payload_tuser,
-
-                arp_request_valid=arp_request_valid,
-                arp_request_ip=arp_request_ip,
-                arp_response_valid=arp_response_valid,
-                arp_response_error=arp_response_error,
-                arp_response_mac=arp_response_mac,
-
-                local_mac=local_mac,
-                local_ip=local_ip,
-                gateway_ip=gateway_ip,
-                subnet_mask=subnet_mask,
-                clear_cache=clear_cache)
+build_cmd = "iverilog -o %s.vvp %s" % (testbench, src)
 
 def bench():
 
@@ -173,81 +90,91 @@ def bench():
     arp_response_mac = Signal(intbv(0)[48:])
 
     # sources and sinks
-    source_queue = Queue()
     source_pause = Signal(bool(0))
-    sink_queue = Queue()
     sink_pause = Signal(bool(0))
 
-    source = eth_ep.EthFrameSource(clk,
-                                   rst,
-                                   eth_hdr_ready=input_eth_hdr_ready,
-                                   eth_hdr_valid=input_eth_hdr_valid,
-                                   eth_dest_mac=input_eth_dest_mac,
-                                   eth_src_mac=input_eth_src_mac,
-                                   eth_type=input_eth_type,
-                                   eth_payload_tdata=input_eth_payload_tdata,
-                                   eth_payload_tvalid=input_eth_payload_tvalid,
-                                   eth_payload_tready=input_eth_payload_tready,
-                                   eth_payload_tlast=input_eth_payload_tlast,
-                                   eth_payload_tuser=input_eth_payload_tuser,
-                                   fifo=source_queue,
-                                   pause=source_pause,
-                                   name='source')
+    source = eth_ep.EthFrameSource()
 
-    sink = eth_ep.EthFrameSink(clk,
-                               rst,
-                               eth_hdr_ready=output_eth_hdr_ready,
-                               eth_hdr_valid=output_eth_hdr_valid,
-                               eth_dest_mac=output_eth_dest_mac,
-                               eth_src_mac=output_eth_src_mac,
-                               eth_type=output_eth_type,
-                               eth_payload_tdata=output_eth_payload_tdata,
-                               eth_payload_tvalid=output_eth_payload_tvalid,
-                               eth_payload_tready=output_eth_payload_tready,
-                               eth_payload_tlast=output_eth_payload_tlast,
-                               eth_payload_tuser=output_eth_payload_tuser,
-                               fifo=sink_queue,
-                               pause=sink_pause,
-                               name='sink')
+    source_logic = source.create_logic(
+        clk,
+        rst,
+        eth_hdr_ready=input_eth_hdr_ready,
+        eth_hdr_valid=input_eth_hdr_valid,
+        eth_dest_mac=input_eth_dest_mac,
+        eth_src_mac=input_eth_src_mac,
+        eth_type=input_eth_type,
+        eth_payload_tdata=input_eth_payload_tdata,
+        eth_payload_tvalid=input_eth_payload_tvalid,
+        eth_payload_tready=input_eth_payload_tready,
+        eth_payload_tlast=input_eth_payload_tlast,
+        eth_payload_tuser=input_eth_payload_tuser,
+        pause=source_pause,
+        name='source'
+    )
+
+    sink = eth_ep.EthFrameSink()
+
+    sink_logic = sink.create_logic(
+        clk,
+        rst,
+        eth_hdr_ready=output_eth_hdr_ready,
+        eth_hdr_valid=output_eth_hdr_valid,
+        eth_dest_mac=output_eth_dest_mac,
+        eth_src_mac=output_eth_src_mac,
+        eth_type=output_eth_type,
+        eth_payload_tdata=output_eth_payload_tdata,
+        eth_payload_tvalid=output_eth_payload_tvalid,
+        eth_payload_tready=output_eth_payload_tready,
+        eth_payload_tlast=output_eth_payload_tlast,
+        eth_payload_tuser=output_eth_payload_tuser,
+        pause=sink_pause,
+        name='sink'
+    )
 
     # DUT
-    dut = dut_arp(clk,
-                  rst,
-                  current_test,
-                              
-                  input_eth_hdr_valid,
-                  input_eth_hdr_ready,
-                  input_eth_dest_mac,
-                  input_eth_src_mac,
-                  input_eth_type,
-                  input_eth_payload_tdata,
-                  input_eth_payload_tvalid,
-                  input_eth_payload_tready,
-                  input_eth_payload_tlast,
-                  input_eth_payload_tuser,
+    if os.system(build_cmd):
+        raise Exception("Error running build command")
 
-                  output_eth_hdr_valid,
-                  output_eth_hdr_ready,
-                  output_eth_dest_mac,
-                  output_eth_src_mac,
-                  output_eth_type,
-                  output_eth_payload_tdata,
-                  output_eth_payload_tvalid,
-                  output_eth_payload_tready,
-                  output_eth_payload_tlast,
-                  output_eth_payload_tuser,
+    dut = Cosimulation(
+        "vvp -m myhdl %s.vvp -lxt2" % testbench,
+        clk=clk,
+        rst=rst,
+        current_test=current_test,
 
-                  arp_request_valid,
-                  arp_request_ip,
-                  arp_response_valid,
-                  arp_response_error,
-                  arp_response_mac,
+        input_eth_hdr_valid=input_eth_hdr_valid,
+        input_eth_hdr_ready=input_eth_hdr_ready,
+        input_eth_dest_mac=input_eth_dest_mac,
+        input_eth_src_mac=input_eth_src_mac,
+        input_eth_type=input_eth_type,
+        input_eth_payload_tdata=input_eth_payload_tdata,
+        input_eth_payload_tvalid=input_eth_payload_tvalid,
+        input_eth_payload_tready=input_eth_payload_tready,
+        input_eth_payload_tlast=input_eth_payload_tlast,
+        input_eth_payload_tuser=input_eth_payload_tuser,
 
-                  local_mac,
-                  local_ip,
-                  gateway_ip,
-                  subnet_mask,
-                  clear_cache)
+        output_eth_hdr_valid=output_eth_hdr_valid,
+        output_eth_hdr_ready=output_eth_hdr_ready,
+        output_eth_dest_mac=output_eth_dest_mac,
+        output_eth_src_mac=output_eth_src_mac,
+        output_eth_type=output_eth_type,
+        output_eth_payload_tdata=output_eth_payload_tdata,
+        output_eth_payload_tvalid=output_eth_payload_tvalid,
+        output_eth_payload_tready=output_eth_payload_tready,
+        output_eth_payload_tlast=output_eth_payload_tlast,
+        output_eth_payload_tuser=output_eth_payload_tuser,
+
+        arp_request_valid=arp_request_valid,
+        arp_request_ip=arp_request_ip,
+        arp_response_valid=arp_response_valid,
+        arp_response_error=arp_response_error,
+        arp_response_mac=arp_response_mac,
+
+        local_mac=local_mac,
+        local_ip=local_ip,
+        gateway_ip=gateway_ip,
+        subnet_mask=subnet_mask,
+        clear_cache=clear_cache
+    )
 
     @always(delay(4))
     def clkgen():
@@ -287,14 +214,14 @@ def bench():
         test_frame.arp_spa = 0xc0a80164
         test_frame.arp_tha = 0x000000000000
         test_frame.arp_tpa = 0xc0a80165
-        source_queue.put(test_frame.build_eth())
+        source.send(test_frame.build_eth())
         yield clk.posedge
 
         yield output_eth_payload_tlast.posedge
         yield clk.posedge
         yield clk.posedge
 
-        rx_frame = sink_queue.get(False)
+        rx_frame = sink.recv()
         check_frame = arp_ep.ARPFrame()
         check_frame.parse_eth(rx_frame)
 
@@ -344,7 +271,7 @@ def bench():
         yield clk.posedge
         yield clk.posedge
 
-        rx_frame = sink_queue.get(False)
+        rx_frame = sink.recv()
         check_frame = arp_ep.ARPFrame()
         check_frame.parse_eth(rx_frame)
 
@@ -375,7 +302,7 @@ def bench():
         test_frame.arp_spa = 0xc0a80166
         test_frame.arp_tha = 0xDAD1D2D3D4D5
         test_frame.arp_tpa = 0xc0a80165
-        source_queue.put(test_frame.build_eth())
+        source.send(test_frame.build_eth())
         yield clk.posedge
 
         # wait for lookup
@@ -400,7 +327,7 @@ def bench():
         yield clk.posedge
         yield clk.posedge
 
-        rx_frame = sink_queue.get(False)
+        rx_frame = sink.recv()
         check_frame = arp_ep.ARPFrame()
         check_frame.parse_eth(rx_frame)
 
@@ -431,7 +358,7 @@ def bench():
         test_frame.arp_spa = 0xc0a80101
         test_frame.arp_tha = 0xDAD1D2D3D4D5
         test_frame.arp_tpa = 0xc0a80165
-        source_queue.put(test_frame.build_eth())
+        source.send(test_frame.build_eth())
         yield clk.posedge
 
         # wait for lookup
@@ -455,10 +382,10 @@ def bench():
         assert bool(arp_response_error)
 
         # check for 4 ARP requests
-        assert sink_queue.qsize() == 4
+        assert sink.count() == 4
 
-        while not sink_queue.empty():
-            rx_frame = sink_queue.get(False)
+        while not sink.empty():
+            rx_frame = sink.recv()
 
             check_frame = arp_ep.ARPFrame()
             check_frame.parse_eth(rx_frame)
@@ -508,7 +435,7 @@ def bench():
 
         raise StopSimulation
 
-    return dut, source, sink, clkgen, check
+    return dut, source_logic, sink_logic, clkgen, check
 
 def test_bench():
     sim = Simulation(bench())

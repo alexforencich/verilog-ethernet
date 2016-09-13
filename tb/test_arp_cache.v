@@ -24,8 +24,11 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
-`timescale 1 ns / 1 ps
+`timescale 1ns / 1ps
 
+/*
+ * Testbench for arp_cache
+ */
 module test_arp_cache;
 
 // Inputs
@@ -52,20 +55,24 @@ wire write_complete;
 
 initial begin
     // myhdl integration
-    $from_myhdl(clk,
-                rst,
-                current_test,
-                query_request_valid,
-                query_request_ip,
-                write_request_valid,
-                write_request_ip,
-                write_request_mac,
-                clear_cache);
-    $to_myhdl(query_response_valid,
-              query_response_error,
-              query_response_mac,
-              write_in_progress,
-              write_complete);
+    $from_myhdl(
+        clk,
+        rst,
+        current_test,
+        query_request_valid,
+        query_request_ip,
+        write_request_valid,
+        write_request_ip,
+        write_request_mac,
+        clear_cache
+    );
+    $to_myhdl(
+        query_response_valid,
+        query_response_error,
+        query_response_mac,
+        write_in_progress,
+        write_complete
+    );
 
     // dump file
     $dumpfile("test_arp_cache.lxt");

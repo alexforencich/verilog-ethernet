@@ -26,254 +26,23 @@ THE SOFTWARE.
 from myhdl import *
 import os
 
-try:
-    from queue import Queue
-except ImportError:
-    from Queue import Queue
-
 import eth_ep
 import ip_ep
 import udp_ep
 
 module = 'udp'
+testbench = 'test_%s' % module
 
 srcs = []
 
 srcs.append("../rtl/%s.v" % module)
 srcs.append("../rtl/udp_ip_rx.v")
 srcs.append("../rtl/udp_ip_tx.v")
-srcs.append("test_%s.v" % module)
+srcs.append("%s.v" % testbench)
 
 src = ' '.join(srcs)
 
-build_cmd = "iverilog -o test_%s.vvp %s" % (module, src)
-
-def dut_udp(clk,
-            rst,
-            current_test,
-
-            input_ip_hdr_valid,
-            input_ip_hdr_ready,
-            input_ip_eth_dest_mac,
-            input_ip_eth_src_mac,
-            input_ip_eth_type,
-            input_ip_version,
-            input_ip_ihl,
-            input_ip_dscp,
-            input_ip_ecn,
-            input_ip_length,
-            input_ip_identification,
-            input_ip_flags,
-            input_ip_fragment_offset,
-            input_ip_ttl,
-            input_ip_protocol,
-            input_ip_header_checksum,
-            input_ip_source_ip,
-            input_ip_dest_ip,
-            input_ip_payload_tdata,
-            input_ip_payload_tvalid,
-            input_ip_payload_tready,
-            input_ip_payload_tlast,
-            input_ip_payload_tuser,
-
-            output_ip_hdr_valid,
-            output_ip_hdr_ready,
-            output_ip_eth_dest_mac,
-            output_ip_eth_src_mac,
-            output_ip_eth_type,
-            output_ip_version,
-            output_ip_ihl,
-            output_ip_dscp,
-            output_ip_ecn,
-            output_ip_length,
-            output_ip_identification,
-            output_ip_flags,
-            output_ip_fragment_offset,
-            output_ip_ttl,
-            output_ip_protocol,
-            output_ip_header_checksum,
-            output_ip_source_ip,
-            output_ip_dest_ip,
-            output_ip_payload_tdata,
-            output_ip_payload_tvalid,
-            output_ip_payload_tready,
-            output_ip_payload_tlast,
-            output_ip_payload_tuser,
-
-            input_udp_hdr_valid,
-            input_udp_hdr_ready,
-            input_udp_eth_dest_mac,
-            input_udp_eth_src_mac,
-            input_udp_eth_type,
-            input_udp_ip_version,
-            input_udp_ip_ihl,
-            input_udp_ip_dscp,
-            input_udp_ip_ecn,
-            input_udp_ip_identification,
-            input_udp_ip_flags,
-            input_udp_ip_fragment_offset,
-            input_udp_ip_ttl,
-            input_udp_ip_header_checksum,
-            input_udp_ip_source_ip,
-            input_udp_ip_dest_ip,
-            input_udp_source_port,
-            input_udp_dest_port,
-            input_udp_length,
-            input_udp_checksum,
-            input_udp_payload_tdata,
-            input_udp_payload_tvalid,
-            input_udp_payload_tready,
-            input_udp_payload_tlast,
-            input_udp_payload_tuser,
-
-            output_udp_hdr_valid,
-            output_udp_hdr_ready,
-            output_udp_eth_dest_mac,
-            output_udp_eth_src_mac,
-            output_udp_eth_type,
-            output_udp_ip_version,
-            output_udp_ip_ihl,
-            output_udp_ip_dscp,
-            output_udp_ip_ecn,
-            output_udp_ip_length,
-            output_udp_ip_identification,
-            output_udp_ip_flags,
-            output_udp_ip_fragment_offset,
-            output_udp_ip_ttl,
-            output_udp_ip_protocol,
-            output_udp_ip_header_checksum,
-            output_udp_ip_source_ip,
-            output_udp_ip_dest_ip,
-            output_udp_source_port,
-            output_udp_dest_port,
-            output_udp_length,
-            output_udp_checksum,
-            output_udp_payload_tdata,
-            output_udp_payload_tvalid,
-            output_udp_payload_tready,
-            output_udp_payload_tlast,
-            output_udp_payload_tuser,
-
-            rx_busy,
-            tx_busy,
-            rx_error_header_early_termination,
-            rx_error_payload_early_termination,
-            tx_error_payload_early_termination):
-
-    if os.system(build_cmd):
-        raise Exception("Error running build command")
-    return Cosimulation("vvp -m myhdl test_%s.vvp -lxt2" % module,
-                clk=clk,
-                rst=rst,
-                current_test=current_test,
-
-                input_ip_hdr_valid=input_ip_hdr_valid,
-                input_ip_hdr_ready=input_ip_hdr_ready,
-                input_ip_eth_dest_mac=input_ip_eth_dest_mac,
-                input_ip_eth_src_mac=input_ip_eth_src_mac,
-                input_ip_eth_type=input_ip_eth_type,
-                input_ip_version=input_ip_version,
-                input_ip_ihl=input_ip_ihl,
-                input_ip_dscp=input_ip_dscp,
-                input_ip_ecn=input_ip_ecn,
-                input_ip_length=input_ip_length,
-                input_ip_identification=input_ip_identification,
-                input_ip_flags=input_ip_flags,
-                input_ip_fragment_offset=input_ip_fragment_offset,
-                input_ip_ttl=input_ip_ttl,
-                input_ip_protocol=input_ip_protocol,
-                input_ip_header_checksum=input_ip_header_checksum,
-                input_ip_source_ip=input_ip_source_ip,
-                input_ip_dest_ip=input_ip_dest_ip,
-                input_ip_payload_tdata=input_ip_payload_tdata,
-                input_ip_payload_tvalid=input_ip_payload_tvalid,
-                input_ip_payload_tready=input_ip_payload_tready,
-                input_ip_payload_tlast=input_ip_payload_tlast,
-                input_ip_payload_tuser=input_ip_payload_tuser,
-
-                output_ip_hdr_valid=output_ip_hdr_valid,
-                output_ip_hdr_ready=output_ip_hdr_ready,
-                output_ip_eth_dest_mac=output_ip_eth_dest_mac,
-                output_ip_eth_src_mac=output_ip_eth_src_mac,
-                output_ip_eth_type=output_ip_eth_type,
-                output_ip_version=output_ip_version,
-                output_ip_ihl=output_ip_ihl,
-                output_ip_dscp=output_ip_dscp,
-                output_ip_ecn=output_ip_ecn,
-                output_ip_length=output_ip_length,
-                output_ip_identification=output_ip_identification,
-                output_ip_flags=output_ip_flags,
-                output_ip_fragment_offset=output_ip_fragment_offset,
-                output_ip_ttl=output_ip_ttl,
-                output_ip_protocol=output_ip_protocol,
-                output_ip_header_checksum=output_ip_header_checksum,
-                output_ip_source_ip=output_ip_source_ip,
-                output_ip_dest_ip=output_ip_dest_ip,
-                output_ip_payload_tdata=output_ip_payload_tdata,
-                output_ip_payload_tvalid=output_ip_payload_tvalid,
-                output_ip_payload_tready=output_ip_payload_tready,
-                output_ip_payload_tlast=output_ip_payload_tlast,
-                output_ip_payload_tuser=output_ip_payload_tuser,
-
-                input_udp_hdr_valid=input_udp_hdr_valid,
-                input_udp_hdr_ready=input_udp_hdr_ready,
-                input_udp_eth_dest_mac=input_udp_eth_dest_mac,
-                input_udp_eth_src_mac=input_udp_eth_src_mac,
-                input_udp_eth_type=input_udp_eth_type,
-                input_udp_ip_version=input_udp_ip_version,
-                input_udp_ip_ihl=input_udp_ip_ihl,
-                input_udp_ip_dscp=input_udp_ip_dscp,
-                input_udp_ip_ecn=input_udp_ip_ecn,
-                input_udp_ip_identification=input_udp_ip_identification,
-                input_udp_ip_flags=input_udp_ip_flags,
-                input_udp_ip_fragment_offset=input_udp_ip_fragment_offset,
-                input_udp_ip_ttl=input_udp_ip_ttl,
-                input_udp_ip_header_checksum=input_udp_ip_header_checksum,
-                input_udp_ip_source_ip=input_udp_ip_source_ip,
-                input_udp_ip_dest_ip=input_udp_ip_dest_ip,
-                input_udp_source_port=input_udp_source_port,
-                input_udp_dest_port=input_udp_dest_port,
-                input_udp_length=input_udp_length,
-                input_udp_checksum=input_udp_checksum,
-                input_udp_payload_tdata=input_udp_payload_tdata,
-                input_udp_payload_tvalid=input_udp_payload_tvalid,
-                input_udp_payload_tready=input_udp_payload_tready,
-                input_udp_payload_tlast=input_udp_payload_tlast,
-                input_udp_payload_tuser=input_udp_payload_tuser,
-
-                output_udp_hdr_valid=output_udp_hdr_valid,
-                output_udp_hdr_ready=output_udp_hdr_ready,
-                output_udp_eth_dest_mac=output_udp_eth_dest_mac,
-                output_udp_eth_src_mac=output_udp_eth_src_mac,
-                output_udp_eth_type=output_udp_eth_type,
-                output_udp_ip_version=output_udp_ip_version,
-                output_udp_ip_ihl=output_udp_ip_ihl,
-                output_udp_ip_dscp=output_udp_ip_dscp,
-                output_udp_ip_ecn=output_udp_ip_ecn,
-                output_udp_ip_length=output_udp_ip_length,
-                output_udp_ip_identification=output_udp_ip_identification,
-                output_udp_ip_flags=output_udp_ip_flags,
-                output_udp_ip_fragment_offset=output_udp_ip_fragment_offset,
-                output_udp_ip_ttl=output_udp_ip_ttl,
-                output_udp_ip_protocol=output_udp_ip_protocol,
-                output_udp_ip_header_checksum=output_udp_ip_header_checksum,
-                output_udp_ip_source_ip=output_udp_ip_source_ip,
-                output_udp_ip_dest_ip=output_udp_ip_dest_ip,
-                output_udp_source_port=output_udp_source_port,
-                output_udp_dest_port=output_udp_dest_port,
-                output_udp_length=output_udp_length,
-                output_udp_checksum=output_udp_checksum,
-                output_udp_payload_tdata=output_udp_payload_tdata,
-                output_udp_payload_tvalid=output_udp_payload_tvalid,
-                output_udp_payload_tready=output_udp_payload_tready,
-                output_udp_payload_tlast=output_udp_payload_tlast,
-                output_udp_payload_tuser=output_udp_payload_tuser,
-
-                rx_busy=rx_busy,
-                tx_busy=tx_busy,
-                rx_error_header_early_termination=rx_error_header_early_termination,
-                rx_error_payload_early_termination=rx_error_payload_early_termination,
-                tx_error_payload_early_termination=tx_error_payload_early_termination)
+build_cmd = "iverilog -o %s.vvp %s" % (testbench, src)
 
 def bench():
 
@@ -389,249 +158,263 @@ def bench():
     tx_error_payload_early_termination = Signal(bool(0))
 
     # sources and sinks
-    ip_source_queue = Queue()
     ip_source_pause = Signal(bool(0))
-    ip_sink_queue = Queue()
     ip_sink_pause = Signal(bool(0))
-    udp_source_queue = Queue()
     udp_source_pause = Signal(bool(0))
-    udp_sink_queue = Queue()
     udp_sink_pause = Signal(bool(0))
 
-    ip_source = ip_ep.IPFrameSource(clk,
-                                    rst,
-                                    ip_hdr_valid=input_ip_hdr_valid,
-                                    ip_hdr_ready=input_ip_hdr_ready,
-                                    eth_dest_mac=input_ip_eth_dest_mac,
-                                    eth_src_mac=input_ip_eth_src_mac,
-                                    eth_type=input_ip_eth_type,
-                                    ip_version=input_ip_version,
-                                    ip_ihl=input_ip_ihl,
-                                    ip_dscp=input_ip_dscp,
-                                    ip_ecn=input_ip_ecn,
-                                    ip_length=input_ip_length,
-                                    ip_identification=input_ip_identification,
-                                    ip_flags=input_ip_flags,
-                                    ip_fragment_offset=input_ip_fragment_offset,
-                                    ip_ttl=input_ip_ttl,
-                                    ip_protocol=input_ip_protocol,
-                                    ip_header_checksum=input_ip_header_checksum,
-                                    ip_source_ip=input_ip_source_ip,
-                                    ip_dest_ip=input_ip_dest_ip,
-                                    ip_payload_tdata=input_ip_payload_tdata,
-                                    ip_payload_tvalid=input_ip_payload_tvalid,
-                                    ip_payload_tready=input_ip_payload_tready,
-                                    ip_payload_tlast=input_ip_payload_tlast,
-                                    ip_payload_tuser=input_ip_payload_tuser,
-                                    fifo=ip_source_queue,
-                                    pause=ip_source_pause,
-                                    name='ip_source')
+    ip_source = ip_ep.IPFrameSource()
 
-    ip_sink = ip_ep.IPFrameSink(clk,
-                                rst,
-                                ip_hdr_ready=output_ip_hdr_ready,
-                                ip_hdr_valid=output_ip_hdr_valid,
-                                eth_dest_mac=output_ip_eth_dest_mac,
-                                eth_src_mac=output_ip_eth_src_mac,
-                                eth_type=output_ip_eth_type,
-                                ip_version=output_ip_version,
-                                ip_ihl=output_ip_ihl,
-                                ip_dscp=output_ip_dscp,
-                                ip_ecn=output_ip_ecn,
-                                ip_length=output_ip_length,
-                                ip_identification=output_ip_identification,
-                                ip_flags=output_ip_flags,
-                                ip_fragment_offset=output_ip_fragment_offset,
-                                ip_ttl=output_ip_ttl,
-                                ip_protocol=output_ip_protocol,
-                                ip_header_checksum=output_ip_header_checksum,
-                                ip_source_ip=output_ip_source_ip,
-                                ip_dest_ip=output_ip_dest_ip,
-                                ip_payload_tdata=output_ip_payload_tdata,
-                                ip_payload_tvalid=output_ip_payload_tvalid,
-                                ip_payload_tready=output_ip_payload_tready,
-                                ip_payload_tlast=output_ip_payload_tlast,
-                                ip_payload_tuser=output_ip_payload_tuser,
-                                fifo=ip_sink_queue,
-                                pause=ip_sink_pause,
-                                name='ip_sink')
+    ip_source_logic = ip_source.create_logic(
+        clk,
+        rst,
+        ip_hdr_ready=input_ip_hdr_ready,
+        ip_hdr_valid=input_ip_hdr_valid,
+        eth_dest_mac=input_ip_eth_dest_mac,
+        eth_src_mac=input_ip_eth_src_mac,
+        eth_type=input_ip_eth_type,
+        ip_version=input_ip_version,
+        ip_ihl=input_ip_ihl,
+        ip_dscp=input_ip_dscp,
+        ip_ecn=input_ip_ecn,
+        ip_length=input_ip_length,
+        ip_identification=input_ip_identification,
+        ip_flags=input_ip_flags,
+        ip_fragment_offset=input_ip_fragment_offset,
+        ip_ttl=input_ip_ttl,
+        ip_protocol=input_ip_protocol,
+        ip_header_checksum=input_ip_header_checksum,
+        ip_source_ip=input_ip_source_ip,
+        ip_dest_ip=input_ip_dest_ip,
+        ip_payload_tdata=input_ip_payload_tdata,
+        ip_payload_tvalid=input_ip_payload_tvalid,
+        ip_payload_tready=input_ip_payload_tready,
+        ip_payload_tlast=input_ip_payload_tlast,
+        ip_payload_tuser=input_ip_payload_tuser,
+        pause=ip_source_pause,
+        name='ip_source'
+    )
 
-    udp_source = udp_ep.UDPFrameSource(clk,
-                                       rst,
-                                       udp_hdr_valid=input_udp_hdr_valid,
-                                       udp_hdr_ready=input_udp_hdr_ready,
-                                       eth_dest_mac=input_udp_eth_dest_mac,
-                                       eth_src_mac=input_udp_eth_src_mac,
-                                       eth_type=input_udp_eth_type,
-                                       ip_version=input_udp_ip_version,
-                                       ip_ihl=input_udp_ip_ihl,
-                                       ip_dscp=input_udp_ip_dscp,
-                                       ip_ecn=input_udp_ip_ecn,
-                                       ip_identification=input_udp_ip_identification,
-                                       ip_flags=input_udp_ip_flags,
-                                       ip_fragment_offset=input_udp_ip_fragment_offset,
-                                       ip_ttl=input_udp_ip_ttl,
-                                       ip_header_checksum=input_udp_ip_header_checksum,
-                                       ip_source_ip=input_udp_ip_source_ip,
-                                       ip_dest_ip=input_udp_ip_dest_ip,
-                                       udp_source_port=input_udp_source_port,
-                                       udp_dest_port=input_udp_dest_port,
-                                       udp_length=input_udp_length,
-                                       udp_checksum=input_udp_checksum,
-                                       udp_payload_tdata=input_udp_payload_tdata,
-                                       udp_payload_tvalid=input_udp_payload_tvalid,
-                                       udp_payload_tready=input_udp_payload_tready,
-                                       udp_payload_tlast=input_udp_payload_tlast,
-                                       udp_payload_tuser=input_udp_payload_tuser,
-                                       fifo=udp_source_queue,
-                                       pause=udp_source_pause,
-                                       name='udp_source')
+    ip_sink = ip_ep.IPFrameSink()
 
-    udp_sink = udp_ep.UDPFrameSink(clk,
-                                   rst,
-                                   udp_hdr_ready=output_udp_hdr_ready,
-                                   udp_hdr_valid=output_udp_hdr_valid,
-                                   eth_dest_mac=output_udp_eth_dest_mac,
-                                   eth_src_mac=output_udp_eth_src_mac,
-                                   eth_type=output_udp_eth_type,
-                                   ip_version=output_udp_ip_version,
-                                   ip_ihl=output_udp_ip_ihl,
-                                   ip_dscp=output_udp_ip_dscp,
-                                   ip_ecn=output_udp_ip_ecn,
-                                   ip_length=output_udp_ip_length,
-                                   ip_identification=output_udp_ip_identification,
-                                   ip_flags=output_udp_ip_flags,
-                                   ip_fragment_offset=output_udp_ip_fragment_offset,
-                                   ip_ttl=output_udp_ip_ttl,
-                                   ip_protocol=output_udp_ip_protocol,
-                                   ip_header_checksum=output_udp_ip_header_checksum,
-                                   ip_source_ip=output_udp_ip_source_ip,
-                                   ip_dest_ip=output_udp_ip_dest_ip,
-                                   udp_source_port=output_udp_source_port,
-                                   udp_dest_port=output_udp_dest_port,
-                                   udp_length=output_udp_length,
-                                   udp_checksum=output_udp_checksum,
-                                   udp_payload_tdata=output_udp_payload_tdata,
-                                   udp_payload_tvalid=output_udp_payload_tvalid,
-                                   udp_payload_tready=output_udp_payload_tready,
-                                   udp_payload_tlast=output_udp_payload_tlast,
-                                   udp_payload_tuser=output_udp_payload_tuser,
-                                   fifo=udp_sink_queue,
-                                   pause=udp_sink_pause,
-                                   name='udp_sink')
+    ip_sink_logic = ip_sink.create_logic(
+        clk,
+        rst,
+        ip_hdr_ready=output_ip_hdr_ready,
+        ip_hdr_valid=output_ip_hdr_valid,
+        eth_dest_mac=output_ip_eth_dest_mac,
+        eth_src_mac=output_ip_eth_src_mac,
+        eth_type=output_ip_eth_type,
+        ip_version=output_ip_version,
+        ip_ihl=output_ip_ihl,
+        ip_dscp=output_ip_dscp,
+        ip_ecn=output_ip_ecn,
+        ip_length=output_ip_length,
+        ip_identification=output_ip_identification,
+        ip_flags=output_ip_flags,
+        ip_fragment_offset=output_ip_fragment_offset,
+        ip_ttl=output_ip_ttl,
+        ip_protocol=output_ip_protocol,
+        ip_header_checksum=output_ip_header_checksum,
+        ip_source_ip=output_ip_source_ip,
+        ip_dest_ip=output_ip_dest_ip,
+        ip_payload_tdata=output_ip_payload_tdata,
+        ip_payload_tvalid=output_ip_payload_tvalid,
+        ip_payload_tready=output_ip_payload_tready,
+        ip_payload_tlast=output_ip_payload_tlast,
+        ip_payload_tuser=output_ip_payload_tuser,
+        pause=ip_sink_pause,
+        name='ip_sink'
+    )
+
+    udp_source = udp_ep.UDPFrameSource()
+
+    udp_source_logic = udp_source.create_logic(
+        clk,
+        rst,
+        udp_hdr_ready=input_udp_hdr_ready,
+        udp_hdr_valid=input_udp_hdr_valid,
+        eth_dest_mac=input_udp_eth_dest_mac,
+        eth_src_mac=input_udp_eth_src_mac,
+        eth_type=input_udp_eth_type,
+        ip_version=input_udp_ip_version,
+        ip_ihl=input_udp_ip_ihl,
+        ip_dscp=input_udp_ip_dscp,
+        ip_ecn=input_udp_ip_ecn,
+        ip_identification=input_udp_ip_identification,
+        ip_flags=input_udp_ip_flags,
+        ip_fragment_offset=input_udp_ip_fragment_offset,
+        ip_ttl=input_udp_ip_ttl,
+        ip_header_checksum=input_udp_ip_header_checksum,
+        ip_source_ip=input_udp_ip_source_ip,
+        ip_dest_ip=input_udp_ip_dest_ip,
+        udp_source_port=input_udp_source_port,
+        udp_dest_port=input_udp_dest_port,
+        udp_length=input_udp_length,
+        udp_checksum=input_udp_checksum,
+        udp_payload_tdata=input_udp_payload_tdata,
+        udp_payload_tvalid=input_udp_payload_tvalid,
+        udp_payload_tready=input_udp_payload_tready,
+        udp_payload_tlast=input_udp_payload_tlast,
+        udp_payload_tuser=input_udp_payload_tuser,
+        pause=udp_source_pause,
+        name='udp_source'
+    )
+
+    udp_sink = udp_ep.UDPFrameSink()
+
+    udp_sink_logic = udp_sink.create_logic(
+        clk,
+        rst,
+        udp_hdr_ready=output_udp_hdr_ready,
+        udp_hdr_valid=output_udp_hdr_valid,
+        eth_dest_mac=output_udp_eth_dest_mac,
+        eth_src_mac=output_udp_eth_src_mac,
+        eth_type=output_udp_eth_type,
+        ip_version=output_udp_ip_version,
+        ip_ihl=output_udp_ip_ihl,
+        ip_dscp=output_udp_ip_dscp,
+        ip_ecn=output_udp_ip_ecn,
+        ip_length=output_udp_ip_length,
+        ip_identification=output_udp_ip_identification,
+        ip_flags=output_udp_ip_flags,
+        ip_fragment_offset=output_udp_ip_fragment_offset,
+        ip_ttl=output_udp_ip_ttl,
+        ip_protocol=output_udp_ip_protocol,
+        ip_header_checksum=output_udp_ip_header_checksum,
+        ip_source_ip=output_udp_ip_source_ip,
+        ip_dest_ip=output_udp_ip_dest_ip,
+        udp_source_port=output_udp_source_port,
+        udp_dest_port=output_udp_dest_port,
+        udp_length=output_udp_length,
+        udp_checksum=output_udp_checksum,
+        udp_payload_tdata=output_udp_payload_tdata,
+        udp_payload_tvalid=output_udp_payload_tvalid,
+        udp_payload_tready=output_udp_payload_tready,
+        udp_payload_tlast=output_udp_payload_tlast,
+        udp_payload_tuser=output_udp_payload_tuser,
+        pause=udp_sink_pause,
+        name='udp_sink'
+    )
 
     # DUT
-    dut = dut_udp(clk,
-                  rst,
-                  current_test,
+    if os.system(build_cmd):
+        raise Exception("Error running build command")
 
-                  input_ip_hdr_valid,
-                  input_ip_hdr_ready,
-                  input_ip_eth_dest_mac,
-                  input_ip_eth_src_mac,
-                  input_ip_eth_type,
-                  input_ip_version,
-                  input_ip_ihl,
-                  input_ip_dscp,
-                  input_ip_ecn,
-                  input_ip_length,
-                  input_ip_identification,
-                  input_ip_flags,
-                  input_ip_fragment_offset,
-                  input_ip_ttl,
-                  input_ip_protocol,
-                  input_ip_header_checksum,
-                  input_ip_source_ip,
-                  input_ip_dest_ip,
-                  input_ip_payload_tdata,
-                  input_ip_payload_tvalid,
-                  input_ip_payload_tready,
-                  input_ip_payload_tlast,
-                  input_ip_payload_tuser,
+    dut = Cosimulation(
+        "vvp -m myhdl %s.vvp -lxt2" % testbench,
+        clk=clk,
+        rst=rst,
+        current_test=current_test,
 
-                  output_ip_hdr_valid,
-                  output_ip_hdr_ready,
-                  output_ip_eth_dest_mac,
-                  output_ip_eth_src_mac,
-                  output_ip_eth_type,
-                  output_ip_version,
-                  output_ip_ihl,
-                  output_ip_dscp,
-                  output_ip_ecn,
-                  output_ip_length,
-                  output_ip_identification,
-                  output_ip_flags,
-                  output_ip_fragment_offset,
-                  output_ip_ttl,
-                  output_ip_protocol,
-                  output_ip_header_checksum,
-                  output_ip_source_ip,
-                  output_ip_dest_ip,
-                  output_ip_payload_tdata,
-                  output_ip_payload_tvalid,
-                  output_ip_payload_tready,
-                  output_ip_payload_tlast,
-                  output_ip_payload_tuser,
+        input_ip_hdr_valid=input_ip_hdr_valid,
+        input_ip_hdr_ready=input_ip_hdr_ready,
+        input_ip_eth_dest_mac=input_ip_eth_dest_mac,
+        input_ip_eth_src_mac=input_ip_eth_src_mac,
+        input_ip_eth_type=input_ip_eth_type,
+        input_ip_version=input_ip_version,
+        input_ip_ihl=input_ip_ihl,
+        input_ip_dscp=input_ip_dscp,
+        input_ip_ecn=input_ip_ecn,
+        input_ip_length=input_ip_length,
+        input_ip_identification=input_ip_identification,
+        input_ip_flags=input_ip_flags,
+        input_ip_fragment_offset=input_ip_fragment_offset,
+        input_ip_ttl=input_ip_ttl,
+        input_ip_protocol=input_ip_protocol,
+        input_ip_header_checksum=input_ip_header_checksum,
+        input_ip_source_ip=input_ip_source_ip,
+        input_ip_dest_ip=input_ip_dest_ip,
+        input_ip_payload_tdata=input_ip_payload_tdata,
+        input_ip_payload_tvalid=input_ip_payload_tvalid,
+        input_ip_payload_tready=input_ip_payload_tready,
+        input_ip_payload_tlast=input_ip_payload_tlast,
+        input_ip_payload_tuser=input_ip_payload_tuser,
 
-                  input_udp_hdr_valid,
-                  input_udp_hdr_ready,
-                  input_udp_eth_dest_mac,
-                  input_udp_eth_src_mac,
-                  input_udp_eth_type,
-                  input_udp_ip_version,
-                  input_udp_ip_ihl,
-                  input_udp_ip_dscp,
-                  input_udp_ip_ecn,
-                  input_udp_ip_identification,
-                  input_udp_ip_flags,
-                  input_udp_ip_fragment_offset,
-                  input_udp_ip_ttl,
-                  input_udp_ip_header_checksum,
-                  input_udp_ip_source_ip,
-                  input_udp_ip_dest_ip,
-                  input_udp_source_port,
-                  input_udp_dest_port,
-                  input_udp_length,
-                  input_udp_checksum,
-                  input_udp_payload_tdata,
-                  input_udp_payload_tvalid,
-                  input_udp_payload_tready,
-                  input_udp_payload_tlast,
-                  input_udp_payload_tuser,
+        output_ip_hdr_valid=output_ip_hdr_valid,
+        output_ip_hdr_ready=output_ip_hdr_ready,
+        output_ip_eth_dest_mac=output_ip_eth_dest_mac,
+        output_ip_eth_src_mac=output_ip_eth_src_mac,
+        output_ip_eth_type=output_ip_eth_type,
+        output_ip_version=output_ip_version,
+        output_ip_ihl=output_ip_ihl,
+        output_ip_dscp=output_ip_dscp,
+        output_ip_ecn=output_ip_ecn,
+        output_ip_length=output_ip_length,
+        output_ip_identification=output_ip_identification,
+        output_ip_flags=output_ip_flags,
+        output_ip_fragment_offset=output_ip_fragment_offset,
+        output_ip_ttl=output_ip_ttl,
+        output_ip_protocol=output_ip_protocol,
+        output_ip_header_checksum=output_ip_header_checksum,
+        output_ip_source_ip=output_ip_source_ip,
+        output_ip_dest_ip=output_ip_dest_ip,
+        output_ip_payload_tdata=output_ip_payload_tdata,
+        output_ip_payload_tvalid=output_ip_payload_tvalid,
+        output_ip_payload_tready=output_ip_payload_tready,
+        output_ip_payload_tlast=output_ip_payload_tlast,
+        output_ip_payload_tuser=output_ip_payload_tuser,
 
-                  output_udp_hdr_valid,
-                  output_udp_hdr_ready,
-                  output_udp_eth_dest_mac,
-                  output_udp_eth_src_mac,
-                  output_udp_eth_type,
-                  output_udp_ip_version,
-                  output_udp_ip_ihl,
-                  output_udp_ip_dscp,
-                  output_udp_ip_ecn,
-                  output_udp_ip_length,
-                  output_udp_ip_identification,
-                  output_udp_ip_flags,
-                  output_udp_ip_fragment_offset,
-                  output_udp_ip_ttl,
-                  output_udp_ip_protocol,
-                  output_udp_ip_header_checksum,
-                  output_udp_ip_source_ip,
-                  output_udp_ip_dest_ip,
-                  output_udp_source_port,
-                  output_udp_dest_port,
-                  output_udp_length,
-                  output_udp_checksum,
-                  output_udp_payload_tdata,
-                  output_udp_payload_tvalid,
-                  output_udp_payload_tready,
-                  output_udp_payload_tlast,
-                  output_udp_payload_tuser,
+        input_udp_hdr_valid=input_udp_hdr_valid,
+        input_udp_hdr_ready=input_udp_hdr_ready,
+        input_udp_eth_dest_mac=input_udp_eth_dest_mac,
+        input_udp_eth_src_mac=input_udp_eth_src_mac,
+        input_udp_eth_type=input_udp_eth_type,
+        input_udp_ip_version=input_udp_ip_version,
+        input_udp_ip_ihl=input_udp_ip_ihl,
+        input_udp_ip_dscp=input_udp_ip_dscp,
+        input_udp_ip_ecn=input_udp_ip_ecn,
+        input_udp_ip_identification=input_udp_ip_identification,
+        input_udp_ip_flags=input_udp_ip_flags,
+        input_udp_ip_fragment_offset=input_udp_ip_fragment_offset,
+        input_udp_ip_ttl=input_udp_ip_ttl,
+        input_udp_ip_header_checksum=input_udp_ip_header_checksum,
+        input_udp_ip_source_ip=input_udp_ip_source_ip,
+        input_udp_ip_dest_ip=input_udp_ip_dest_ip,
+        input_udp_source_port=input_udp_source_port,
+        input_udp_dest_port=input_udp_dest_port,
+        input_udp_length=input_udp_length,
+        input_udp_checksum=input_udp_checksum,
+        input_udp_payload_tdata=input_udp_payload_tdata,
+        input_udp_payload_tvalid=input_udp_payload_tvalid,
+        input_udp_payload_tready=input_udp_payload_tready,
+        input_udp_payload_tlast=input_udp_payload_tlast,
+        input_udp_payload_tuser=input_udp_payload_tuser,
 
-                  rx_busy,
-                  tx_busy,
-                  rx_error_header_early_termination,
-                  rx_error_payload_early_termination,
-                  tx_error_payload_early_termination)
+        output_udp_hdr_valid=output_udp_hdr_valid,
+        output_udp_hdr_ready=output_udp_hdr_ready,
+        output_udp_eth_dest_mac=output_udp_eth_dest_mac,
+        output_udp_eth_src_mac=output_udp_eth_src_mac,
+        output_udp_eth_type=output_udp_eth_type,
+        output_udp_ip_version=output_udp_ip_version,
+        output_udp_ip_ihl=output_udp_ip_ihl,
+        output_udp_ip_dscp=output_udp_ip_dscp,
+        output_udp_ip_ecn=output_udp_ip_ecn,
+        output_udp_ip_length=output_udp_ip_length,
+        output_udp_ip_identification=output_udp_ip_identification,
+        output_udp_ip_flags=output_udp_ip_flags,
+        output_udp_ip_fragment_offset=output_udp_ip_fragment_offset,
+        output_udp_ip_ttl=output_udp_ip_ttl,
+        output_udp_ip_protocol=output_udp_ip_protocol,
+        output_udp_ip_header_checksum=output_udp_ip_header_checksum,
+        output_udp_ip_source_ip=output_udp_ip_source_ip,
+        output_udp_ip_dest_ip=output_udp_ip_dest_ip,
+        output_udp_source_port=output_udp_source_port,
+        output_udp_dest_port=output_udp_dest_port,
+        output_udp_length=output_udp_length,
+        output_udp_checksum=output_udp_checksum,
+        output_udp_payload_tdata=output_udp_payload_tdata,
+        output_udp_payload_tvalid=output_udp_payload_tvalid,
+        output_udp_payload_tready=output_udp_payload_tready,
+        output_udp_payload_tlast=output_udp_payload_tlast,
+        output_udp_payload_tuser=output_udp_payload_tuser,
+
+        rx_busy=rx_busy,
+        tx_busy=tx_busy,
+        rx_error_header_early_termination=rx_error_header_early_termination,
+        rx_error_payload_early_termination=rx_error_payload_early_termination,
+        tx_error_payload_early_termination=tx_error_payload_early_termination
+    )
 
     @always(delay(4))
     def clkgen():
@@ -694,7 +477,7 @@ def bench():
         test_frame.build()
         ip_frame = test_frame.build_ip()
 
-        ip_source_queue.put(ip_frame)
+        ip_source.send(ip_frame)
 
         yield clk.posedge
         yield clk.posedge
@@ -704,16 +487,14 @@ def bench():
         yield clk.posedge
         yield clk.posedge
 
-        rx_frame = None
-        if not udp_sink_queue.empty():
-            rx_frame = udp_sink_queue.get()
+        rx_frame = udp_sink.recv()
 
         assert rx_frame == test_frame
 
-        assert ip_source_queue.empty()
-        assert ip_sink_queue.empty()
-        assert udp_source_queue.empty()
-        assert udp_sink_queue.empty()
+        assert ip_source.empty()
+        assert ip_sink.empty()
+        assert udp_source.empty()
+        assert udp_sink.empty()
 
         yield delay(100)
 
@@ -743,7 +524,7 @@ def bench():
         test_frame.payload = bytearray(range(32))
         test_frame.build()
 
-        udp_source_queue.put(test_frame)
+        udp_source.send(test_frame)
 
         yield clk.posedge
         yield clk.posedge
@@ -753,25 +534,23 @@ def bench():
         yield clk.posedge
         yield clk.posedge
 
-        rx_frame = None
-        if not ip_sink_queue.empty():
-            rx_frame = ip_sink_queue.get()
+        rx_frame = ip_sink.recv()
 
         check_frame = udp_ep.UDPFrame()
         check_frame.parse_ip(rx_frame)
 
         assert check_frame == test_frame
 
-        assert ip_source_queue.empty()
-        assert ip_sink_queue.empty()
-        assert udp_source_queue.empty()
-        assert udp_sink_queue.empty()
+        assert ip_source.empty()
+        assert ip_sink.empty()
+        assert udp_source.empty()
+        assert udp_sink.empty()
 
         yield delay(100)
 
         raise StopSimulation
 
-    return dut, ip_source, ip_sink, udp_source, udp_sink, clkgen, monitor, check
+    return dut, ip_source_logic, ip_sink_logic, udp_source_logic, udp_sink_logic, clkgen, monitor, check
 
 def test_bench():
     sim = Simulation(bench())

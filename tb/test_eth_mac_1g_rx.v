@@ -52,18 +52,22 @@ wire error_bad_fcs;
 
 initial begin
     // myhdl integration
-    $from_myhdl(clk,
-                rst,
-                current_test,
-                gmii_rxd,
-                gmii_rx_dv,
-                gmii_rx_er);
-    $to_myhdl(output_axis_tdata,
-              output_axis_tvalid,
-              output_axis_tlast,
-              output_axis_tuser,
-              error_bad_frame,
-              error_bad_fcs);
+    $from_myhdl(
+        clk,
+        rst,
+        current_test,
+        gmii_rxd,
+        gmii_rx_dv,
+        gmii_rx_er
+    );
+    $to_myhdl(
+        output_axis_tdata,
+        output_axis_tvalid,
+        output_axis_tlast,
+        output_axis_tuser,
+        error_bad_frame,
+        error_bad_fcs
+    );
 
     // dump file
     $dumpfile("test_eth_mac_1g_rx.lxt");
