@@ -37,6 +37,10 @@ testbench = 'test_%s' % module
 srcs = []
 
 srcs.append("../rtl/%s.v" % module)
+srcs.append("../lib/eth/rtl/iddr.v")
+srcs.append("../lib/eth/rtl/oddr.v")
+srcs.append("../lib/eth/rtl/ssio_ddr_in.v")
+srcs.append("../lib/eth/rtl/ssio_ddr_out.v")
 srcs.append("../lib/eth/rtl/rgmii_phy_if.v")
 srcs.append("../lib/eth/rtl/eth_mac_1g_fifo.v")
 srcs.append("../lib/eth/rtl/eth_mac_1g.v")

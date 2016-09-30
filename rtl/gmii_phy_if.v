@@ -39,6 +39,7 @@ module gmii_phy_if #
     parameter IODDR_STYLE = "IODDR2",
     // Clock input style ("BUFG", "BUFR", "BUFIO", "BUFIO2")
     // Use BUFR for Virtex-5, Virtex-6, 7-series
+    // Use BUFG for Ultrascale
     // Use BUFIO2 for Spartan-6
     parameter CLOCK_INPUT_STYLE = "BUFIO2"
 )
@@ -73,147 +74,33 @@ module gmii_phy_if #
     output wire        phy_gmii_tx_er
 );
 
-wire phy_gmii_rx_clk_int;
-wire phy_gmii_rx_clk_io;
-wire phy_gmii_tx_clk_int;
+ssio_sdr_in #
+(
+    .TARGET(TARGET),
+    .CLOCK_INPUT_STYLE(CLOCK_INPUT_STYLE),
+    .WIDTH(10)
+)
+rx_ssio_sdr_inst (
+    .input_clk(phy_gmii_rx_clk),
+    .input_d({phy_gmii_rxd, phy_gmii_rx_dv, phy_gmii_rx_er}),
+    .output_clk(mac_gmii_rx_clk),
+    .output_q({mac_gmii_rxd, mac_gmii_rx_dv, mac_gmii_rx_er})
+);
 
-generate
+ssio_sdr_out #
+(
+    .TARGET(TARGET),
+    .IODDR_STYLE(IODDR_STYLE),
+    .WIDTH(10)
+)
+tx_ssio_sdr_inst (
+    .clk(clk),
+    .input_d({mac_gmii_txd, mac_gmii_tx_en, mac_gmii_tx_er}),
+    .output_clk(phy_gmii_tx_clk),
+    .output_q({phy_gmii_txd, phy_gmii_tx_en, phy_gmii_tx_er})
+);
 
-if (TARGET == "XILINX") begin
-
-    // use Xilinx clocking primitives
-
-    if (CLOCK_INPUT_STYLE == "BUFG") begin
-
-        // buffer RX clock
-        BUFG
-        phy_gmii_rx_clk_bufg (
-            .I(phy_gmii_rx_clk),
-            .O(phy_gmii_rx_clk_int)
-        );
-
-        // pass through RX clock to MAC and input buffers
-        assign phy_gmii_rx_clk_io = phy_gmii_rx_clk_int;
-        assign mac_gmii_rx_clk = phy_gmii_rx_clk_int;
-        
-    end else if (CLOCK_INPUT_STYLE == "BUFR") begin
-
-        assign phy_gmii_rx_clk_int = phy_gmii_rx_clk;
-
-        // pass through RX clock to input buffers
-        BUFIO
-        phy_gmii_rx_clk_bufio (
-            .I(phy_gmii_rx_clk_int),
-            .O(phy_gmii_rx_clk_io)
-        );
-
-        // pass through RX clock to MAC
-        BUFR #(
-            .BUFR_DIVIDE("BYPASS")
-        )
-        phy_gmii_rx_clk_bufr (
-            .I(phy_gmii_rx_clk_int),
-            .O(mac_gmii_rx_clk),
-            .CE(1'b1),
-            .CLR(1'b0)
-        );
-        
-    end else if (CLOCK_INPUT_STYLE == "BUFIO") begin
-
-        assign phy_gmii_rx_clk_int = phy_gmii_rx_clk;
-
-        // pass through RX clock to input buffers
-        BUFIO
-        phy_gmii_rx_clk_bufio (
-            .I(phy_gmii_rx_clk_int),
-            .O(phy_gmii_rx_clk_io)
-        );
-
-        // pass through RX clock to MAC
-        BUFG
-        phy_gmii_rx_clk_bufg (
-            .I(phy_gmii_rx_clk_int),
-            .O(mac_gmii_rx_clk)
-        );
-
-    end else if (CLOCK_INPUT_STYLE == "BUFIO2") begin
-
-        // pass through RX clock to input buffers
-        BUFIO2 #(
-            .DIVIDE(1),
-            .DIVIDE_BYPASS("TRUE"),
-            .I_INVERT("FALSE"),
-            .USE_DOUBLER("FALSE")
-        )
-        phy_gmii_rx_clk_bufio (
-            .I(phy_gmii_rx_clk),
-            .DIVCLK(phy_gmii_rx_clk_int),
-            .IOCLK(phy_gmii_rx_clk_io),
-            .SERDESSTROBE()
-        );
-
-        // pass through RX clock to MAC
-        BUFG
-        phy_gmii_rx_clk_bufg (
-            .I(phy_gmii_rx_clk_int),
-            .O(mac_gmii_rx_clk)
-        );
-        
-    end
-
-    // pass through clock to MAC
-    assign mac_gmii_tx_clk = clk;
-
-    // pass through clock to PHY
-    assign phy_gmii_tx_clk_int = clk;
-    
-    // invert to center clock edge in valid window
-    if (IODDR_STYLE == "IODDR") begin
-        ODDR
-        phy_gmii_tx_clk_oddr (
-            .Q(phy_gmii_tx_clk),
-            .C(phy_gmii_tx_clk_int),
-            .CE(1'b1),
-            .D1(1'b0),
-            .D2(1'b1),
-            .R(1'b0),
-            .S(1'b0)
-        );
-    end else if (IODDR_STYLE == "IODDR2") begin
-        ODDR2
-        phy_gmii_tx_clk_oddr (
-            .Q(phy_gmii_tx_clk),
-            .C0(phy_gmii_tx_clk_int),
-            .C1(~phy_gmii_tx_clk_int),
-            .CE(1'b1),
-            .D0(1'b0),
-            .D1(1'b1),
-            .R(1'b0),
-            .S(1'b0)
-        );
-    end
-
-end else begin
-
-    // pass through RX clock to input buffers
-    assign phy_gmii_rx_clk_io = phy_gmii_rx_clk;
-
-    // pass through RX clock to MAC
-    assign phy_gmii_rx_clk_int = phy_gmii_rx_clk;
-    assign mac_gmii_rx_clk = phy_gmii_rx_clk_int;
-
-    // pass through clock to MAC
-    assign mac_gmii_tx_clk = clk;
-
-    // pass through clock to PHY
-    assign phy_gmii_tx_clk_int = clk;
-
-    // invert to center clock edge in valid window
-    assign phy_gmii_tx_clk = ~phy_gmii_tx_clk_int;
-
-end
-
-endgenerate
+assign mac_gmii_tx_clk = clk;
 
 // reset sync
 reg [3:0] tx_rst_reg = 4'hf;
@@ -237,41 +124,5 @@ always @(posedge mac_gmii_rx_clk or posedge rst) begin
         rx_rst_reg <= {1'b0, rx_rst_reg[3:1]};
     end
 end
-
-// register RX data from PHY to MAC
-(* IOB = "TRUE" *)
-reg [7:0] gmii_rxd_reg = 8'd0;
-(* IOB = "TRUE" *)
-reg gmii_rx_dv_reg = 1'b0;
-(* IOB = "TRUE" *)
-reg gmii_rx_er_reg = 1'b0;
-
-always @(posedge phy_gmii_rx_clk_io) begin
-    gmii_rxd_reg <= phy_gmii_rxd;
-    gmii_rx_dv_reg <= phy_gmii_rx_dv;
-    gmii_rx_er_reg <= phy_gmii_rx_er;
-end
-
-assign mac_gmii_rxd = gmii_rxd_reg;
-assign mac_gmii_rx_dv = gmii_rx_dv_reg;
-assign mac_gmii_rx_er = gmii_rx_er_reg;
-
-// register TX data from MAC to PHY
-(* IOB = "TRUE" *)
-reg [7:0] gmii_txd_reg = 8'd0;
-(* IOB = "TRUE" *)
-reg gmii_tx_en_reg = 1'b0;
-(* IOB = "TRUE" *)
-reg gmii_tx_er_reg = 1'b0;
-
-always @(posedge phy_gmii_tx_clk_int) begin
-    gmii_txd_reg <= mac_gmii_txd;
-    gmii_tx_en_reg <= mac_gmii_tx_en;
-    gmii_tx_er_reg <= mac_gmii_tx_er;
-end
-
-assign phy_gmii_txd = gmii_txd_reg;
-assign phy_gmii_tx_en = gmii_tx_en_reg;
-assign phy_gmii_tx_er = gmii_tx_er_reg;
 
 endmodule
