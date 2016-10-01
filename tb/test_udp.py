@@ -36,8 +36,10 @@ testbench = 'test_%s' % module
 srcs = []
 
 srcs.append("../rtl/%s.v" % module)
+srcs.append("../rtl/udp_checksum_gen.v")
 srcs.append("../rtl/udp_ip_rx.v")
 srcs.append("../rtl/udp_ip_tx.v")
+srcs.append("../lib/axis/rtl/axis_fifo.v")
 srcs.append("%s.v" % testbench)
 
 src = ' '.join(srcs)
@@ -434,9 +436,13 @@ def bench():
             tx_error_payload_early_termination_asserted.next = 1
 
     def wait_normal():
-        while (input_ip_payload_tvalid or input_udp_payload_tvalid or
-                output_ip_payload_tvalid or output_udp_payload_tvalid or
-                input_ip_hdr_valid or input_udp_hdr_valid):
+        i = 8
+        while i > 0:
+            i = max(0, i-1)
+            if (input_ip_payload_tvalid or input_udp_payload_tvalid or
+                    output_ip_payload_tvalid or output_udp_payload_tvalid or
+                    input_ip_hdr_valid or input_udp_hdr_valid):
+                i = 8
             yield clk.posedge
 
     @instance

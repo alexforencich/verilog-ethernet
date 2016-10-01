@@ -31,7 +31,7 @@ THE SOFTWARE.
  */
 module udp #
 (
-    parameter CHECKSUM_ENABLE = 1,
+    parameter CHECKSUM_GEN_ENABLE = 1,
     parameter CHECKSUM_PAYLOAD_FIFO_ADDR_WIDTH = 11,
     parameter CHECKSUM_HEADER_FIFO_ADDR_WIDTH = 3
 )
@@ -253,13 +253,13 @@ udp_ip_rx_inst (
 
 generate
 
-if (CHECKSUM_ENABLE) begin
+if (CHECKSUM_GEN_ENABLE) begin
 
-    udp_checksum #(
+    udp_checksum_gen #(
         .PAYLOAD_FIFO_ADDR_WIDTH(CHECKSUM_PAYLOAD_FIFO_ADDR_WIDTH),
         .HEADER_FIFO_ADDR_WIDTH(CHECKSUM_HEADER_FIFO_ADDR_WIDTH)
     )
-    udp_checksum_inst (
+    udp_checksum_gen_inst (
         .clk(clk),
         .rst(rst),
         // UDP frame input
@@ -276,13 +276,11 @@ if (CHECKSUM_ENABLE) begin
         .input_ip_flags(input_udp_ip_flags),
         .input_ip_fragment_offset(input_udp_ip_fragment_offset),
         .input_ip_ttl(input_udp_ip_ttl),
-        .input_ip_protocol(0),
         .input_ip_header_checksum(input_udp_ip_header_checksum),
         .input_ip_source_ip(input_udp_ip_source_ip),
         .input_ip_dest_ip(input_udp_ip_dest_ip),
         .input_udp_source_port(input_udp_source_port),
         .input_udp_dest_port(input_udp_dest_port),
-        .input_udp_checksum(input_udp_checksum),
         .input_udp_payload_tdata(input_udp_payload_tdata),
         .input_udp_payload_tvalid(input_udp_payload_tvalid),
         .input_udp_payload_tready(input_udp_payload_tready),

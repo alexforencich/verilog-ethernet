@@ -38,6 +38,7 @@ srcs = []
 
 srcs.append("../rtl/%s.v" % module)
 srcs.append("../rtl/udp.v")
+srcs.append("../rtl/udp_checksum_gen.v")
 srcs.append("../rtl/udp_ip_rx.v")
 srcs.append("../rtl/udp_ip_tx.v")
 srcs.append("../rtl/ip_complete.v")
@@ -54,6 +55,7 @@ srcs.append("../rtl/eth_arb_mux_2.v")
 srcs.append("../rtl/eth_mux_2.v")
 srcs.append("../lib/axis/rtl/arbiter.v")
 srcs.append("../lib/axis/rtl/priority_encoder.v")
+srcs.append("../lib/axis/rtl/axis_fifo.v")
 srcs.append("%s.v" % testbench)
 
 src = ' '.join(srcs)
@@ -523,9 +525,13 @@ def bench():
             udp_tx_error_payload_early_termination_asserted.next = 1
 
     def wait_normal():
-        while (input_eth_payload_tvalid or input_ip_payload_tvalid or input_udp_payload_tvalid or
-                output_eth_payload_tvalid or output_ip_payload_tvalid or output_udp_payload_tvalid or
-                input_eth_hdr_valid or input_ip_hdr_valid or input_udp_hdr_valid):
+        i = 16
+        while i > 0:
+            i = max(0, i-1)
+            if (input_eth_payload_tvalid or input_ip_payload_tvalid or input_udp_payload_tvalid or
+                    output_eth_payload_tvalid or output_ip_payload_tvalid or output_udp_payload_tvalid or
+                    input_eth_hdr_valid or input_ip_hdr_valid or input_udp_hdr_valid):
+                i = 16
             yield clk.posedge
 
     @instance

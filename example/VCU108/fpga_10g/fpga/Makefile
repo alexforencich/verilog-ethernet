@@ -24,6 +24,7 @@ SYN_FILES += lib/eth/rtl/lfsr.v
 SYN_FILES += lib/eth/rtl/eth_axis_rx_64.v
 SYN_FILES += lib/eth/rtl/eth_axis_tx_64.v
 SYN_FILES += lib/eth/rtl/udp_complete_64.v
+SYN_FILES += lib/eth/rtl/udp_checksum_gen_64.v
 SYN_FILES += lib/eth/rtl/udp_64.v
 SYN_FILES += lib/eth/rtl/udp_ip_rx_64.v
 SYN_FILES += lib/eth/rtl/udp_ip_tx_64.v
