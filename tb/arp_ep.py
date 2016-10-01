@@ -29,18 +29,19 @@ import struct
 
 class ARPFrame(object):
     def __init__(self,
-                 eth_dest_mac=0,
-                 eth_src_mac=0,
-                 eth_type=0,
-                 arp_htype=1,
-                 arp_ptype=0x0800,
-                 arp_hlen=6,
-                 arp_plen=4,
-                 arp_oper=2,
-                 arp_sha=0x5A5152535455,
-                 arp_spa=0xc0a80164,
-                 arp_tha=0xDAD1D2D3D4D5,
-                 arp_tpa=0xc0a80164):
+                eth_dest_mac=0,
+                eth_src_mac=0,
+                eth_type=0,
+                arp_htype=1,
+                arp_ptype=0x0800,
+                arp_hlen=6,
+                arp_plen=4,
+                arp_oper=2,
+                arp_sha=0x5A5152535455,
+                arp_spa=0xc0a80164,
+                arp_tha=0xDAD1D2D3D4D5,
+                arp_tpa=0xc0a80164
+            ):
 
         self.eth_dest_mac = eth_dest_mac
         self.eth_src_mac = eth_src_mac
@@ -122,32 +123,37 @@ class ARPFrame(object):
 
     def __eq__(self, other):
         if type(other) is ARPFrame:
-            return (self.eth_src_mac == other.eth_src_mac and
-                self.eth_dest_mac == other.eth_dest_mac and
-                self.eth_type == other.eth_type and
-                self.arp_htype == other.arp_htype and
-                self.arp_ptype == other.arp_ptype and
-                self.arp_hlen == other.arp_hlen and
-                self.arp_plen == other.arp_plen and
-                self.arp_oper == other.arp_oper and
-                self.arp_sha == other.arp_sha and
-                self.arp_spa == other.arp_spa and
-                self.arp_tha == other.arp_tha and
-                self.arp_tpa == other.arp_tpa)
+            return (
+                    self.eth_src_mac == other.eth_src_mac and
+                    self.eth_dest_mac == other.eth_dest_mac and
+                    self.eth_type == other.eth_type and
+                    self.arp_htype == other.arp_htype and
+                    self.arp_ptype == other.arp_ptype and
+                    self.arp_hlen == other.arp_hlen and
+                    self.arp_plen == other.arp_plen and
+                    self.arp_oper == other.arp_oper and
+                    self.arp_sha == other.arp_sha and
+                    self.arp_spa == other.arp_spa and
+                    self.arp_tha == other.arp_tha and
+                    self.arp_tpa == other.arp_tpa
+                )
+        return False
 
     def __repr__(self):
-        return (('ArpFrame(eth_dest_mac=0x%012x, ' % self.eth_dest_mac) +
+        return (
+                ('ArpFrame(eth_dest_mac=0x%012x, ' % self.eth_dest_mac) +
                 ('eth_src_mac=0x%012x, ' % self.eth_src_mac) +
                 ('eth_type=0x%04x, ' % self.eth_type) +
-                 ('arp_htype=0x%04x, ' % self.arp_htype) +
-                 ('arp_ptype=0x%04x, ' % self.arp_ptype) +
-                 ('arp_hlen=%d, ' % self.arp_hlen) +
-                 ('arp_plen=%d, ' % self.arp_plen) +
-                 ('arp_oper=0x%04x, ' % self.arp_oper) +
-                 ('arp_sha=0x%012x, ' % self.arp_sha) +
-                 ('arp_spa=0x%08x, ' % self.arp_spa) +
-                 ('arp_tha=0x%012x, ' % self.arp_tha) +
-                 ('arp_tpa=0x%08x)' % self.arp_tpa))
+                ('arp_htype=0x%04x, ' % self.arp_htype) +
+                ('arp_ptype=0x%04x, ' % self.arp_ptype) +
+                ('arp_hlen=%d, ' % self.arp_hlen) +
+                ('arp_plen=%d, ' % self.arp_plen) +
+                ('arp_oper=0x%04x, ' % self.arp_oper) +
+                ('arp_sha=0x%012x, ' % self.arp_sha) +
+                ('arp_spa=0x%08x, ' % self.arp_spa) +
+                ('arp_tha=0x%012x, ' % self.arp_tha) +
+                ('arp_tpa=0x%08x)' % self.arp_tpa)
+            )
 
 
 class ARPFrameSource():

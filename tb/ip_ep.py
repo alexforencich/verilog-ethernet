@@ -28,23 +28,25 @@ import eth_ep
 import struct
 
 class IPFrame(object):
-    def __init__(self, payload=b'',
-                 eth_dest_mac=0,
-                 eth_src_mac=0,
-                 eth_type=0,
-                 ip_version=4,
-                 ip_ihl=5,
-                 ip_dscp=0,
-                 ip_ecn=0,
-                 ip_length=None,
-                 ip_identification=0,
-                 ip_flags=2,
-                 ip_fragment_offset=0,
-                 ip_ttl=64,
-                 ip_protocol=0x11,
-                 ip_header_checksum=None,
-                 ip_source_ip=0xc0a80164,
-                 ip_dest_ip=0xc0a80165):
+    def __init__(self,
+                payload=b'',
+                eth_dest_mac=0,
+                eth_src_mac=0,
+                eth_type=0,
+                ip_version=4,
+                ip_ihl=5,
+                ip_dscp=0,
+                ip_ecn=0,
+                ip_length=None,
+                ip_identification=0,
+                ip_flags=2,
+                ip_fragment_offset=0,
+                ip_ttl=64,
+                ip_protocol=0x11,
+                ip_header_checksum=None,
+                ip_source_ip=0xc0a80164,
+                ip_dest_ip=0xc0a80165
+            ):
 
         self._payload = axis_ep.AXIStreamFrame()
         self.eth_dest_mac = eth_dest_mac
@@ -192,26 +194,30 @@ class IPFrame(object):
 
     def __eq__(self, other):
         if type(other) is IPFrame:
-            return (self.eth_src_mac == other.eth_src_mac and
-                self.eth_dest_mac == other.eth_dest_mac and
-                self.eth_type == other.eth_type and
-                self.ip_version == other.ip_version and
-                self.ip_ihl == other.ip_ihl and
-                self.ip_dscp == other.ip_dscp and
-                self.ip_ecn == other.ip_ecn and
-                self.ip_length == other.ip_length and
-                self.ip_identification == other.ip_identification and
-                self.ip_flags == other.ip_flags and
-                self.ip_fragment_offset == other.ip_fragment_offset and
-                self.ip_ttl == other.ip_ttl and
-                self.ip_protocol == other.ip_protocol and
-                self.ip_header_checksum == other.ip_header_checksum and
-                self.ip_source_ip == other.ip_source_ip and
-                self.ip_dest_ip == other.ip_dest_ip and
-                self.payload == other.payload)
+            return (
+                    self.eth_src_mac == other.eth_src_mac and
+                    self.eth_dest_mac == other.eth_dest_mac and
+                    self.eth_type == other.eth_type and
+                    self.ip_version == other.ip_version and
+                    self.ip_ihl == other.ip_ihl and
+                    self.ip_dscp == other.ip_dscp and
+                    self.ip_ecn == other.ip_ecn and
+                    self.ip_length == other.ip_length and
+                    self.ip_identification == other.ip_identification and
+                    self.ip_flags == other.ip_flags and
+                    self.ip_fragment_offset == other.ip_fragment_offset and
+                    self.ip_ttl == other.ip_ttl and
+                    self.ip_protocol == other.ip_protocol and
+                    self.ip_header_checksum == other.ip_header_checksum and
+                    self.ip_source_ip == other.ip_source_ip and
+                    self.ip_dest_ip == other.ip_dest_ip and
+                    self.payload == other.payload
+                )
+        return False
 
     def __repr__(self):
-        return (('IPFrame(payload=%s, ' % repr(self.payload)) +
+        return (
+                ('IPFrame(payload=%s, ' % repr(self.payload)) +
                 ('eth_dest_mac=0x%012x, ' % self.eth_dest_mac) +
                 ('eth_src_mac=0x%012x, ' % self.eth_src_mac) +
                 ('eth_type=0x%04x, ' % self.eth_type) +
@@ -225,9 +231,10 @@ class IPFrame(object):
                 ('ip_fragment_offset=%d, ' % self.ip_fragment_offset) +
                 ('ip_ttl=%d, ' % self.ip_ttl) +
                 ('ip_protocol=0x%02x, ' % self.ip_protocol) +
-                ('ip_header_checksum=%x, ' % self.ip_header_checksum) +
+                ('ip_header_checksum=0x%x, ' % self.ip_header_checksum) +
                 ('ip_source_ip=0x%08x, ' % self.ip_source_ip) +
-                ('ip_dest_ip=0x%08x)' % self.ip_dest_ip))
+                ('ip_dest_ip=0x%08x)' % self.ip_dest_ip)
+            )
 
 
 class IPFrameSource():

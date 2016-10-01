@@ -105,10 +105,13 @@ class EthFrame(object):
 
     def __eq__(self, other):
         if type(other) is EthFrame:
-            return (self.eth_src_mac == other.eth_src_mac and
-                self.eth_dest_mac == other.eth_dest_mac and
-                self.eth_type == other.eth_type and
-                self.payload == other.payload)
+            return (
+                    self.eth_src_mac == other.eth_src_mac and
+                    self.eth_dest_mac == other.eth_dest_mac and
+                    self.eth_type == other.eth_type and
+                    self.payload == other.payload
+                )
+        return False
 
     def __repr__(self):
         fcs = 'None'
