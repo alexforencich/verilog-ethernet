@@ -190,7 +190,7 @@ class IPFrame(object):
         self.ip_source_ip = struct.unpack('>L', data.payload.data[12:16])[0]
         self.ip_dest_ip = struct.unpack('>L', data.payload.data[16:20])[0]
 
-        self.payload = axis_ep.AXIStreamFrame(data.payload.data[20:])
+        self.payload = axis_ep.AXIStreamFrame(data.payload.data[20:self.ip_length])
 
     def __eq__(self, other):
         if type(other) is IPFrame:

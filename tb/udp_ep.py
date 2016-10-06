@@ -267,7 +267,7 @@ class UDPFrame(object):
         self.udp_length = struct.unpack('>H', data.payload.data[4:6])[0]
         self.udp_checksum = struct.unpack('>H', data.payload.data[6:8])[0]
 
-        self.payload = axis_ep.AXIStreamFrame(data.payload.data[8:])
+        self.payload = axis_ep.AXIStreamFrame(data.payload.data[8:self.udp_length])
 
     def __eq__(self, other):
         if type(other) is UDPFrame:
