@@ -27,7 +27,7 @@
 ###################################################################
 
 # phony targets
-.PHONY: clean
+.PHONY: clean fpga
 
 # output files to hang on to
 .PRECIOUS: %.sof %.map.rpt %.fit.rpt %.asm.rpt %.sta.rpt

@@ -60,7 +60,7 @@ XCI_FILES += ip/ten_gig_eth_pcs_pma_0.xci
 
 include ../common/vivado.mk
 
-program: #$(FPGA_TOP).bit
+program: $(FPGA_TOP).bit
 	echo "open_hw" > program.tcl
 	echo "connect_hw_server" >> program.tcl
 	echo "open_hw_target" >> program.tcl
