@@ -10,23 +10,23 @@ set_property CONFIG_VOLTAGE 1.8 [current_design]
 #set_property -dict {LOC G31  IOSTANDARD DIFF_SSTL12} [get_ports clk_300mhz_1_p]
 #set_property -dict {LOC F31  IOSTANDARD DIFF_SSTL12} [get_ports clk_300mhz_1_n]
 #create_clock -period 3.333 -name clk_300_mhz_1 [get_ports clk_300mhz_1_p]
-#set_clock_groups -asynchronous -group clk_300mhz_1
+#set_clock_groups -asynchronous -group [get_clocks clk_300mhz_1 -include_generated_clocks]
 
 #set_property -dict {LOC G22  IOSTANDARD DIFF_SSTL12} [get_ports clk_300mhz_2_p]
 #set_property -dict {LOC G21  IOSTANDARD DIFF_SSTL12} [get_ports clk_300mhz_2_n]
 #create_clock -period 3.333 -name clk_300mhz_2 [get_ports clk_300mhz_2_p]
-#set_clock_groups -asynchronous -group clk_300mhz_2
+#set_clock_groups -asynchronous -group [get_clocks clk_300mhz_2 -include_generated_clocks]
 
 # 125 MHz
 set_property -dict {LOC BC9  IOSTANDARD LVDS} [get_ports clk_125mhz_p]
 set_property -dict {LOC BC8  IOSTANDARD LVDS} [get_ports clk_125mhz_n]
 create_clock -period 8.000 -name clk_125mhz [get_ports clk_125mhz_p]
-set_clock_groups -asynchronous -group clk_125mhz
+set_clock_groups -asynchronous -group [get_clocks clk_125mhz -include_generated_clocks]
 
 # 90 MHz
 #set_property -dict {LOC AL20 IOSTANDARD LVCMOS18} [get_ports clk_90mhz]
 #create_clock -period 11.111 -name clk_90mhz [get_ports clk_90mhz]
-#set_clock_groups -asynchronous -group clk_90mhz
+#set_clock_groups -asynchronous -group [get_clocks clk_90mhz -include_generated_clocks]
 
 # LEDs
 set_property -dict {LOC AT32 IOSTANDARD LVCMOS12 SLEW SLOW DRIVE 8} [get_ports {led[0]}]
@@ -74,5 +74,5 @@ set_property -dict {LOC AT21 IOSTANDARD LVCMOS18} [get_ports phy_int_n]
 
 # 625 MHz ref clock from SGMII PHY
 create_clock -period 1.600 -name phy_sgmii_clk [get_ports phy_sgmii_clk_p]
-set_clock_groups -asynchronous -group phy_sgmii_clk
+set_clock_groups -asynchronous -group [get_clocks phy_sgmii_clk -include_generated_clocks]
 

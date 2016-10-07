@@ -8,7 +8,7 @@ set_property CONFIG_VOLTAGE 3.3 [current_design]
 # 100 MHz clock
 set_property -dict {LOC R4 IOSTANDARD LVCMOS33} [get_ports clk]
 create_clock -period 10.000 -name clk [get_ports clk]
-set_clock_groups -asynchronous -group clk
+set_clock_groups -asynchronous -group [get_clocks clk -include_generated_clocks]
 
 # LEDs
 set_property -dict {LOC T14 IOSTANDARD LVCMOS25 SLEW SLOW DRIVE 12} [get_ports {led[0]}]
@@ -64,5 +64,5 @@ set_property -dict {LOC W14 IOSTANDARD LVCMOS25} [get_ports phy_pme_n]
 #set_property -dict {LOC AA16 IOSTANDARD LVCMOS25 SLEW SLOW DRIVE 12} [get_ports phy_mdc]
 
 create_clock -period 8.000 -name phy_rx_clk [get_ports phy_rx_clk]
-set_clock_groups -asynchronous -group phy_rx_clk
+set_clock_groups -asynchronous -group [get_clocks phy_rx_clk -include_generated_clocks]
 
