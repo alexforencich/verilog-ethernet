@@ -31,55 +31,83 @@ THE SOFTWARE.
  */
 module fpga (
     // CPU reset button
-    input wire CPU_RESET_n,
+    input  wire        CPU_RESET_n,
     // buttons
-    input wire [3:0] BUTTON,
-    input wire [3:0] SW,
+    input  wire [3:0]  BUTTON,
+    input  wire [3:0]  SW,
     // LEDs
-    output wire [6:0] HEX0_D,
-    output wire       HEX0_DP,
-    output wire [6:0] HEX1_D,
-    output wire       HEX1_DP,
-    output wire [3:0] LED,
-    output wire [3:0] LED_BRACKET,
-    output wire       LED_RJ45_L,
-    output wire       LED_RJ45_R,
+    output wire [6:0]  HEX0_D,
+    output wire        HEX0_DP,
+    output wire [6:0]  HEX1_D,
+    output wire        HEX1_DP,
+    output wire [3:0]  LED,
+    output wire [3:0]  LED_BRACKET,
+    output wire        LED_RJ45_L,
+    output wire        LED_RJ45_R,
     // Temperature control
-    //inout wire TEMP_CLK,
-    //inout wire TEMP_DATA,
-    //input wire TEMP_INT_n,
-    //input wire TEMP_OVERT_n,
-    output wire FAN_CTRL,
+    //inout wire        TEMP_CLK,
+    //inout wire        TEMP_DATA,
+    //input wire        TEMP_INT_n,
+    //input wire        TEMP_OVERT_n,
+    output wire        FAN_CTRL,
     // 50 MHz clock inputs
-    input  wire OSC_50_B3B,
-    input  wire OSC_50_B3D,
-    input  wire OSC_50_B4A,
-    input  wire OSC_50_B4D,
-    input  wire OSC_50_B7A,
-    input  wire OSC_50_B7D,
-    input  wire OSC_50_B8A,
-    input  wire OSC_50_B8D,
+    input  wire        OSC_50_B3B,
+    input  wire        OSC_50_B3D,
+    input  wire        OSC_50_B4A,
+    input  wire        OSC_50_B4D,
+    input  wire        OSC_50_B7A,
+    input  wire        OSC_50_B7D,
+    input  wire        OSC_50_B8A,
+    input  wire        OSC_50_B8D,
     // PCIe interface
-    //input  wire PCIE_PERST_n,
-    //input  wire PCIE_REFCLK_p,
-    //input  wire [7:0] PCIE_RX_p,
-    //output wire [7:0] PCIE_TX_p,
-    //input  wire PCIE_WAKE_n,
-    //inout  wire PCIE_SMBCLK,
-    //inout  wire PCIE_SMBDAT,
+    //input  wire        PCIE_PERST_n,
+    //input  wire        PCIE_REFCLK_p,
+    //input  wire [7:0]  PCIE_RX_p,
+    //output wire [7:0]  PCIE_TX_p,
+    //input  wire        PCIE_WAKE_n,
+    //inout  wire        PCIE_SMBCLK,
+    //inout  wire        PCIE_SMBDAT,
     // Si570
-    inout  wire CLOCK_SCL,
-    inout  wire CLOCK_SDA,
+    inout  wire        CLOCK_SCL,
+    inout  wire        CLOCK_SDA,
     // 10G Ethernet
-    input  wire SFPA_RX_p,
-    output wire SFPA_TX_p,
-    input  wire SFPB_RX_p,
-    output wire SFPB_TX_p,
-    input  wire SFPC_RX_p,
-    output wire SFPC_TX_p,
-    input  wire SFPD_RX_p,
-    output wire SFPD_TX_p,
-    input  wire SFP_REFCLK_P
+    input  wire        SFPA_LOS,
+    input  wire        SFPA_TXFAULT,
+    input  wire        SFPA_MOD0_PRESNT_n,
+    inout  wire        SFPA_MOD1_SCL,
+    inout  wire        SFPA_MOD2_SDA,
+    output wire        SFPA_TXDISABLE,
+    output wire [1:0]  SPFA_RATESEL,
+    input  wire        SFPA_RX_p,
+    output wire        SFPA_TX_p,
+    input  wire        SFPB_LOS,
+    input  wire        SFPB_TXFAULT,
+    input  wire        SFPB_MOD0_PRESNT_n,
+    inout  wire        SFPB_MOD1_SCL,
+    inout  wire        SFPB_MOD2_SDA,
+    output wire        SFPB_TXDISABLE,
+    output wire [1:0]  SPFB_RATESEL,
+    input  wire        SFPB_RX_p,
+    output wire        SFPB_TX_p,
+    input  wire        SFPC_LOS,
+    input  wire        SFPC_TXFAULT,
+    input  wire        SFPC_MOD0_PRESNT_n,
+    inout  wire        SFPC_MOD1_SCL,
+    inout  wire        SFPC_MOD2_SDA,
+    output wire        SFPC_TXDISABLE,
+    output wire [1:0]  SPFC_RATESEL,
+    input  wire        SFPC_RX_p,
+    output wire        SFPC_TX_p,
+    input  wire        SFPD_LOS,
+    input  wire        SFPD_TXFAULT,
+    input  wire        SFPD_MOD0_PRESNT_n,
+    inout  wire        SFPD_MOD1_SCL,
+    inout  wire        SFPD_MOD2_SDA,
+    output wire        SFPD_TXDISABLE,
+    output wire [1:0]  SPFD_RATESEL,
+    input  wire        SFPD_RX_p,
+    output wire        SFPD_TX_p,
+    input  wire        SFP_REFCLK_P
 );
 
 // Clock and reset
@@ -239,6 +267,26 @@ wire [71:0] sfp_d_rx_dc;
 
 wire [367:0] phy_reconfig_from_xcvr;
 wire [559:0] phy_reconfig_to_xcvr;
+
+assign SFPA_MOD1_SCL = 1'bz;
+assign SFPA_MOD2_SDA = 1'bz;
+assign SFPA_TXDISABLE = 1'b0;
+assign SPFA_RATESEL = 2'b00;
+
+assign SFPB_MOD1_SCL = 1'bz;
+assign SFPB_MOD2_SDA = 1'bz;
+assign SFPB_TXDISABLE = 1'b0;
+assign SPFB_RATESEL = 2'b00;
+
+assign SFPC_MOD1_SCL = 1'bz;
+assign SFPC_MOD2_SDA = 1'bz;
+assign SFPC_TXDISABLE = 1'b0;
+assign SPFC_RATESEL = 2'b00;
+
+assign SFPD_MOD1_SCL = 1'bz;
+assign SFPD_MOD2_SDA = 1'bz;
+assign SFPD_TXDISABLE = 1'b0;
+assign SPFD_RATESEL = 2'b00;
 
 phy
 phy_inst (
