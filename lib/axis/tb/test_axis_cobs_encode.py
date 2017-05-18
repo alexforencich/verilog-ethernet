@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 
-Copyright (c) 2016 Alex Forencich
+Copyright (c) 2016-2017 Alex Forencich
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -91,9 +91,8 @@ def cobs_decode(block):
         i += 1
         if i+code-1 > len(block):
             return None
-        for k in range(code-1):
-            dec.append(block[i])
-            i += 1
+        dec.extend(block[i:i+code-1])
+        i += code-1
         if code < 255 and i < len(block):
             dec.append(0)
 
