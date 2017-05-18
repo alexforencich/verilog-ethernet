@@ -169,6 +169,7 @@ class AXIStreamFrame(object):
     def __eq__(self, other):
         if type(other) is AXIStreamFrame:
             return self.data == other.data
+        return False
 
     def __repr__(self):
         return 'AXIStreamFrame(data=%s, keep=%s, dest=%s, user=%s)' % (repr(self.data), repr(self.keep), repr(self.dest), repr(self.user))
