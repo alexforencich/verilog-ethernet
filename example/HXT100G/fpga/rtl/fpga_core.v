@@ -410,9 +410,14 @@ always @(posedge clk) begin
     if (rst) begin
         led_reg <= 0;
     end else begin
-        valid_last <= tx_udp_payload_tvalid;
-        if (tx_udp_payload_tvalid & ~valid_last) begin
-            led_reg <= tx_udp_payload_tdata;
+        if (tx_udp_payload_tvalid) begin
+            if (~valid_last) begin
+                led_reg <= tx_udp_payload_tdata;
+                valid_last <= 1'b1;
+            end
+            if (tx_udp_payload_tlast) begin
+                valid_last <= 1'b0;
+            end
         end
     end
 end
