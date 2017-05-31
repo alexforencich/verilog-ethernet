@@ -73,6 +73,7 @@ class GMIIFrame(object):
     def __eq__(self, other):
         if type(other) is GMIIFrame:
             return self.data == other.data
+        return False
 
     def __repr__(self):
         return 'GMIIFrame(data=%s, error=%s)' % (repr(self.data), repr(self.error))
@@ -101,6 +102,8 @@ class GMIISource(object):
                 txd,
                 tx_en,
                 tx_er,
+                clk_enable=True,
+                mii_select=False,
                 name=None
             ):
 
@@ -129,7 +132,9 @@ class GMIISource(object):
                     er = []
                     ifg_cnt = 0
                 else:
-                    if ifg_cnt > 0:
+                    if not clk_enable:
+                        pass
+                    elif ifg_cnt > 0:
                         ifg_cnt -= 1
                         txd.next = 0
                         tx_er.next = 0
@@ -139,12 +144,26 @@ class GMIISource(object):
                         tx_er.next = er.pop(0)
                         tx_en.next = 1
                         if len(d) == 0:
-                            ifg_cnt = 12
+                            if mii_select:
+                                ifg_cnt = 12*2
+                            else:
+                                ifg_cnt = 12
                     elif len(self.queue) > 0:
                         frame = GMIIFrame(self.queue.pop(0))
                         d, er = frame.build()
                         if name is not None:
                             print("[%s] Sending frame %s" % (name, repr(frame)))
+                        if mii_select:
+                            d2 = []
+                            for b in d:
+                                d2.append(b & 0x0F)
+                                d2.append(b >> 4)
+                            d = d2
+                            er2 = []
+                            for b in er:
+                                er2.append(b)
+                                er2.append(b)
+                            er = er2
                         txd.next = d.pop(0)
                         tx_er.next = er.pop(0)
                         tx_en.next = 1
@@ -178,6 +197,8 @@ class GMIISink(object):
                 rxd,
                 rx_dv,
                 rx_er,
+                clk_enable=True,
+                mii_select=False,
                 name=None
             ):
 
@@ -201,7 +222,9 @@ class GMIISink(object):
                     d = []
                     er = []
                 else:
-                    if rx_dv:
+                    if not clk_enable:
+                        pass
+                    elif rx_dv:
                         if frame is None:
                             frame = GMIIFrame()
                             d = []
@@ -210,6 +233,26 @@ class GMIISink(object):
                         er.append(int(rx_er))
                     elif frame is not None:
                         if len(d) > 0:
+                            if mii_select:
+                                odd = True
+                                sync = False
+                                b = 0
+                                be = 0
+                                d2 = []
+                                er2 = []
+                                for n, e in zip(d, er):
+                                    odd = not odd
+                                    b = (n & 0x0F) << 4 | b >> 4
+                                    be |= e
+                                    if not sync and b == 0xD5:
+                                        odd = True
+                                        sync = True
+                                    if odd:
+                                        d2.append(b)
+                                        er2.append(be)
+                                        be = False
+                                d = d2
+                                er = er2
                             frame.parse(d, er)
                             self.queue.append(frame)
                             if name is not None:

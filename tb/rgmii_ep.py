@@ -32,6 +32,8 @@ class RGMIISource(gmii_ep.GMIISource):
                 rst,
                 txd,
                 tx_ctl,
+                clk_enable=True,
+                mii_select=False,
                 name=None
             ):
 
@@ -45,7 +47,7 @@ class RGMIISource(gmii_ep.GMIISource):
         gmii_tx_en_reg = Signal(bool(0))
         gmii_tx_er_reg = Signal(bool(0))
 
-        gmii_source = super(RGMIISource, self).create_logic(clk, rst, gmii_txd, gmii_tx_en, gmii_tx_er, name)
+        gmii_source = super(RGMIISource, self).create_logic(clk, rst, gmii_txd, gmii_tx_en, gmii_tx_er, clk_enable, mii_select, name)
 
         @instance
         def logic():
@@ -54,7 +56,8 @@ class RGMIISource(gmii_ep.GMIISource):
                 txd.next = gmii_txd_reg[4:0]
                 tx_ctl.next = gmii_tx_en_reg
                 yield clk.posedge
-                txd.next = gmii_txd_reg[8:4]
+                if not mii_select:
+                    txd.next = gmii_txd_reg[8:4]
                 tx_ctl.next = gmii_tx_en_reg ^ gmii_tx_er_reg
                 gmii_txd_reg.next = gmii_txd
                 gmii_tx_en_reg.next = gmii_tx_en
@@ -69,6 +72,8 @@ class RGMIISink(gmii_ep.GMIISink):
                 rst,
                 rxd,
                 rx_ctl,
+                clk_enable=True,
+                mii_select=False,
                 name=None
             ):
 
@@ -78,7 +83,7 @@ class RGMIISink(gmii_ep.GMIISink):
         gmii_rx_dv = Signal(bool(0))
         gmii_rx_er = Signal(bool(0))
 
-        gmii_sink = super(RGMIISink, self).create_logic(clk, rst, gmii_rxd, gmii_rx_dv, gmii_rx_er, name)
+        gmii_sink = super(RGMIISink, self).create_logic(clk, rst, gmii_rxd, gmii_rx_dv, gmii_rx_er, clk_enable, mii_select, name)
 
         @instance
         def logic():
