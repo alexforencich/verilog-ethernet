@@ -54,6 +54,7 @@ reg [63:0] qsfp_rxd_4 = 0;
 reg [7:0] qsfp_rxc_4 = 0;
 reg phy_gmii_clk = 0;
 reg phy_gmii_rst = 0;
+reg phy_gmii_clk_en = 0;
 reg [7:0] phy_gmii_rxd = 0;
 reg phy_gmii_rx_dv = 0;
 reg phy_gmii_rx_er = 0;
@@ -101,6 +102,7 @@ initial begin
         qsfp_rxc_4,
         phy_gmii_clk,
         phy_gmii_rst,
+        phy_gmii_clk_en,
         phy_gmii_rxd,
         phy_gmii_rx_dv,
         phy_gmii_rx_er,
@@ -160,6 +162,7 @@ UUT (
     .qsfp_rxc_4(qsfp_rxc_4),
     .phy_gmii_clk(phy_gmii_clk),
     .phy_gmii_rst(phy_gmii_rst),
+    .phy_gmii_clk_en(phy_gmii_clk_en),
     .phy_gmii_rxd(phy_gmii_rxd),
     .phy_gmii_rx_dv(phy_gmii_rx_dv),
     .phy_gmii_rx_er(phy_gmii_rx_er),

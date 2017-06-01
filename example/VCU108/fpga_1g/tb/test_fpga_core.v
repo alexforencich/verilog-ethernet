@@ -46,6 +46,7 @@ reg btnc = 0;
 reg [3:0] sw = 0;
 reg phy_gmii_clk = 0;
 reg phy_gmii_rst = 0;
+reg phy_gmii_clk_en = 0;
 reg [7:0] phy_gmii_rxd = 0;
 reg phy_gmii_rx_dv = 0;
 reg phy_gmii_rx_er = 0;
@@ -77,6 +78,7 @@ initial begin
         sw,
         phy_gmii_clk,
         phy_gmii_rst,
+        phy_gmii_clk_en,
         phy_gmii_rxd,
         phy_gmii_rx_dv,
         phy_gmii_rx_er,
@@ -112,6 +114,7 @@ UUT (
     .led(led),
     .phy_gmii_clk(phy_gmii_clk),
     .phy_gmii_rst(phy_gmii_rst),
+    .phy_gmii_clk_en(phy_gmii_clk_en),
     .phy_gmii_rxd(phy_gmii_rxd),
     .phy_gmii_rx_dv(phy_gmii_rx_dv),
     .phy_gmii_rx_er(phy_gmii_rx_er),

@@ -481,6 +481,7 @@ ten_gig_eth_pcs_pma_inst (
 // SGMII interface to PHY
 wire phy_gmii_clk_int;
 wire phy_gmii_rst_int;
+wire phy_gmii_clk_en_int;
 wire [7:0] phy_gmii_txd_int;
 wire phy_gmii_tx_en_int;
 wire phy_gmii_tx_er_int;
@@ -488,7 +489,21 @@ wire [7:0] phy_gmii_rxd_int;
 wire phy_gmii_rx_dv_int;
 wire phy_gmii_rx_er_int;
 
-wire [15:0] gig_eth_status_vector;
+wire [15:0] gig_eth_pcspma_status_vector;
+
+wire gig_eth_pcspma_status_link_status              = gig_eth_pcspma_status_vector[0];
+wire gig_eth_pcspma_status_link_synchronization     = gig_eth_pcspma_status_vector[1];
+wire gig_eth_pcspma_status_rudi_c                   = gig_eth_pcspma_status_vector[2];
+wire gig_eth_pcspma_status_rudi_i                   = gig_eth_pcspma_status_vector[3];
+wire gig_eth_pcspma_status_rudi_invalid             = gig_eth_pcspma_status_vector[4];
+wire gig_eth_pcspma_status_rxdisperr                = gig_eth_pcspma_status_vector[5];
+wire gig_eth_pcspma_status_rxnotintable             = gig_eth_pcspma_status_vector[6];
+wire gig_eth_pcspma_status_phy_link_status          = gig_eth_pcspma_status_vector[7];
+wire [1:0] gig_eth_pcspma_status_remote_fault_encdg = gig_eth_pcspma_status_vector[9:8];
+wire [1:0] gig_eth_pcspma_status_speed              = gig_eth_pcspma_status_vector[11:10];
+wire gig_eth_pcspma_status_duplex                   = gig_eth_pcspma_status_vector[12];
+wire gig_eth_pcspma_status_remote_fault             = gig_eth_pcspma_status_vector[13];
+wire [1:0] gig_eth_pcspma_status_pause              = gig_eth_pcspma_status_vector[15:14];
 
 wire [4:0] gig_eth_pcspma_config_vector;
 
@@ -537,11 +552,11 @@ gig_eth_pcspma (
     // MAC clocking
     .sgmii_clk_r            (),
     .sgmii_clk_f            (),
-    .sgmii_clk_en           (), // need to pass through to MAC
+    .sgmii_clk_en           (phy_gmii_clk_en_int),
     
     // Speed control
-    .speed_is_10_100        (1'b0),
-    .speed_is_100           (1'b0),
+    .speed_is_10_100        (gig_eth_pcspma_status_speed != 2'b10),
+    .speed_is_100           (gig_eth_pcspma_status_speed == 2'b01),
 
     // Internal GMII
     .gmii_txd               (phy_gmii_txd_int),
@@ -560,7 +575,7 @@ gig_eth_pcspma (
     .an_restart_config      (1'b0),
 
     // Status
-    .status_vector          (gig_eth_status_vector),
+    .status_vector          (gig_eth_pcspma_status_vector),
     .signal_detect          (1'b1)
 );
 
@@ -610,6 +625,7 @@ core_inst (
      */
     .phy_gmii_clk(phy_gmii_clk_int),
     .phy_gmii_rst(phy_gmii_rst_int),
+    .phy_gmii_clk_en(phy_gmii_clk_en_int),
     .phy_gmii_rxd(phy_gmii_rxd_int),
     .phy_gmii_rx_dv(phy_gmii_rx_dv_int),
     .phy_gmii_rx_er(phy_gmii_rx_er_int),

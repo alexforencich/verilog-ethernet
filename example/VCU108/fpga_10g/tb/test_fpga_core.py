@@ -40,8 +40,8 @@ srcs = []
 srcs.append("../rtl/%s.v" % module)
 srcs.append("../lib/eth/rtl/eth_mac_1g_fifo.v")
 srcs.append("../lib/eth/rtl/eth_mac_1g.v")
-srcs.append("../lib/eth/rtl/eth_mac_1g_rx.v")
-srcs.append("../lib/eth/rtl/eth_mac_1g_tx.v")
+srcs.append("../lib/eth/rtl/axis_gmii_rx.v")
+srcs.append("../lib/eth/rtl/axis_gmii_tx.v")
 srcs.append("../lib/eth/rtl/eth_mac_10g_fifo.v")
 srcs.append("../lib/eth/rtl/eth_mac_10g.v")
 srcs.append("../lib/eth/rtl/eth_mac_10g_rx.v")
@@ -108,6 +108,7 @@ def bench():
     qsfp_rxc_4 = Signal(intbv(0)[8:])
     phy_gmii_clk = Signal(bool(0))
     phy_gmii_rst = Signal(bool(0))
+    phy_gmii_clk_en = Signal(bool(0))
     phy_gmii_rxd = Signal(intbv(0)[8:])
     phy_gmii_rx_dv = Signal(bool(0))
     phy_gmii_rx_er = Signal(bool(0))
@@ -165,6 +166,7 @@ def bench():
         txd=phy_gmii_rxd,
         tx_en=phy_gmii_rx_dv,
         tx_er=phy_gmii_rx_er,
+        clk_enable=phy_gmii_clk_en,
         name='gmii_source'
     )
 
@@ -176,6 +178,7 @@ def bench():
         rxd=phy_gmii_txd,
         rx_dv=phy_gmii_tx_en,
         rx_er=phy_gmii_tx_er,
+        clk_enable=phy_gmii_clk_en,
         name='gmii_sink'
     )
 
@@ -216,6 +219,7 @@ def bench():
 
         phy_gmii_clk=phy_gmii_clk,
         phy_gmii_rst=phy_gmii_rst,
+        phy_gmii_clk_en=phy_gmii_clk_en,
         phy_gmii_rxd=phy_gmii_rxd,
         phy_gmii_rx_dv=phy_gmii_rx_dv,
         phy_gmii_rx_er=phy_gmii_rx_er,
@@ -235,6 +239,18 @@ def bench():
     def clkgen():
         clk.next = not clk
         phy_gmii_clk.next = not phy_gmii_clk
+
+    clk_enable_rate = Signal(int(0))
+    clk_enable_div = Signal(int(0))
+
+    @always(clk.posedge)
+    def clk_enable_gen():
+        if clk_enable_div.next > 0:
+            phy_gmii_clk_en.next = 0
+            clk_enable_div.next = clk_enable_div - 1
+        else:
+            phy_gmii_clk_en.next = 1
+            clk_enable_div.next = clk_enable_rate - 1
 
     @instance
     def check():
@@ -497,7 +513,7 @@ def bench():
 
         raise StopSimulation
 
-    return dut, qsfp_1_source_logic, qsfp_1_sink_logic, qsfp_2_source_logic, qsfp_2_sink_logic, qsfp_3_source_logic, qsfp_3_sink_logic, qsfp_4_source_logic, qsfp_4_sink_logic, gmii_source_logic, gmii_sink_logic, clkgen, check
+    return dut, qsfp_1_source_logic, qsfp_1_sink_logic, qsfp_2_source_logic, qsfp_2_sink_logic, qsfp_3_source_logic, qsfp_3_sink_logic, qsfp_4_source_logic, qsfp_4_sink_logic, gmii_source_logic, gmii_sink_logic, clkgen, clk_enable_gen, check
 
 def test_bench():
     sim = Simulation(bench())
