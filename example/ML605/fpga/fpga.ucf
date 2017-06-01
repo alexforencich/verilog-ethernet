@@ -52,6 +52,7 @@ NET "phy_reset_n" LOC = "AH13" | IOSTANDARD=LVCMOS25; # Bank = 33, IO_L18P_33 (E
 #NET "phy_mdio" LOC = "AN14" | IOSTANDARD=LVCMOS25; # (E-MDIO)
 # GMII Transmit
 NET "phy_gtx_clk" LOC = "AH12" | IOSTANDARD=LVCMOS25 | SLEW = FAST; # Bank = 33, IO_L16N_33 (E-GTXCLK)
+NET "phy_tx_clk"  LOC = "AD12" | IOSTANDARD=LVCMOS25; # Bank = 33, IO_L10P_MRCC_33 (E-TXCLK)
 NET "phy_txd<0>"  LOC = "AM11" | IOSTANDARD=LVCMOS25 | SLEW = FAST; # Bank = 33, IO_L7N_33 (E-TXD0)
 NET "phy_txd<1>"  LOC = "AL11" | IOSTANDARD=LVCMOS25 | SLEW = FAST; # Bank = 33, IO_L7P_33 (E-TXD1)
 NET "phy_txd<2>"  LOC = "AG10" | IOSTANDARD=LVCMOS25 | SLEW = FAST; # Bank = 33, IO_L6N_33 (E-TXD2)
@@ -63,7 +64,7 @@ NET "phy_txd<7>"  LOC = "AF11" | IOSTANDARD=LVCMOS25 | SLEW = FAST; # Bank = 33,
 NET "phy_tx_en"   LOC = "AJ10" | IOSTANDARD=LVCMOS25 | SLEW = FAST; # Bank = 33, IO_L8P_SRCC_33 (E-TXEN)
 NET "phy_tx_er"   LOC = "AH10" | IOSTANDARD=LVCMOS25 | SLEW = FAST; # Bank = 33, IO_L8N_SRCC_33 (E-TXER)
 # GMII Receive
-NET "phy_rx_clk" LOC = "AP11" | IOSTANDARD=LVCMOS25 | TNM_NET = "clk_rx_local"; # (E-RXCLK)
+NET "phy_rx_clk"  LOC = "AP11" | IOSTANDARD=LVCMOS25 | TNM_NET = "clk_rx_local"; # (E-RXCLK)
 NET "phy_rxd<0>"  LOC = "AN13" | IOSTANDARD=LVCMOS25; # Bank = 33, IO_L15P_33 (E-RXD0)
 NET "phy_rxd<1>"  LOC = "AF14" | IOSTANDARD=LVCMOS25; # Bank = 33, IO_L14N_VREF_33 (E-RXD1)
 NET "phy_rxd<2>"  LOC = "AE14" | IOSTANDARD=LVCMOS25; # Bank = 33, IO_L14P_33 (E-RXD2)

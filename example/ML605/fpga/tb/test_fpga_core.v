@@ -49,6 +49,7 @@ reg phy_rx_clk = 0;
 reg [7:0] phy_rxd = 0;
 reg phy_rx_dv = 0;
 reg phy_rx_er = 0;
+reg phy_tx_clk = 0;
 reg uart_txd = 0;
 reg uart_rts = 0;
 
@@ -83,6 +84,7 @@ initial begin
         phy_rxd,
         phy_rx_dv,
         phy_rx_er,
+        phy_tx_clk,
         uart_txd,
         uart_rts
     );
@@ -130,6 +132,7 @@ UUT (
     .phy_rx_dv(phy_rx_dv),
     .phy_rx_er(phy_rx_er),
     .phy_gtx_clk(phy_gtx_clk),
+    .phy_tx_clk(phy_tx_clk),
     .phy_txd(phy_txd),
     .phy_tx_en(phy_tx_en),
     .phy_tx_er(phy_tx_er),
