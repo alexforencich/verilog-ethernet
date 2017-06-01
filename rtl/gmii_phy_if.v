@@ -68,10 +68,16 @@ module gmii_phy_if #
     input  wire [7:0]  phy_gmii_rxd,
     input  wire        phy_gmii_rx_dv,
     input  wire        phy_gmii_rx_er,
+    input  wire        phy_mii_tx_clk,
     output wire        phy_gmii_tx_clk,
     output wire [7:0]  phy_gmii_txd,
     output wire        phy_gmii_tx_en,
-    output wire        phy_gmii_tx_er
+    output wire        phy_gmii_tx_er,
+
+    /*
+     * Control
+     */
+    input  wire        mii_select
 );
 
 ssio_sdr_in #
@@ -94,13 +100,27 @@ ssio_sdr_out #
     .WIDTH(10)
 )
 tx_ssio_sdr_inst (
-    .clk(clk),
+    .clk(mac_gmii_tx_clk),
     .input_d({mac_gmii_txd, mac_gmii_tx_en, mac_gmii_tx_er}),
     .output_clk(phy_gmii_tx_clk),
     .output_q({phy_gmii_txd, phy_gmii_tx_en, phy_gmii_tx_er})
 );
 
-assign mac_gmii_tx_clk = clk;
+generate
+
+if (TARGET == "XILINX") begin
+    BUFGMUX
+    gmii_bufgmux_inst (
+        .I0(clk),
+        .I1(phy_mii_tx_clk),
+        .S(mii_select),
+        .O(mac_gmii_tx_clk)
+    );
+end else begin
+    assign mac_gmii_tx_clk = mii_select ? phy_mii_tx_clk : clk;
+end
+
+endgenerate
 
 // reset sync
 reg [3:0] tx_rst_reg = 4'hf;
