@@ -56,6 +56,10 @@ reg rx_axis_tready = 0;
 reg [7:0] gmii_rxd = 0;
 reg gmii_rx_dv = 0;
 reg gmii_rx_er = 0;
+reg rx_clk_enable = 1;
+reg tx_clk_enable = 1;
+reg rx_mii_select = 0;
+reg tx_mii_select = 0;
 reg [7:0] ifg_delay = 0;
 
 // Outputs
@@ -96,6 +100,10 @@ initial begin
         gmii_rxd,
         gmii_rx_dv,
         gmii_rx_er,
+        rx_clk_enable,
+        tx_clk_enable,
+        rx_mii_select,
+        tx_mii_select,
         ifg_delay
     );
     $to_myhdl(
@@ -151,6 +159,10 @@ UUT (
     .gmii_txd(gmii_txd),
     .gmii_tx_en(gmii_tx_en),
     .gmii_tx_er(gmii_tx_er),
+    .rx_clk_enable(rx_clk_enable),
+    .tx_clk_enable(tx_clk_enable),
+    .rx_mii_select(rx_mii_select),
+    .tx_mii_select(tx_mii_select),
     .tx_fifo_overflow(tx_fifo_overflow),
     .tx_fifo_bad_frame(tx_fifo_bad_frame),
     .tx_fifo_good_frame(tx_fifo_good_frame),

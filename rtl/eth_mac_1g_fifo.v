@@ -73,6 +73,14 @@ module eth_mac_1g_fifo #
     output wire        gmii_tx_er,
 
     /*
+     * Control
+     */
+    input  wire        rx_clk_enable,
+    input  wire        tx_clk_enable,
+    input  wire        rx_mii_select,
+    input  wire        tx_mii_select,
+
+    /*
      * Status
      */
     output wire        tx_fifo_overflow,
@@ -157,6 +165,10 @@ eth_mac_1g_inst (
     .gmii_txd(gmii_txd),
     .gmii_tx_en(gmii_tx_en),
     .gmii_tx_er(gmii_tx_er),
+    .rx_clk_enable(rx_clk_enable),
+    .tx_clk_enable(tx_clk_enable),
+    .rx_mii_select(rx_mii_select),
+    .tx_mii_select(tx_mii_select),
     .rx_error_bad_frame(rx_error_bad_frame_int),
     .rx_error_bad_fcs(rx_error_bad_fcs_int),
     .ifg_delay(ifg_delay)

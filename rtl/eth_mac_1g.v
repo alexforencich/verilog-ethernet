@@ -68,6 +68,14 @@ module eth_mac_1g #
     output wire        gmii_tx_er,
 
     /*
+     * Control
+     */
+    input  wire        rx_clk_enable,
+    input  wire        tx_clk_enable,
+    input  wire        rx_mii_select,
+    input  wire        tx_mii_select,
+
+    /*
      * Status
      */
     output wire        rx_error_bad_frame,
@@ -79,8 +87,8 @@ module eth_mac_1g #
     input  wire [7:0]  ifg_delay
 );
 
-eth_mac_1g_rx
-eth_mac_1g_rx_inst (
+axis_gmii_rx
+axis_gmii_rx_inst (
     .clk(rx_clk),
     .rst(rx_rst),
     .gmii_rxd(gmii_rxd),
@@ -90,15 +98,17 @@ eth_mac_1g_rx_inst (
     .output_axis_tvalid(rx_axis_tvalid),
     .output_axis_tlast(rx_axis_tlast),
     .output_axis_tuser(rx_axis_tuser),
+    .clk_enable(rx_clk_enable),
+    .mii_select(rx_mii_select),
     .error_bad_frame(rx_error_bad_frame),
     .error_bad_fcs(rx_error_bad_fcs)
 );
 
-eth_mac_1g_tx #(
+axis_gmii_tx #(
     .ENABLE_PADDING(ENABLE_PADDING),
     .MIN_FRAME_LENGTH(MIN_FRAME_LENGTH)
 )
-eth_mac_1g_tx_inst (
+axis_gmii_tx_inst (
     .clk(tx_clk),
     .rst(tx_rst),
     .input_axis_tdata(tx_axis_tdata),
@@ -109,6 +119,8 @@ eth_mac_1g_tx_inst (
     .gmii_txd(gmii_txd),
     .gmii_tx_en(gmii_tx_en),
     .gmii_tx_er(gmii_tx_er),
+    .clk_enable(tx_clk_enable),
+    .mii_select(tx_mii_select),
     .ifg_delay(ifg_delay)
 );
 

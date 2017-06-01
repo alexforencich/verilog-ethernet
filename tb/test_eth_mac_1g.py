@@ -37,8 +37,8 @@ srcs = []
 
 srcs.append("../rtl/%s.v" % module)
 srcs.append("../rtl/lfsr.v")
-srcs.append("../rtl/eth_mac_1g_rx.v")
-srcs.append("../rtl/eth_mac_1g_tx.v")
+srcs.append("../rtl/axis_gmii_rx.v")
+srcs.append("../rtl/axis_gmii_tx.v")
 srcs.append("%s.v" % testbench)
 
 src = ' '.join(srcs)
@@ -67,6 +67,10 @@ def bench():
     gmii_rxd = Signal(intbv(0)[8:])
     gmii_rx_dv = Signal(bool(0))
     gmii_rx_er = Signal(bool(0))
+    rx_clk_enable = Signal(bool(1))
+    tx_clk_enable = Signal(bool(1))
+    rx_mii_select = Signal(bool(0))
+    tx_mii_select = Signal(bool(0))
     ifg_delay = Signal(intbv(0)[8:])
 
     # Outputs
@@ -92,6 +96,8 @@ def bench():
         txd=gmii_rxd,
         tx_en=gmii_rx_dv,
         tx_er=gmii_rx_er,
+        clk_enable=rx_clk_enable,
+        mii_select=rx_mii_select,
         name='gmii_source'
     )
 
@@ -103,6 +109,8 @@ def bench():
         rxd=gmii_txd,
         rx_dv=gmii_tx_en,
         rx_er=gmii_tx_er,
+        clk_enable=tx_clk_enable,
+        mii_select=tx_mii_select,
         name='gmii_sink'
     )
 
@@ -166,6 +174,12 @@ def bench():
         gmii_tx_en=gmii_tx_en,
         gmii_tx_er=gmii_tx_er,
 
+        rx_clk_enable=rx_clk_enable,
+        tx_clk_enable=tx_clk_enable,
+
+        rx_mii_select=rx_mii_select,
+        tx_mii_select=tx_mii_select,
+
         rx_error_bad_frame=rx_error_bad_frame,
         rx_error_bad_fcs=rx_error_bad_fcs,
 
@@ -177,6 +191,30 @@ def bench():
         clk.next = not clk
         tx_clk.next = not tx_clk
         rx_clk.next = not rx_clk
+
+    rx_error_bad_frame_asserted = Signal(bool(0))
+    rx_error_bad_fcs_asserted = Signal(bool(0))
+
+    @always(clk.posedge)
+    def monitor():
+        if (rx_error_bad_frame):
+            rx_error_bad_frame_asserted.next = 1
+        if (rx_error_bad_fcs):
+            rx_error_bad_fcs_asserted.next = 1
+
+    clk_enable_rate = Signal(int(0))
+    clk_enable_div = Signal(int(0))
+
+    @always(clk.posedge)
+    def clk_enable_gen():
+        if clk_enable_div.next > 0:
+            rx_clk_enable.next = 0
+            tx_clk_enable.next = 0
+            clk_enable_div.next = clk_enable_div - 1
+        else:
+            rx_clk_enable.next = 1
+            tx_clk_enable.next = 1
+            clk_enable_div.next = clk_enable_rate - 1
 
     @instance
     def check():
@@ -197,84 +235,99 @@ def bench():
 
         # testbench stimulus
 
-        yield clk.posedge
-        print("test 1: test rx packet")
-        current_test.next = 1
+        for rate, mii in [(1, 0), (10, 0), (5, 1)]:
+            clk_enable_rate.next = rate
+            rx_mii_select.next = mii
+            tx_mii_select.next = mii
 
-        test_frame = eth_ep.EthFrame()
-        test_frame.eth_dest_mac = 0xDAD1D2D3D4D5
-        test_frame.eth_src_mac = 0x5A5152535455
-        test_frame.eth_type = 0x8000
-        test_frame.payload = bytearray(range(32))
-        test_frame.update_fcs()
+            yield clk.posedge
+            print("test 1: test rx packet")
+            current_test.next = 1
 
-        axis_frame = test_frame.build_axis_fcs()
+            test_frame = eth_ep.EthFrame()
+            test_frame.eth_dest_mac = 0xDAD1D2D3D4D5
+            test_frame.eth_src_mac = 0x5A5152535455
+            test_frame.eth_type = 0x8000
+            test_frame.payload = bytearray(range(32))
+            test_frame.update_fcs()
 
-        gmii_source.send(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+bytearray(axis_frame))
-        yield clk.posedge
-        yield clk.posedge
+            axis_frame = test_frame.build_axis_fcs()
 
-        while gmii_rx_dv or rx_axis_tvalid:
+            gmii_source.send(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+bytearray(axis_frame))
+            yield clk.posedge
             yield clk.posedge
 
-        yield clk.posedge
-        yield clk.posedge
-
-        rx_frame = axis_sink.recv()
-
-        eth_frame = eth_ep.EthFrame()
-        eth_frame.parse_axis(rx_frame)
-        eth_frame.update_fcs()
-
-        assert eth_frame == test_frame
-
-        yield delay(100)
-
-        yield clk.posedge
-        print("test 2: test tx packet")
-        current_test.next = 2
-
-        test_frame = eth_ep.EthFrame()
-        test_frame.eth_dest_mac = 0xDAD1D2D3D4D5
-        test_frame.eth_src_mac = 0x5A5152535455
-        test_frame.eth_type = 0x8000
-        test_frame.payload = bytearray(range(32))
-        test_frame.update_fcs()
-
-        axis_frame = test_frame.build_axis()
-
-        axis_source.send(axis_frame)
-        yield clk.posedge
-        yield clk.posedge
-
-        while gmii_tx_en or tx_axis_tvalid:
+            while not rx_clk_enable or not tx_clk_enable or not (gmii_rx_dv or gmii_tx_en):
+                yield clk.posedge
             yield clk.posedge
 
-        yield clk.posedge
-        yield clk.posedge
+            while not rx_clk_enable or not tx_clk_enable or gmii_rx_dv or gmii_tx_en or tx_axis_tvalid or rx_axis_tvalid:
+                yield clk.posedge
 
-        rx_frame = gmii_sink.recv()
+            yield clk.posedge
+            yield clk.posedge
+            yield clk.posedge
 
-        assert rx_frame.data[0:8] == bytearray(b'\x55\x55\x55\x55\x55\x55\x55\xD5')
+            rx_frame = axis_sink.recv()
 
-        eth_frame = eth_ep.EthFrame()
-        eth_frame.parse_axis_fcs(rx_frame.data[8:])
+            eth_frame = eth_ep.EthFrame()
+            eth_frame.parse_axis(rx_frame)
+            eth_frame.update_fcs()
 
-        print(hex(eth_frame.eth_fcs))
-        print(hex(eth_frame.calc_fcs()))
+            assert eth_frame == test_frame
 
-        assert len(eth_frame.payload.data) == 46
-        assert eth_frame.eth_fcs == eth_frame.calc_fcs()
-        assert eth_frame.eth_dest_mac == test_frame.eth_dest_mac
-        assert eth_frame.eth_src_mac == test_frame.eth_src_mac
-        assert eth_frame.eth_type == test_frame.eth_type
-        assert eth_frame.payload.data.index(test_frame.payload.data) == 0
+            yield delay(100)
 
-        yield delay(100)
+            yield clk.posedge
+            print("test 2: test tx packet")
+            current_test.next = 2
+
+            test_frame = eth_ep.EthFrame()
+            test_frame.eth_dest_mac = 0xDAD1D2D3D4D5
+            test_frame.eth_src_mac = 0x5A5152535455
+            test_frame.eth_type = 0x8000
+            test_frame.payload = bytearray(range(32))
+            test_frame.update_fcs()
+
+            axis_frame = test_frame.build_axis()
+
+            axis_source.send(axis_frame)
+            yield clk.posedge
+            yield clk.posedge
+
+            while not rx_clk_enable or not tx_clk_enable or not (gmii_rx_dv or gmii_tx_en):
+                yield clk.posedge
+            yield clk.posedge
+
+            while not rx_clk_enable or not tx_clk_enable or gmii_rx_dv or gmii_tx_en or tx_axis_tvalid or rx_axis_tvalid:
+                yield clk.posedge
+
+            yield clk.posedge
+            yield clk.posedge
+            yield clk.posedge
+
+            rx_frame = gmii_sink.recv()
+
+            assert rx_frame.data[0:8] == bytearray(b'\x55\x55\x55\x55\x55\x55\x55\xD5')
+
+            eth_frame = eth_ep.EthFrame()
+            eth_frame.parse_axis_fcs(rx_frame.data[8:])
+
+            print(hex(eth_frame.eth_fcs))
+            print(hex(eth_frame.calc_fcs()))
+
+            assert len(eth_frame.payload.data) == 46
+            assert eth_frame.eth_fcs == eth_frame.calc_fcs()
+            assert eth_frame.eth_dest_mac == test_frame.eth_dest_mac
+            assert eth_frame.eth_src_mac == test_frame.eth_src_mac
+            assert eth_frame.eth_type == test_frame.eth_type
+            assert eth_frame.payload.data.index(test_frame.payload.data) == 0
+
+            yield delay(100)
 
         raise StopSimulation
 
-    return dut, axis_source_logic, axis_sink_logic, gmii_source_logic, gmii_sink_logic, clkgen, check
+    return dut, monitor, axis_source_logic, axis_sink_logic, gmii_source_logic, gmii_sink_logic, clkgen, clk_enable_gen, check
 
 def test_bench():
     sim = Simulation(bench())
