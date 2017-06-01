@@ -73,19 +73,6 @@ module fpga_core #
     output wire       uart_txd
 );
 
-// GMII between MAC and PHY IF
-wire gmii_rx_clk;
-wire gmii_rx_rst;
-wire [7:0] gmii_rxd;
-wire gmii_rx_dv;
-wire gmii_rx_er;
-
-wire gmii_tx_clk;
-wire gmii_tx_rst;
-wire [7:0] gmii_txd;
-wire gmii_tx_en;
-wire gmii_tx_er;
-
 // AXI between MAC and Ethernet modules
 wire [7:0] rx_axis_tdata;
 wire rx_axis_tvalid;
@@ -323,47 +310,20 @@ assign phy_reset_n = ~rst;
 
 assign uart_txd = 0;
 
-rgmii_phy_if #(
+eth_mac_1g_rgmii_fifo #(
     .TARGET(TARGET),
     .IODDR_STYLE("IODDR"),
     .CLOCK_INPUT_STYLE("BUFR"),
-    .USE_CLK90("TRUE")
-)
-rgmii_phy_if_inst (
-    .clk(clk),
-    .clk90(clk90),
-    .rst(rst),
-
-    .mac_gmii_rx_clk(gmii_rx_clk),
-    .mac_gmii_rx_rst(gmii_rx_rst),
-    .mac_gmii_rxd(gmii_rxd),
-    .mac_gmii_rx_dv(gmii_rx_dv),
-    .mac_gmii_rx_er(gmii_rx_er),
-    .mac_gmii_tx_clk(gmii_tx_clk),
-    .mac_gmii_tx_rst(gmii_tx_rst),
-    .mac_gmii_txd(gmii_txd),
-    .mac_gmii_tx_en(gmii_tx_en),
-    .mac_gmii_tx_er(gmii_tx_er),
-
-    .phy_rgmii_rx_clk(phy_rx_clk),
-    .phy_rgmii_rxd(phy_rxd),
-    .phy_rgmii_rx_ctl(phy_rx_ctl),
-    .phy_rgmii_tx_clk(phy_tx_clk),
-    .phy_rgmii_txd(phy_txd),
-    .phy_rgmii_tx_ctl(phy_tx_ctl)
-);
-
-eth_mac_1g_fifo #(
+    .USE_CLK90("TRUE"),
     .ENABLE_PADDING(1),
     .MIN_FRAME_LENGTH(64),
     .TX_FIFO_ADDR_WIDTH(12),
     .RX_FIFO_ADDR_WIDTH(12)
 )
-eth_mac_1g_fifo_inst (
-    .rx_clk(gmii_rx_clk),
-    .rx_rst(gmii_rx_rst),
-    .tx_clk(gmii_tx_clk),
-    .tx_rst(gmii_tx_rst),
+eth_mac_inst (
+    .gtx_clk(clk),
+    .gtx_clk90(clk90),
+    .gtx_rst(rst),
     .logic_clk(clk),
     .logic_rst(rst),
 
@@ -379,15 +339,22 @@ eth_mac_1g_fifo_inst (
     .rx_axis_tlast(rx_axis_tlast),
     .rx_axis_tuser(rx_axis_tuser),
 
-    .gmii_rxd(gmii_rxd),
-    .gmii_rx_dv(gmii_rx_dv),
-    .gmii_rx_er(gmii_rx_er),
-    .gmii_txd(gmii_txd),
-    .gmii_tx_en(gmii_tx_en),
-    .gmii_tx_er(gmii_tx_er),
-
+    .rgmii_rx_clk(phy_rx_clk),
+    .rgmii_rxd(phy_rxd),
+    .rgmii_rx_ctl(phy_rx_ctl),
+    .rgmii_tx_clk(phy_tx_clk),
+    .rgmii_txd(phy_txd),
+    .rgmii_tx_ctl(phy_tx_ctl),
+    
+    .tx_fifo_overflow(),
+    .tx_fifo_bad_frame(),
+    .tx_fifo_good_frame(),
     .rx_error_bad_frame(rx_error_bad_frame),
     .rx_error_bad_fcs(rx_error_bad_fcs),
+    .rx_fifo_overflow(),
+    .rx_fifo_bad_frame(),
+    .rx_fifo_good_frame(),
+    .speed(),
 
     .ifg_delay(12)
 );
