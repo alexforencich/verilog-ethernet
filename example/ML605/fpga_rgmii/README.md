@@ -8,8 +8,8 @@ The design by default listens to UDP port 1234 at IP address 192.168.1.128 and
 will echo back any packets received.  The design will also respond correctly
 to ARP requests.  
 
-Configure the PHY for GMII by placing J66 and J67 across pins 1 and 2 and
-opening J68.
+Configure the PHY for RGMII by placing J66 across pins 1 and 2, opening J67,
+and shorting J68.
 
 FPGA: XC6SlX45-2CSG324
 PHY: Marvell M88E1111
