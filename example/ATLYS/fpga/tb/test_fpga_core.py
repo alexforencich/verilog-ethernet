@@ -42,10 +42,11 @@ srcs.append("../lib/eth/rtl/oddr.v")
 srcs.append("../lib/eth/rtl/ssio_sdr_in.v")
 srcs.append("../lib/eth/rtl/ssio_sdr_out.v")
 srcs.append("../lib/eth/rtl/gmii_phy_if.v")
-srcs.append("../lib/eth/rtl/eth_mac_1g_fifo.v")
+srcs.append("../lib/eth/rtl/eth_mac_1g_gmii_fifo.v")
+srcs.append("../lib/eth/rtl/eth_mac_1g_gmii.v")
 srcs.append("../lib/eth/rtl/eth_mac_1g.v")
-srcs.append("../lib/eth/rtl/eth_mac_1g_rx.v")
-srcs.append("../lib/eth/rtl/eth_mac_1g_tx.v")
+srcs.append("../lib/eth/rtl/axis_gmii_rx.v")
+srcs.append("../lib/eth/rtl/axis_gmii_tx.v")
 srcs.append("../lib/eth/rtl/lfsr.v")
 srcs.append("../lib/eth/rtl/eth_axis_rx.v")
 srcs.append("../lib/eth/rtl/eth_axis_tx.v")
@@ -96,6 +97,7 @@ def bench():
     phy_rxd = Signal(intbv(0)[8:])
     phy_rx_dv = Signal(bool(0))
     phy_rx_er = Signal(bool(0))
+    phy_tx_clk = Signal(bool(0))
     uart_rxd = Signal(bool(0))
 
     # Outputs
@@ -108,6 +110,8 @@ def bench():
     uart_txd = Signal(bool(0))
 
     # sources and sinks
+    mii_select = Signal(bool(0))
+
     gmii_source = gmii_ep.GMIISource()
 
     gmii_source_logic = gmii_source.create_logic(
@@ -116,6 +120,7 @@ def bench():
         txd=phy_rxd,
         tx_en=phy_rx_dv,
         tx_er=phy_rx_er,
+        mii_select=mii_select,
         name='gmii_source'
     )
 
@@ -127,6 +132,7 @@ def bench():
         rxd=phy_txd,
         rx_dv=phy_tx_en,
         rx_er=phy_tx_er,
+        mii_select=mii_select,
         name='gmii_sink'
     )
 
@@ -153,6 +159,7 @@ def bench():
         phy_rx_dv=phy_rx_dv,
         phy_rx_er=phy_rx_er,
         phy_gtx_clk=phy_gtx_clk,
+        phy_tx_clk=phy_tx_clk,
         phy_txd=phy_txd,
         phy_tx_en=phy_tx_en,
         phy_tx_er=phy_tx_er,
@@ -165,7 +172,15 @@ def bench():
     @always(delay(4))
     def clkgen():
         clk.next = not clk
-        phy_rx_clk.next = not phy_rx_clk
+
+    rx_clk_hp = Signal(int(4))
+
+    @instance
+    def rx_clk_gen():
+        while True:
+            yield delay(int(rx_clk_hp))
+            phy_rx_clk.next = not phy_rx_clk
+            phy_tx_clk.next = not phy_tx_clk
 
     @instance
     def check():
@@ -286,7 +301,7 @@ def bench():
 
         raise StopSimulation
 
-    return dut, gmii_source_logic, gmii_sink_logic, clkgen, check
+    return dut, gmii_source_logic, gmii_sink_logic, clkgen, rx_clk_gen, check
 
 def test_bench():
     sim = Simulation(bench())
