@@ -136,7 +136,7 @@ def bench():
     gmii_sink = gmii_ep.GMIISink()
 
     gmii_sink_logic = gmii_sink.create_logic(
-        phy_gtx_clk,
+        phy_tx_clk,
         rst,
         rxd=phy_txd,
         rx_dv=phy_tx_en,
