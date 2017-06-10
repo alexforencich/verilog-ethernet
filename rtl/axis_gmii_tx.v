@@ -108,15 +108,16 @@ lfsr #(
     .LFSR_WIDTH(32),
     .LFSR_POLY(32'h4c11db7),
     .LFSR_CONFIG("GALOIS"),
+    .LFSR_FEED_FORWARD(0),
     .REVERSE(1),
     .DATA_WIDTH(8),
-    .OUTPUT_WIDTH(32),
     .STYLE("AUTO")
 )
 eth_crc_8 (
     .data_in(input_tdata_reg),
-    .lfsr_in(crc_state),
-    .lfsr_out(crc_next)
+    .state_in(crc_state),
+    .data_out(),
+    .state_out(crc_next)
 );
 
 always @* begin
