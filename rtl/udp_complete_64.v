@@ -356,7 +356,8 @@ assign output_ip_payload_tvalid = input_select_ip_reg & ip_rx_ip_payload_tvalid;
 assign output_ip_payload_tlast = ip_rx_ip_payload_tlast;
 assign output_ip_payload_tuser = ip_rx_ip_payload_tuser;
 
-assign ip_rx_ip_hdr_ready = udp_rx_ip_hdr_ready & output_ip_hdr_ready;
+assign ip_rx_ip_hdr_ready = (input_select_udp & udp_rx_ip_hdr_ready) |
+                            (input_select_ip & output_ip_hdr_ready);
 
 assign ip_rx_ip_payload_tready = (input_select_udp_reg & udp_rx_ip_payload_tready) |
                                  (input_select_ip_reg & output_ip_payload_tready);

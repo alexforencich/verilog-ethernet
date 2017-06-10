@@ -250,7 +250,9 @@ assign arp_rx_eth_payload_tvalid = input_select_arp_reg & input_eth_payload_tval
 assign arp_rx_eth_payload_tlast = input_eth_payload_tlast;
 assign arp_rx_eth_payload_tuser = input_eth_payload_tuser;
 
-assign input_eth_hdr_ready = arp_rx_eth_hdr_ready & ip_rx_eth_hdr_ready;
+assign input_eth_hdr_ready = (input_select_ip & ip_rx_eth_hdr_ready) |
+                             (input_select_arp & arp_rx_eth_hdr_ready) |
+                             (input_select_none);
 
 assign input_eth_payload_tready = (input_select_ip_reg & ip_rx_eth_payload_tready) |
                                   (input_select_arp_reg & arp_rx_eth_payload_tready) |
