@@ -1,0 +1,24 @@
+# UCF file for clock module domain crossing constraints
+
+NET "phy_sgmii_txoutclk" TNM_NET = "txoutclk";
+TIMESPEC "TS_txoutclk" = PERIOD "txoutclk" 8 ns HIGH 50 %;
+
+NET "eth_pcspma/transceiver_inst/RXRECCLK" TNM_NET = "rxrecclk";
+TIMESPEC "ts_rxrecclk" = PERIOD "rxrecclk" 8 ns;
+
+# Identify clock domain crossing registers
+INST "eth_pcspma/transceiver_inst/rx_elastic_buffer_inst/wr_addr_gray*" TNM = "wr_graycode";
+INST "eth_pcspma/transceiver_inst/rx_elastic_buffer_inst/rd_addr_gray*" TNM = "rd_graycode";
+
+# Control Gray Code delay and skew across clock boundary
+TIMESPEC "ts_rx_skew_control1" = FROM "wr_graycode" TO "FFS" 14 ns DATAPATHONLY;
+TIMESPEC "ts_rx_skew_control2" = FROM "rd_graycode" TO "FFS" 14 ns DATAPATHONLY;
+
+# Constrain between Distributed Memory (output data) and the 1st set of flip-flops
+INST "eth_pcspma/transceiver_inst/rx_elastic_buffer_inst/*rd_data*"  TNM = "fifo_read";
+TIMESPEC "ts_ram_read_false_path" = FROM "RAMS" TO "fifo_read"  6 ns DATAPATHONLY; 
+
+NET "clk_125mhz_int" TNM = "ffs_clk_125mhz_int";
+NET "phy_sgmii_txoutclk" TNM = "ffs_sgmii_clk";
+TIMESPEC "TS_clk_125mhz_int_to_sgmii_clk" = FROM "ffs_clk_125mhz_int" TO "ffs_sgmii_clk" 10 ns;
+TIMESPEC "TS_sgmii_clk_to_clk_125mhz_int" = FROM "ffs_sgmii_clk" TO "ffs_clk_125mhz_int" 10 ns;
