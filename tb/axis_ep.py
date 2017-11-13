@@ -27,19 +27,21 @@ from myhdl import *
 skip_asserts = False
 
 class AXIStreamFrame(object):
-    def __init__(self, data=b'', keep=None, dest=None, user=None):
+    def __init__(self, data=b'', keep=None, id=None, dest=None, user=None):
         self.B = 0
         self.N = 8
         self.M = 1
         self.WL = 8
         self.data = b''
         self.keep = None
+        self.id = 0
         self.dest = 0
         self.user = None
 
         if type(data) is bytes or type(data) is bytearray:
             self.data = bytearray(data)
             self.keep = keep
+            self.id = id
             self.dest = dest
             self.user = user
         elif type(data) is AXIStreamFrame:
@@ -51,6 +53,11 @@ class AXIStreamFrame(object):
                 self.data = list(data.data)
             if data.keep is not None:
                 self.keep = list(data.keep)
+            if data.id is not None:
+                if type(data.id) is int:
+                    self.id = data.id
+                else:
+                    self.id = list(data.id)
             if data.dest is not None:
                 if type(data.dest) is int:
                     self.dest = data.dest
@@ -64,6 +71,7 @@ class AXIStreamFrame(object):
         else:
             self.data = list(data)
             self.keep = keep
+            self.id = id
             self.dest = dest
             self.user = user
 
@@ -74,14 +82,10 @@ class AXIStreamFrame(object):
         f = list(self.data)
         tdata = []
         tkeep = []
+        tid = []
         tdest = []
         tuser = []
         i = 0
-
-        dest = 0
-        if type(self.dest) is int:
-            dest = self.dest
-            self.dest = None
 
         assert_tuser = False
         if (type(self.user) is int or type(self.user) is bool) and self.user:
@@ -97,14 +101,26 @@ class AXIStreamFrame(object):
                     keep = keep | (1 << j)
                     if len(f) == 0: break
                 tdata.append(data)
+
                 if self.keep is None:
                     tkeep.append(keep)
                 else:
                     tkeep.append(self.keep[i])
+                
+                if self.id is None:
+                    tid.append(0)
+                elif type(self.id) is int:
+                    tid.append(self.id)
+                else:
+                    tid.append(self.id[i])
+                
                 if self.dest is None:
-                    tdest.append(dest)
+                    tdest.append(0)
+                elif type(self.dest) is int:
+                    tdest.append(self.dest)
                 else:
                     tdest.append(self.dest[i])
+                
                 if self.user is None:
                     tuser.append(0)
                 else:
@@ -116,10 +132,21 @@ class AXIStreamFrame(object):
                 data = 0
                 tdata.append(f.pop(0))
                 tkeep.append(0)
+                
+                if self.id is None:
+                    tid.append(0)
+                elif type(self.id) is int:
+                    tid.append(self.id)
+                else:
+                    tid.append(self.id[i])
+                
                 if self.dest is None:
-                    tdest.append(dest)
+                    tdest.append(0)
+                elif type(self.dest) is int:
+                    tdest.append(self.dest)
                 else:
                     tdest.append(self.dest[i])
+                
                 if self.user is None:
                     tuser.append(0)
                 else:
@@ -130,19 +157,17 @@ class AXIStreamFrame(object):
             tuser[-1] = 1
             self.user = 1
 
-        if self.dest == None:
-            self.dest = dest
+        return tdata, tkeep, tid, tdest, tuser
 
-        return tdata, tkeep, tdest, tuser
-
-    def parse(self, tdata, tkeep, tdest, tuser):
+    def parse(self, tdata, tkeep, tid, tdest, tuser):
         if tdata is None or tkeep is None or tuser is None:
             return
-        if len(tdata) != len(tkeep) or len(tdata) != len(tdest) or len(tdata) != len(tuser):
+        if len(tdata) != len(tkeep) or len(tdata) != len(tid) or len(tdata) != len(tdest) or len(tdata) != len(tuser):
             raise Exception("Invalid data")
 
         self.data = []
         self.keep = []
+        self.id = []
         self.dest = []
         self.user = []
 
@@ -154,12 +179,14 @@ class AXIStreamFrame(object):
                     if tkeep[i] & (1 << j):
                         self.data.append((tdata[i] >> (j*self.WL)) & mask)
                 self.keep.append(tkeep[i])
+                self.id.append(tid[i])
                 self.dest.append(tdest[i])
                 self.user.append(tuser[i])
         else:
             for i in range(len(tdata)):
                 self.data.append(tdata[i])
                 self.keep.append(tkeep[i])
+                self.id.append(tid[i])
                 self.dest.append(tdest[i])
                 self.user.append(tuser[i])
 
@@ -172,7 +199,7 @@ class AXIStreamFrame(object):
         return False
 
     def __repr__(self):
-        return 'AXIStreamFrame(data=%s, keep=%s, dest=%s, user=%s)' % (repr(self.data), repr(self.keep), repr(self.dest), repr(self.user))
+        return 'AXIStreamFrame(data=%s, keep=%s, id=%s, dest=%s, user=%s)' % (repr(self.data), repr(self.keep), repr(self.id), repr(self.dest), repr(self.user))
 
     def __iter__(self):
         return self.data.__iter__()
@@ -203,8 +230,9 @@ class AXIStreamSource(object):
                 tvalid=Signal(bool(False)),
                 tready=Signal(bool(True)),
                 tlast=Signal(bool(False)),
+                tid=Signal(intbv(0)),
                 tdest=Signal(intbv(0)),
-                tuser=Signal(bool(False)),
+                tuser=Signal(intbv(0)),
                 pause=0,
                 name=None
             ):
@@ -226,6 +254,7 @@ class AXIStreamSource(object):
             frame = AXIStreamFrame()
             data = []
             keep = []
+            id = []
             dest = []
             user = []
             B = 0
@@ -250,6 +279,7 @@ class AXIStreamSource(object):
                     else:
                         tdata.next = 0
                     tkeep.next = 0
+                    tid.next = 0
                     tdest.next = 0
                     tuser.next = False
                     tvalid_int.next = False
@@ -264,6 +294,7 @@ class AXIStreamSource(object):
                             else:
                                 tdata.next = data.pop(0)
                             tkeep.next = keep.pop(0)
+                            tid.next = id.pop(0)
                             tdest.next = dest.pop(0)
                             tuser.next = user.pop(0)
                             tvalid_int.next = True
@@ -278,7 +309,7 @@ class AXIStreamSource(object):
                             frame.N = N
                             frame.M = M
                             frame.WL = WL
-                            data, keep, dest, user = frame.build()
+                            data, keep, id, dest, user = frame.build()
                             if name is not None:
                                 print("[%s] Sending frame %s" % (name, repr(frame)))
                             if B > 0:
@@ -288,6 +319,7 @@ class AXIStreamSource(object):
                             else:
                                 tdata.next = data.pop(0)
                             tkeep.next = keep.pop(0)
+                            tid.next = id.pop(0)
                             tdest.next = dest.pop(0)
                             tuser.next = user.pop(0)
                             tvalid_int.next = True
@@ -330,8 +362,9 @@ class AXIStreamSink(object):
                 tvalid=Signal(bool(False)),
                 tready=Signal(bool(True)),
                 tlast=Signal(bool(True)),
+                tid=Signal(intbv(0)),
                 tdest=Signal(intbv(0)),
-                tuser=Signal(bool(False)),
+                tuser=Signal(intbv(0)),
                 pause=0,
                 name=None
             ):
@@ -353,6 +386,7 @@ class AXIStreamSink(object):
             frame = AXIStreamFrame()
             data = []
             keep = []
+            id = []
             dest = []
             user = []
             B = 0
@@ -376,6 +410,7 @@ class AXIStreamSink(object):
                     frame = AXIStreamFrame()
                     data = []
                     keep = []
+                    id = []
                     dest = []
                     user = []
                     first = True
@@ -411,6 +446,7 @@ class AXIStreamSink(object):
                         else:
                             data.append(int(tdata))
                         keep.append(int(tkeep))
+                        id.append(int(tid))
                         dest.append(int(tdest))
                         user.append(int(tuser))
                         first = False
@@ -419,13 +455,14 @@ class AXIStreamSink(object):
                             frame.N = N
                             frame.M = M
                             frame.WL = WL
-                            frame.parse(data, keep, dest, user)
+                            frame.parse(data, keep, id, dest, user)
                             self.queue.append(frame)
                             if name is not None:
                                 print("[%s] Got frame %s" % (name, repr(frame)))
                             frame = AXIStreamFrame()
                             data = []
                             keep = []
+                            id = []
                             dest = []
                             user = []
                             first = True
