@@ -27,7 +27,7 @@ from myhdl import *
 skip_asserts = False
 
 class AXIStreamFrame(object):
-    def __init__(self, data=b'', keep=None, id=None, dest=None, user=None):
+    def __init__(self, data=b'', keep=None, id=None, dest=None, user=None, last_cycle_user=None):
         self.B = 0
         self.N = 8
         self.M = 1
@@ -37,6 +37,7 @@ class AXIStreamFrame(object):
         self.id = 0
         self.dest = 0
         self.user = None
+        self.last_cycle_user = None
 
         if type(data) is bytes or type(data) is bytearray:
             self.data = bytearray(data)
@@ -44,6 +45,7 @@ class AXIStreamFrame(object):
             self.id = id
             self.dest = dest
             self.user = user
+            self.last_cycle_user = last_cycle_user
         elif type(data) is AXIStreamFrame:
             self.N = data.N
             self.WL = data.WL
@@ -68,12 +70,14 @@ class AXIStreamFrame(object):
                     self.user = data.user
                 else:
                     self.user = list(data.user)
+            self.last_cycle_user = data.last_cycle_user
         else:
             self.data = list(data)
             self.keep = keep
             self.id = id
             self.dest = dest
             self.user = user
+            self.last_cycle_user = last_cycle_user
 
     def build(self):
         if self.data is None:
@@ -87,13 +91,8 @@ class AXIStreamFrame(object):
         tuser = []
         i = 0
 
-        assert_tuser = False
-        if (type(self.user) is int or type(self.user) is bool) and self.user:
-            assert_tuser = True
-            self.user = None
-
-        if self.B == 0:
-            while len(f) > 0:
+        while len(f) > 0:
+            if self.B == 0:
                 data = 0
                 keep = 0
                 for j in range(self.M):
@@ -106,56 +105,36 @@ class AXIStreamFrame(object):
                     tkeep.append(keep)
                 else:
                     tkeep.append(self.keep[i])
-                
-                if self.id is None:
-                    tid.append(0)
-                elif type(self.id) is int:
-                    tid.append(self.id)
-                else:
-                    tid.append(self.id[i])
-                
-                if self.dest is None:
-                    tdest.append(0)
-                elif type(self.dest) is int:
-                    tdest.append(self.dest)
-                else:
-                    tdest.append(self.dest[i])
-                
-                if self.user is None:
-                    tuser.append(0)
-                else:
-                    tuser.append(self.user[i])
-                i += 1
-        else:
-            # multiple tdata signals
-            while len(f) > 0:
+            else:
+                # multiple tdata signals
                 data = 0
                 tdata.append(f.pop(0))
                 tkeep.append(0)
-                
-                if self.id is None:
-                    tid.append(0)
-                elif type(self.id) is int:
-                    tid.append(self.id)
-                else:
-                    tid.append(self.id[i])
-                
-                if self.dest is None:
-                    tdest.append(0)
-                elif type(self.dest) is int:
-                    tdest.append(self.dest)
-                else:
-                    tdest.append(self.dest[i])
-                
-                if self.user is None:
-                    tuser.append(0)
-                else:
-                    tuser.append(self.user[i])
-                i += 1
 
-        if assert_tuser:
-            tuser[-1] = 1
-            self.user = 1
+            if self.id is None:
+                tid.append(0)
+            elif type(self.id) is int:
+                tid.append(self.id)
+            else:
+                tid.append(self.id[i])
+
+            if self.dest is None:
+                tdest.append(0)
+            elif type(self.dest) is int:
+                tdest.append(self.dest)
+            else:
+                tdest.append(self.dest[i])
+
+            if self.user is None:
+                tuser.append(0)
+            elif type(self.user) is int:
+                tuser.append(self.user)
+            else:
+                tuser.append(self.user[i])
+            i += 1
+
+        if self.last_cycle_user:
+            tuser[-1] = self.last_cycle_user
 
         return tdata, tkeep, tid, tdest, tuser
 
@@ -193,13 +172,22 @@ class AXIStreamFrame(object):
         if self.WL == 8:
             self.data = bytearray(self.data)
 
+        self.last_cycle_user = self.user[-1]
+
     def __eq__(self, other):
         if type(other) is AXIStreamFrame:
             return self.data == other.data
         return False
 
     def __repr__(self):
-        return 'AXIStreamFrame(data=%s, keep=%s, id=%s, dest=%s, user=%s)' % (repr(self.data), repr(self.keep), repr(self.id), repr(self.dest), repr(self.user))
+        return (
+                ('AXIStreamFrame(data=%s, ' % repr(self.data)) +
+                ('keep=%s, ' % repr(self.keep)) +
+                ('id=%s, ' % repr(self.id)) +
+                ('dest=%s, ' % repr(self.dest)) +
+                ('user=%s, ' % repr(self.user)) +
+                ('last_cycle_user=%s)' % repr(self.last_cycle_user))
+            )
 
     def __iter__(self):
         return self.data.__iter__()
