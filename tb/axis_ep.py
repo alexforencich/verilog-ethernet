@@ -39,7 +39,7 @@ class AXIStreamFrame(object):
         self.user = None
         self.last_cycle_user = None
 
-        if type(data) is bytes or type(data) is bytearray:
+        if type(data) in (bytes, bytearray):
             self.data = bytearray(data)
             self.keep = keep
             self.id = id
@@ -56,17 +56,17 @@ class AXIStreamFrame(object):
             if data.keep is not None:
                 self.keep = list(data.keep)
             if data.id is not None:
-                if type(data.id) is int:
+                if type(data.id) in (int, bool):
                     self.id = data.id
                 else:
                     self.id = list(data.id)
             if data.dest is not None:
-                if type(data.dest) is int:
+                if type(data.dest) in (int, bool):
                     self.dest = data.dest
                 else:
                     self.dest = list(data.dest)
             if data.user is not None:
-                if type(data.user) is int or type(data.user) is bool:
+                if type(data.user) in (int, bool):
                     self.user = data.user
                 else:
                     self.user = list(data.user)
@@ -175,9 +175,62 @@ class AXIStreamFrame(object):
         self.last_cycle_user = self.user[-1]
 
     def __eq__(self, other):
-        if type(other) is AXIStreamFrame:
-            return self.data == other.data
-        return False
+        if not isinstance(other, AXIStreamFrame):
+            return False
+        if self.data != other.data:
+            return False
+        if self.keep is not None and other.keep is not None:
+            if self.keep != other.keep:
+                return False
+        if self.id is not None and other.id is not None:
+            if type(self.id) in (int, bool) and type(other.id) is list:
+                for k in other.id:
+                    if self.id != k:
+                        return False
+            elif type(other.id) in (int, bool) and type(self.id) is list:
+                for k in self.id:
+                    if other.id != k:
+                        return False
+            elif self.id != other.id:
+                return False
+        if self.dest is not None and other.dest is not None:
+            if type(self.dest) in (int, bool) and type(other.dest) is list:
+                for k in other.dest:
+                    if self.dest != k:
+                        return False
+            elif type(other.dest) in (int, bool) and type(self.dest) is list:
+                for k in self.dest:
+                    if other.dest != k:
+                        return False
+            elif self.dest != other.dest:
+                return False
+        if self.last_cycle_user is not None and other.last_cycle_user is not None:
+            if self.last_cycle_user != other.last_cycle_user:
+                return False
+            if self.user is not None and other.user is not None:
+                if type(self.user) in (int, bool) and type(other.user) is list:
+                    for k in other.user[:-1]:
+                        if self.user != k:
+                            return False
+                elif type(other.user) in (int, bool) and type(self.user) is list:
+                    for k in self.user[:-1]:
+                        if other.user != k:
+                            return False
+                elif self.user != other.user:
+                    return False
+        else:
+            if self.user is not None and other.user is not None:
+                if type(self.user) in (int, bool) and type(other.user) is list:
+                    for k in other.user:
+                        if self.user != k:
+                            return False
+                elif type(other.user) in (int, bool) and type(self.user) is list:
+                    for k in self.user:
+                        if other.user != k:
+                            return False
+                elif self.user != other.user:
+                    return False
+        return True
 
     def __repr__(self):
         return (
