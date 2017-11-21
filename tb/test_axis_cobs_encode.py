@@ -265,7 +265,7 @@ def bench():
                     assert cobs_decode(enc) == block
                     assert rx_frame.data == enc
                     assert cobs_decode(rx_frame.data) == block
-                    assert not rx_frame.user[-1]
+                    assert not rx_frame.last_cycle_user
 
                     assert sink.empty()
 
@@ -294,14 +294,14 @@ def bench():
                     assert cobs_decode(enc) == block
                     assert rx_frame.data == enc
                     assert cobs_decode(rx_frame.data) == block
-                    assert not rx_frame.user[-1]
+                    assert not rx_frame.last_cycle_user
 
                     rx_frame = sink.recv()
 
                     assert cobs_decode(enc) == block
                     assert rx_frame.data == enc
                     assert cobs_decode(rx_frame.data) == block
-                    assert not rx_frame.user[-1]
+                    assert not rx_frame.last_cycle_user
 
                     assert sink.empty()
 
@@ -314,7 +314,7 @@ def bench():
                 test_frame1 = axis_ep.AXIStreamFrame(block)
                 test_frame2 = axis_ep.AXIStreamFrame(block)
 
-                test_frame1.user = 1
+                test_frame1.last_cycle_user = 1
 
                 for wait in wait_normal, wait_pause_source, wait_pause_sink:
                     source.send(test_frame1)
@@ -330,14 +330,14 @@ def bench():
                     rx_frame = sink.recv()
 
                     assert cobs_decode(rx_frame.data) == None
-                    assert rx_frame.user[-1]
+                    assert rx_frame.last_cycle_user
 
                     rx_frame = sink.recv()
 
                     assert cobs_decode(enc) == block
                     assert rx_frame.data == enc
                     assert cobs_decode(rx_frame.data) == block
-                    assert not rx_frame.user[-1]
+                    assert not rx_frame.last_cycle_user
 
                     assert sink.empty()
 
