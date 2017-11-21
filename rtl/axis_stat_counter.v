@@ -32,6 +32,7 @@ THE SOFTWARE.
 module axis_stat_counter #
 (
     parameter DATA_WIDTH = 64,
+    parameter KEEP_ENABLE = (DATA_WIDTH>8),
     parameter KEEP_WIDTH = (DATA_WIDTH/8),
     parameter TAG_ENABLE = 1,
     parameter TAG_WIDTH = 16,
@@ -57,22 +58,22 @@ module axis_stat_counter #
     /*
      * AXI status data output
      */
-    output wire [7:0]  output_axis_tdata,
-    output wire        output_axis_tvalid,
-    input  wire        output_axis_tready,
-    output wire        output_axis_tlast,
-    output wire        output_axis_tuser,
+    output wire [7:0]             output_axis_tdata,
+    output wire                   output_axis_tvalid,
+    input  wire                   output_axis_tready,
+    output wire                   output_axis_tlast,
+    output wire                   output_axis_tuser,
 
     /*
      * Configuration
      */
-    input  wire [TAG_WIDTH-1:0] tag,
-    input  wire        trigger,
+    input  wire [TAG_WIDTH-1:0]   tag,
+    input  wire                   trigger,
 
     /*
      * Status
      */
-    output wire        busy
+    output wire                   busy
 );
 
 localparam TAG_BYTE_WIDTH = (TAG_WIDTH + 7) / 8;
@@ -213,18 +214,22 @@ always @* begin
     // stats collection
 
     // increment tick count by number of words that can be transferred per cycle
-    tick_count_next = tick_count_next + KEEP_WIDTH;
+    tick_count_next = tick_count_next + (KEEP_ENABLE ? KEEP_WIDTH : 1);
 
     if (monitor_axis_tready & monitor_axis_tvalid) begin
         // valid transfer cycle
 
         // increment byte count by number of words transferred
-        bit_cnt = 0;
-        for (i = 0; i <= KEEP_WIDTH; i = i + 1) begin
-            //bit_cnt = bit_cnt + monitor_axis_tkeep[i];
-            if (monitor_axis_tkeep == ({KEEP_WIDTH{1'b1}}) >> (KEEP_WIDTH-i)) bit_cnt = i;
+        if (KEEP_ENABLE) begin
+            bit_cnt = 0;
+            for (i = 0; i <= KEEP_WIDTH; i = i + 1) begin
+                //bit_cnt = bit_cnt + monitor_axis_tkeep[i];
+                if (monitor_axis_tkeep == ({KEEP_WIDTH{1'b1}}) >> (KEEP_WIDTH-i)) bit_cnt = i;
+            end
+            byte_count_next = byte_count_next + bit_cnt;
+        end else begin
+            byte_count_next = byte_count_next + 1;
         end
-        byte_count_next = byte_count_next + bit_cnt;
 
         // count frames
         if (monitor_axis_tlast) begin
@@ -298,7 +303,7 @@ always @* begin
     store_axis_int_to_output = 1'b0;
     store_axis_int_to_temp = 1'b0;
     store_axis_temp_to_output = 1'b0;
-    
+
     if (output_axis_tready_int_reg) begin
         // input is ready
         if (output_axis_tready | ~output_axis_tvalid_reg) begin
