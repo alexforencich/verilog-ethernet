@@ -33,6 +33,17 @@ module axis_async_frame_fifo #
 (
     parameter ADDR_WIDTH = 12,
     parameter DATA_WIDTH = 8,
+    parameter KEEP_ENABLE = (DATA_WIDTH>8),
+    parameter KEEP_WIDTH = (DATA_WIDTH/8),
+    parameter ID_ENABLE = 0,
+    parameter ID_WIDTH = 8,
+    parameter DEST_ENABLE = 0,
+    parameter DEST_WIDTH = 8,
+    parameter USER_ENABLE = 1,
+    parameter USER_WIDTH = 1,
+    parameter USER_BAD_FRAME_VALUE = 1'b1,
+    parameter USER_BAD_FRAME_MASK = 1'b1,
+    parameter DROP_BAD_FRAME = 1,
     parameter DROP_WHEN_FULL = 0
 )
 (
@@ -46,19 +57,26 @@ module axis_async_frame_fifo #
      */
     input  wire                   input_clk,
     input  wire [DATA_WIDTH-1:0]  input_axis_tdata,
+    input  wire [KEEP_WIDTH-1:0]  input_axis_tkeep,
     input  wire                   input_axis_tvalid,
     output wire                   input_axis_tready,
     input  wire                   input_axis_tlast,
-    input  wire                   input_axis_tuser,
-    
+    input  wire [ID_WIDTH-1:0]    input_axis_tid,
+    input  wire [DEST_WIDTH-1:0]  input_axis_tdest,
+    input  wire [USER_WIDTH-1:0]  input_axis_tuser,
+
     /*
      * AXI output
      */
     input  wire                   output_clk,
     output wire [DATA_WIDTH-1:0]  output_axis_tdata,
+    output wire [KEEP_WIDTH-1:0]  output_axis_tkeep,
     output wire                   output_axis_tvalid,
     input  wire                   output_axis_tready,
     output wire                   output_axis_tlast,
+    output wire [ID_WIDTH-1:0]    output_axis_tid,
+    output wire [DEST_WIDTH-1:0]  output_axis_tdest,
+    output wire [USER_WIDTH-1:0]  output_axis_tuser,
 
     /*
      * Status
@@ -70,6 +88,13 @@ module axis_async_frame_fifo #
     output wire                   output_status_bad_frame,
     output wire                   output_status_good_frame
 );
+
+localparam KEEP_OFFSET = DATA_WIDTH;
+localparam LAST_OFFSET = KEEP_OFFSET + (KEEP_ENABLE ? KEEP_WIDTH : 0);
+localparam ID_OFFSET   = LAST_OFFSET + 1;
+localparam DEST_OFFSET = ID_OFFSET   + (ID_ENABLE   ? ID_WIDTH   : 0);
+localparam USER_OFFSET = DEST_OFFSET + (DEST_ENABLE ? DEST_WIDTH : 0);
+localparam WIDTH       = USER_OFFSET + (USER_ENABLE ? USER_WIDTH : 0);
 
 reg [ADDR_WIDTH:0] wr_ptr_reg = {ADDR_WIDTH+1{1'b0}}, wr_ptr_next;
 reg [ADDR_WIDTH:0] wr_ptr_cur_reg = {ADDR_WIDTH+1{1'b0}}, wr_ptr_cur_next;
@@ -91,13 +116,13 @@ reg output_rst_sync1_reg = 1'b1;
 reg output_rst_sync2_reg = 1'b1;
 reg output_rst_sync3_reg = 1'b1;
 
-reg [DATA_WIDTH+1-1:0] mem[(2**ADDR_WIDTH)-1:0];
-reg [DATA_WIDTH+1-1:0] mem_read_data_reg = {DATA_WIDTH+1{1'b0}};
+reg [WIDTH-1:0] mem[(2**ADDR_WIDTH)-1:0];
+reg [WIDTH-1:0] mem_read_data_reg;
 reg mem_read_data_valid_reg = 1'b0, mem_read_data_valid_next;
-wire [DATA_WIDTH+1-1:0] mem_write_data;
 
-reg [DATA_WIDTH+1-1:0] output_data_reg = {DATA_WIDTH+1{1'b0}};
+wire [WIDTH-1:0] input_axis;
 
+reg [WIDTH-1:0] output_axis_reg;
 reg output_axis_tvalid_reg = 1'b0, output_axis_tvalid_next;
 
 // full when first TWO MSBs do NOT match, but rest matches
@@ -136,10 +161,23 @@ reg good_frame_sync4_reg = 1'b0;
 
 assign input_axis_tready = (~full | DROP_WHEN_FULL) & ~input_rst_sync3_reg;
 
+generate
+    assign input_axis[DATA_WIDTH-1:0] = input_axis_tdata;
+    if (KEEP_ENABLE) assign input_axis[KEEP_OFFSET +: KEEP_WIDTH] = input_axis_tkeep;
+    assign input_axis[LAST_OFFSET] = input_axis_tlast;
+    if (ID_ENABLE)   assign input_axis[ID_OFFSET   +: ID_WIDTH]   = input_axis_tid;
+    if (DEST_ENABLE) assign input_axis[DEST_OFFSET +: DEST_WIDTH] = input_axis_tdest;
+    if (USER_ENABLE) assign input_axis[USER_OFFSET +: USER_WIDTH] = input_axis_tuser;
+endgenerate
+
 assign output_axis_tvalid = output_axis_tvalid_reg;
 
-assign mem_write_data = {input_axis_tlast, input_axis_tdata};
-assign {output_axis_tlast, output_axis_tdata} = output_data_reg;
+assign output_axis_tdata = output_axis_reg[DATA_WIDTH-1:0];
+assign output_axis_tkeep = KEEP_ENABLE ? output_axis_reg[KEEP_OFFSET +: KEEP_WIDTH] : {KEEP_WIDTH{1'b1}};
+assign output_axis_tlast = output_axis_reg[LAST_OFFSET];
+assign output_axis_tid   = ID_ENABLE   ? output_axis_reg[ID_OFFSET   +: ID_WIDTH]   : {ID_WIDTH{1'b0}};
+assign output_axis_tdest = DEST_ENABLE ? output_axis_reg[DEST_OFFSET +: DEST_WIDTH] : {DEST_WIDTH{1'b0}};
+assign output_axis_tuser = USER_ENABLE ? output_axis_reg[USER_OFFSET +: USER_WIDTH] : {USER_WIDTH{1'b0}};
 
 assign input_status_overflow = overflow_reg;
 assign input_status_bad_frame = bad_frame_reg;
@@ -206,7 +244,7 @@ always @* begin
                 wr_ptr_cur_next = wr_ptr_cur_reg + 1;
                 if (input_axis_tlast) begin
                     // end of frame
-                    if (input_axis_tuser) begin
+                    if (DROP_BAD_FRAME && (USER_BAD_FRAME_MASK & input_axis_tuser == USER_BAD_FRAME_VALUE)) begin
                         // bad packet, reset write pointer
                         wr_ptr_cur_next = wr_ptr_reg;
                         bad_frame_next = 1'b1;
@@ -246,7 +284,7 @@ always @(posedge input_clk) begin
     wr_addr_reg <= wr_ptr_cur_next;
 
     if (write) begin
-        mem[wr_addr_reg[ADDR_WIDTH-1:0]] <= mem_write_data;
+        mem[wr_addr_reg[ADDR_WIDTH-1:0]] <= input_axis;
     end
 end
 
@@ -367,7 +405,7 @@ always @(posedge output_clk) begin
     end
 
     if (store_output) begin
-        output_data_reg <= mem_read_data_reg;
+        output_axis_reg <= mem_read_data_reg;
     end
 end
 
