@@ -32,6 +32,14 @@ THE SOFTWARE.
 module axis_frame_length_adjust_fifo #
 (
     parameter DATA_WIDTH = 8,
+    parameter KEEP_ENABLE = (DATA_WIDTH>8),
+    parameter KEEP_WIDTH = (DATA_WIDTH/8),
+    parameter ID_ENABLE = 0,
+    parameter ID_WIDTH = 8,
+    parameter DEST_ENABLE = 0,
+    parameter DEST_WIDTH = 8,
+    parameter USER_ENABLE = 1,
+    parameter USER_WIDTH = 1,
     parameter FRAME_FIFO_ADDR_WIDTH = 12,
     parameter HEADER_FIFO_ADDR_WIDTH = 3
 )
@@ -43,10 +51,13 @@ module axis_frame_length_adjust_fifo #
      * AXI input
      */
     input  wire [DATA_WIDTH-1:0]  input_axis_tdata,
+    input  wire [KEEP_WIDTH-1:0]  input_axis_tkeep,
     input  wire                   input_axis_tvalid,
     output wire                   input_axis_tready,
     input  wire                   input_axis_tlast,
-    input  wire                   input_axis_tuser,
+    input  wire [ID_WIDTH-1:0]    input_axis_tid,
+    input  wire [DEST_WIDTH-1:0]  input_axis_tdest,
+    input  wire [USER_WIDTH-1:0]  input_axis_tuser,
 
     /*
      * AXI output
@@ -58,10 +69,13 @@ module axis_frame_length_adjust_fifo #
     output wire [15:0]            output_axis_hdr_length,
     output wire [15:0]            output_axis_hdr_original_length,
     output wire [DATA_WIDTH-1:0]  output_axis_tdata,
+    output wire [KEEP_WIDTH-1:0]  output_axis_tkeep,
     output wire                   output_axis_tvalid,
     input  wire                   output_axis_tready,
     output wire                   output_axis_tlast,
-    output wire                   output_axis_tuser,
+    output wire [ID_WIDTH-1:0]    output_axis_tid,
+    output wire [DEST_WIDTH-1:0]  output_axis_tdest,
+    output wire [USER_WIDTH-1:0]  output_axis_tuser,
 
     /*
      * Configuration
@@ -71,10 +85,13 @@ module axis_frame_length_adjust_fifo #
 );
 
 wire [DATA_WIDTH-1:0] fifo_axis_tdata;
+wire [KEEP_WIDTH-1:0] fifo_axis_tkeep;
 wire fifo_axis_tvalid;
 wire fifo_axis_tready;
 wire fifo_axis_tlast;
-wire fifo_axis_tuser;
+wire [ID_WIDTH-1:0] fifo_axis_tid;
+wire [DEST_WIDTH-1:0] fifo_axis_tdest;
+wire [USER_WIDTH-1:0] fifo_axis_tuser;
 
 wire status_valid;
 wire status_ready;
@@ -85,24 +102,35 @@ wire [15:0] status_frame_original_length;
 
 axis_frame_length_adjust #(
     .DATA_WIDTH(DATA_WIDTH),
-    .KEEP_WIDTH(1)
+    .KEEP_ENABLE(KEEP_ENABLE),
+    .KEEP_WIDTH(KEEP_WIDTH),
+    .ID_ENABLE(ID_ENABLE),
+    .ID_WIDTH(ID_WIDTH),
+    .DEST_ENABLE(DEST_ENABLE),
+    .DEST_WIDTH(DEST_WIDTH),
+    .USER_ENABLE(USER_ENABLE),
+    .USER_WIDTH(USER_WIDTH)
 )
 axis_frame_length_adjust_inst (
     .clk(clk),
     .rst(rst),
     // AXI input
     .input_axis_tdata(input_axis_tdata),
-    .input_axis_tkeep(1),
+    .input_axis_tkeep(input_axis_tkeep),
     .input_axis_tvalid(input_axis_tvalid),
     .input_axis_tready(input_axis_tready),
     .input_axis_tlast(input_axis_tlast),
+    .input_axis_tid(input_axis_tid),
+    .input_axis_tdest(input_axis_tdest),
     .input_axis_tuser(input_axis_tuser),
     // AXI output
     .output_axis_tdata(fifo_axis_tdata),
-    .output_axis_tkeep(),
+    .output_axis_tkeep(fifo_axis_tkeep),
     .output_axis_tvalid(fifo_axis_tvalid),
     .output_axis_tready(fifo_axis_tready),
     .output_axis_tlast(fifo_axis_tlast),
+    .output_axis_tid(fifo_axis_tid),
+    .output_axis_tdest(fifo_axis_tdest),
     .output_axis_tuser(fifo_axis_tuser),
     // Status
     .status_valid(status_valid),
@@ -118,45 +146,70 @@ axis_frame_length_adjust_inst (
 
 axis_fifo #(
     .ADDR_WIDTH(FRAME_FIFO_ADDR_WIDTH),
-    .DATA_WIDTH(DATA_WIDTH)
+    .DATA_WIDTH(DATA_WIDTH),
+    .KEEP_ENABLE(KEEP_ENABLE),
+    .KEEP_WIDTH(KEEP_WIDTH),
+    .LAST_ENABLE(1),
+    .ID_ENABLE(ID_ENABLE),
+    .ID_WIDTH(ID_WIDTH),
+    .DEST_ENABLE(DEST_ENABLE),
+    .DEST_WIDTH(DEST_WIDTH),
+    .USER_ENABLE(USER_ENABLE),
+    .USER_WIDTH(USER_WIDTH)
 )
 frame_fifo_inst (
     .clk(clk),
     .rst(rst),
     // AXI input
     .input_axis_tdata(fifo_axis_tdata),
+    .input_axis_tkeep(fifo_axis_tkeep),
     .input_axis_tvalid(fifo_axis_tvalid),
     .input_axis_tready(fifo_axis_tready),
     .input_axis_tlast(fifo_axis_tlast),
+    .input_axis_tid(fifo_axis_tid),
+    .input_axis_tdest(fifo_axis_tdest),
     .input_axis_tuser(fifo_axis_tuser),
     // AXI output
     .output_axis_tdata(output_axis_tdata),
+    .output_axis_tkeep(output_axis_tkeep),
     .output_axis_tvalid(output_axis_tvalid),
     .output_axis_tready(output_axis_tready),
     .output_axis_tlast(output_axis_tlast),
+    .output_axis_tid(output_axis_tid),
+    .output_axis_tdest(output_axis_tdest),
     .output_axis_tuser(output_axis_tuser)
 );
 
 axis_fifo #(
     .ADDR_WIDTH(HEADER_FIFO_ADDR_WIDTH),
-    .DATA_WIDTH(1+1+16+16)
+    .DATA_WIDTH(1+1+16+16),
+    .KEEP_ENABLE(0),
+    .LAST_ENABLE(0),
+    .ID_ENABLE(0),
+    .DEST_ENABLE(0),
+    .USER_ENABLE(0)
 )
 header_fifo_inst (
     .clk(clk),
     .rst(rst),
     // AXI input
     .input_axis_tdata({status_frame_pad, status_frame_truncate, status_frame_length, status_frame_original_length}),
+    .input_axis_tkeep(0),
     .input_axis_tvalid(status_valid),
     .input_axis_tready(status_ready),
     .input_axis_tlast(0),
+    .input_axis_tid(0),
+    .input_axis_tdest(0),
     .input_axis_tuser(0),
     // AXI output
     .output_axis_tdata({output_axis_hdr_pad, output_axis_hdr_truncate, output_axis_hdr_length, output_axis_hdr_original_length}),
+    .output_axis_tkeep(),
     .output_axis_tvalid(output_axis_hdr_valid),
     .output_axis_tready(output_axis_hdr_ready),
     .output_axis_tlast(),
+    .output_axis_tid(),
+    .output_axis_tdest(),
     .output_axis_tuser()
 );
-
 
 endmodule
