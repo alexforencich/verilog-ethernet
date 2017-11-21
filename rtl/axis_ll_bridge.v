@@ -36,7 +36,7 @@ module axis_ll_bridge #
 (
     input  wire                   clk,
     input  wire                   rst,
-    
+
     /*
      * AXI input
      */
@@ -44,7 +44,7 @@ module axis_ll_bridge #
     input  wire                   axis_tvalid,
     output wire                   axis_tready,
     input  wire                   axis_tlast,
-    
+
     /*
      * LocalLink output
      */
