@@ -27,14 +27,24 @@ THE SOFTWARE.
 `timescale 1ns / 1ps
 
 /*
- * Testbench for axis_frame_fifo_64
+ * Testbench for axis_frame_fifo
  */
 module test_axis_frame_fifo_64;
 
 // Parameters
 parameter ADDR_WIDTH = 6;
 parameter DATA_WIDTH = 64;
+parameter KEEP_ENABLE = (DATA_WIDTH>8);
 parameter KEEP_WIDTH = (DATA_WIDTH/8);
+parameter ID_ENABLE = 1;
+parameter ID_WIDTH = 8;
+parameter DEST_ENABLE = 1;
+parameter DEST_WIDTH = 8;
+parameter USER_ENABLE = 1;
+parameter USER_WIDTH = 1;
+parameter USER_BAD_FRAME_VALUE = 1'b1;
+parameter USER_BAD_FRAME_MASK = 1'b1;
+parameter DROP_BAD_FRAME = 1;
 parameter DROP_WHEN_FULL = 0;
 
 // Inputs
@@ -46,7 +56,9 @@ reg [DATA_WIDTH-1:0] input_axis_tdata = 0;
 reg [KEEP_WIDTH-1:0] input_axis_tkeep = 0;
 reg input_axis_tvalid = 0;
 reg input_axis_tlast = 0;
-reg input_axis_tuser = 0;
+reg [ID_WIDTH-1:0] input_axis_tid = 0;
+reg [DEST_WIDTH-1:0] input_axis_tdest = 0;
+reg [USER_WIDTH-1:0] input_axis_tuser = 0;
 reg output_axis_tready = 0;
 
 // Outputs
@@ -55,6 +67,9 @@ wire [DATA_WIDTH-1:0] output_axis_tdata;
 wire [KEEP_WIDTH-1:0] output_axis_tkeep;
 wire output_axis_tvalid;
 wire output_axis_tlast;
+wire [ID_WIDTH-1:0] output_axis_tid;
+wire [DEST_WIDTH-1:0] output_axis_tdest;
+wire [USER_WIDTH-1:0] output_axis_tuser;
 wire overflow;
 wire bad_frame;
 wire good_frame;
@@ -69,6 +84,8 @@ initial begin
         input_axis_tkeep,
         input_axis_tvalid,
         input_axis_tlast,
+        input_axis_tid,
+        input_axis_tdest,
         input_axis_tuser,
         output_axis_tready
     );
@@ -78,6 +95,9 @@ initial begin
         output_axis_tkeep,
         output_axis_tvalid,
         output_axis_tlast,
+        output_axis_tid,
+        output_axis_tdest,
+        output_axis_tuser,
         overflow,
         bad_frame,
         good_frame
@@ -88,10 +108,20 @@ initial begin
     $dumpvars(0, test_axis_frame_fifo_64);
 end
 
-axis_frame_fifo_64 #(
+axis_frame_fifo #(
     .ADDR_WIDTH(ADDR_WIDTH),
-    .KEEP_WIDTH(KEEP_WIDTH),
     .DATA_WIDTH(DATA_WIDTH),
+    .KEEP_ENABLE(KEEP_ENABLE),
+    .KEEP_WIDTH(KEEP_WIDTH),
+    .ID_ENABLE(ID_ENABLE),
+    .ID_WIDTH(ID_WIDTH),
+    .DEST_ENABLE(DEST_ENABLE),
+    .DEST_WIDTH(DEST_WIDTH),
+    .USER_ENABLE(USER_ENABLE),
+    .USER_WIDTH(USER_WIDTH),
+    .USER_BAD_FRAME_VALUE(USER_BAD_FRAME_VALUE),
+    .USER_BAD_FRAME_MASK(USER_BAD_FRAME_MASK),
+    .DROP_BAD_FRAME(DROP_BAD_FRAME),
     .DROP_WHEN_FULL(DROP_WHEN_FULL)
 )
 UUT (
@@ -103,6 +133,8 @@ UUT (
     .input_axis_tvalid(input_axis_tvalid),
     .input_axis_tready(input_axis_tready),
     .input_axis_tlast(input_axis_tlast),
+    .input_axis_tid(input_axis_tid),
+    .input_axis_tdest(input_axis_tdest),
     .input_axis_tuser(input_axis_tuser),
     // AXI output
     .output_axis_tdata(output_axis_tdata),
@@ -110,6 +142,9 @@ UUT (
     .output_axis_tvalid(output_axis_tvalid),
     .output_axis_tready(output_axis_tready),
     .output_axis_tlast(output_axis_tlast),
+    .output_axis_tid(output_axis_tid),
+    .output_axis_tdest(output_axis_tdest),
+    .output_axis_tuser(output_axis_tuser),
     // Status
     .overflow(overflow),
     .bad_frame(bad_frame),
