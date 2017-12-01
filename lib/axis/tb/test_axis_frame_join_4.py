@@ -445,7 +445,7 @@ def bench():
         test_frame_1 = axis_ep.AXIStreamFrame(b'\x01\xAA\xBB\xCC\xDD\x01')
         test_frame_2 = axis_ep.AXIStreamFrame(b'\x02\xAA\xBB\xCC\xDD\x02')
         test_frame_3 = axis_ep.AXIStreamFrame(b'\x03\xAA\xBB\xCC\xDD\x03')
-        test_frame_0.user = 1
+        test_frame_0.last_cycle_user = 1
         source_0.send(test_frame_0)
         source_1.send(test_frame_1)
         source_2.send(test_frame_2)
@@ -459,7 +459,7 @@ def bench():
         rx_frame = sink.recv()
 
         assert rx_frame.data == struct.pack('>H', tag) + test_frame_0.data + test_frame_1.data + test_frame_2.data + test_frame_3.data
-        assert rx_frame.user[-1]
+        assert rx_frame.last_cycle_user
 
         yield delay(100)
 

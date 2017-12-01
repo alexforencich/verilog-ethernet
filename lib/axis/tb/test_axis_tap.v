@@ -33,6 +33,16 @@ module test_axis_tap;
 
 // Parameters
 parameter DATA_WIDTH = 8;
+parameter KEEP_ENABLE = (DATA_WIDTH>8);
+parameter KEEP_WIDTH = (DATA_WIDTH/8);
+parameter ID_ENABLE = 1;
+parameter ID_WIDTH = 8;
+parameter DEST_ENABLE = 1;
+parameter DEST_WIDTH = 8;
+parameter USER_ENABLE = 1;
+parameter USER_WIDTH = 1;
+parameter USER_BAD_FRAME_VALUE = 1'b1;
+parameter USER_BAD_FRAME_MASK = 1'b1;
 
 // Inputs
 reg clk = 0;
@@ -40,17 +50,23 @@ reg rst = 0;
 reg [7:0] current_test = 0;
 
 reg [DATA_WIDTH-1:0] tap_axis_tdata = 0;
+reg [KEEP_WIDTH-1:0] tap_axis_tkeep = 0;
 reg tap_axis_tvalid = 0;
 reg tap_axis_tready = 0;
 reg tap_axis_tlast = 0;
-reg tap_axis_tuser = 0;
+reg [ID_WIDTH-1:0] tap_axis_tid = 0;
+reg [DEST_WIDTH-1:0] tap_axis_tdest = 0;
+reg [USER_WIDTH-1:0] tap_axis_tuser = 0;
 reg output_axis_tready = 0;
 
 // Outputs
 wire [DATA_WIDTH-1:0] output_axis_tdata;
+wire [KEEP_WIDTH-1:0] output_axis_tkeep;
 wire output_axis_tvalid;
 wire output_axis_tlast;
-wire output_axis_tuser;
+wire [ID_WIDTH-1:0] output_axis_tid;
+wire [DEST_WIDTH-1:0] output_axis_tdest;
+wire [USER_WIDTH-1:0] output_axis_tuser;
 
 initial begin
     // myhdl integration
@@ -59,16 +75,22 @@ initial begin
         rst,
         current_test,
         tap_axis_tdata,
+        tap_axis_tkeep,
         tap_axis_tvalid,
         tap_axis_tready,
         tap_axis_tlast,
+        tap_axis_tid,
+        tap_axis_tdest,
         tap_axis_tuser,
         output_axis_tready
     );
     $to_myhdl(
         output_axis_tdata,
+        output_axis_tkeep,
         output_axis_tvalid,
         output_axis_tlast,
+        output_axis_tid,
+        output_axis_tdest,
         output_axis_tuser
     );
 
@@ -78,22 +100,38 @@ initial begin
 end
 
 axis_tap #(
-    .DATA_WIDTH(DATA_WIDTH)
+    .DATA_WIDTH(DATA_WIDTH),
+    .KEEP_ENABLE(KEEP_ENABLE),
+    .KEEP_WIDTH(KEEP_WIDTH),
+    .ID_ENABLE(ID_ENABLE),
+    .ID_WIDTH(ID_WIDTH),
+    .DEST_ENABLE(DEST_ENABLE),
+    .DEST_WIDTH(DEST_WIDTH),
+    .USER_ENABLE(USER_ENABLE),
+    .USER_WIDTH(USER_WIDTH),
+    .USER_BAD_FRAME_VALUE(USER_BAD_FRAME_VALUE),
+    .USER_BAD_FRAME_MASK(USER_BAD_FRAME_MASK)
 )
 UUT (
     .clk(clk),
     .rst(rst),
     // AXI tap
     .tap_axis_tdata(tap_axis_tdata),
+    .tap_axis_tkeep(tap_axis_tkeep),
     .tap_axis_tvalid(tap_axis_tvalid),
     .tap_axis_tready(tap_axis_tready),
     .tap_axis_tlast(tap_axis_tlast),
+    .tap_axis_tid(tap_axis_tid),
+    .tap_axis_tdest(tap_axis_tdest),
     .tap_axis_tuser(tap_axis_tuser),
     // AXI output
     .output_axis_tdata(output_axis_tdata),
+    .output_axis_tkeep(output_axis_tkeep),
     .output_axis_tvalid(output_axis_tvalid),
     .output_axis_tready(output_axis_tready),
     .output_axis_tlast(output_axis_tlast),
+    .output_axis_tid(output_axis_tid),
+    .output_axis_tdest(output_axis_tdest),
     .output_axis_tuser(output_axis_tuser)
 );
 

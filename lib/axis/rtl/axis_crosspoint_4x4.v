@@ -31,57 +31,90 @@ THE SOFTWARE.
  */
 module axis_crosspoint_4x4 #
 (
-    parameter DATA_WIDTH = 8
+    parameter DATA_WIDTH = 8,
+    parameter KEEP_ENABLE = (DATA_WIDTH>8),
+    parameter KEEP_WIDTH = (DATA_WIDTH/8),
+    parameter LAST_ENABLE = 1,
+    parameter ID_ENABLE = 0,
+    parameter ID_WIDTH = 8,
+    parameter DEST_ENABLE = 0,
+    parameter DEST_WIDTH = 8,
+    parameter USER_ENABLE = 1,
+    parameter USER_WIDTH = 1
 )
 (
-    input  wire        clk,
-    input  wire        rst,
+    input  wire                   clk,
+    input  wire                   rst,
 
     /*
      * AXI Stream inputs
      */
     input  wire [DATA_WIDTH-1:0]  input_0_axis_tdata,
+    input  wire [KEEP_WIDTH-1:0]  input_0_axis_tkeep,
     input  wire                   input_0_axis_tvalid,
     input  wire                   input_0_axis_tlast,
-    input  wire                   input_0_axis_tuser,
+    input  wire [ID_WIDTH-1:0]    input_0_axis_tid,
+    input  wire [DEST_WIDTH-1:0]  input_0_axis_tdest,
+    input  wire [USER_WIDTH-1:0]  input_0_axis_tuser,
 
     input  wire [DATA_WIDTH-1:0]  input_1_axis_tdata,
+    input  wire [KEEP_WIDTH-1:0]  input_1_axis_tkeep,
     input  wire                   input_1_axis_tvalid,
     input  wire                   input_1_axis_tlast,
-    input  wire                   input_1_axis_tuser,
+    input  wire [ID_WIDTH-1:0]    input_1_axis_tid,
+    input  wire [DEST_WIDTH-1:0]  input_1_axis_tdest,
+    input  wire [USER_WIDTH-1:0]  input_1_axis_tuser,
 
     input  wire [DATA_WIDTH-1:0]  input_2_axis_tdata,
+    input  wire [KEEP_WIDTH-1:0]  input_2_axis_tkeep,
     input  wire                   input_2_axis_tvalid,
     input  wire                   input_2_axis_tlast,
-    input  wire                   input_2_axis_tuser,
+    input  wire [ID_WIDTH-1:0]    input_2_axis_tid,
+    input  wire [DEST_WIDTH-1:0]  input_2_axis_tdest,
+    input  wire [USER_WIDTH-1:0]  input_2_axis_tuser,
 
     input  wire [DATA_WIDTH-1:0]  input_3_axis_tdata,
+    input  wire [KEEP_WIDTH-1:0]  input_3_axis_tkeep,
     input  wire                   input_3_axis_tvalid,
     input  wire                   input_3_axis_tlast,
-    input  wire                   input_3_axis_tuser,
+    input  wire [ID_WIDTH-1:0]    input_3_axis_tid,
+    input  wire [DEST_WIDTH-1:0]  input_3_axis_tdest,
+    input  wire [USER_WIDTH-1:0]  input_3_axis_tuser,
 
     /*
      * AXI Stream outputs
      */
     output wire [DATA_WIDTH-1:0]  output_0_axis_tdata,
+    output wire [KEEP_WIDTH-1:0]  output_0_axis_tkeep,
     output wire                   output_0_axis_tvalid,
     output wire                   output_0_axis_tlast,
-    output wire                   output_0_axis_tuser,
+    output wire [ID_WIDTH-1:0]    output_0_axis_tid,
+    output wire [DEST_WIDTH-1:0]  output_0_axis_tdest,
+    output wire [USER_WIDTH-1:0]  output_0_axis_tuser,
 
     output wire [DATA_WIDTH-1:0]  output_1_axis_tdata,
+    output wire [KEEP_WIDTH-1:0]  output_1_axis_tkeep,
     output wire                   output_1_axis_tvalid,
     output wire                   output_1_axis_tlast,
-    output wire                   output_1_axis_tuser,
+    output wire [ID_WIDTH-1:0]    output_1_axis_tid,
+    output wire [DEST_WIDTH-1:0]  output_1_axis_tdest,
+    output wire [USER_WIDTH-1:0]  output_1_axis_tuser,
 
     output wire [DATA_WIDTH-1:0]  output_2_axis_tdata,
+    output wire [KEEP_WIDTH-1:0]  output_2_axis_tkeep,
     output wire                   output_2_axis_tvalid,
     output wire                   output_2_axis_tlast,
-    output wire                   output_2_axis_tuser,
+    output wire [ID_WIDTH-1:0]    output_2_axis_tid,
+    output wire [DEST_WIDTH-1:0]  output_2_axis_tdest,
+    output wire [USER_WIDTH-1:0]  output_2_axis_tuser,
 
     output wire [DATA_WIDTH-1:0]  output_3_axis_tdata,
+    output wire [KEEP_WIDTH-1:0]  output_3_axis_tkeep,
     output wire                   output_3_axis_tvalid,
     output wire                   output_3_axis_tlast,
-    output wire                   output_3_axis_tuser,
+    output wire [ID_WIDTH-1:0]    output_3_axis_tid,
+    output wire [DEST_WIDTH-1:0]  output_3_axis_tdest,
+    output wire [USER_WIDTH-1:0]  output_3_axis_tuser,
 
     /*
      * Control
@@ -92,71 +125,106 @@ module axis_crosspoint_4x4 #
     input  wire [1:0]             output_3_select
 );
 
-reg [DATA_WIDTH-1:0]  input_0_axis_tdata_reg = {DATA_WIDTH{1'b0}};
+reg [DATA_WIDTH-1:0]  input_0_axis_tdata_reg  = {DATA_WIDTH{1'b0}};
+reg [KEEP_WIDTH-1:0]  input_0_axis_tkeep_reg  = {KEEP_WIDTH{1'b0}};
 reg                   input_0_axis_tvalid_reg = 1'b0;
-reg                   input_0_axis_tlast_reg = 1'b0;
-reg                   input_0_axis_tuser_reg = 1'b0;
+reg                   input_0_axis_tlast_reg  = 1'b0;
+reg [ID_WIDTH-1:0]    input_0_axis_tid_reg    = {ID_WIDTH{1'b0}};
+reg [DEST_WIDTH-1:0]  input_0_axis_tdest_reg  = {DEST_WIDTH{1'b0}};
+reg [USER_WIDTH-1:0]  input_0_axis_tuser_reg  = {USER_WIDTH{1'b0}};
 
-reg [DATA_WIDTH-1:0]  input_1_axis_tdata_reg = {DATA_WIDTH{1'b0}};
+reg [DATA_WIDTH-1:0]  input_1_axis_tdata_reg  = {DATA_WIDTH{1'b0}};
+reg [KEEP_WIDTH-1:0]  input_1_axis_tkeep_reg  = {KEEP_WIDTH{1'b0}};
 reg                   input_1_axis_tvalid_reg = 1'b0;
-reg                   input_1_axis_tlast_reg = 1'b0;
-reg                   input_1_axis_tuser_reg = 1'b0;
+reg                   input_1_axis_tlast_reg  = 1'b0;
+reg [ID_WIDTH-1:0]    input_1_axis_tid_reg    = {ID_WIDTH{1'b0}};
+reg [DEST_WIDTH-1:0]  input_1_axis_tdest_reg  = {DEST_WIDTH{1'b0}};
+reg [USER_WIDTH-1:0]  input_1_axis_tuser_reg  = {USER_WIDTH{1'b0}};
 
-reg [DATA_WIDTH-1:0]  input_2_axis_tdata_reg = {DATA_WIDTH{1'b0}};
+reg [DATA_WIDTH-1:0]  input_2_axis_tdata_reg  = {DATA_WIDTH{1'b0}};
+reg [KEEP_WIDTH-1:0]  input_2_axis_tkeep_reg  = {KEEP_WIDTH{1'b0}};
 reg                   input_2_axis_tvalid_reg = 1'b0;
-reg                   input_2_axis_tlast_reg = 1'b0;
-reg                   input_2_axis_tuser_reg = 1'b0;
+reg                   input_2_axis_tlast_reg  = 1'b0;
+reg [ID_WIDTH-1:0]    input_2_axis_tid_reg    = {ID_WIDTH{1'b0}};
+reg [DEST_WIDTH-1:0]  input_2_axis_tdest_reg  = {DEST_WIDTH{1'b0}};
+reg [USER_WIDTH-1:0]  input_2_axis_tuser_reg  = {USER_WIDTH{1'b0}};
 
-reg [DATA_WIDTH-1:0]  input_3_axis_tdata_reg = {DATA_WIDTH{1'b0}};
+reg [DATA_WIDTH-1:0]  input_3_axis_tdata_reg  = {DATA_WIDTH{1'b0}};
+reg [KEEP_WIDTH-1:0]  input_3_axis_tkeep_reg  = {KEEP_WIDTH{1'b0}};
 reg                   input_3_axis_tvalid_reg = 1'b0;
-reg                   input_3_axis_tlast_reg = 1'b0;
-reg                   input_3_axis_tuser_reg = 1'b0;
+reg                   input_3_axis_tlast_reg  = 1'b0;
+reg [ID_WIDTH-1:0]    input_3_axis_tid_reg    = {ID_WIDTH{1'b0}};
+reg [DEST_WIDTH-1:0]  input_3_axis_tdest_reg  = {DEST_WIDTH{1'b0}};
+reg [USER_WIDTH-1:0]  input_3_axis_tuser_reg  = {USER_WIDTH{1'b0}};
 
-reg [DATA_WIDTH-1:0]  output_0_axis_tdata_reg = {DATA_WIDTH{1'b0}};
+reg [DATA_WIDTH-1:0]  output_0_axis_tdata_reg  = {DATA_WIDTH{1'b0}};
+reg [KEEP_WIDTH-1:0]  output_0_axis_tkeep_reg  = {KEEP_WIDTH{1'b0}};
 reg                   output_0_axis_tvalid_reg = 1'b0;
-reg                   output_0_axis_tlast_reg = 1'b0;
-reg                   output_0_axis_tuser_reg = 1'b0;
+reg                   output_0_axis_tlast_reg  = 1'b0;
+reg [ID_WIDTH-1:0]    output_0_axis_tid_reg    = {ID_WIDTH{1'b0}};
+reg [DEST_WIDTH-1:0]  output_0_axis_tdest_reg  = {DEST_WIDTH{1'b0}};
+reg [USER_WIDTH-1:0]  output_0_axis_tuser_reg  = {USER_WIDTH{1'b0}};
 
-reg [DATA_WIDTH-1:0]  output_1_axis_tdata_reg = {DATA_WIDTH{1'b0}};
+reg [DATA_WIDTH-1:0]  output_1_axis_tdata_reg  = {DATA_WIDTH{1'b0}};
+reg [KEEP_WIDTH-1:0]  output_1_axis_tkeep_reg  = {KEEP_WIDTH{1'b0}};
 reg                   output_1_axis_tvalid_reg = 1'b0;
-reg                   output_1_axis_tlast_reg = 1'b0;
-reg                   output_1_axis_tuser_reg = 1'b0;
+reg                   output_1_axis_tlast_reg  = 1'b0;
+reg [ID_WIDTH-1:0]    output_1_axis_tid_reg    = {ID_WIDTH{1'b0}};
+reg [DEST_WIDTH-1:0]  output_1_axis_tdest_reg  = {DEST_WIDTH{1'b0}};
+reg [USER_WIDTH-1:0]  output_1_axis_tuser_reg  = {USER_WIDTH{1'b0}};
 
-reg [DATA_WIDTH-1:0]  output_2_axis_tdata_reg = {DATA_WIDTH{1'b0}};
+reg [DATA_WIDTH-1:0]  output_2_axis_tdata_reg  = {DATA_WIDTH{1'b0}};
+reg [KEEP_WIDTH-1:0]  output_2_axis_tkeep_reg  = {KEEP_WIDTH{1'b0}};
 reg                   output_2_axis_tvalid_reg = 1'b0;
-reg                   output_2_axis_tlast_reg = 1'b0;
-reg                   output_2_axis_tuser_reg = 1'b0;
+reg                   output_2_axis_tlast_reg  = 1'b0;
+reg [ID_WIDTH-1:0]    output_2_axis_tid_reg    = {ID_WIDTH{1'b0}};
+reg [DEST_WIDTH-1:0]  output_2_axis_tdest_reg  = {DEST_WIDTH{1'b0}};
+reg [USER_WIDTH-1:0]  output_2_axis_tuser_reg  = {USER_WIDTH{1'b0}};
 
-reg [DATA_WIDTH-1:0]  output_3_axis_tdata_reg = {DATA_WIDTH{1'b0}};
+reg [DATA_WIDTH-1:0]  output_3_axis_tdata_reg  = {DATA_WIDTH{1'b0}};
+reg [KEEP_WIDTH-1:0]  output_3_axis_tkeep_reg  = {KEEP_WIDTH{1'b0}};
 reg                   output_3_axis_tvalid_reg = 1'b0;
-reg                   output_3_axis_tlast_reg = 1'b0;
-reg                   output_3_axis_tuser_reg = 1'b0;
+reg                   output_3_axis_tlast_reg  = 1'b0;
+reg [ID_WIDTH-1:0]    output_3_axis_tid_reg    = {ID_WIDTH{1'b0}};
+reg [DEST_WIDTH-1:0]  output_3_axis_tdest_reg  = {DEST_WIDTH{1'b0}};
+reg [USER_WIDTH-1:0]  output_3_axis_tuser_reg  = {USER_WIDTH{1'b0}};
 
 reg [1:0]             output_0_select_reg = 2'd0;
 reg [1:0]             output_1_select_reg = 2'd0;
 reg [1:0]             output_2_select_reg = 2'd0;
 reg [1:0]             output_3_select_reg = 2'd0;
 
-assign output_0_axis_tdata = output_0_axis_tdata_reg;
+assign output_0_axis_tdata  = output_0_axis_tdata_reg;
+assign output_0_axis_tkeep  = KEEP_ENABLE ? output_0_axis_tkeep_reg : {KEEP_WIDTH{1'b1}};
 assign output_0_axis_tvalid = output_0_axis_tvalid_reg;
-assign output_0_axis_tlast = output_0_axis_tlast_reg;
-assign output_0_axis_tuser = output_0_axis_tuser_reg;
+assign output_0_axis_tlast  = LAST_ENABLE ? output_0_axis_tlast_reg : 1'b1;
+assign output_0_axis_tid    = ID_ENABLE   ? output_0_axis_tid_reg   : {ID_WIDTH{1'b0}};
+assign output_0_axis_tdest  = DEST_ENABLE ? output_0_axis_tdest_reg : {DEST_WIDTH{1'b0}};
+assign output_0_axis_tuser  = USER_ENABLE ? output_0_axis_tuser_reg : {USER_WIDTH{1'b0}};
 
-assign output_1_axis_tdata = output_1_axis_tdata_reg;
+assign output_1_axis_tdata  = output_1_axis_tdata_reg;
+assign output_1_axis_tkeep  = KEEP_ENABLE ? output_1_axis_tkeep_reg : {KEEP_WIDTH{1'b1}};
 assign output_1_axis_tvalid = output_1_axis_tvalid_reg;
-assign output_1_axis_tlast = output_1_axis_tlast_reg;
-assign output_1_axis_tuser = output_1_axis_tuser_reg;
+assign output_1_axis_tlast  = LAST_ENABLE ? output_1_axis_tlast_reg : 1'b1;
+assign output_1_axis_tid    = ID_ENABLE   ? output_1_axis_tid_reg   : {ID_WIDTH{1'b0}};
+assign output_1_axis_tdest  = DEST_ENABLE ? output_1_axis_tdest_reg : {DEST_WIDTH{1'b0}};
+assign output_1_axis_tuser  = USER_ENABLE ? output_1_axis_tuser_reg : {USER_WIDTH{1'b0}};
 
-assign output_2_axis_tdata = output_2_axis_tdata_reg;
+assign output_2_axis_tdata  = output_2_axis_tdata_reg;
+assign output_2_axis_tkeep  = KEEP_ENABLE ? output_2_axis_tkeep_reg : {KEEP_WIDTH{1'b1}};
 assign output_2_axis_tvalid = output_2_axis_tvalid_reg;
-assign output_2_axis_tlast = output_2_axis_tlast_reg;
-assign output_2_axis_tuser = output_2_axis_tuser_reg;
+assign output_2_axis_tlast  = LAST_ENABLE ? output_2_axis_tlast_reg : 1'b1;
+assign output_2_axis_tid    = ID_ENABLE   ? output_2_axis_tid_reg   : {ID_WIDTH{1'b0}};
+assign output_2_axis_tdest  = DEST_ENABLE ? output_2_axis_tdest_reg : {DEST_WIDTH{1'b0}};
+assign output_2_axis_tuser  = USER_ENABLE ? output_2_axis_tuser_reg : {USER_WIDTH{1'b0}};
 
-assign output_3_axis_tdata = output_3_axis_tdata_reg;
+assign output_3_axis_tdata  = output_3_axis_tdata_reg;
+assign output_3_axis_tkeep  = KEEP_ENABLE ? output_3_axis_tkeep_reg : {KEEP_WIDTH{1'b1}};
 assign output_3_axis_tvalid = output_3_axis_tvalid_reg;
-assign output_3_axis_tlast = output_3_axis_tlast_reg;
-assign output_3_axis_tuser = output_3_axis_tuser_reg;
-
+assign output_3_axis_tlast  = LAST_ENABLE ? output_3_axis_tlast_reg : 1'b1;
+assign output_3_axis_tid    = ID_ENABLE   ? output_3_axis_tid_reg   : {ID_WIDTH{1'b0}};
+assign output_3_axis_tdest  = DEST_ENABLE ? output_3_axis_tdest_reg : {DEST_WIDTH{1'b0}};
+assign output_3_axis_tuser  = USER_ENABLE ? output_3_axis_tuser_reg : {USER_WIDTH{1'b0}};
 
 always @(posedge clk) begin
     if (rst) begin
@@ -215,40 +283,64 @@ always @(posedge clk) begin
     end
 
     input_0_axis_tdata_reg <= input_0_axis_tdata;
+    input_0_axis_tkeep_reg <= input_0_axis_tkeep;
     input_0_axis_tlast_reg <= input_0_axis_tlast;
+    input_0_axis_tid_reg   <= input_0_axis_tid;
+    input_0_axis_tdest_reg <= input_0_axis_tdest;
     input_0_axis_tuser_reg <= input_0_axis_tuser;
 
     input_1_axis_tdata_reg <= input_1_axis_tdata;
+    input_1_axis_tkeep_reg <= input_1_axis_tkeep;
     input_1_axis_tlast_reg <= input_1_axis_tlast;
+    input_1_axis_tid_reg   <= input_1_axis_tid;
+    input_1_axis_tdest_reg <= input_1_axis_tdest;
     input_1_axis_tuser_reg <= input_1_axis_tuser;
 
     input_2_axis_tdata_reg <= input_2_axis_tdata;
+    input_2_axis_tkeep_reg <= input_2_axis_tkeep;
     input_2_axis_tlast_reg <= input_2_axis_tlast;
+    input_2_axis_tid_reg   <= input_2_axis_tid;
+    input_2_axis_tdest_reg <= input_2_axis_tdest;
     input_2_axis_tuser_reg <= input_2_axis_tuser;
 
     input_3_axis_tdata_reg <= input_3_axis_tdata;
+    input_3_axis_tkeep_reg <= input_3_axis_tkeep;
     input_3_axis_tlast_reg <= input_3_axis_tlast;
+    input_3_axis_tid_reg   <= input_3_axis_tid;
+    input_3_axis_tdest_reg <= input_3_axis_tdest;
     input_3_axis_tuser_reg <= input_3_axis_tuser;
 
     case (output_0_select_reg)
         2'd0: begin
             output_0_axis_tdata_reg <= input_0_axis_tdata_reg;
+            output_0_axis_tkeep_reg <= input_0_axis_tkeep_reg;
             output_0_axis_tlast_reg <= input_0_axis_tlast_reg;
+            output_0_axis_tid_reg   <= input_0_axis_tid_reg;
+            output_0_axis_tdest_reg <= input_0_axis_tdest_reg;
             output_0_axis_tuser_reg <= input_0_axis_tuser_reg;
         end
         2'd1: begin
             output_0_axis_tdata_reg <= input_1_axis_tdata_reg;
+            output_0_axis_tkeep_reg <= input_1_axis_tkeep_reg;
             output_0_axis_tlast_reg <= input_1_axis_tlast_reg;
+            output_0_axis_tid_reg   <= input_1_axis_tid_reg;
+            output_0_axis_tdest_reg <= input_1_axis_tdest_reg;
             output_0_axis_tuser_reg <= input_1_axis_tuser_reg;
         end
         2'd2: begin
             output_0_axis_tdata_reg <= input_2_axis_tdata_reg;
+            output_0_axis_tkeep_reg <= input_2_axis_tkeep_reg;
             output_0_axis_tlast_reg <= input_2_axis_tlast_reg;
+            output_0_axis_tid_reg   <= input_2_axis_tid_reg;
+            output_0_axis_tdest_reg <= input_2_axis_tdest_reg;
             output_0_axis_tuser_reg <= input_2_axis_tuser_reg;
         end
         2'd3: begin
             output_0_axis_tdata_reg <= input_3_axis_tdata_reg;
+            output_0_axis_tkeep_reg <= input_3_axis_tkeep_reg;
             output_0_axis_tlast_reg <= input_3_axis_tlast_reg;
+            output_0_axis_tid_reg   <= input_3_axis_tid_reg;
+            output_0_axis_tdest_reg <= input_3_axis_tdest_reg;
             output_0_axis_tuser_reg <= input_3_axis_tuser_reg;
         end
     endcase
@@ -256,22 +348,34 @@ always @(posedge clk) begin
     case (output_1_select_reg)
         2'd0: begin
             output_1_axis_tdata_reg <= input_0_axis_tdata_reg;
+            output_1_axis_tkeep_reg <= input_0_axis_tkeep_reg;
             output_1_axis_tlast_reg <= input_0_axis_tlast_reg;
+            output_1_axis_tid_reg   <= input_0_axis_tid_reg;
+            output_1_axis_tdest_reg <= input_0_axis_tdest_reg;
             output_1_axis_tuser_reg <= input_0_axis_tuser_reg;
         end
         2'd1: begin
             output_1_axis_tdata_reg <= input_1_axis_tdata_reg;
+            output_1_axis_tkeep_reg <= input_1_axis_tkeep_reg;
             output_1_axis_tlast_reg <= input_1_axis_tlast_reg;
+            output_1_axis_tid_reg   <= input_1_axis_tid_reg;
+            output_1_axis_tdest_reg <= input_1_axis_tdest_reg;
             output_1_axis_tuser_reg <= input_1_axis_tuser_reg;
         end
         2'd2: begin
             output_1_axis_tdata_reg <= input_2_axis_tdata_reg;
+            output_1_axis_tkeep_reg <= input_2_axis_tkeep_reg;
             output_1_axis_tlast_reg <= input_2_axis_tlast_reg;
+            output_1_axis_tid_reg   <= input_2_axis_tid_reg;
+            output_1_axis_tdest_reg <= input_2_axis_tdest_reg;
             output_1_axis_tuser_reg <= input_2_axis_tuser_reg;
         end
         2'd3: begin
             output_1_axis_tdata_reg <= input_3_axis_tdata_reg;
+            output_1_axis_tkeep_reg <= input_3_axis_tkeep_reg;
             output_1_axis_tlast_reg <= input_3_axis_tlast_reg;
+            output_1_axis_tid_reg   <= input_3_axis_tid_reg;
+            output_1_axis_tdest_reg <= input_3_axis_tdest_reg;
             output_1_axis_tuser_reg <= input_3_axis_tuser_reg;
         end
     endcase
@@ -279,22 +383,34 @@ always @(posedge clk) begin
     case (output_2_select_reg)
         2'd0: begin
             output_2_axis_tdata_reg <= input_0_axis_tdata_reg;
+            output_2_axis_tkeep_reg <= input_0_axis_tkeep_reg;
             output_2_axis_tlast_reg <= input_0_axis_tlast_reg;
+            output_2_axis_tid_reg   <= input_0_axis_tid_reg;
+            output_2_axis_tdest_reg <= input_0_axis_tdest_reg;
             output_2_axis_tuser_reg <= input_0_axis_tuser_reg;
         end
         2'd1: begin
             output_2_axis_tdata_reg <= input_1_axis_tdata_reg;
+            output_2_axis_tkeep_reg <= input_1_axis_tkeep_reg;
             output_2_axis_tlast_reg <= input_1_axis_tlast_reg;
+            output_2_axis_tid_reg   <= input_1_axis_tid_reg;
+            output_2_axis_tdest_reg <= input_1_axis_tdest_reg;
             output_2_axis_tuser_reg <= input_1_axis_tuser_reg;
         end
         2'd2: begin
             output_2_axis_tdata_reg <= input_2_axis_tdata_reg;
+            output_2_axis_tkeep_reg <= input_2_axis_tkeep_reg;
             output_2_axis_tlast_reg <= input_2_axis_tlast_reg;
+            output_2_axis_tid_reg   <= input_2_axis_tid_reg;
+            output_2_axis_tdest_reg <= input_2_axis_tdest_reg;
             output_2_axis_tuser_reg <= input_2_axis_tuser_reg;
         end
         2'd3: begin
             output_2_axis_tdata_reg <= input_3_axis_tdata_reg;
+            output_2_axis_tkeep_reg <= input_3_axis_tkeep_reg;
             output_2_axis_tlast_reg <= input_3_axis_tlast_reg;
+            output_2_axis_tid_reg   <= input_3_axis_tid_reg;
+            output_2_axis_tdest_reg <= input_3_axis_tdest_reg;
             output_2_axis_tuser_reg <= input_3_axis_tuser_reg;
         end
     endcase
@@ -302,22 +418,34 @@ always @(posedge clk) begin
     case (output_3_select_reg)
         2'd0: begin
             output_3_axis_tdata_reg <= input_0_axis_tdata_reg;
+            output_3_axis_tkeep_reg <= input_0_axis_tkeep_reg;
             output_3_axis_tlast_reg <= input_0_axis_tlast_reg;
+            output_3_axis_tid_reg   <= input_0_axis_tid_reg;
+            output_3_axis_tdest_reg <= input_0_axis_tdest_reg;
             output_3_axis_tuser_reg <= input_0_axis_tuser_reg;
         end
         2'd1: begin
             output_3_axis_tdata_reg <= input_1_axis_tdata_reg;
+            output_3_axis_tkeep_reg <= input_1_axis_tkeep_reg;
             output_3_axis_tlast_reg <= input_1_axis_tlast_reg;
+            output_3_axis_tid_reg   <= input_1_axis_tid_reg;
+            output_3_axis_tdest_reg <= input_1_axis_tdest_reg;
             output_3_axis_tuser_reg <= input_1_axis_tuser_reg;
         end
         2'd2: begin
             output_3_axis_tdata_reg <= input_2_axis_tdata_reg;
+            output_3_axis_tkeep_reg <= input_2_axis_tkeep_reg;
             output_3_axis_tlast_reg <= input_2_axis_tlast_reg;
+            output_3_axis_tid_reg   <= input_2_axis_tid_reg;
+            output_3_axis_tdest_reg <= input_2_axis_tdest_reg;
             output_3_axis_tuser_reg <= input_2_axis_tuser_reg;
         end
         2'd3: begin
             output_3_axis_tdata_reg <= input_3_axis_tdata_reg;
+            output_3_axis_tkeep_reg <= input_3_axis_tkeep_reg;
             output_3_axis_tlast_reg <= input_3_axis_tlast_reg;
+            output_3_axis_tid_reg   <= input_3_axis_tid_reg;
+            output_3_axis_tdest_reg <= input_3_axis_tdest_reg;
             output_3_axis_tuser_reg <= input_3_axis_tuser_reg;
         end
     endcase

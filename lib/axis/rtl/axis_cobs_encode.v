@@ -102,22 +102,34 @@ reg code_fifo_out_tready;
 
 axis_fifo #(
     .ADDR_WIDTH(8),
-    .DATA_WIDTH(8)
+    .DATA_WIDTH(8),
+    .KEEP_ENABLE(0),
+    .LAST_ENABLE(1),
+    .ID_ENABLE(0),
+    .DEST_ENABLE(0),
+    .USER_ENABLE(1),
+    .USER_WIDTH(1)
 )
 code_fifo_inst (
     .clk(clk),
     .rst(rst),
     // AXI input
     .input_axis_tdata(code_fifo_in_tdata),
+    .input_axis_tkeep(0),
     .input_axis_tvalid(code_fifo_in_tvalid),
     .input_axis_tready(code_fifo_in_tready),
     .input_axis_tlast(code_fifo_in_tlast),
+    .input_axis_tid(0),
+    .input_axis_tdest(0),
     .input_axis_tuser(code_fifo_in_tuser),
     // AXI output
     .output_axis_tdata(code_fifo_out_tdata),
+    .output_axis_tkeep(),
     .output_axis_tvalid(code_fifo_out_tvalid),
     .output_axis_tready(code_fifo_out_tready),
     .output_axis_tlast(code_fifo_out_tlast),
+    .output_axis_tid(),
+    .output_axis_tdest(),
     .output_axis_tuser(code_fifo_out_tuser)
 );
 
@@ -133,22 +145,33 @@ reg data_fifo_out_tready;
 
 axis_fifo #(
     .ADDR_WIDTH(8),
-    .DATA_WIDTH(8)
+    .DATA_WIDTH(8),
+    .KEEP_ENABLE(0),
+    .LAST_ENABLE(1),
+    .ID_ENABLE(0),
+    .DEST_ENABLE(0),
+    .USER_ENABLE(0)
 )
 data_fifo_inst (
     .clk(clk),
     .rst(rst),
     // AXI input
     .input_axis_tdata(data_fifo_in_tdata),
+    .input_axis_tkeep(0),
     .input_axis_tvalid(data_fifo_in_tvalid),
     .input_axis_tready(data_fifo_in_tready),
     .input_axis_tlast(data_fifo_in_tlast),
-    .input_axis_tuser(1'b0),
+    .input_axis_tid(0),
+    .input_axis_tdest(0),
+    .input_axis_tuser(0),
     // AXI output
     .output_axis_tdata(data_fifo_out_tdata),
+    .output_axis_tkeep(),
     .output_axis_tvalid(data_fifo_out_tvalid),
     .output_axis_tready(data_fifo_out_tready),
     .output_axis_tlast(data_fifo_out_tlast),
+    .output_axis_tid(),
+    .output_axis_tdest(),
     .output_axis_tuser()
 );
 
@@ -178,7 +201,7 @@ always @* begin
 
             if (input_axis_tready & input_axis_tvalid) begin
                 // valid input data
-                
+
                 if (input_axis_tdata == 8'd0 || (input_axis_tlast & input_axis_tuser)) begin
                     // got a zero or propagated error, so store a zero code
                     code_fifo_in_tdata = 8'd1;
@@ -224,7 +247,7 @@ always @* begin
 
             if (input_axis_tready & input_axis_tvalid) begin
                 // valid input data
-                
+
                 if (input_axis_tdata == 8'd0 || (input_axis_tlast & input_axis_tuser)) begin
                     // got a zero or propagated error, so store the code
                     code_fifo_in_tdata = input_count_reg;
@@ -421,7 +444,7 @@ always @* begin
     store_axis_int_to_output = 1'b0;
     store_axis_int_to_temp = 1'b0;
     store_axis_temp_to_output = 1'b0;
-    
+
     if (output_axis_tready_int_reg) begin
         // input is ready
         if (output_axis_tready | ~output_axis_tvalid_reg) begin

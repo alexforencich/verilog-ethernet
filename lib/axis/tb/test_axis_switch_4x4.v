@@ -33,7 +33,13 @@ module test_axis_switch_4x4;
 
 // Parameters
 parameter DATA_WIDTH = 8;
+parameter KEEP_ENABLE = (DATA_WIDTH>8);
+parameter KEEP_WIDTH = (DATA_WIDTH/8);
+parameter ID_ENABLE = 1;
+parameter ID_WIDTH = 8;
 parameter DEST_WIDTH = 3;
+parameter USER_ENABLE = 1;
+parameter USER_WIDTH = 1;
 parameter OUT_0_BASE = 0;
 parameter OUT_0_TOP = 0;
 parameter OUT_0_CONNECT = 4'b1111;
@@ -55,25 +61,33 @@ reg rst = 0;
 reg [7:0] current_test = 0;
 
 reg [DATA_WIDTH-1:0] input_0_axis_tdata = 0;
+reg [KEEP_WIDTH-1:0] input_0_axis_tkeep = 0;
 reg input_0_axis_tvalid = 0;
 reg input_0_axis_tlast = 0;
+reg [ID_WIDTH-1:0] input_0_axis_tid = 0;
 reg [DEST_WIDTH-1:0] input_0_axis_tdest = 0;
-reg input_0_axis_tuser = 0;
+reg [USER_WIDTH-1:0] input_0_axis_tuser = 0;
 reg [DATA_WIDTH-1:0] input_1_axis_tdata = 0;
+reg [KEEP_WIDTH-1:0] input_1_axis_tkeep = 0;
 reg input_1_axis_tvalid = 0;
 reg input_1_axis_tlast = 0;
+reg [ID_WIDTH-1:0] input_1_axis_tid = 0;
 reg [DEST_WIDTH-1:0] input_1_axis_tdest = 0;
-reg input_1_axis_tuser = 0;
+reg [USER_WIDTH-1:0] input_1_axis_tuser = 0;
 reg [DATA_WIDTH-1:0] input_2_axis_tdata = 0;
+reg [KEEP_WIDTH-1:0] input_2_axis_tkeep = 0;
 reg input_2_axis_tvalid = 0;
 reg input_2_axis_tlast = 0;
+reg [ID_WIDTH-1:0] input_2_axis_tid = 0;
 reg [DEST_WIDTH-1:0] input_2_axis_tdest = 0;
-reg input_2_axis_tuser = 0;
+reg [USER_WIDTH-1:0] input_2_axis_tuser = 0;
 reg [DATA_WIDTH-1:0] input_3_axis_tdata = 0;
+reg [KEEP_WIDTH-1:0] input_3_axis_tkeep = 0;
 reg input_3_axis_tvalid = 0;
 reg input_3_axis_tlast = 0;
+reg [ID_WIDTH-1:0] input_3_axis_tid = 0;
 reg [DEST_WIDTH-1:0] input_3_axis_tdest = 0;
-reg input_3_axis_tuser = 0;
+reg [USER_WIDTH-1:0] input_3_axis_tuser = 0;
 reg output_0_axis_tready = 0;
 reg output_1_axis_tready = 0;
 reg output_2_axis_tready = 0;
@@ -85,25 +99,33 @@ wire input_1_axis_tready;
 wire input_2_axis_tready;
 wire input_3_axis_tready;
 wire [DATA_WIDTH-1:0] output_0_axis_tdata;
+wire [KEEP_WIDTH-1:0] output_0_axis_tkeep;
 wire output_0_axis_tvalid;
 wire output_0_axis_tlast;
+wire [ID_WIDTH-1:0] output_0_axis_tid;
 wire [DEST_WIDTH-1:0] output_0_axis_tdest;
-wire output_0_axis_tuser;
+wire [USER_WIDTH-1:0] output_0_axis_tuser;
 wire [DATA_WIDTH-1:0] output_1_axis_tdata;
+wire [KEEP_WIDTH-1:0] output_1_axis_tkeep;
 wire output_1_axis_tvalid;
 wire output_1_axis_tlast;
+wire [ID_WIDTH-1:0] output_1_axis_tid;
 wire [DEST_WIDTH-1:0] output_1_axis_tdest;
-wire output_1_axis_tuser;
+wire [USER_WIDTH-1:0] output_1_axis_tuser;
 wire [DATA_WIDTH-1:0] output_2_axis_tdata;
+wire [KEEP_WIDTH-1:0] output_2_axis_tkeep;
 wire output_2_axis_tvalid;
 wire output_2_axis_tlast;
+wire [ID_WIDTH-1:0] output_2_axis_tid;
 wire [DEST_WIDTH-1:0] output_2_axis_tdest;
-wire output_2_axis_tuser;
+wire [USER_WIDTH-1:0] output_2_axis_tuser;
 wire [DATA_WIDTH-1:0] output_3_axis_tdata;
+wire [KEEP_WIDTH-1:0] output_3_axis_tkeep;
 wire output_3_axis_tvalid;
 wire output_3_axis_tlast;
+wire [ID_WIDTH-1:0] output_3_axis_tid;
 wire [DEST_WIDTH-1:0] output_3_axis_tdest;
-wire output_3_axis_tuser;
+wire [USER_WIDTH-1:0] output_3_axis_tuser;
 
 initial begin
     // myhdl integration
@@ -112,23 +134,31 @@ initial begin
         rst,
         current_test,
         input_0_axis_tdata,
+        input_0_axis_tkeep,
         input_0_axis_tvalid,
         input_0_axis_tlast,
+        input_0_axis_tid,
         input_0_axis_tdest,
         input_0_axis_tuser,
         input_1_axis_tdata,
+        input_1_axis_tkeep,
         input_1_axis_tvalid,
         input_1_axis_tlast,
+        input_1_axis_tid,
         input_1_axis_tdest,
         input_1_axis_tuser,
         input_2_axis_tdata,
+        input_2_axis_tkeep,
         input_2_axis_tvalid,
         input_2_axis_tlast,
+        input_2_axis_tid,
         input_2_axis_tdest,
         input_2_axis_tuser,
         input_3_axis_tdata,
+        input_3_axis_tkeep,
         input_3_axis_tvalid,
         input_3_axis_tlast,
+        input_3_axis_tid,
         input_3_axis_tdest,
         input_3_axis_tuser,
         output_0_axis_tready,
@@ -142,23 +172,31 @@ initial begin
         input_2_axis_tready,
         input_3_axis_tready,
         output_0_axis_tdata,
+        output_0_axis_tkeep,
         output_0_axis_tvalid,
         output_0_axis_tlast,
+        output_0_axis_tid,
         output_0_axis_tdest,
         output_0_axis_tuser,
         output_1_axis_tdata,
+        output_1_axis_tkeep,
         output_1_axis_tvalid,
         output_1_axis_tlast,
+        output_1_axis_tid,
         output_1_axis_tdest,
         output_1_axis_tuser,
         output_2_axis_tdata,
+        output_2_axis_tkeep,
         output_2_axis_tvalid,
         output_2_axis_tlast,
+        output_2_axis_tid,
         output_2_axis_tdest,
         output_2_axis_tuser,
         output_3_axis_tdata,
+        output_3_axis_tkeep,
         output_3_axis_tvalid,
         output_3_axis_tlast,
+        output_3_axis_tid,
         output_3_axis_tdest,
         output_3_axis_tuser
     );
@@ -170,7 +208,13 @@ end
 
 axis_switch_4x4 #(
     .DATA_WIDTH(DATA_WIDTH),
+    .KEEP_ENABLE(KEEP_ENABLE),
+    .KEEP_WIDTH(KEEP_WIDTH),
+    .ID_ENABLE(ID_ENABLE),
+    .ID_WIDTH(ID_WIDTH),
     .DEST_WIDTH(DEST_WIDTH),
+    .USER_ENABLE(USER_ENABLE),
+    .USER_WIDTH(USER_WIDTH),
     .OUT_0_BASE(OUT_0_BASE),
     .OUT_0_TOP(OUT_0_TOP),
     .OUT_0_CONNECT(OUT_0_CONNECT),
@@ -191,52 +235,68 @@ UUT (
     .rst(rst),
     // AXI inputs
     .input_0_axis_tdata(input_0_axis_tdata),
+    .input_0_axis_tkeep(input_0_axis_tkeep),
     .input_0_axis_tvalid(input_0_axis_tvalid),
     .input_0_axis_tready(input_0_axis_tready),
     .input_0_axis_tlast(input_0_axis_tlast),
+    .input_0_axis_tid(input_0_axis_tid),
     .input_0_axis_tdest(input_0_axis_tdest),
     .input_0_axis_tuser(input_0_axis_tuser),
     .input_1_axis_tdata(input_1_axis_tdata),
+    .input_1_axis_tkeep(input_1_axis_tkeep),
     .input_1_axis_tvalid(input_1_axis_tvalid),
     .input_1_axis_tready(input_1_axis_tready),
     .input_1_axis_tlast(input_1_axis_tlast),
+    .input_1_axis_tid(input_1_axis_tid),
     .input_1_axis_tdest(input_1_axis_tdest),
     .input_1_axis_tuser(input_1_axis_tuser),
     .input_2_axis_tdata(input_2_axis_tdata),
+    .input_2_axis_tkeep(input_2_axis_tkeep),
     .input_2_axis_tvalid(input_2_axis_tvalid),
     .input_2_axis_tready(input_2_axis_tready),
     .input_2_axis_tlast(input_2_axis_tlast),
+    .input_2_axis_tid(input_2_axis_tid),
     .input_2_axis_tdest(input_2_axis_tdest),
     .input_2_axis_tuser(input_2_axis_tuser),
     .input_3_axis_tdata(input_3_axis_tdata),
+    .input_3_axis_tkeep(input_3_axis_tkeep),
     .input_3_axis_tvalid(input_3_axis_tvalid),
     .input_3_axis_tready(input_3_axis_tready),
     .input_3_axis_tlast(input_3_axis_tlast),
+    .input_3_axis_tid(input_3_axis_tid),
     .input_3_axis_tdest(input_3_axis_tdest),
     .input_3_axis_tuser(input_3_axis_tuser),
     // AXI outputs
     .output_0_axis_tdata(output_0_axis_tdata),
+    .output_0_axis_tkeep(output_0_axis_tkeep),
     .output_0_axis_tvalid(output_0_axis_tvalid),
     .output_0_axis_tready(output_0_axis_tready),
     .output_0_axis_tlast(output_0_axis_tlast),
+    .output_0_axis_tid(output_0_axis_tid),
     .output_0_axis_tdest(output_0_axis_tdest),
     .output_0_axis_tuser(output_0_axis_tuser),
     .output_1_axis_tdata(output_1_axis_tdata),
+    .output_1_axis_tkeep(output_1_axis_tkeep),
     .output_1_axis_tvalid(output_1_axis_tvalid),
     .output_1_axis_tready(output_1_axis_tready),
     .output_1_axis_tlast(output_1_axis_tlast),
+    .output_1_axis_tid(output_1_axis_tid),
     .output_1_axis_tdest(output_1_axis_tdest),
     .output_1_axis_tuser(output_1_axis_tuser),
     .output_2_axis_tdata(output_2_axis_tdata),
+    .output_2_axis_tkeep(output_2_axis_tkeep),
     .output_2_axis_tvalid(output_2_axis_tvalid),
     .output_2_axis_tready(output_2_axis_tready),
     .output_2_axis_tlast(output_2_axis_tlast),
+    .output_2_axis_tid(output_2_axis_tid),
     .output_2_axis_tdest(output_2_axis_tdest),
     .output_2_axis_tuser(output_2_axis_tuser),
     .output_3_axis_tdata(output_3_axis_tdata),
+    .output_3_axis_tkeep(output_3_axis_tkeep),
     .output_3_axis_tvalid(output_3_axis_tvalid),
     .output_3_axis_tready(output_3_axis_tready),
     .output_3_axis_tlast(output_3_axis_tlast),
+    .output_3_axis_tid(output_3_axis_tid),
     .output_3_axis_tdest(output_3_axis_tdest),
     .output_3_axis_tuser(output_3_axis_tuser)
 );

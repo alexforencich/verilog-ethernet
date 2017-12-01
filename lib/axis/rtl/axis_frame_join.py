@@ -33,11 +33,11 @@ def generate(ports=4, name=None, output=None):
     print("Opening file '{0}'...".format(output))
 
     output_file = open(output, 'w')
-    
+
     print("Generating {0} port AXI Stream frame joiner {1}...".format(ports, name))
-    
+
     select_width = int(math.ceil(math.log(ports, 2)))
-    
+
     t = Template(u"""/*
 
 Copyright (c) 2014-2017 Alex Forencich
@@ -192,7 +192,7 @@ always @* begin
                 // next cycle if started will send data, so enable input
                 input_0_axis_tready_next = output_axis_tready_int_early;
             end
-            
+
             if (input_0_axis_tvalid) begin
                 // input 0 valid; start transferring data
                 if (TAG_ENABLE) begin
@@ -284,7 +284,7 @@ always @* begin
                 end
             end else begin
                 state_next = STATE_TRANSFER;
-            end 
+            end
         end
     endcase
 end
@@ -347,7 +347,7 @@ always @* begin
     store_axis_int_to_output = 1'b0;
     store_axis_int_to_temp = 1'b0;
     store_axis_temp_to_output = 1'b0;
-    
+
     if (output_axis_tready_int_reg) begin
         // input is ready
         if (output_axis_tready | ~output_axis_tvalid_reg) begin
@@ -399,14 +399,14 @@ end
 endmodule
 
 """)
-    
+
     output_file.write(t.render(
         n=ports,
         w=select_width,
         name=name,
         ports=range(ports)
     ))
-    
+
     print("Done")
 
 if __name__ == "__main__":

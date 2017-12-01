@@ -28,8 +28,8 @@ import os
 
 import axis_ep
 
-module = 'axis_rate_limit_64'
-testbench = 'test_%s' % module
+module = 'axis_rate_limit'
+testbench = 'test_%s_64' % module
 
 srcs = []
 
@@ -44,7 +44,15 @@ def bench():
 
     # Parameters
     DATA_WIDTH = 64
+    KEEP_ENABLE = (DATA_WIDTH>8)
     KEEP_WIDTH = (DATA_WIDTH/8)
+    LAST_ENABLE = 1
+    ID_ENABLE = 1
+    ID_WIDTH = 8
+    DEST_ENABLE = 1
+    DEST_WIDTH = 8
+    USER_ENABLE = 1
+    USER_WIDTH = 1
 
     # Inputs
     clk = Signal(bool(0))
@@ -52,10 +60,12 @@ def bench():
     current_test = Signal(intbv(0)[8:])
 
     input_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
-    input_axis_tkeep = Signal(intbv(0)[KEEP_WIDTH:])
+    input_axis_tkeep = Signal(intbv(1)[KEEP_WIDTH:])
     input_axis_tvalid = Signal(bool(0))
     input_axis_tlast = Signal(bool(0))
-    input_axis_tuser = Signal(bool(0))
+    input_axis_tid = Signal(intbv(0)[ID_WIDTH:])
+    input_axis_tdest = Signal(intbv(0)[DEST_WIDTH:])
+    input_axis_tuser = Signal(intbv(0)[USER_WIDTH:])
     output_axis_tready = Signal(bool(0))
 
     rate_num = Signal(intbv(0)[8:])
@@ -65,10 +75,12 @@ def bench():
     # Outputs
     input_axis_tready = Signal(bool(0))
     output_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
-    output_axis_tkeep = Signal(intbv(0)[KEEP_WIDTH:])
+    output_axis_tkeep = Signal(intbv(1)[KEEP_WIDTH:])
     output_axis_tvalid = Signal(bool(0))
     output_axis_tlast = Signal(bool(0))
-    output_axis_tuser = Signal(bool(0))
+    output_axis_tid = Signal(intbv(0)[ID_WIDTH:])
+    output_axis_tdest = Signal(intbv(0)[DEST_WIDTH:])
+    output_axis_tuser = Signal(intbv(0)[USER_WIDTH:])
 
     # sources and sinks
     source_pause = Signal(bool(0))
@@ -84,6 +96,8 @@ def bench():
         tvalid=input_axis_tvalid,
         tready=input_axis_tready,
         tlast=input_axis_tlast,
+        tid=input_axis_tid,
+        tdest=input_axis_tdest,
         tuser=input_axis_tuser,
         pause=source_pause,
         name='source'
@@ -99,6 +113,8 @@ def bench():
         tvalid=output_axis_tvalid,
         tready=output_axis_tready,
         tlast=output_axis_tlast,
+        tid=output_axis_tid,
+        tdest=output_axis_tdest,
         tuser=output_axis_tuser,
         pause=sink_pause,
         name='sink'
@@ -119,6 +135,8 @@ def bench():
         input_axis_tvalid=input_axis_tvalid,
         input_axis_tready=input_axis_tready,
         input_axis_tlast=input_axis_tlast,
+        input_axis_tid=input_axis_tid,
+        input_axis_tdest=input_axis_tdest,
         input_axis_tuser=input_axis_tuser,
 
         output_axis_tdata=output_axis_tdata,
@@ -126,6 +144,8 @@ def bench():
         output_axis_tvalid=output_axis_tvalid,
         output_axis_tready=output_axis_tready,
         output_axis_tlast=output_axis_tlast,
+        output_axis_tid=output_axis_tid,
+        output_axis_tdest=output_axis_tdest,
         output_axis_tuser=output_axis_tuser,
 
         rate_num=rate_num,
@@ -192,10 +212,15 @@ def bench():
             print("test 1: test packet")
             current_test.next = 1
 
-            test_frame = axis_ep.AXIStreamFrame(b'\xDA\xD1\xD2\xD3\xD4\xD5' +
-                                                b'\x5A\x51\x52\x53\x54\x55' +
-                                                b'\x80\x00' +
-                                                b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
+            test_frame = axis_ep.AXIStreamFrame(
+                b'\xDA\xD1\xD2\xD3\xD4\xD5' +
+                b'\x5A\x51\x52\x53\x54\x55' +
+                b'\x80\x00' +
+                b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10',
+                id=1,
+                dest=1
+            )
+
             source.send(test_frame)
             yield clk.posedge
 
@@ -215,10 +240,15 @@ def bench():
             print("test 2: longer packet")
             current_test.next = 2
 
-            test_frame = axis_ep.AXIStreamFrame(b'\xDA\xD1\xD2\xD3\xD4\xD5' +
-                                                b'\x5A\x51\x52\x53\x54\x55' +
-                                                b'\x80\x00' +
-                                                bytearray(range(256)))
+            test_frame = axis_ep.AXIStreamFrame(
+                b'\xDA\xD1\xD2\xD3\xD4\xD5' +
+                b'\x5A\x51\x52\x53\x54\x55' +
+                b'\x80\x00' +
+                bytearray(range(256)),
+                id=2,
+                dest=1
+            )
+
             source.send(test_frame)
             yield clk.posedge
 
@@ -236,10 +266,15 @@ def bench():
             print("test 3: test packet with pauses")
             current_test.next = 3
 
-            test_frame = axis_ep.AXIStreamFrame(b'\xDA\xD1\xD2\xD3\xD4\xD5' +
-                                                b'\x5A\x51\x52\x53\x54\x55' +
-                                                b'\x80\x00' +
-                                                bytearray(range(256)))
+            test_frame = axis_ep.AXIStreamFrame(
+                b'\xDA\xD1\xD2\xD3\xD4\xD5' +
+                b'\x5A\x51\x52\x53\x54\x55' +
+                b'\x80\x00' +
+                bytearray(range(256)),
+                id=3,
+                dest=1
+            )
+
             source.send(test_frame)
             yield clk.posedge
 
@@ -273,14 +308,23 @@ def bench():
             print("test 4: back-to-back packets")
             current_test.next = 4
 
-            test_frame1 = axis_ep.AXIStreamFrame(b'\xDA\xD1\xD2\xD3\xD4\xD5' +
-                                                 b'\x5A\x51\x52\x53\x54\x55' +
-                                                 b'\x80\x00' +
-                                                 b'\x01\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
-            test_frame2 = axis_ep.AXIStreamFrame(b'\xDA\xD1\xD2\xD3\xD4\xD5' +
-                                                 b'\x5A\x51\x52\x53\x54\x55' +
-                                                 b'\x80\x00' +
-                                                 b'\x02\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
+            test_frame1 = axis_ep.AXIStreamFrame(
+                b'\xDA\xD1\xD2\xD3\xD4\xD5' +
+                b'\x5A\x51\x52\x53\x54\x55' +
+                b'\x80\x00' +
+                b'\x01\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10',
+                id=4,
+                dest=1
+            )
+            test_frame2 = axis_ep.AXIStreamFrame(
+                b'\xDA\xD1\xD2\xD3\xD4\xD5' +
+                b'\x5A\x51\x52\x53\x54\x55' +
+                b'\x80\x00' +
+                b'\x02\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10',
+                id=4,
+                dest=2
+            )
+
             source.send(test_frame1)
             source.send(test_frame2)
             yield clk.posedge
@@ -305,14 +349,23 @@ def bench():
             print("test 5: alternate pause source")
             current_test.next = 5
 
-            test_frame1 = axis_ep.AXIStreamFrame(b'\xDA\xD1\xD2\xD3\xD4\xD5' +
-                                                 b'\x5A\x51\x52\x53\x54\x55' +
-                                                 b'\x80\x00' +
-                                                 b'\x01\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
-            test_frame2 = axis_ep.AXIStreamFrame(b'\xDA\xD1\xD2\xD3\xD4\xD5' +
-                                                 b'\x5A\x51\x52\x53\x54\x55' +
-                                                 b'\x80\x00' +
-                                                 b'\x02\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
+            test_frame1 = axis_ep.AXIStreamFrame(
+                b'\xDA\xD1\xD2\xD3\xD4\xD5' +
+                b'\x5A\x51\x52\x53\x54\x55' +
+                b'\x80\x00' +
+                b'\x01\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10',
+                id=5,
+                dest=1
+            )
+            test_frame2 = axis_ep.AXIStreamFrame(
+                b'\xDA\xD1\xD2\xD3\xD4\xD5' +
+                b'\x5A\x51\x52\x53\x54\x55' +
+                b'\x80\x00' +
+                b'\x02\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10',
+                id=5,
+                dest=2
+            )
+
             source.send(test_frame1)
             source.send(test_frame2)
             yield clk.posedge
@@ -345,14 +398,23 @@ def bench():
             print("test 6: alternate pause sink")
             current_test.next = 6
 
-            test_frame1 = axis_ep.AXIStreamFrame(b'\xDA\xD1\xD2\xD3\xD4\xD5' +
-                                                 b'\x5A\x51\x52\x53\x54\x55' +
-                                                 b'\x80\x00' +
-                                                 b'\x01\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
-            test_frame2 = axis_ep.AXIStreamFrame(b'\xDA\xD1\xD2\xD3\xD4\xD5' +
-                                                 b'\x5A\x51\x52\x53\x54\x55' +
-                                                 b'\x80\x00' +
-                                                 b'\x02\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
+            test_frame1 = axis_ep.AXIStreamFrame(
+                b'\xDA\xD1\xD2\xD3\xD4\xD5' +
+                b'\x5A\x51\x52\x53\x54\x55' +
+                b'\x80\x00' +
+                b'\x01\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10',
+                id=6,
+                dest=1
+            )
+            test_frame2 = axis_ep.AXIStreamFrame(
+                b'\xDA\xD1\xD2\xD3\xD4\xD5' +
+                b'\x5A\x51\x52\x53\x54\x55' +
+                b'\x80\x00' +
+                b'\x02\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10',
+                id=6,
+                dest=2
+            )
+
             source.send(test_frame1)
             source.send(test_frame2)
             yield clk.posedge
@@ -385,11 +447,16 @@ def bench():
             print("test 7: tuser assert")
             current_test.next = 7
 
-            test_frame = axis_ep.AXIStreamFrame(b'\xDA\xD1\xD2\xD3\xD4\xD5' +
-                                                b'\x5A\x51\x52\x53\x54\x55' +
-                                                b'\x80\x00' +
-                                                b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10')
-            test_frame.user = 1
+            test_frame = axis_ep.AXIStreamFrame(
+                b'\xDA\xD1\xD2\xD3\xD4\xD5' +
+                b'\x5A\x51\x52\x53\x54\x55' +
+                b'\x80\x00' +
+                b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10',
+                id=7,
+                dest=1,
+                last_cycle_user=1
+            )
+
             source.send(test_frame)
             yield clk.posedge
 
@@ -402,7 +469,7 @@ def bench():
             rx_frame = sink.recv()
 
             assert rx_frame == test_frame
-            assert rx_frame.user[-1]
+            assert rx_frame.last_cycle_user
 
             yield delay(100)
 
@@ -423,10 +490,14 @@ def bench():
                 test_frame = []
 
                 for i in range(len(lens)):
-                    test_frame.append(axis_ep.AXIStreamFrame(b'\xDA\xD1\xD2\xD3\xD4\xD5' +
-                                                     b'\x5A\x51\x52\x53\x54\x55' +
-                                                     b'\x80\x00' +
-                                                     bytearray(range(lens[i]))))
+                    test_frame.append(axis_ep.AXIStreamFrame(
+                        b'\xDA\xD1\xD2\xD3\xD4\xD5' +
+                        b'\x5A\x51\x52\x53\x54\x55' +
+                        b'\x80\x00' +
+                        bytearray(range(lens[i])),
+                        id=i,
+                        dest=1
+                    ))
 
                 for f in test_frame:
                     source.send(f)
@@ -458,7 +529,7 @@ def bench():
                 print("byte count %d" % byte_count)
                 print("frame count %d" % frame_count)
 
-                assert tick_count == cycle*8
+                assert tick_count == cycle*len(output_axis_tkeep)
                 assert byte_count == sum(len(f.data) for f in test_frame)
                 assert frame_count == len(test_frame)
 

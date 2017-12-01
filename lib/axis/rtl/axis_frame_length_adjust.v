@@ -31,8 +31,15 @@ THE SOFTWARE.
  */
 module axis_frame_length_adjust #
 (
-    parameter DATA_WIDTH = 1,
-    parameter KEEP_WIDTH = (DATA_WIDTH/8)
+    parameter DATA_WIDTH = 8,
+    parameter KEEP_ENABLE = (DATA_WIDTH>8),
+    parameter KEEP_WIDTH = (DATA_WIDTH/8),
+    parameter ID_ENABLE = 0,
+    parameter ID_WIDTH = 8,
+    parameter DEST_ENABLE = 0,
+    parameter DEST_WIDTH = 8,
+    parameter USER_ENABLE = 1,
+    parameter USER_WIDTH = 1
 )
 (
     input  wire                   clk,
@@ -46,7 +53,9 @@ module axis_frame_length_adjust #
     input  wire                   input_axis_tvalid,
     output wire                   input_axis_tready,
     input  wire                   input_axis_tlast,
-    input  wire                   input_axis_tuser,
+    input  wire [ID_WIDTH-1:0]    input_axis_tid,
+    input  wire [DEST_WIDTH-1:0]  input_axis_tdest,
+    input  wire [USER_WIDTH-1:0]  input_axis_tuser,
 
     /*
      * AXI output
@@ -56,7 +65,9 @@ module axis_frame_length_adjust #
     output wire                   output_axis_tvalid,
     input  wire                   output_axis_tready,
     output wire                   output_axis_tlast,
-    output wire                   output_axis_tuser,
+    output wire [ID_WIDTH-1:0]    output_axis_tid,
+    output wire [DEST_WIDTH-1:0]  output_axis_tdest,
+    output wire [USER_WIDTH-1:0]  output_axis_tuser,
 
     /*
      * Status
@@ -106,8 +117,9 @@ reg [15:0] long_counter_reg = 16'd0, long_counter_next = 16'd0;
 
 reg [DATA_WIDTH-1:0] last_word_data_reg = {DATA_WIDTH{1'b0}};
 reg [KEEP_WIDTH-1:0] last_word_keep_reg = {KEEP_WIDTH{1'b0}};
-
-reg last_cycle_tuser_reg = 1'b0, last_cycle_tuser_next;
+reg [ID_WIDTH-1:0]   last_word_id_reg   = {ID_WIDTH{1'b0}};
+reg [DEST_WIDTH-1:0] last_word_dest_reg = {DEST_WIDTH{1'b0}};
+reg [USER_WIDTH-1:0] last_word_user_reg = {USER_WIDTH{1'b0}};
 
 reg status_valid_reg = 1'b0, status_valid_next;
 reg status_frame_pad_reg = 1'b0, status_frame_pad_next;
@@ -116,13 +128,15 @@ reg [15:0] status_frame_length_reg = 16'd0, status_frame_length_next;
 reg [15:0] status_frame_original_length_reg = 16'd0, status_frame_original_length_next;
 
 // internal datapath
-reg [DATA_WIDTH-1:0] output_axis_tdata_int;
-reg [KEEP_WIDTH-1:0] output_axis_tkeep_int;
-reg                  output_axis_tvalid_int;
-reg                  output_axis_tready_int_reg = 1'b0;
-reg                  output_axis_tlast_int;
-reg                  output_axis_tuser_int;
-wire                 output_axis_tready_int_early;
+reg  [DATA_WIDTH-1:0] output_axis_tdata_int;
+reg  [KEEP_WIDTH-1:0] output_axis_tkeep_int;
+reg                   output_axis_tvalid_int;
+reg                   output_axis_tready_int_reg = 1'b0;
+reg                   output_axis_tlast_int;
+reg  [ID_WIDTH-1:0]   output_axis_tid_int;
+reg  [DEST_WIDTH-1:0] output_axis_tdest_int;
+reg  [USER_WIDTH-1:0] output_axis_tuser_int;
+wire                  output_axis_tready_int_early;
 
 reg input_axis_tready_reg = 1'b0, input_axis_tready_next;
 assign input_axis_tready = input_axis_tready_reg;
@@ -145,15 +159,15 @@ always @* begin
     short_counter_next = short_counter_reg;
     long_counter_next = long_counter_reg;
 
-    output_axis_tdata_int = {DATA_WIDTH{1'b0}};
-    output_axis_tkeep_int = {KEEP_WIDTH{1'b0}};
+    output_axis_tdata_int  = {DATA_WIDTH{1'b0}};
+    output_axis_tkeep_int  = {KEEP_WIDTH{1'b0}};
     output_axis_tvalid_int = 1'b0;
-    output_axis_tlast_int = 1'b0;
-    output_axis_tuser_int = 1'b0;
+    output_axis_tlast_int  = 1'b0;
+    output_axis_tid_int    = {ID_WIDTH{1'b0}};
+    output_axis_tdest_int  = {DEST_WIDTH{1'b0}};
+    output_axis_tuser_int  = {USER_WIDTH{1'b0}};
 
     input_axis_tready_next = 1'b0;
-
-    last_cycle_tuser_next = last_cycle_tuser_reg;
 
     status_valid_next = status_valid_reg & ~status_ready;
     status_frame_pad_next = status_frame_pad_reg;
@@ -171,6 +185,8 @@ always @* begin
             output_axis_tkeep_int = input_axis_tkeep;
             output_axis_tvalid_int = input_axis_tvalid;
             output_axis_tlast_int = input_axis_tlast;
+            output_axis_tid_int = input_axis_tid;
+            output_axis_tdest_int = input_axis_tdest;
             output_axis_tuser_int = input_axis_tuser;
 
             short_counter_next = length_min;
@@ -224,8 +240,7 @@ always @* begin
                                 input_axis_tready_next = 1'b0;
                                 output_axis_tkeep_int = {KEEP_WIDTH{1'b1}};
                                 output_axis_tlast_int = 1'b0;
-                                output_axis_tuser_int = 1'b0;
-                                last_cycle_tuser_next = input_axis_tuser;
+                                store_last_word = 1'b1;
                                 state_next = STATE_PAD;
                             end else begin
                                 status_valid_next = 1'b1;
@@ -268,6 +283,8 @@ always @* begin
             output_axis_tkeep_int = input_axis_tkeep;
             output_axis_tvalid_int = input_axis_tvalid;
             output_axis_tlast_int = input_axis_tlast;
+            output_axis_tid_int = input_axis_tid;
+            output_axis_tdest_int = input_axis_tdest;
             output_axis_tuser_int = input_axis_tuser;
 
             if (input_axis_tready & input_axis_tvalid) begin
@@ -318,8 +335,7 @@ always @* begin
                                 input_axis_tready_next = 1'b0;
                                 output_axis_tkeep_int = {KEEP_WIDTH{1'b1}};
                                 output_axis_tlast_int = 1'b0;
-                                output_axis_tuser_int = 1'b0;
-                                last_cycle_tuser_next = input_axis_tuser;
+                                store_last_word = 1'b1;
                                 state_next = STATE_PAD;
                             end else begin
                                 status_valid_next = 1'b1;
@@ -361,7 +377,9 @@ always @* begin
             output_axis_tkeep_int = {KEEP_WIDTH{1'b1}};
             output_axis_tvalid_int = 1'b1;
             output_axis_tlast_int = 1'b0;
-            output_axis_tuser_int = 1'b0;
+            output_axis_tid_int = last_word_id_reg;
+            output_axis_tdest_int = last_word_dest_reg;
+            output_axis_tuser_int = last_word_user_reg;
 
             if (output_axis_tready_int_reg) begin
                 frame_ptr_next = frame_ptr_reg + KEEP_WIDTH;
@@ -386,7 +404,6 @@ always @* begin
                     input_axis_tready_next = output_axis_tready_int_early & status_ready;
                     output_axis_tkeep_int = ({KEEP_WIDTH{1'b1}}) >> (KEEP_WIDTH-short_counter_reg);
                     output_axis_tlast_int = 1'b1;
-                    output_axis_tuser_int = last_cycle_tuser_reg;
                     frame_ptr_next = 16'd0;
                     short_counter_next = length_min;
                     long_counter_next = length_max;
@@ -406,6 +423,8 @@ always @* begin
             output_axis_tkeep_int = last_word_keep_reg;
             output_axis_tvalid_int = input_axis_tvalid & input_axis_tlast;
             output_axis_tlast_int = input_axis_tlast;
+            output_axis_tid_int = last_word_id_reg;
+            output_axis_tdest_int = last_word_dest_reg;
             output_axis_tuser_int = input_axis_tuser;
 
             if (input_axis_tready & input_axis_tvalid) begin
@@ -458,8 +477,6 @@ always @(posedge clk) begin
         status_valid_reg <= status_valid_next;
     end
 
-    last_cycle_tuser_reg <= last_cycle_tuser_next;
-
     status_frame_pad_reg <= status_frame_pad_next;
     status_frame_truncate_reg <= status_frame_truncate_next;
     status_frame_length_reg <= status_frame_length_next;
@@ -468,32 +485,41 @@ always @(posedge clk) begin
     if (store_last_word) begin
         last_word_data_reg <= output_axis_tdata_int;
         last_word_keep_reg <= output_axis_tkeep_int;
+        last_word_id_reg   <= output_axis_tid_int;
+        last_word_dest_reg <= output_axis_tdest_int;
+        last_word_user_reg <= output_axis_tuser_int;
     end
 end
 
 // output datapath logic
-reg [DATA_WIDTH-1:0] output_axis_tdata_reg = {DATA_WIDTH{1'b0}};
-reg [KEEP_WIDTH-1:0] output_axis_tkeep_reg = {KEEP_WIDTH{1'b0}};
+reg [DATA_WIDTH-1:0] output_axis_tdata_reg  = {DATA_WIDTH{1'b0}};
+reg [KEEP_WIDTH-1:0] output_axis_tkeep_reg  = {KEEP_WIDTH{1'b0}};
 reg                  output_axis_tvalid_reg = 1'b0, output_axis_tvalid_next;
-reg                  output_axis_tlast_reg = 1'b0;
-reg                  output_axis_tuser_reg = 1'b0;
+reg                  output_axis_tlast_reg  = 1'b0;
+reg [ID_WIDTH-1:0]   output_axis_tid_reg    = {ID_WIDTH{1'b0}};
+reg [DEST_WIDTH-1:0] output_axis_tdest_reg  = {DEST_WIDTH{1'b0}};
+reg [USER_WIDTH-1:0] output_axis_tuser_reg  = {USER_WIDTH{1'b0}};
 
-reg [DATA_WIDTH-1:0] temp_axis_tdata_reg = {DATA_WIDTH{1'b0}};
-reg [KEEP_WIDTH-1:0] temp_axis_tkeep_reg = {KEEP_WIDTH{1'b0}};
+reg [DATA_WIDTH-1:0] temp_axis_tdata_reg  = {DATA_WIDTH{1'b0}};
+reg [KEEP_WIDTH-1:0] temp_axis_tkeep_reg  = {KEEP_WIDTH{1'b0}};
 reg                  temp_axis_tvalid_reg = 1'b0, temp_axis_tvalid_next;
-reg                  temp_axis_tlast_reg = 1'b0;
-reg                  temp_axis_tuser_reg = 1'b0;
+reg                  temp_axis_tlast_reg  = 1'b0;
+reg [ID_WIDTH-1:0]   temp_axis_tid_reg    = {ID_WIDTH{1'b0}};
+reg [DEST_WIDTH-1:0] temp_axis_tdest_reg  = {DEST_WIDTH{1'b0}};
+reg [USER_WIDTH-1:0] temp_axis_tuser_reg  = {USER_WIDTH{1'b0}};
 
 // datapath control
 reg store_axis_int_to_output;
 reg store_axis_int_to_temp;
 reg store_axis_temp_to_output;
 
-assign output_axis_tdata = output_axis_tdata_reg;
-assign output_axis_tkeep = output_axis_tkeep_reg;
+assign output_axis_tdata  = output_axis_tdata_reg;
+assign output_axis_tkeep  = KEEP_ENABLE ? output_axis_tkeep_reg : {KEEP_WIDTH{1'b1}};
 assign output_axis_tvalid = output_axis_tvalid_reg;
-assign output_axis_tlast = output_axis_tlast_reg;
-assign output_axis_tuser = output_axis_tuser_reg;
+assign output_axis_tlast  = output_axis_tlast_reg;
+assign output_axis_tid    = ID_ENABLE   ? output_axis_tid_reg   : {ID_WIDTH{1'b0}};
+assign output_axis_tdest  = DEST_ENABLE ? output_axis_tdest_reg : {DEST_WIDTH{1'b0}};
+assign output_axis_tuser  = USER_ENABLE ? output_axis_tuser_reg : {USER_WIDTH{1'b0}};
 
 // enable ready input next cycle if output is ready or the temp reg will not be filled on the next cycle (output reg empty or no input)
 assign output_axis_tready_int_early = output_axis_tready | (~temp_axis_tvalid_reg & (~output_axis_tvalid_reg | ~output_axis_tvalid_int));
@@ -506,7 +532,7 @@ always @* begin
     store_axis_int_to_output = 1'b0;
     store_axis_int_to_temp = 1'b0;
     store_axis_temp_to_output = 1'b0;
-    
+
     if (output_axis_tready_int_reg) begin
         // input is ready
         if (output_axis_tready | ~output_axis_tvalid_reg) begin
@@ -542,11 +568,15 @@ always @(posedge clk) begin
         output_axis_tdata_reg <= output_axis_tdata_int;
         output_axis_tkeep_reg <= output_axis_tkeep_int;
         output_axis_tlast_reg <= output_axis_tlast_int;
+        output_axis_tid_reg   <= output_axis_tid_int;
+        output_axis_tdest_reg <= output_axis_tdest_int;
         output_axis_tuser_reg <= output_axis_tuser_int;
     end else if (store_axis_temp_to_output) begin
         output_axis_tdata_reg <= temp_axis_tdata_reg;
         output_axis_tkeep_reg <= temp_axis_tkeep_reg;
         output_axis_tlast_reg <= temp_axis_tlast_reg;
+        output_axis_tid_reg   <= temp_axis_tid_reg;
+        output_axis_tdest_reg <= temp_axis_tdest_reg;
         output_axis_tuser_reg <= temp_axis_tuser_reg;
     end
 
@@ -554,6 +584,8 @@ always @(posedge clk) begin
         temp_axis_tdata_reg <= output_axis_tdata_int;
         temp_axis_tkeep_reg <= output_axis_tkeep_int;
         temp_axis_tlast_reg <= output_axis_tlast_int;
+        temp_axis_tid_reg   <= output_axis_tid_int;
+        temp_axis_tdest_reg <= output_axis_tdest_int;
         temp_axis_tuser_reg <= output_axis_tuser_int;
     end
 end

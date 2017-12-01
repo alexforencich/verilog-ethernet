@@ -44,7 +44,14 @@ def bench():
 
     # Parameters
     DATA_WIDTH = 64
+    KEEP_ENABLE = (DATA_WIDTH>8)
     KEEP_WIDTH = (DATA_WIDTH/8)
+    ID_ENABLE = 1
+    ID_WIDTH = 8
+    DEST_ENABLE = 1
+    DEST_WIDTH = 8
+    USER_ENABLE = 1
+    USER_WIDTH = 1
 
     # Inputs
     clk = Signal(bool(0))
@@ -52,10 +59,12 @@ def bench():
     current_test = Signal(intbv(0)[8:])
 
     input_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
-    input_axis_tkeep = Signal(intbv(0)[KEEP_WIDTH:])
+    input_axis_tkeep = Signal(intbv(1)[KEEP_WIDTH:])
     input_axis_tvalid = Signal(bool(0))
     input_axis_tlast = Signal(bool(0))
-    input_axis_tuser = Signal(bool(0))
+    input_axis_tid = Signal(intbv(0)[ID_WIDTH:])
+    input_axis_tdest = Signal(intbv(0)[DEST_WIDTH:])
+    input_axis_tuser = Signal(intbv(0)[USER_WIDTH:])
     output_axis_tready = Signal(bool(0))
     status_ready = Signal(bool(0))
     length_min = Signal(intbv(0)[16:])
@@ -64,10 +73,12 @@ def bench():
     # Outputs
     input_axis_tready = Signal(bool(0))
     output_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
-    output_axis_tkeep = Signal(intbv(0)[KEEP_WIDTH:])
+    output_axis_tkeep = Signal(intbv(1)[KEEP_WIDTH:])
     output_axis_tvalid = Signal(bool(0))
     output_axis_tlast = Signal(bool(0))
-    output_axis_tuser = Signal(bool(0))
+    output_axis_tid = Signal(intbv(0)[ID_WIDTH:])
+    output_axis_tdest = Signal(intbv(0)[DEST_WIDTH:])
+    output_axis_tuser = Signal(intbv(0)[USER_WIDTH:])
     status_valid = Signal(bool(0))
     status_frame_pad = Signal(bool(0))
     status_frame_truncate = Signal(bool(0))
@@ -89,6 +100,8 @@ def bench():
         tvalid=input_axis_tvalid,
         tready=input_axis_tready,
         tlast=input_axis_tlast,
+        tid=input_axis_tid,
+        tdest=input_axis_tdest,
         tuser=input_axis_tuser,
         pause=source_pause,
         name='source'
@@ -104,6 +117,8 @@ def bench():
         tvalid=output_axis_tvalid,
         tready=output_axis_tready,
         tlast=output_axis_tlast,
+        tid=output_axis_tid,
+        tdest=output_axis_tdest,
         tuser=output_axis_tuser,
         pause=sink_pause,
         name='sink'
@@ -136,6 +151,8 @@ def bench():
         input_axis_tvalid=input_axis_tvalid,
         input_axis_tready=input_axis_tready,
         input_axis_tlast=input_axis_tlast,
+        input_axis_tid=input_axis_tid,
+        input_axis_tdest=input_axis_tdest,
         input_axis_tuser=input_axis_tuser,
 
         output_axis_tdata=output_axis_tdata,
@@ -143,6 +160,8 @@ def bench():
         output_axis_tvalid=output_axis_tvalid,
         output_axis_tready=output_axis_tready,
         output_axis_tlast=output_axis_tlast,
+        output_axis_tid=output_axis_tid,
+        output_axis_tdest=output_axis_tdest,
         output_axis_tuser=output_axis_tuser,
 
         status_valid=status_valid,
@@ -206,7 +225,7 @@ def bench():
                     print("test 1: test packet, length %d" % payload_len)
                     current_test.next = 1
 
-                    test_frame = axis_ep.AXIStreamFrame(bytearray(range(payload_len)))
+                    test_frame = axis_ep.AXIStreamFrame(bytearray(range(payload_len)), id=1, dest=1)
 
                     for wait in wait_normal, wait_pause_source, wait_pause_sink:
                         source.send(test_frame)
@@ -243,8 +262,8 @@ def bench():
                     print("test 2: back-to-back packets, length %d" % payload_len)
                     current_test.next = 2
 
-                    test_frame1 = axis_ep.AXIStreamFrame(bytearray(range(payload_len)))
-                    test_frame2 = axis_ep.AXIStreamFrame(bytearray(range(payload_len)))
+                    test_frame1 = axis_ep.AXIStreamFrame(bytearray(range(payload_len)), id=2, dest=1)
+                    test_frame2 = axis_ep.AXIStreamFrame(bytearray(range(payload_len)), id=2, dest=2)
 
                     for wait in wait_normal, wait_pause_source, wait_pause_sink:
                         source.send(test_frame1)
@@ -297,10 +316,10 @@ def bench():
                     print("test 3: tuser assert, length %d" % payload_len)
                     current_test.next = 3
 
-                    test_frame1 = axis_ep.AXIStreamFrame(bytearray(range(payload_len)))
-                    test_frame2 = axis_ep.AXIStreamFrame(bytearray(range(payload_len)))
+                    test_frame1 = axis_ep.AXIStreamFrame(bytearray(range(payload_len)), id=3, dest=1)
+                    test_frame2 = axis_ep.AXIStreamFrame(bytearray(range(payload_len)), id=3, dest=2)
 
-                    test_frame1.user = 1
+                    test_frame1.last_cycle_user = 1
 
                     for wait in wait_normal, wait_pause_source, wait_pause_sink:
                         source.send(test_frame1)
@@ -323,7 +342,7 @@ def bench():
                         assert lrx <= lmax
                         assert rx_frame.data[:lm] == test_frame1.data[:lm]
 
-                        assert rx_frame.user[-1]
+                        assert rx_frame.last_cycle_user
 
                         status = status_sink.recv()
                         assert status.data[0][0] == (lt < lmin)

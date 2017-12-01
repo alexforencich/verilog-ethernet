@@ -72,6 +72,14 @@ THE SOFTWARE.
 module {{name}} #
 (
     parameter DATA_WIDTH = 8,
+    parameter KEEP_ENABLE = (DATA_WIDTH>8),
+    parameter KEEP_WIDTH = (DATA_WIDTH/8),
+    parameter ID_ENABLE = 0,
+    parameter ID_WIDTH = 8,
+    parameter DEST_ENABLE = 0,
+    parameter DEST_WIDTH = 8,
+    parameter USER_ENABLE = 1,
+    parameter USER_WIDTH = 1,
     // arbitration type: "PRIORITY" or "ROUND_ROBIN"
     parameter ARB_TYPE = "PRIORITY",
     // LSB priority: "LOW", "HIGH"
@@ -80,25 +88,31 @@ module {{name}} #
 (
     input  wire                   clk,
     input  wire                   rst,
-    
+
     /*
      * AXI inputs
      */
 {%- for p in ports %}
     input  wire [DATA_WIDTH-1:0]  input_{{p}}_axis_tdata,
+    input  wire [KEEP_WIDTH-1:0]  input_{{p}}_axis_tkeep,
     input  wire                   input_{{p}}_axis_tvalid,
     output wire                   input_{{p}}_axis_tready,
     input  wire                   input_{{p}}_axis_tlast,
-    input  wire                   input_{{p}}_axis_tuser,
+    input  wire [ID_WIDTH-1:0]    input_{{p}}_axis_tid,
+    input  wire [DEST_WIDTH-1:0]  input_{{p}}_axis_tdest,
+    input  wire [USER_WIDTH-1:0]  input_{{p}}_axis_tuser,
 {% endfor %}
     /*
      * AXI output
      */
     output wire [DATA_WIDTH-1:0]  output_axis_tdata,
+    output wire [KEEP_WIDTH-1:0]  output_axis_tkeep,
     output wire                   output_axis_tvalid,
     input  wire                   output_axis_tready,
     output wire                   output_axis_tlast,
-    output wire                   output_axis_tuser
+    output wire [ID_WIDTH-1:0]    output_axis_tid,
+    output wire [DEST_WIDTH-1:0]  output_axis_tdest,
+    output wire [USER_WIDTH-1:0]  output_axis_tuser
 );
 
 wire [{{n-1}}:0] request;
@@ -113,22 +127,36 @@ assign request[{{p}}] = input_{{p}}_axis_tvalid & ~acknowledge[{{p}}];
 
 // mux instance
 axis_mux_{{n}} #(
-    .DATA_WIDTH(DATA_WIDTH)
+    .DATA_WIDTH(DATA_WIDTH),
+    .KEEP_ENABLE(KEEP_ENABLE),
+    .KEEP_WIDTH(KEEP_WIDTH),
+    .ID_ENABLE(ID_ENABLE),
+    .ID_WIDTH(ID_WIDTH),
+    .DEST_ENABLE(DEST_ENABLE),
+    .DEST_WIDTH(DEST_WIDTH),
+    .USER_ENABLE(USER_ENABLE),
+    .USER_WIDTH(USER_WIDTH)
 )
 mux_inst (
     .clk(clk),
     .rst(rst),
 {%- for p in ports %}
     .input_{{p}}_axis_tdata(input_{{p}}_axis_tdata),
+    .input_{{p}}_axis_tkeep(input_{{p}}_axis_tkeep),
     .input_{{p}}_axis_tvalid(input_{{p}}_axis_tvalid & grant[{{p}}]),
     .input_{{p}}_axis_tready(input_{{p}}_axis_tready),
     .input_{{p}}_axis_tlast(input_{{p}}_axis_tlast),
+    .input_{{p}}_axis_tid(input_{{p}}_axis_tid),
+    .input_{{p}}_axis_tdest(input_{{p}}_axis_tdest),
     .input_{{p}}_axis_tuser(input_{{p}}_axis_tuser),
 {%- endfor %}
     .output_axis_tdata(output_axis_tdata),
+    .output_axis_tkeep(output_axis_tkeep),
     .output_axis_tvalid(output_axis_tvalid),
     .output_axis_tready(output_axis_tready),
     .output_axis_tlast(output_axis_tlast),
+    .output_axis_tid(output_axis_tid),
+    .output_axis_tdest(output_axis_tdest),
     .output_axis_tuser(output_axis_tuser),
     .enable(grant_valid),
     .select(grant_encoded)
@@ -154,14 +182,14 @@ arb_inst (
 endmodule
 
 """)
-    
+
     output_file.write(t.render(
         n=ports,
         w=select_width,
         name=name,
         ports=range(ports)
     ))
-    
+
     print("Done")
 
 if __name__ == "__main__":

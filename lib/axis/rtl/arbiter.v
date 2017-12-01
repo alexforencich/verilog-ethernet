@@ -42,7 +42,7 @@ module arbiter #
 (
     input  wire                     clk,
     input  wire                     rst,
-    
+
     input  wire [PORTS-1:0]         request,
     input  wire [PORTS-1:0]         acknowledge,
 

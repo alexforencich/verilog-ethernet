@@ -78,29 +78,44 @@ THE SOFTWARE.
  */
 module {{name}} #
 (
-    parameter DATA_WIDTH = 8
+    parameter DATA_WIDTH = 8,
+    parameter KEEP_ENABLE = (DATA_WIDTH>8),
+    parameter KEEP_WIDTH = (DATA_WIDTH/8),
+    parameter LAST_ENABLE = 1,
+    parameter ID_ENABLE = 0,
+    parameter ID_WIDTH = 8,
+    parameter DEST_ENABLE = 0,
+    parameter DEST_WIDTH = 8,
+    parameter USER_ENABLE = 1,
+    parameter USER_WIDTH = 1
 )
 (
-    input  wire        clk,
-    input  wire        rst,
+    input  wire                   clk,
+    input  wire                   rst,
 
     /*
      * AXI Stream inputs
      */
 {%- for p in range(m) %}
     input  wire [DATA_WIDTH-1:0]  input_{{p}}_axis_tdata,
+    input  wire [KEEP_WIDTH-1:0]  input_{{p}}_axis_tkeep,
     input  wire                   input_{{p}}_axis_tvalid,
     input  wire                   input_{{p}}_axis_tlast,
-    input  wire                   input_{{p}}_axis_tuser,
+    input  wire [ID_WIDTH-1:0]    input_{{p}}_axis_tid,
+    input  wire [DEST_WIDTH-1:0]  input_{{p}}_axis_tdest,
+    input  wire [USER_WIDTH-1:0]  input_{{p}}_axis_tuser,
 {% endfor %}
     /*
      * AXI Stream outputs
      */
 {%- for p in range(n) %}
     output wire [DATA_WIDTH-1:0]  output_{{p}}_axis_tdata,
+    output wire [KEEP_WIDTH-1:0]  output_{{p}}_axis_tkeep,
     output wire                   output_{{p}}_axis_tvalid,
     output wire                   output_{{p}}_axis_tlast,
-    output wire                   output_{{p}}_axis_tuser,
+    output wire [ID_WIDTH-1:0]    output_{{p}}_axis_tid,
+    output wire [DEST_WIDTH-1:0]  output_{{p}}_axis_tdest,
+    output wire [USER_WIDTH-1:0]  output_{{p}}_axis_tuser,
 {% endfor %}
     /*
      * Control
@@ -110,29 +125,37 @@ module {{name}} #
 {%- endfor %}
 );
 {% for p in range(m) %}
-reg [DATA_WIDTH-1:0]  input_{{p}}_axis_tdata_reg = {DATA_WIDTH{1'b0}};
+reg [DATA_WIDTH-1:0]  input_{{p}}_axis_tdata_reg  = {DATA_WIDTH{1'b0}};
+reg [KEEP_WIDTH-1:0]  input_{{p}}_axis_tkeep_reg  = {KEEP_WIDTH{1'b0}};
 reg                   input_{{p}}_axis_tvalid_reg = 1'b0;
-reg                   input_{{p}}_axis_tlast_reg = 1'b0;
-reg                   input_{{p}}_axis_tuser_reg = 1'b0;
+reg                   input_{{p}}_axis_tlast_reg  = 1'b0;
+reg [ID_WIDTH-1:0]    input_{{p}}_axis_tid_reg    = {ID_WIDTH{1'b0}};
+reg [DEST_WIDTH-1:0]  input_{{p}}_axis_tdest_reg  = {DEST_WIDTH{1'b0}};
+reg [USER_WIDTH-1:0]  input_{{p}}_axis_tuser_reg  = {USER_WIDTH{1'b0}};
 {% endfor %}
 
 {%- for p in range(n) %}
-reg [DATA_WIDTH-1:0]  output_{{p}}_axis_tdata_reg = {DATA_WIDTH{1'b0}};
+reg [DATA_WIDTH-1:0]  output_{{p}}_axis_tdata_reg  = {DATA_WIDTH{1'b0}};
+reg [KEEP_WIDTH-1:0]  output_{{p}}_axis_tkeep_reg  = {KEEP_WIDTH{1'b0}};
 reg                   output_{{p}}_axis_tvalid_reg = 1'b0;
-reg                   output_{{p}}_axis_tlast_reg = 1'b0;
-reg                   output_{{p}}_axis_tuser_reg = 1'b0;
+reg                   output_{{p}}_axis_tlast_reg  = 1'b0;
+reg [ID_WIDTH-1:0]    output_{{p}}_axis_tid_reg    = {ID_WIDTH{1'b0}};
+reg [DEST_WIDTH-1:0]  output_{{p}}_axis_tdest_reg  = {DEST_WIDTH{1'b0}};
+reg [USER_WIDTH-1:0]  output_{{p}}_axis_tuser_reg  = {USER_WIDTH{1'b0}};
 {% endfor %}
 
 {%- for p in range(n) %}
 reg [{{w-1}}:0]             output_{{p}}_select_reg = {{w}}'d0;
 {%- endfor %}
 {% for p in range(n) %}
-assign output_{{p}}_axis_tdata = output_{{p}}_axis_tdata_reg;
+assign output_{{p}}_axis_tdata  = output_{{p}}_axis_tdata_reg;
+assign output_{{p}}_axis_tkeep  = KEEP_ENABLE ? output_{{p}}_axis_tkeep_reg : {KEEP_WIDTH{1'b1}};
 assign output_{{p}}_axis_tvalid = output_{{p}}_axis_tvalid_reg;
-assign output_{{p}}_axis_tlast = output_{{p}}_axis_tlast_reg;
-assign output_{{p}}_axis_tuser = output_{{p}}_axis_tuser_reg;
+assign output_{{p}}_axis_tlast  = LAST_ENABLE ? output_{{p}}_axis_tlast_reg : 1'b1;
+assign output_{{p}}_axis_tid    = ID_ENABLE   ? output_{{p}}_axis_tid_reg   : {ID_WIDTH{1'b0}};
+assign output_{{p}}_axis_tdest  = DEST_ENABLE ? output_{{p}}_axis_tdest_reg : {DEST_WIDTH{1'b0}};
+assign output_{{p}}_axis_tuser  = USER_ENABLE ? output_{{p}}_axis_tuser_reg : {USER_WIDTH{1'b0}};
 {% endfor %}
-
 always @(posedge clk) begin
     if (rst) begin
 {%- for p in range(n) %}
@@ -163,7 +186,10 @@ always @(posedge clk) begin
 {%- for p in range(m) %}
 
     input_{{p}}_axis_tdata_reg <= input_{{p}}_axis_tdata;
+    input_{{p}}_axis_tkeep_reg <= input_{{p}}_axis_tkeep;
     input_{{p}}_axis_tlast_reg <= input_{{p}}_axis_tlast;
+    input_{{p}}_axis_tid_reg   <= input_{{p}}_axis_tid;
+    input_{{p}}_axis_tdest_reg <= input_{{p}}_axis_tdest;
     input_{{p}}_axis_tuser_reg <= input_{{p}}_axis_tuser;
 {%- endfor %}
 {%- for p in range(n) %}
@@ -172,7 +198,10 @@ always @(posedge clk) begin
 {%- for q in range(m) %}
         {{w}}'d{{q}}: begin
             output_{{p}}_axis_tdata_reg <= input_{{q}}_axis_tdata_reg;
+            output_{{p}}_axis_tkeep_reg <= input_{{q}}_axis_tkeep_reg;
             output_{{p}}_axis_tlast_reg <= input_{{q}}_axis_tlast_reg;
+            output_{{p}}_axis_tid_reg   <= input_{{q}}_axis_tid_reg;
+            output_{{p}}_axis_tdest_reg <= input_{{q}}_axis_tdest_reg;
             output_{{p}}_axis_tuser_reg <= input_{{q}}_axis_tuser_reg;
         end
 {%- endfor %}
@@ -183,14 +212,14 @@ end
 endmodule
 
 """)
-    
+
     output_file.write(t.render(
         m=m,
         n=n,
         w=select_width,
         name=name
     ))
-    
+
     print("Done")
 
 if __name__ == "__main__":

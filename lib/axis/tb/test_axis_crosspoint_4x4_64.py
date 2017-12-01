@@ -28,8 +28,8 @@ import os
 
 import axis_ep
 
-module = 'axis_crosspoint_64_4x4'
-testbench = 'test_%s' % module
+module = 'axis_crosspoint_4x4'
+testbench = 'test_%s_64' % module
 
 srcs = []
 
@@ -44,7 +44,15 @@ def bench():
 
     # Parameters
     DATA_WIDTH = 64
+    KEEP_ENABLE = (DATA_WIDTH>8)
     KEEP_WIDTH = (DATA_WIDTH/8)
+    LAST_ENABLE = 1
+    ID_ENABLE = 1
+    ID_WIDTH = 8
+    DEST_ENABLE = 1
+    DEST_WIDTH = 8
+    USER_ENABLE = 1
+    USER_WIDTH = 1
 
     # Inputs
     clk = Signal(bool(0))
@@ -52,25 +60,33 @@ def bench():
     current_test = Signal(intbv(0)[8:])
 
     input_0_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
-    input_0_axis_tkeep = Signal(intbv(0)[KEEP_WIDTH:])
+    input_0_axis_tkeep = Signal(intbv(1)[KEEP_WIDTH:])
     input_0_axis_tvalid = Signal(bool(0))
     input_0_axis_tlast = Signal(bool(0))
-    input_0_axis_tuser = Signal(bool(0))
+    input_0_axis_tid = Signal(intbv(0)[ID_WIDTH:])
+    input_0_axis_tdest = Signal(intbv(0)[DEST_WIDTH:])
+    input_0_axis_tuser = Signal(intbv(0)[USER_WIDTH:])
     input_1_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
-    input_1_axis_tkeep = Signal(intbv(0)[KEEP_WIDTH:])
+    input_1_axis_tkeep = Signal(intbv(1)[KEEP_WIDTH:])
     input_1_axis_tvalid = Signal(bool(0))
     input_1_axis_tlast = Signal(bool(0))
-    input_1_axis_tuser = Signal(bool(0))
+    input_1_axis_tid = Signal(intbv(0)[ID_WIDTH:])
+    input_1_axis_tdest = Signal(intbv(0)[DEST_WIDTH:])
+    input_1_axis_tuser = Signal(intbv(0)[USER_WIDTH:])
     input_2_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
-    input_2_axis_tkeep = Signal(intbv(0)[KEEP_WIDTH:])
+    input_2_axis_tkeep = Signal(intbv(1)[KEEP_WIDTH:])
     input_2_axis_tvalid = Signal(bool(0))
     input_2_axis_tlast = Signal(bool(0))
-    input_2_axis_tuser = Signal(bool(0))
+    input_2_axis_tid = Signal(intbv(0)[ID_WIDTH:])
+    input_2_axis_tdest = Signal(intbv(0)[DEST_WIDTH:])
+    input_2_axis_tuser = Signal(intbv(0)[USER_WIDTH:])
     input_3_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
-    input_3_axis_tkeep = Signal(intbv(0)[KEEP_WIDTH:])
+    input_3_axis_tkeep = Signal(intbv(1)[KEEP_WIDTH:])
     input_3_axis_tvalid = Signal(bool(0))
     input_3_axis_tlast = Signal(bool(0))
-    input_3_axis_tuser = Signal(bool(0))
+    input_3_axis_tid = Signal(intbv(0)[ID_WIDTH:])
+    input_3_axis_tdest = Signal(intbv(0)[DEST_WIDTH:])
+    input_3_axis_tuser = Signal(intbv(0)[USER_WIDTH:])
 
     output_0_select = Signal(intbv(0)[2:])
     output_1_select = Signal(intbv(0)[2:])
@@ -79,25 +95,33 @@ def bench():
 
     # Outputs
     output_0_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
-    output_0_axis_tkeep = Signal(intbv(0)[KEEP_WIDTH:])
+    output_0_axis_tkeep = Signal(intbv(1)[KEEP_WIDTH:])
     output_0_axis_tvalid = Signal(bool(0))
     output_0_axis_tlast = Signal(bool(0))
-    output_0_axis_tuser = Signal(bool(0))
+    output_0_axis_tid = Signal(intbv(0)[ID_WIDTH:])
+    output_0_axis_tdest = Signal(intbv(0)[DEST_WIDTH:])
+    output_0_axis_tuser = Signal(intbv(0)[USER_WIDTH:])
     output_1_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
-    output_1_axis_tkeep = Signal(intbv(0)[KEEP_WIDTH:])
+    output_1_axis_tkeep = Signal(intbv(1)[KEEP_WIDTH:])
     output_1_axis_tvalid = Signal(bool(0))
     output_1_axis_tlast = Signal(bool(0))
-    output_1_axis_tuser = Signal(bool(0))
+    output_1_axis_tid = Signal(intbv(0)[ID_WIDTH:])
+    output_1_axis_tdest = Signal(intbv(0)[DEST_WIDTH:])
+    output_1_axis_tuser = Signal(intbv(0)[USER_WIDTH:])
     output_2_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
-    output_2_axis_tkeep = Signal(intbv(0)[KEEP_WIDTH:])
+    output_2_axis_tkeep = Signal(intbv(1)[KEEP_WIDTH:])
     output_2_axis_tvalid = Signal(bool(0))
     output_2_axis_tlast = Signal(bool(0))
-    output_2_axis_tuser = Signal(bool(0))
+    output_2_axis_tid = Signal(intbv(0)[ID_WIDTH:])
+    output_2_axis_tdest = Signal(intbv(0)[DEST_WIDTH:])
+    output_2_axis_tuser = Signal(intbv(0)[USER_WIDTH:])
     output_3_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
-    output_3_axis_tkeep = Signal(intbv(0)[KEEP_WIDTH:])
+    output_3_axis_tkeep = Signal(intbv(1)[KEEP_WIDTH:])
     output_3_axis_tvalid = Signal(bool(0))
     output_3_axis_tlast = Signal(bool(0))
-    output_3_axis_tuser = Signal(bool(0))
+    output_3_axis_tid = Signal(intbv(0)[ID_WIDTH:])
+    output_3_axis_tdest = Signal(intbv(0)[DEST_WIDTH:])
+    output_3_axis_tuser = Signal(intbv(0)[USER_WIDTH:])
 
     # sources and sinks
     source_0_pause = Signal(bool(0))
@@ -118,6 +142,8 @@ def bench():
         tkeep=input_0_axis_tkeep,
         tvalid=input_0_axis_tvalid,
         tlast=input_0_axis_tlast,
+        tid=input_0_axis_tid,
+        tdest=input_0_axis_tdest,
         tuser=input_0_axis_tuser,
         pause=source_0_pause,
         name='source_0'
@@ -132,6 +158,8 @@ def bench():
         tkeep=input_1_axis_tkeep,
         tvalid=input_1_axis_tvalid,
         tlast=input_1_axis_tlast,
+        tid=input_1_axis_tid,
+        tdest=input_1_axis_tdest,
         tuser=input_1_axis_tuser,
         pause=source_1_pause,
         name='source_1'
@@ -146,6 +174,8 @@ def bench():
         tkeep=input_2_axis_tkeep,
         tvalid=input_2_axis_tvalid,
         tlast=input_2_axis_tlast,
+        tid=input_2_axis_tid,
+        tdest=input_2_axis_tdest,
         tuser=input_2_axis_tuser,
         pause=source_2_pause,
         name='source_2'
@@ -160,6 +190,8 @@ def bench():
         tkeep=input_3_axis_tkeep,
         tvalid=input_3_axis_tvalid,
         tlast=input_3_axis_tlast,
+        tid=input_3_axis_tid,
+        tdest=input_3_axis_tdest,
         tuser=input_3_axis_tuser,
         pause=source_3_pause,
         name='source_3'
@@ -174,6 +206,8 @@ def bench():
         tkeep=output_0_axis_tkeep,
         tvalid=output_0_axis_tvalid,
         tlast=output_0_axis_tlast,
+        tid=output_0_axis_tid,
+        tdest=output_0_axis_tdest,
         tuser=output_0_axis_tuser,
         pause=sink_0_pause,
         name='sink_0'
@@ -188,6 +222,8 @@ def bench():
         tkeep=output_1_axis_tkeep,
         tvalid=output_1_axis_tvalid,
         tlast=output_1_axis_tlast,
+        tid=output_1_axis_tid,
+        tdest=output_1_axis_tdest,
         tuser=output_1_axis_tuser,
         pause=sink_1_pause,
         name='sink_1'
@@ -202,6 +238,8 @@ def bench():
         tkeep=output_2_axis_tkeep,
         tvalid=output_2_axis_tvalid,
         tlast=output_2_axis_tlast,
+        tid=output_2_axis_tid,
+        tdest=output_2_axis_tdest,
         tuser=output_2_axis_tuser,
         pause=sink_2_pause,
         name='sink_2'
@@ -216,6 +254,8 @@ def bench():
         tkeep=output_3_axis_tkeep,
         tvalid=output_3_axis_tvalid,
         tlast=output_3_axis_tlast,
+        tid=output_3_axis_tid,
+        tdest=output_3_axis_tdest,
         tuser=output_3_axis_tuser,
         pause=sink_3_pause,
         name='sink_3'
@@ -235,42 +275,58 @@ def bench():
         input_0_axis_tkeep=input_0_axis_tkeep,
         input_0_axis_tvalid=input_0_axis_tvalid,
         input_0_axis_tlast=input_0_axis_tlast,
+        input_0_axis_tid=input_0_axis_tid,
+        input_0_axis_tdest=input_0_axis_tdest,
         input_0_axis_tuser=input_0_axis_tuser,
         input_1_axis_tdata=input_1_axis_tdata,
         input_1_axis_tkeep=input_1_axis_tkeep,
         input_1_axis_tvalid=input_1_axis_tvalid,
         input_1_axis_tlast=input_1_axis_tlast,
+        input_1_axis_tid=input_1_axis_tid,
+        input_1_axis_tdest=input_1_axis_tdest,
         input_1_axis_tuser=input_1_axis_tuser,
         input_2_axis_tdata=input_2_axis_tdata,
         input_2_axis_tkeep=input_2_axis_tkeep,
         input_2_axis_tvalid=input_2_axis_tvalid,
         input_2_axis_tlast=input_2_axis_tlast,
+        input_2_axis_tid=input_2_axis_tid,
+        input_2_axis_tdest=input_2_axis_tdest,
         input_2_axis_tuser=input_2_axis_tuser,
         input_3_axis_tdata=input_3_axis_tdata,
         input_3_axis_tkeep=input_3_axis_tkeep,
         input_3_axis_tvalid=input_3_axis_tvalid,
         input_3_axis_tlast=input_3_axis_tlast,
+        input_3_axis_tid=input_3_axis_tid,
+        input_3_axis_tdest=input_3_axis_tdest,
         input_3_axis_tuser=input_3_axis_tuser,
 
         output_0_axis_tdata=output_0_axis_tdata,
         output_0_axis_tkeep=output_0_axis_tkeep,
         output_0_axis_tvalid=output_0_axis_tvalid,
         output_0_axis_tlast=output_0_axis_tlast,
+        output_0_axis_tid=output_0_axis_tid,
+        output_0_axis_tdest=output_0_axis_tdest,
         output_0_axis_tuser=output_0_axis_tuser,
         output_1_axis_tdata=output_1_axis_tdata,
         output_1_axis_tkeep=output_1_axis_tkeep,
         output_1_axis_tvalid=output_1_axis_tvalid,
         output_1_axis_tlast=output_1_axis_tlast,
+        output_1_axis_tid=output_1_axis_tid,
+        output_1_axis_tdest=output_1_axis_tdest,
         output_1_axis_tuser=output_1_axis_tuser,
         output_2_axis_tdata=output_2_axis_tdata,
         output_2_axis_tkeep=output_2_axis_tkeep,
         output_2_axis_tvalid=output_2_axis_tvalid,
         output_2_axis_tlast=output_2_axis_tlast,
+        output_2_axis_tid=output_2_axis_tid,
+        output_2_axis_tdest=output_2_axis_tdest,
         output_2_axis_tuser=output_2_axis_tuser,
         output_3_axis_tdata=output_3_axis_tdata,
         output_3_axis_tkeep=output_3_axis_tkeep,
         output_3_axis_tvalid=output_3_axis_tvalid,
         output_3_axis_tlast=output_3_axis_tlast,
+        output_3_axis_tid=output_3_axis_tid,
+        output_3_axis_tdest=output_3_axis_tdest,
         output_3_axis_tuser=output_3_axis_tuser,
 
         output_0_select=output_0_select,
@@ -305,10 +361,10 @@ def bench():
         output_2_select.next = 2
         output_3_select.next = 3
 
-        test_frame0 = axis_ep.AXIStreamFrame(b'\x01\x00\x00\xFF\x01\x02\x03\x04')
-        test_frame1 = axis_ep.AXIStreamFrame(b'\x01\x01\x01\xFF\x01\x02\x03\x04')
-        test_frame2 = axis_ep.AXIStreamFrame(b'\x01\x02\x02\xFF\x01\x02\x03\x04')
-        test_frame3 = axis_ep.AXIStreamFrame(b'\x01\x03\x03\xFF\x01\x02\x03\x04')
+        test_frame0 = axis_ep.AXIStreamFrame(b'\x01\x00\x00\xFF\x01\x02\x03\x04', id=0, dest=0)
+        test_frame1 = axis_ep.AXIStreamFrame(b'\x01\x01\x01\xFF\x01\x02\x03\x04', id=1, dest=1)
+        test_frame2 = axis_ep.AXIStreamFrame(b'\x01\x02\x02\xFF\x01\x02\x03\x04', id=2, dest=2)
+        test_frame3 = axis_ep.AXIStreamFrame(b'\x01\x03\x03\xFF\x01\x02\x03\x04', id=3, dest=3)
         source_0.send(test_frame0)
         source_1.send(test_frame1)
         source_2.send(test_frame2)
@@ -347,10 +403,10 @@ def bench():
         output_2_select.next = 1
         output_3_select.next = 0
 
-        test_frame0 = axis_ep.AXIStreamFrame(b'\x02\x00\x03\xFF\x01\x02\x03\x04')
-        test_frame1 = axis_ep.AXIStreamFrame(b'\x02\x01\x02\xFF\x01\x02\x03\x04')
-        test_frame2 = axis_ep.AXIStreamFrame(b'\x02\x02\x01\xFF\x01\x02\x03\x04')
-        test_frame3 = axis_ep.AXIStreamFrame(b'\x02\x03\x00\xFF\x01\x02\x03\x04')
+        test_frame0 = axis_ep.AXIStreamFrame(b'\x02\x00\x03\xFF\x01\x02\x03\x04', id=0, dest=3)
+        test_frame1 = axis_ep.AXIStreamFrame(b'\x02\x01\x02\xFF\x01\x02\x03\x04', id=1, dest=2)
+        test_frame2 = axis_ep.AXIStreamFrame(b'\x02\x02\x01\xFF\x01\x02\x03\x04', id=2, dest=1)
+        test_frame3 = axis_ep.AXIStreamFrame(b'\x02\x03\x00\xFF\x01\x02\x03\x04', id=3, dest=0)
         source_0.send(test_frame0)
         source_1.send(test_frame1)
         source_2.send(test_frame2)
@@ -389,7 +445,7 @@ def bench():
         output_2_select.next = 0
         output_3_select.next = 0
 
-        test_frame0 = axis_ep.AXIStreamFrame(b'\x03\x00\xFF\xFF\x01\x02\x03\x04')
+        test_frame0 = axis_ep.AXIStreamFrame(b'\x03\x00\xFF\xFF\x01\x02\x03\x04', id=0, dest=0)
         source_0.send(test_frame0)
         yield clk.posedge
 

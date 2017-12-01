@@ -27,15 +27,22 @@ THE SOFTWARE.
 `timescale 1ns / 1ps
 
 /*
- * Testbench for axis_frame_length_adjust_fifo_64
+ * Testbench for axis_frame_length_adjust_fifo
  */
 module test_axis_frame_length_adjust_fifo_64;
 
 // Parameters
-localparam DATA_WIDTH = 64;
-localparam KEEP_WIDTH = (DATA_WIDTH/8);
-localparam FRAME_FIFO_ADDR_WIDTH = 9;
-localparam HEADER_FIFO_ADDR_WIDTH = 3;
+parameter DATA_WIDTH = 64;
+parameter KEEP_ENABLE = (DATA_WIDTH>8);
+parameter KEEP_WIDTH = (DATA_WIDTH/8);
+parameter ID_ENABLE = 1;
+parameter ID_WIDTH = 8;
+parameter DEST_ENABLE = 1;
+parameter DEST_WIDTH = 8;
+parameter USER_ENABLE = 1;
+parameter USER_WIDTH = 1;
+parameter FRAME_FIFO_ADDR_WIDTH = 9;
+parameter HEADER_FIFO_ADDR_WIDTH = 3;
 
 // Inputs
 reg clk = 0;
@@ -46,7 +53,9 @@ reg [DATA_WIDTH-1:0] input_axis_tdata = 0;
 reg [KEEP_WIDTH-1:0] input_axis_tkeep = 0;
 reg input_axis_tvalid = 0;
 reg input_axis_tlast = 0;
-reg input_axis_tuser = 0;
+reg [ID_WIDTH-1:0] input_axis_tid = 0;
+reg [DEST_WIDTH-1:0] input_axis_tdest = 0;
+reg [USER_WIDTH-1:0] input_axis_tuser = 0;
 reg output_axis_hdr_ready = 0;
 reg output_axis_tready = 0;
 reg [15:0] length_min = 0;
@@ -58,7 +67,9 @@ wire [DATA_WIDTH-1:0] output_axis_tdata;
 wire [KEEP_WIDTH-1:0] output_axis_tkeep;
 wire output_axis_tvalid;
 wire output_axis_tlast;
-wire output_axis_tuser;
+wire [ID_WIDTH-1:0] output_axis_tid;
+wire [DEST_WIDTH-1:0] output_axis_tdest;
+wire [USER_WIDTH-1:0] output_axis_tuser;
 wire output_axis_hdr_valid;
 wire output_axis_hdr_pad;
 wire output_axis_hdr_truncate;
@@ -75,6 +86,8 @@ initial begin
         input_axis_tkeep,
         input_axis_tvalid,
         input_axis_tlast,
+        input_axis_tid,
+        input_axis_tdest,
         input_axis_tuser,
         output_axis_hdr_ready,
         output_axis_tready,
@@ -92,6 +105,8 @@ initial begin
         output_axis_tkeep,
         output_axis_tvalid,
         output_axis_tlast,
+        output_axis_tid,
+        output_axis_tdest,
         output_axis_tuser
     );
 
@@ -100,9 +115,16 @@ initial begin
     $dumpvars(0, test_axis_frame_length_adjust_fifo_64);
 end
 
-axis_frame_length_adjust_fifo_64 #(
+axis_frame_length_adjust_fifo #(
     .DATA_WIDTH(DATA_WIDTH),
+    .KEEP_ENABLE(KEEP_ENABLE),
     .KEEP_WIDTH(KEEP_WIDTH),
+    .ID_ENABLE(ID_ENABLE),
+    .ID_WIDTH(ID_WIDTH),
+    .DEST_ENABLE(DEST_ENABLE),
+    .DEST_WIDTH(DEST_WIDTH),
+    .USER_ENABLE(USER_ENABLE),
+    .USER_WIDTH(USER_WIDTH),
     .FRAME_FIFO_ADDR_WIDTH(FRAME_FIFO_ADDR_WIDTH),
     .HEADER_FIFO_ADDR_WIDTH(HEADER_FIFO_ADDR_WIDTH)
 )
@@ -115,6 +137,8 @@ UUT (
     .input_axis_tvalid(input_axis_tvalid),
     .input_axis_tready(input_axis_tready),
     .input_axis_tlast(input_axis_tlast),
+    .input_axis_tid(input_axis_tid),
+    .input_axis_tdest(input_axis_tdest),
     .input_axis_tuser(input_axis_tuser),
     // AXI output
     .output_axis_hdr_valid(output_axis_hdr_valid),
@@ -128,6 +152,8 @@ UUT (
     .output_axis_tvalid(output_axis_tvalid),
     .output_axis_tready(output_axis_tready),
     .output_axis_tlast(output_axis_tlast),
+    .output_axis_tid(output_axis_tid),
+    .output_axis_tdest(output_axis_tdest),
     .output_axis_tuser(output_axis_tuser),
     // Configuration
     .length_min(length_min),
