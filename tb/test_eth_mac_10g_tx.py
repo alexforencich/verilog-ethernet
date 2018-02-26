@@ -272,7 +272,7 @@ def bench():
             axis_frame1 = test_frame1.build_axis()
             axis_frame2 = test_frame2.build_axis()
 
-            axis_frame1.user = 1
+            axis_frame1.last_cycle_user = 1
 
             source.send(axis_frame1)
             source.send(axis_frame2)

@@ -39,7 +39,7 @@ srcs.append("../rtl/%s.v" % module)
 srcs.append("../rtl/udp_checksum_gen_64.v")
 srcs.append("../rtl/udp_ip_rx_64.v")
 srcs.append("../rtl/udp_ip_tx_64.v")
-srcs.append("../lib/axis/rtl/axis_fifo_64.v")
+srcs.append("../lib/axis/rtl/axis_fifo.v")
 srcs.append("%s.v" % testbench)
 
 src = ' '.join(srcs)

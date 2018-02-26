@@ -37,7 +37,7 @@ testbench = 'test_%s' % module
 srcs = []
 
 srcs.append("../rtl/%s.v" % module)
-srcs.append("../lib/axis/rtl/axis_fifo_64.v")
+srcs.append("../lib/axis/rtl/axis_fifo.v")
 srcs.append("%s.v" % testbench)
 
 src = ' '.join(srcs)

@@ -197,23 +197,35 @@ wire output_udp_payload_fifo_tlast;
 wire output_udp_payload_fifo_tuser;
 
 axis_fifo #(
+    .ADDR_WIDTH(PAYLOAD_FIFO_ADDR_WIDTH),
     .DATA_WIDTH(8),
-    .ADDR_WIDTH(PAYLOAD_FIFO_ADDR_WIDTH)
+    .KEEP_ENABLE(0),
+    .LAST_ENABLE(1),
+    .ID_ENABLE(0),
+    .DEST_ENABLE(0),
+    .USER_ENABLE(1),
+    .USER_WIDTH(1)
 )
 payload_fifo (
     .clk(clk),
     .rst(rst),
     // AXI input
     .input_axis_tdata(input_udp_payload_fifo_tdata),
+    .input_axis_tkeep(0),
     .input_axis_tvalid(input_udp_payload_fifo_tvalid),
     .input_axis_tready(input_udp_payload_fifo_tready),
     .input_axis_tlast(input_udp_payload_fifo_tlast),
+    .input_axis_tid(0),
+    .input_axis_tdest(0),
     .input_axis_tuser(input_udp_payload_fifo_tuser),
     // AXI output
     .output_axis_tdata(output_udp_payload_fifo_tdata),
+    .output_axis_tkeep(),
     .output_axis_tvalid(output_udp_payload_fifo_tvalid),
     .output_axis_tready(output_udp_payload_fifo_tready),
     .output_axis_tlast(output_udp_payload_fifo_tlast),
+    .output_axis_tid(),
+    .output_axis_tdest(),
     .output_axis_tuser(output_udp_payload_fifo_tuser)
 );
 

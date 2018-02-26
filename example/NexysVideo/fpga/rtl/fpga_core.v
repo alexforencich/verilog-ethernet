@@ -544,7 +544,12 @@ udp_complete_inst (
 
 axis_fifo #(
     .ADDR_WIDTH(12),
-    .DATA_WIDTH(8)
+    .DATA_WIDTH(8),
+    .KEEP_ENABLE(0),
+    .ID_ENABLE(0),
+    .DEST_ENABLE(0),
+    .USER_ENABLE(1),
+    .USER_WIDTH(1)
 )
 udp_payload_fifo (
     .clk(clk),
@@ -552,16 +557,22 @@ udp_payload_fifo (
 
     // AXI input
     .input_axis_tdata(rx_fifo_udp_payload_tdata),
+    .input_axis_tkeep(0),
     .input_axis_tvalid(rx_fifo_udp_payload_tvalid),
     .input_axis_tready(rx_fifo_udp_payload_tready),
     .input_axis_tlast(rx_fifo_udp_payload_tlast),
+    .input_axis_tid(0),
+    .input_axis_tdest(0),
     .input_axis_tuser(rx_fifo_udp_payload_tuser),
 
     // AXI output
     .output_axis_tdata(tx_fifo_udp_payload_tdata),
+    .output_axis_tkeep(),
     .output_axis_tvalid(tx_fifo_udp_payload_tvalid),
     .output_axis_tready(tx_fifo_udp_payload_tready),
     .output_axis_tlast(tx_fifo_udp_payload_tlast),
+    .output_axis_tid(),
+    .output_axis_tdest(),
     .output_axis_tuser(tx_fifo_udp_payload_tuser)
 );
 

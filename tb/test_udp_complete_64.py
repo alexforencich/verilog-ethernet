@@ -55,7 +55,7 @@ srcs.append("../rtl/eth_arb_mux_64_2.v")
 srcs.append("../rtl/eth_mux_64_2.v")
 srcs.append("../lib/axis/rtl/arbiter.v")
 srcs.append("../lib/axis/rtl/priority_encoder.v")
-srcs.append("../lib/axis/rtl/axis_fifo_64.v")
+srcs.append("../lib/axis/rtl/axis_fifo.v")
 srcs.append("%s.v" % testbench)
 
 src = ' '.join(srcs)

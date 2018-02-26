@@ -40,8 +40,8 @@ SYN_FILES += lib/eth/rtl/xgmii_interleave.v
 SYN_FILES += lib/eth/rtl/xgmii_deinterleave.v
 SYN_FILES += lib/eth/lib/axis/rtl/arbiter.v
 SYN_FILES += lib/eth/lib/axis/rtl/priority_encoder.v
-SYN_FILES += lib/eth/lib/axis/rtl/axis_fifo_64.v
-SYN_FILES += lib/eth/lib/axis/rtl/axis_async_frame_fifo_64.v
+SYN_FILES += lib/eth/lib/axis/rtl/axis_fifo.v
+SYN_FILES += lib/eth/lib/axis/rtl/axis_async_frame_fifo.v
 SYN_FILES += cores/phy/phy.qip
 SYN_FILES += cores/phy_reconfig/phy_reconfig.qip
 

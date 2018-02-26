@@ -354,7 +354,7 @@ def bench():
 
             rx_frame = sink.recv()
 
-            assert rx_frame.user[-1]
+            assert rx_frame.last_cycle_user
 
             rx_frame = sink.recv()
 
