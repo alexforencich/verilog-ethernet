@@ -1,6 +1,7 @@
 # User Constraints File for the Xilinx ML605 board, rev C
 
-CONFIG PART = xc6vlx130t-1ff1156;
+#CONFIG PART = xc6vlx130t-1ff1156;
+#CONFIG PART = xc6vlx240t-1ff1156;
 
 # 200MHz clock
 NET "sys_clk_p" LOC = "J9" | IOSTANDARD=LVDS_25; # Bank = 34, IO_L0P_GC_34 (GCLK)
