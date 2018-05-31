@@ -568,7 +568,7 @@ axis_fifo #(
     .ADDR_WIDTH(10),
     .DATA_WIDTH(64),
     .KEEP_ENABLE(1),
-    .KEEP_WIDTH(64),
+    .KEEP_WIDTH(8),
     .ID_ENABLE(0),
     .DEST_ENABLE(0),
     .USER_ENABLE(1),

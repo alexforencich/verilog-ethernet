@@ -623,7 +623,19 @@ eth_gth_phy_quad_A_inst (
     .xgmii_txd_3(eth_r6_txd),
     .xgmii_txc_3(eth_r6_txc),
     .xgmii_rxd_3(eth_r6_rxd),
-    .xgmii_rxc_3(eth_r6_rxc)
+    .xgmii_rxc_3(eth_r6_rxc),
+
+    /*
+     * Control
+     */
+    .tx_powerdown_0(1'b0),
+    .rx_powerdown_0(1'b0),
+    .tx_powerdown_1(1'b0),
+    .rx_powerdown_1(1'b0),
+    .tx_powerdown_2(1'b0),
+    .rx_powerdown_2(1'b0),
+    .tx_powerdown_3(1'b0),
+    .rx_powerdown_3(1'b0)
 );
 
 // Quad B X0Y1
@@ -681,7 +693,19 @@ eth_gth_phy_quad_B_inst (
     .xgmii_txd_3(eth_r7_txd),
     .xgmii_txc_3(eth_r7_txc),
     .xgmii_rxd_3(eth_r7_rxd),
-    .xgmii_rxc_3(eth_r7_rxc)
+    .xgmii_rxc_3(eth_r7_rxc),
+
+    /*
+     * Control
+     */
+    .tx_powerdown_0(1'b0),
+    .rx_powerdown_0(1'b0),
+    .tx_powerdown_1(1'b0),
+    .rx_powerdown_1(1'b0),
+    .tx_powerdown_2(1'b0),
+    .rx_powerdown_2(1'b0),
+    .tx_powerdown_3(1'b0),
+    .rx_powerdown_3(1'b0)
 );
 
 // Quad C X0Y2
@@ -739,7 +763,19 @@ eth_gth_phy_quad_C_inst (
     .xgmii_txd_3(eth_r10_txd),
     .xgmii_txc_3(eth_r10_txc),
     .xgmii_rxd_3(eth_r10_rxd),
-    .xgmii_rxc_3(eth_r10_rxc)
+    .xgmii_rxc_3(eth_r10_rxc),
+
+    /*
+     * Control
+     */
+    .tx_powerdown_0(1'b0),
+    .rx_powerdown_0(1'b0),
+    .tx_powerdown_1(1'b0),
+    .rx_powerdown_1(1'b0),
+    .tx_powerdown_2(1'b0),
+    .rx_powerdown_2(1'b0),
+    .tx_powerdown_3(1'b0),
+    .rx_powerdown_3(1'b0)
 );
 
 // Quad D X1Y0
@@ -797,7 +833,19 @@ eth_gth_phy_quad_D_inst (
     .xgmii_txd_3(eth_l6_txd),
     .xgmii_txc_3(eth_l6_txc),
     .xgmii_rxd_3(eth_l6_rxd),
-    .xgmii_rxc_3(eth_l6_rxc)
+    .xgmii_rxc_3(eth_l6_rxc),
+
+    /*
+     * Control
+     */
+    .tx_powerdown_0(1'b0),
+    .rx_powerdown_0(1'b0),
+    .tx_powerdown_1(1'b0),
+    .rx_powerdown_1(1'b0),
+    .tx_powerdown_2(1'b0),
+    .rx_powerdown_2(1'b0),
+    .tx_powerdown_3(1'b0),
+    .rx_powerdown_3(1'b0)
 );
 
 // Quad E X1Y1
@@ -855,7 +903,19 @@ eth_gth_phy_quad_E_inst (
     .xgmii_txd_3(eth_l7_txd),
     .xgmii_txc_3(eth_l7_txc),
     .xgmii_rxd_3(eth_l7_rxd),
-    .xgmii_rxc_3(eth_l7_rxc)
+    .xgmii_rxc_3(eth_l7_rxc),
+
+    /*
+     * Control
+     */
+    .tx_powerdown_0(1'b0),
+    .rx_powerdown_0(1'b0),
+    .tx_powerdown_1(1'b0),
+    .rx_powerdown_1(1'b0),
+    .tx_powerdown_2(1'b0),
+    .rx_powerdown_2(1'b0),
+    .tx_powerdown_3(1'b0),
+    .rx_powerdown_3(1'b0)
 );
 
 // Quad F X1Y2
@@ -913,7 +973,19 @@ eth_gth_phy_quad_F_inst (
     .xgmii_txd_3(eth_l10_txd),
     .xgmii_txc_3(eth_l10_txc),
     .xgmii_rxd_3(eth_l10_rxd),
-    .xgmii_rxc_3(eth_l10_rxc)
+    .xgmii_rxc_3(eth_l10_rxc),
+
+    /*
+     * Control
+     */
+    .tx_powerdown_0(1'b0),
+    .rx_powerdown_0(1'b0),
+    .tx_powerdown_1(1'b0),
+    .rx_powerdown_1(1'b0),
+    .tx_powerdown_2(1'b0),
+    .rx_powerdown_2(1'b0),
+    .tx_powerdown_3(1'b0),
+    .rx_powerdown_3(1'b0)
 );
 
 
