@@ -54,7 +54,7 @@ genvar n;
 generate
 
 if (TARGET == "XILINX") begin
-    for (n = 0; n < WIDTH; n = n + 1) begin
+    for (n = 0; n < WIDTH; n = n + 1) begin : oddr
         if (IODDR_STYLE == "IODDR") begin
             ODDR #(
                 .DDR_CLK_EDGE("SAME_EDGE"),
@@ -90,7 +90,6 @@ end else if (TARGET == "ALTERA") begin
     altddio_out #(
         .WIDTH(WIDTH),
         .POWER_UP_HIGH("OFF"),
-        .INTENDED_DEVICE_FAMILY("Stratix V"),
         .OE_REG("UNUSED")
     )
     altddio_out_inst (

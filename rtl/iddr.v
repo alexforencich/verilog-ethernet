@@ -54,7 +54,7 @@ genvar n;
 generate
 
 if (TARGET == "XILINX") begin
-    for (n = 0; n < WIDTH; n = n + 1) begin
+    for (n = 0; n < WIDTH; n = n + 1) begin : iddr
         if (IODDR_STYLE == "IODDR") begin
             IDDR #(
                 .DDR_CLK_EDGE("SAME_EDGE_PIPELINED"),
@@ -86,10 +86,12 @@ if (TARGET == "XILINX") begin
         end
     end
 end else if (TARGET == "ALTERA") begin
+    wire [WIDTH-1:0] q1_int;
+    reg [WIDTH-1:0] q1_delay;
+
     altddio_in #(
         .WIDTH(WIDTH),
-        .POWER_UP_HIGH("OFF"),
-        .INTENDED_DEVICE_FAMILY("Stratix V")
+        .POWER_UP_HIGH("OFF")
     )
     altddio_in_inst (
         .aset(1'b0),
@@ -97,9 +99,15 @@ end else if (TARGET == "ALTERA") begin
         .inclocken(1'b1),
         .inclock(clk),
         .aclr(1'b0),
-        .dataout_h(q1),
+        .dataout_h(q1_int),
         .dataout_l(q2)
     );
+
+    always @(posedge clk) begin
+        q1_delay <= q1_int;
+    end
+
+    assign q1 = q1_delay;
 end else begin
     reg [WIDTH-1:0] d_reg_1 = {WIDTH{1'b0}};
     reg [WIDTH-1:0] d_reg_2 = {WIDTH{1'b0}};
