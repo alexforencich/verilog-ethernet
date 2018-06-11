@@ -321,7 +321,9 @@ if (CHECKSUM_GEN_ENABLE) begin
         .output_udp_payload_tvalid(tx_udp_payload_tvalid),
         .output_udp_payload_tready(tx_udp_payload_tready),
         .output_udp_payload_tlast(tx_udp_payload_tlast),
-        .output_udp_payload_tuser(tx_udp_payload_tuser)
+        .output_udp_payload_tuser(tx_udp_payload_tuser),
+        // Status signals
+        .busy()
     );
 
 end else begin

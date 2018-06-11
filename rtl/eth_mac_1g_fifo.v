@@ -193,6 +193,7 @@ tx_fifo (
     // AXI input
     .input_clk(logic_clk),
     .input_axis_tdata(tx_axis_tdata),
+    .input_axis_tkeep(0),
     .input_axis_tvalid(tx_axis_tvalid),
     .input_axis_tready(tx_axis_tready),
     .input_axis_tlast(tx_axis_tlast),
@@ -202,6 +203,7 @@ tx_fifo (
     // AXI output
     .output_clk(tx_clk),
     .output_axis_tdata(tx_fifo_axis_tdata),
+    .output_axis_tkeep(),
     .output_axis_tvalid(tx_fifo_axis_tvalid),
     .output_axis_tready(tx_fifo_axis_tready),
     .output_axis_tlast(tx_fifo_axis_tlast),
@@ -238,6 +240,7 @@ rx_fifo (
     // AXI input
     .input_clk(rx_clk),
     .input_axis_tdata(rx_fifo_axis_tdata),
+    .input_axis_tkeep(0),
     .input_axis_tvalid(rx_fifo_axis_tvalid),
     .input_axis_tready(),
     .input_axis_tlast(rx_fifo_axis_tlast),
@@ -247,6 +250,7 @@ rx_fifo (
     // AXI output
     .output_clk(logic_clk),
     .output_axis_tdata(rx_axis_tdata),
+    .output_axis_tkeep(),
     .output_axis_tvalid(rx_axis_tvalid),
     .output_axis_tready(rx_axis_tready),
     .output_axis_tlast(rx_axis_tlast),
