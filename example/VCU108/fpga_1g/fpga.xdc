@@ -9,7 +9,7 @@ set_property CONFIG_VOLTAGE 1.8 [current_design]
 # 300 MHz
 #set_property -dict {LOC G31  IOSTANDARD DIFF_SSTL12} [get_ports clk_300mhz_1_p]
 #set_property -dict {LOC F31  IOSTANDARD DIFF_SSTL12} [get_ports clk_300mhz_1_n]
-#create_clock -period 3.333 -name clk_300_mhz_1 [get_ports clk_300mhz_1_p]
+#create_clock -period 3.333 -name clk_300mhz_1 [get_ports clk_300mhz_1_p]
 #set_clock_groups -asynchronous -group [get_clocks clk_300mhz_1 -include_generated_clocks]
 
 #set_property -dict {LOC G22  IOSTANDARD DIFF_SSTL12} [get_ports clk_300mhz_2_p]
