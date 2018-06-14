@@ -366,7 +366,7 @@ class AXIStreamSource(object):
                             tvalid_int.next = True
                             tlast.next = len(data) == 0
 
-        return logic, pause_logic
+        return instances()
 
 
 class AXIStreamSink(object):
@@ -508,5 +508,5 @@ class AXIStreamSink(object):
                             user = []
                             first = True
 
-        return logic, pause_logic
+        return instances()
 
