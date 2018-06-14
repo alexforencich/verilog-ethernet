@@ -223,7 +223,7 @@ def bench():
 
         raise StopSimulation
 
-    return dut, clkgen, check
+    return instances()
 
 def test_bench():
     os.chdir(os.path.dirname(os.path.abspath(__file__)))

@@ -93,7 +93,7 @@ class LocalLinkSource(object):
                             sof_out_n.next = False
                             eof_out_n.next = len(frame) != 0
 
-        return logic, pause_logic
+        return instances()
 
 
 class LocalLinkSink(object):
@@ -158,5 +158,5 @@ class LocalLinkSink(object):
                                 print("[%s] Got frame %s" % (name, repr(frame)))
                             frame = []
 
-        return logic, pause_logic
+        return instances()
 
