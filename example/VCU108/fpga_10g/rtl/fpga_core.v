@@ -394,9 +394,15 @@ eth_mac_10g_fifo_inst (
     .xgmii_rxc(qsfp_rxc_1),
     .xgmii_txd(qsfp_txd_1),
     .xgmii_txc(qsfp_txc_1),
-    
+
+    .tx_fifo_overflow(),
+    .tx_fifo_bad_frame(),
+    .tx_fifo_good_frame(),
     .rx_error_bad_frame(),
     .rx_error_bad_fcs(),
+    .rx_fifo_overflow(),
+    .rx_fifo_bad_frame(),
+    .rx_fifo_good_frame(),
 
     .ifg_delay(8'd12)
 );
@@ -469,8 +475,8 @@ eth_mac_1g_inst (
     .tx_fifo_overflow(),
     .tx_fifo_bad_frame(),
     .tx_fifo_good_frame(),
-    .rx_error_bad_frame(rx_error_bad_frame),
-    .rx_error_bad_fcs(rx_error_bad_fcs),
+    .rx_error_bad_frame(),
+    .rx_error_bad_fcs(),
     .rx_fifo_overflow(),
     .rx_fifo_bad_frame(),
     .rx_fifo_good_frame(),

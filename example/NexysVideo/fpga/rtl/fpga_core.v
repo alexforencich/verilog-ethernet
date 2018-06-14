@@ -345,12 +345,12 @@ eth_mac_inst (
     .rgmii_tx_clk(phy_tx_clk),
     .rgmii_txd(phy_txd),
     .rgmii_tx_ctl(phy_tx_ctl),
-    
+
     .tx_fifo_overflow(),
     .tx_fifo_bad_frame(),
     .tx_fifo_good_frame(),
-    .rx_error_bad_frame(rx_error_bad_frame),
-    .rx_error_bad_fcs(rx_error_bad_fcs),
+    .rx_error_bad_frame(),
+    .rx_error_bad_fcs(),
     .rx_fifo_overflow(),
     .rx_fifo_bad_frame(),
     .rx_fifo_good_frame(),

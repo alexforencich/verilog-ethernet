@@ -508,9 +508,15 @@ eth_mac_10g_fifo_inst (
     .xgmii_rxc(eth_l0_rxc),
     .xgmii_txd(eth_l0_txd),
     .xgmii_txc(eth_l0_txc),
-    
-    .rx_error_bad_frame(rx_error_bad_frame),
-    .rx_error_bad_fcs(rx_error_bad_fcs),
+
+    .tx_fifo_overflow(),
+    .tx_fifo_bad_frame(),
+    .tx_fifo_good_frame(),
+    .rx_error_bad_frame(),
+    .rx_error_bad_fcs(),
+    .rx_fifo_overflow(),
+    .rx_fifo_bad_frame(),
+    .rx_fifo_good_frame(),
 
     .ifg_delay(8'd12)
 );
