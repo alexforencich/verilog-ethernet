@@ -236,7 +236,7 @@ class ARPFrameSource():
 
                             frame_valid_int.next = True
 
-        return logic, pause_logic
+        return instances()
 
 
 class ARPFrameSink():
@@ -316,5 +316,5 @@ class ARPFrameSink():
                         if name is not None:
                             print("[%s] Got frame %s" % (name, repr(frame)))
 
-        return logic, pause_logic
+        return instances()
 

@@ -601,14 +601,7 @@ def bench():
 
         raise StopSimulation
 
-    return (dut, clkgen, check, eth_r0_source_logic, eth_r0_sink_logic, eth_r1_source_logic, eth_r1_sink_logic, eth_r2_source_logic, eth_r2_sink_logic,
-        eth_r3_source_logic, eth_r3_sink_logic, eth_r4_source_logic, eth_r4_sink_logic, eth_r5_source_logic, eth_r5_sink_logic,
-        eth_r6_source_logic, eth_r6_sink_logic, eth_r7_source_logic, eth_r7_sink_logic, eth_r8_source_logic, eth_r8_sink_logic,
-        eth_r9_source_logic, eth_r9_sink_logic, eth_r10_source_logic, eth_r10_sink_logic, eth_r11_source_logic, eth_r11_sink_logic,
-        eth_l0_source_logic, eth_l0_sink_logic, eth_l1_source_logic, eth_l1_sink_logic, eth_l2_source_logic, eth_l2_sink_logic,
-        eth_l3_source_logic, eth_l3_sink_logic, eth_l4_source_logic, eth_l4_sink_logic, eth_l5_source_logic, eth_l5_sink_logic,
-        eth_l6_source_logic, eth_l6_sink_logic, eth_l7_source_logic, eth_l7_sink_logic, eth_l8_source_logic, eth_l8_sink_logic,
-        eth_l9_source_logic, eth_l9_sink_logic, eth_l10_source_logic, eth_l10_sink_logic, eth_l11_source_logic, eth_l11_sink_logic)
+    return instances()
 
 def test_bench():
     sim = Simulation(bench())

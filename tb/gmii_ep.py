@@ -172,7 +172,7 @@ class GMIISource(object):
                         tx_er.next = 0
                         tx_en.next = 0
 
-        return logic
+        return instances()
 
 
 class GMIISink(object):
@@ -261,5 +261,5 @@ class GMIISink(object):
                         d = []
                         er = []
 
-        return logic
+        return instances()
 

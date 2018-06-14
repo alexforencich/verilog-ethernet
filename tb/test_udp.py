@@ -556,7 +556,7 @@ def bench():
 
         raise StopSimulation
 
-    return dut, ip_source_logic, ip_sink_logic, udp_source_logic, udp_sink_logic, clkgen, monitor, check
+    return instances()
 
 def test_bench():
     sim = Simulation(bench())

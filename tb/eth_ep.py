@@ -204,7 +204,7 @@ class EthFrameSource():
 
                             eth_hdr_valid_int.next = True
 
-        return logic, pause_logic, eth_payload_source
+        return instances()
 
 
 class EthFrameSink():
@@ -295,5 +295,5 @@ class EthFrameSink():
                         if name is not None:
                             print("[%s] Got frame %s" % (name, repr(frame)))
 
-        return logic, pause_logic, eth_payload_sink
+        return instances()
 

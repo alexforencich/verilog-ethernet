@@ -317,7 +317,7 @@ def bench():
 
         raise StopSimulation
 
-    return dut, gmii_source_logic, gmii_sink_logic, clkgen, clk_enable_gen, check
+    return instances()
 
 def test_bench():
     sim = Simulation(bench())

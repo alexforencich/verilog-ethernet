@@ -572,7 +572,7 @@ def bench():
 
         raise StopSimulation
 
-    return dut, eth_source_logic, eth_sink_logic, ip_source_logic, ip_sink_logic, clkgen, monitor, check
+    return instances()
 
 def test_bench():
     sim = Simulation(bench())

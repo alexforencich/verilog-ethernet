@@ -63,7 +63,7 @@ class RGMIISource(gmii_ep.GMIISource):
                 gmii_tx_en_reg.next = gmii_tx_en
                 gmii_tx_er_reg.next = gmii_tx_er
 
-        return gmii_source, logic
+        return instances()
 
 
 class RGMIISink(gmii_ep.GMIISink):
@@ -102,5 +102,5 @@ class RGMIISink(gmii_ep.GMIISink):
                 dat |= int(rxd.val) << 4
                 ctl2 = int(rx_ctl.val)
 
-        return gmii_sink, logic
+        return instances()
 

@@ -293,7 +293,7 @@ def bench():
 
         raise StopSimulation
 
-    return dut, sfp_a_source_logic, sfp_a_sink_logic, sfp_b_source_logic, sfp_b_sink_logic, sfp_c_source_logic, sfp_c_sink_logic, sfp_d_source_logic, sfp_d_sink_logic, clkgen, check
+    return instances()
 
 def test_bench():
     sim = Simulation(bench())
