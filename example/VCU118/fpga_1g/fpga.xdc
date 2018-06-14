@@ -111,6 +111,7 @@ set_clock_groups -asynchronous -group [get_clocks phy_sgmii_clk -include_generat
 #set_property -dict {LOC AP21 IOSTANDARD LVCMOS18} [get_ports qsfp1_intl]
 #set_property -dict {LOC AN21 IOSTANDARD LVCMOS18} [get_ports qsfp1_lpmode]
 
+# 156.25 MHz MGT reference clock
 #create_clock -period 6.400 -name qsfp1_mgt_refclk_0 [get_ports qsfp1_mgt_refclk_0_p]
 #set_clock_groups -asynchronous -group [get_clocks qsfp1_mgt_refclk_0 -include_generated_clocks]
 
@@ -142,6 +143,7 @@ set_clock_groups -asynchronous -group [get_clocks phy_sgmii_clk -include_generat
 #set_property -dict {LOC AT21 IOSTANDARD LVCMOS18} [get_ports qsfp2_intl]
 #set_property -dict {LOC AT24 IOSTANDARD LVCMOS18} [get_ports qsfp2_lpmode]
 
+# 156.25 MHz MGT reference clock
 #create_clock -period 6.400 -name qsfp2_mgt_refclk_0 [get_ports qsfp2_mgt_refclk_0_p]
 #set_clock_groups -asynchronous -group [get_clocks qsfp2_mgt_refclk_0 -include_generated_clocks]
 
