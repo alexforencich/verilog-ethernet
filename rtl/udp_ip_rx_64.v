@@ -227,14 +227,14 @@ assign error_payload_early_termination = error_payload_early_termination_reg;
 
 function [3:0] keep2count;
     input [7:0] k;
-    case (k)
-        8'b00000000: keep2count = 4'd0;
-        8'b00000001: keep2count = 4'd1;
-        8'b00000011: keep2count = 4'd2;
-        8'b00000111: keep2count = 4'd3;
-        8'b00001111: keep2count = 4'd4;
-        8'b00011111: keep2count = 4'd5;
-        8'b00111111: keep2count = 4'd6;
+    casez (k)
+        8'bzzzzzzz0: keep2count = 4'd0;
+        8'bzzzzzz01: keep2count = 4'd1;
+        8'bzzzzz011: keep2count = 4'd2;
+        8'bzzzz0111: keep2count = 4'd3;
+        8'bzzz01111: keep2count = 4'd4;
+        8'bzz011111: keep2count = 4'd5;
+        8'bz0111111: keep2count = 4'd6;
         8'b01111111: keep2count = 4'd7;
         8'b11111111: keep2count = 4'd8;
     endcase

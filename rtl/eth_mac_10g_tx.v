@@ -255,14 +255,14 @@ eth_crc_64 (
 
 function [3:0] keep2count;
     input [7:0] k;
-    case (k)
-        8'b00000000: keep2count = 4'd0;
-        8'b00000001: keep2count = 4'd1;
-        8'b00000011: keep2count = 4'd2;
-        8'b00000111: keep2count = 4'd3;
-        8'b00001111: keep2count = 4'd4;
-        8'b00011111: keep2count = 4'd5;
-        8'b00111111: keep2count = 4'd6;
+    casez (k)
+        8'bzzzzzzz0: keep2count = 4'd0;
+        8'bzzzzzz01: keep2count = 4'd1;
+        8'bzzzzz011: keep2count = 4'd2;
+        8'bzzzz0111: keep2count = 4'd3;
+        8'bzzz01111: keep2count = 4'd4;
+        8'bzz011111: keep2count = 4'd5;
+        8'bz0111111: keep2count = 4'd6;
         8'b01111111: keep2count = 4'd7;
         8'b11111111: keep2count = 4'd8;
     endcase
@@ -294,43 +294,43 @@ end
 
 // FCS cycle calculation
 always @* begin
-    case (input_tkeep_reg)
-        8'b00000001: begin
+    casez (input_tkeep_reg)
+        8'bzzzzzz01: begin
             fcs_output_txd_0 = {24'h0707fd, ~crc_next0[31:0], input_tdata_reg[7:0]};
             fcs_output_txd_1 = {63'h0707070707070707};
             fcs_output_txc_0 = 8'b11100000;
             fcs_output_txc_1 = 8'b11111111;
             ifg_offset = 8'd3;
         end
-        8'b00000011: begin
+        8'bzzzzz011: begin
             fcs_output_txd_0 = {16'h07fd, ~crc_next1[31:0], input_tdata_reg[15:0]};
             fcs_output_txd_1 = {63'h0707070707070707};
             fcs_output_txc_0 = 8'b11000000;
             fcs_output_txc_1 = 8'b11111111;
             ifg_offset = 8'd2;
         end
-        8'b00000111: begin
+        8'bzzzz0111: begin
             fcs_output_txd_0 = {8'hfd, ~crc_next2[31:0], input_tdata_reg[23:0]};
             fcs_output_txd_1 = {63'h0707070707070707};
             fcs_output_txc_0 = 8'b10000000;
             fcs_output_txc_1 = 8'b11111111;
             ifg_offset = 8'd1;
         end
-        8'b00001111: begin
+        8'bzzz01111: begin
             fcs_output_txd_0 = {~crc_next3[31:0], input_tdata_reg[31:0]};
             fcs_output_txd_1 = {63'h07070707070707fd};
             fcs_output_txc_0 = 8'b00000000;
             fcs_output_txc_1 = 8'b11111111;
             ifg_offset = 8'd8;
         end
-        8'b00011111: begin
+        8'bzz011111: begin
             fcs_output_txd_0 = {~crc_next4[23:0], input_tdata_reg[39:0]};
             fcs_output_txd_1 = {56'h070707070707fd, ~crc_next4[31:24]};
             fcs_output_txc_0 = 8'b00000000;
             fcs_output_txc_1 = 8'b11111110;
             ifg_offset = 8'd7;
         end
-        8'b00111111: begin
+        8'bz0111111: begin
             fcs_output_txd_0 = {~crc_next5[15:0], input_tdata_reg[47:0]};
             fcs_output_txd_1 = {48'h0707070707fd, ~crc_next5[31:16]};
             fcs_output_txc_0 = 8'b00000000;

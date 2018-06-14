@@ -249,14 +249,14 @@ eth_crc_64 (
 
 function [3:0] keep2count;
     input [7:0] k;
-    case (k)
-        8'b00000000: keep2count = 4'd0;
-        8'b00000001: keep2count = 4'd1;
-        8'b00000011: keep2count = 4'd2;
-        8'b00000111: keep2count = 4'd3;
-        8'b00001111: keep2count = 4'd4;
-        8'b00011111: keep2count = 4'd5;
-        8'b00111111: keep2count = 4'd6;
+    casez (k)
+        8'bzzzzzzz0: keep2count = 4'd0;
+        8'bzzzzzz01: keep2count = 4'd1;
+        8'bzzzzz011: keep2count = 4'd2;
+        8'bzzzz0111: keep2count = 4'd3;
+        8'bzzz01111: keep2count = 4'd4;
+        8'bzz011111: keep2count = 4'd5;
+        8'bz0111111: keep2count = 4'd6;
         8'b01111111: keep2count = 4'd7;
         8'b11111111: keep2count = 4'd8;
     endcase
@@ -288,38 +288,38 @@ end
 
 // FCS cycle calculation
 always @* begin
-    case (fcs_input_tkeep)
-        8'b00000001: begin
+    casez (fcs_input_tkeep)
+        8'bzzzzzz01: begin
             fcs_output_tdata_0 = {24'd0, ~crc_next0[31:0], fcs_input_tdata[7:0]};
             fcs_output_tdata_1 = 64'd0;
             fcs_output_tkeep_0 = 8'b00011111;
             fcs_output_tkeep_1 = 8'b00000000;
         end
-        8'b00000011: begin
+        8'bzzzzz011: begin
             fcs_output_tdata_0 = {16'd0, ~crc_next1[31:0], fcs_input_tdata[15:0]};
             fcs_output_tdata_1 = 64'd0;
             fcs_output_tkeep_0 = 8'b00111111;
             fcs_output_tkeep_1 = 8'b00000000;
         end
-        8'b00000111: begin
+        8'bzzzz0111: begin
             fcs_output_tdata_0 = {8'd0, ~crc_next2[31:0], fcs_input_tdata[23:0]};
             fcs_output_tdata_1 = 64'd0;
             fcs_output_tkeep_0 = 8'b01111111;
             fcs_output_tkeep_1 = 8'b00000000;
         end
-        8'b00001111: begin
+        8'bzzz01111: begin
             fcs_output_tdata_0 = {~crc_next3[31:0], fcs_input_tdata[31:0]};
             fcs_output_tdata_1 = 64'd0;
             fcs_output_tkeep_0 = 8'b11111111;
             fcs_output_tkeep_1 = 8'b00000000;
         end
-        8'b00011111: begin
+        8'bzz011111: begin
             fcs_output_tdata_0 = {~crc_next4[23:0], fcs_input_tdata[39:0]};
             fcs_output_tdata_1 = {56'd0, ~crc_next4[31:24]};
             fcs_output_tkeep_0 = 8'b11111111;
             fcs_output_tkeep_1 = 8'b00000001;
         end
-        8'b00111111: begin
+        8'bz0111111: begin
             fcs_output_tdata_0 = {~crc_next5[15:0], fcs_input_tdata[47:0]};
             fcs_output_tdata_1 = {48'd0, ~crc_next5[31:16]};
             fcs_output_tkeep_0 = 8'b11111111;

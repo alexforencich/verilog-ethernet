@@ -219,43 +219,43 @@ reg [7:0] control_masked;
 reg [7:0] tkeep_mask;
 
 always @* begin
-    case (detect_term)
+    casez (detect_term)
     8'b00000000: begin
         detect_error_masked = detect_error;
         control_masked = xgmii_rxc_d0;
         tkeep_mask = 8'b11111111;
     end
-    8'b00000001: begin
+    8'bzzzzzzz1: begin
         detect_error_masked = 0;
         control_masked = 0;
         tkeep_mask = 8'b00000000;
     end
-    8'b00000010: begin
+    8'bzzzzzz10: begin
         detect_error_masked = detect_error[0];
         control_masked = xgmii_rxc_d0[0];
         tkeep_mask = 8'b00000001;
     end
-    8'b00000100: begin
+    8'bzzzzz100: begin
         detect_error_masked = detect_error[1:0];
         control_masked = xgmii_rxc_d0[1:0];
         tkeep_mask = 8'b00000011;
     end
-    8'b00001000: begin
+    8'bzzzz1000: begin
         detect_error_masked = detect_error[2:0];
         control_masked = xgmii_rxc_d0[2:0];
         tkeep_mask = 8'b00000111;
     end
-    8'b00010000: begin
+    8'bzzz10000: begin
         detect_error_masked = detect_error[3:0];
         control_masked = xgmii_rxc_d0[3:0];
         tkeep_mask = 8'b00001111;
     end
-    8'b00100000: begin
+    8'bzz100000: begin
         detect_error_masked = detect_error[4:0];
         control_masked = xgmii_rxc_d0[4:0];
         tkeep_mask = 8'b00011111;
     end
-    8'b01000000: begin
+    8'bz1000000: begin
         detect_error_masked = detect_error[5:0];
         control_masked = xgmii_rxc_d0[5:0];
         tkeep_mask = 8'b00111111;
