@@ -27,32 +27,34 @@ THE SOFTWARE.
 `timescale 1ns / 1ps
 
 /*
- * ARP cache block
+ * ARP cache
  */
 module arp_cache #(
-    parameter CACHE_ADDR_WIDTH = 2
+    parameter CACHE_ADDR_WIDTH = 9
 )
 (
     input  wire        clk,
     input  wire        rst,
 
     /*
-     * Query cache
+     * Cache query
      */
     input  wire        query_request_valid,
+    output wire        query_request_ready,
     input  wire [31:0] query_request_ip,
+
     output wire        query_response_valid,
+    input  wire        query_response_ready,
     output wire        query_response_error,
     output wire [47:0] query_response_mac,
 
     /*
-     * Write cache
+     * Cache write
      */
     input  wire        write_request_valid,
+    output wire        write_request_ready,
     input  wire [31:0] write_request_ip,
     input  wire [47:0] write_request_mac,
-    output wire        write_in_progress,
-    output wire        write_complete,
 
     /*
      * Configuration
@@ -60,118 +62,156 @@ module arp_cache #(
     input  wire        clear_cache
 );
 
-// bit LRU cache
+reg mem_write = 0;
+reg store_query = 0;
+reg store_write = 0;
 
-reg [31:0] ip_addr_mem[(2**CACHE_ADDR_WIDTH)-1:0];
-reg [47:0] mac_addr_mem[(2**CACHE_ADDR_WIDTH)-1:0];
-reg [(2**CACHE_ADDR_WIDTH)-1:0] lru_bit = 0;
-
-reg query_response_valid_reg = 0;
-reg query_response_error_reg = 0;
-reg [47:0] query_response_mac_reg = 0;
-
-reg write_complete_reg = 0;
-
-localparam [2:0]
-    WRITE_STATE_IDLE = 0,
-    WRITE_STATE_SEARCH = 1,
-    WRITE_STATE_NOTFOUND = 2;
-
-reg [2:0] write_state = WRITE_STATE_IDLE;
+reg query_ip_valid_reg = 0, query_ip_valid_next;
+reg [31:0] query_ip_reg = 0;
+reg write_ip_valid_reg = 0, write_ip_valid_next;
 reg [31:0] write_ip_reg = 0;
 reg [47:0] write_mac_reg = 0;
-reg [CACHE_ADDR_WIDTH-1:0] write_addr = 0;
-reg [CACHE_ADDR_WIDTH-1:0] write_ptr = 0;
 
-wire write_state_idle = (write_state == WRITE_STATE_IDLE);
-wire write_state_search = (write_state == WRITE_STATE_SEARCH);
-wire write_state_notfound = (write_state == WRITE_STATE_NOTFOUND);
+reg [CACHE_ADDR_WIDTH-1:0] wr_ptr_reg = {CACHE_ADDR_WIDTH{1'b0}}, wr_ptr_next;
+reg [CACHE_ADDR_WIDTH-1:0] rd_ptr_reg = {CACHE_ADDR_WIDTH{1'b0}}, rd_ptr_next;
 
-reg clear_cache_operation = 0;
+reg valid_mem[(2**CACHE_ADDR_WIDTH)-1:0];
+reg [31:0] ip_addr_mem[(2**CACHE_ADDR_WIDTH)-1:0];
+reg [47:0] mac_addr_mem[(2**CACHE_ADDR_WIDTH)-1:0];
+
+reg query_request_ready_reg = 0, query_request_ready_next;
+
+reg query_response_valid_reg = 0, query_response_valid_next;
+reg query_response_error_reg = 0, query_response_error_next;
+reg [47:0] query_response_mac_reg = 0;
+
+reg write_request_ready_reg = 0, write_request_ready_next;
+
+wire [31:0] query_request_hash;
+wire [31:0] write_request_hash;
+
+assign query_request_ready = query_request_ready_reg;
 
 assign query_response_valid = query_response_valid_reg;
 assign query_response_error = query_response_error_reg;
 assign query_response_mac = query_response_mac_reg;
 
-assign write_in_progress = ~write_state_idle;
-assign write_complete = write_complete_reg;
+assign write_request_ready = write_request_ready_reg;
 
-wire lru_full = &lru_bit;
+lfsr #(
+    .LFSR_WIDTH(32),
+    .LFSR_POLY(32'h4c11db7),
+    .LFSR_CONFIG("GALOIS"),
+    .LFSR_FEED_FORWARD(0),
+    .REVERSE(1),
+    .DATA_WIDTH(32),
+    .STYLE("AUTO")
+)
+rd_hash (
+    .data_in(query_request_ip),
+    .state_in(32'hffffffff),
+    .data_out(),
+    .state_out(query_request_hash)
+);
 
-integer i;
+lfsr #(
+    .LFSR_WIDTH(32),
+    .LFSR_POLY(32'h4c11db7),
+    .LFSR_CONFIG("GALOIS"),
+    .LFSR_FEED_FORWARD(0),
+    .REVERSE(1),
+    .DATA_WIDTH(32),
+    .STYLE("AUTO")
+)
+wr_hash (
+    .data_in(write_request_ip),
+    .state_in(32'hffffffff),
+    .data_out(),
+    .state_out(write_request_hash)
+);
+
+always @* begin
+    mem_write = 1'b0;
+    store_query = 1'b0;
+    store_write = 1'b0;
+
+    wr_ptr_next = wr_ptr_reg;
+    rd_ptr_next = rd_ptr_reg;
+
+    query_ip_valid_next = query_ip_valid_reg;
+
+    query_request_ready_next = ~query_ip_valid_reg || ~query_request_valid || query_response_ready;
+
+    query_response_valid_next = query_response_valid_reg & ~query_response_ready;
+    query_response_error_next = query_response_error_reg;
+
+    if (query_ip_valid_reg && (~query_request_valid || query_response_ready)) begin
+        query_response_valid_next = 1;
+        query_ip_valid_next = 0;
+        if (valid_mem[rd_ptr_reg] && ip_addr_mem[rd_ptr_reg] == query_ip_reg) begin
+            query_response_error_next = 0;
+        end else begin
+            query_response_error_next = 1;
+        end
+    end
+
+    if (query_request_valid && query_request_ready && (~query_ip_valid_reg || ~query_request_valid || query_response_ready)) begin
+        store_query = 1;
+        query_ip_valid_next = 1;
+        rd_ptr_next = query_request_hash[CACHE_ADDR_WIDTH-1:0];
+    end
+
+    write_ip_valid_next = write_ip_valid_reg;
+
+    write_request_ready_next = 1'b1;
+
+    if (write_ip_valid_reg) begin
+        write_ip_valid_next = 0;
+        mem_write = 1;
+    end
+
+    if (write_request_valid && write_request_ready) begin
+        store_write = 1;
+        write_ip_valid_next = 1;
+        wr_ptr_next = write_request_hash[CACHE_ADDR_WIDTH-1:0];
+    end
+end
 
 always @(posedge clk) begin
     if (rst) begin
-        query_response_valid_reg <= 0;
-        query_response_error_reg <= 0;
-        write_complete_reg <= 0;
-        write_state <= WRITE_STATE_IDLE;
-        write_addr <= 0;
-        write_ptr <= 0;
-        clear_cache_operation <= 1;
-        lru_bit <= 0;
+        query_ip_valid_reg <= 1'b0;
+        query_request_ready_reg <= 1'b0;
+        query_response_valid_reg <= 1'b0;
+        write_ip_valid_reg <= 1'b0;
+        write_request_ready_reg <= 1'b0;
     end else begin
-        write_complete_reg <= 0;
-        query_response_valid_reg <= 0;
-        query_response_error_reg <= 0;
+        query_ip_valid_reg <= query_ip_valid_next;
+        query_request_ready_reg <= query_request_ready_next;
+        query_response_valid_reg <= query_response_valid_next;
+        write_ip_valid_reg <= write_ip_valid_next;
+        write_request_ready_reg <= write_request_ready_next;
+    end
 
-        // clear LRU bits when full
-        if (lru_full) begin
-            lru_bit <= 0;
-        end
+    query_response_error_reg <= query_response_error_next;
 
-        // fast IP match and readout
-        if (query_request_valid) begin
-            query_response_valid_reg <= 1;
-            query_response_error_reg <= 1;
-            for (i = 0; i < 2**CACHE_ADDR_WIDTH; i = i + 1) begin
-                if (ip_addr_mem[i] == query_request_ip) begin
-                    query_response_error_reg <= 0;
-                    query_response_mac_reg <= mac_addr_mem[i];
-                    lru_bit[i] <= 1'b1;
-                end
-            end
-        end
+    if (store_query) begin
+        query_ip_reg <= query_request_ip;
+    end
 
-        // manage writes
-        if (write_state_idle) begin
-            if (write_request_valid) begin
-                write_state <= WRITE_STATE_SEARCH;
-                write_ip_reg <= write_request_ip;
-                write_mac_reg <= write_request_mac;
-            end
-            write_addr <= 0;
-        end else if (write_state_search) begin
-            write_addr <= write_addr + 1;
-            if (&write_addr) begin
-                write_state <= WRITE_STATE_NOTFOUND;
-            end
-            if (ip_addr_mem[write_addr] == write_ip_reg) begin
-                write_state <= WRITE_STATE_IDLE;
-                mac_addr_mem[write_addr] <= write_mac_reg;
-                write_complete_reg <= 1;
-            end
-        end else if (write_state_notfound) begin
-            write_ptr <= write_ptr + 1;
-            if (~lru_bit[write_ptr]) begin
-                ip_addr_mem[write_ptr] <= write_ip_reg;
-                mac_addr_mem[write_ptr] <= write_mac_reg;
-                write_state <= WRITE_STATE_IDLE;
-                write_complete_reg <= 1;
-            end
-        end
+    if (store_write) begin
+        write_ip_reg <= write_request_ip;
+        write_mac_reg <= write_request_mac;
+    end
 
-        // clear cache
-        if (clear_cache & ~clear_cache_operation) begin
-            clear_cache_operation <= 1;
-            write_addr <= 0;
-        end
-        if (clear_cache_operation) begin
-            write_addr <= write_addr + 1;
-            ip_addr_mem[write_addr] <= 0;
-            mac_addr_mem[write_addr] <= 0;
-            clear_cache_operation <= ~&write_addr;
-        end
+    wr_ptr_reg <= wr_ptr_next;
+    rd_ptr_reg <= rd_ptr_next;
+
+    query_response_mac_reg <= mac_addr_mem[rd_ptr_reg];
+
+    if (mem_write) begin
+        valid_mem[wr_ptr_reg] <= 1'b1;
+        ip_addr_mem[wr_ptr_reg] <= write_ip_reg;
+        mac_addr_mem[wr_ptr_reg] <= write_mac_reg;
     end
 end
 

@@ -53,6 +53,7 @@ srcs.append("../rtl/arp_eth_rx.v")
 srcs.append("../rtl/arp_eth_tx.v")
 srcs.append("../rtl/eth_arb_mux_2.v")
 srcs.append("../rtl/eth_mux_2.v")
+srcs.append("../rtl/lfsr.v")
 srcs.append("../lib/axis/rtl/arbiter.v")
 srcs.append("../lib/axis/rtl/priority_encoder.v")
 srcs.append("../lib/axis/rtl/axis_fifo.v")
@@ -525,13 +526,13 @@ def bench():
             udp_tx_error_payload_early_termination_asserted.next = 1
 
     def wait_normal():
-        i = 16
+        i = 20
         while i > 0:
             i = max(0, i-1)
             if (input_eth_payload_tvalid or input_ip_payload_tvalid or input_udp_payload_tvalid or
                     output_eth_payload_tvalid or output_ip_payload_tvalid or output_udp_payload_tvalid or
                     input_eth_hdr_valid or input_ip_hdr_valid or input_udp_hdr_valid):
-                i = 16
+                i = 20
             yield clk.posedge
 
     @instance

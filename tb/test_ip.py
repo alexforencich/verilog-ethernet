@@ -26,6 +26,7 @@ THE SOFTWARE.
 from myhdl import *
 import os
 
+import axis_ep
 import eth_ep
 import ip_ep
 
@@ -58,6 +59,7 @@ def bench():
     input_eth_payload_tvalid = Signal(bool(0))
     input_eth_payload_tlast = Signal(bool(0))
     input_eth_payload_tuser = Signal(bool(0))
+    arp_request_ready = Signal(bool(0))
     arp_response_valid = Signal(bool(0))
     arp_response_error = Signal(bool(0))
     arp_response_mac = Signal(intbv(0)[48:])
@@ -93,6 +95,7 @@ def bench():
     output_eth_payload_tuser = Signal(bool(0))
     arp_request_valid = Signal(bool(0))
     arp_request_ip = Signal(intbv(0)[32:])
+    arp_response_ready = Signal(bool(0))
     output_ip_hdr_valid = Signal(bool(0))
     output_ip_eth_dest_mac = Signal(intbv(0)[48:])
     output_ip_eth_src_mac = Signal(intbv(0)[48:])
@@ -224,6 +227,28 @@ def bench():
         name='ip_sink'
     )
 
+    arp_request_sink = axis_ep.AXIStreamSink()
+
+    arp_request_sink_logic = arp_request_sink.create_logic(
+        clk,
+        rst,
+        tdata=(arp_request_ip,),
+        tvalid=arp_request_valid,
+        tready=arp_request_ready,
+        name='arp_request_sink'
+    )
+
+    arp_response_source = axis_ep.AXIStreamSource()
+
+    arp_response_source_logic = arp_response_source.create_logic(
+        clk,
+        rst,
+        tdata=(arp_response_error, arp_response_mac),
+        tvalid=arp_response_valid,
+        tready=arp_response_ready,
+        name='arp_response_source'
+    )
+
     # DUT
     if os.system(build_cmd):
         raise Exception("Error running build command")
@@ -257,8 +282,10 @@ def bench():
         output_eth_payload_tuser=output_eth_payload_tuser,
 
         arp_request_valid=arp_request_valid,
+        arp_request_ready=arp_request_ready,
         arp_request_ip=arp_request_ip,
         arp_response_valid=arp_response_valid,
+        arp_response_ready=arp_response_ready,
         arp_response_error=arp_response_error,
         arp_response_mac=arp_response_mac,
 
@@ -325,17 +352,13 @@ def bench():
         while True:
             yield clk.posedge
 
-            arp_response_valid.next = 0
-            arp_response_error.next = 0
-            arp_response_mac.next = 0
+            if not arp_request_sink.empty():
+                req_ip = arp_request_sink.recv().data[0][0]
 
-            if arp_request_valid:
-                if int(arp_request_ip) in arp_table:
-                    arp_response_valid.next = 1
-                    arp_response_mac.next = arp_table[int(arp_request_ip)]
+                if req_ip in arp_table:
+                    arp_response_source.send([(0, arp_table[req_ip])])
                 else:
-                    arp_response_valid.next = 1
-                    arp_response_error.next = 1
+                    arp_response_source.send([(1, 0)])
 
     rx_error_header_early_termination_asserted = Signal(bool(0))
     rx_error_payload_early_termination_asserted = Signal(bool(0))

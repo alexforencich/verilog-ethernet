@@ -26,6 +26,7 @@ THE SOFTWARE.
 from myhdl import *
 import os
 
+import axis_ep
 import eth_ep
 import arp_ep
 
@@ -35,6 +36,7 @@ testbench = 'test_%s' % module
 srcs = []
 
 srcs.append("../rtl/%s.v" % module)
+srcs.append("../rtl/lfsr.v")
 srcs.append("../rtl/arp_cache.v")
 srcs.append("../rtl/arp_eth_rx.v")
 srcs.append("../rtl/arp_eth_tx.v")
@@ -65,6 +67,7 @@ def bench():
 
     arp_request_valid = Signal(bool(0))
     arp_request_ip = Signal(intbv(0)[32:])
+    arp_response_ready = Signal(bool(0))
 
     local_mac = Signal(intbv(0)[48:])
     local_ip = Signal(intbv(0)[32:])
@@ -85,17 +88,18 @@ def bench():
     output_eth_payload_tlast = Signal(bool(0))
     output_eth_payload_tuser = Signal(bool(0))
 
+    arp_request_ready = Signal(bool(0))
     arp_response_valid = Signal(bool(0))
     arp_response_error = Signal(bool(0))
     arp_response_mac = Signal(intbv(0)[48:])
 
     # sources and sinks
-    source_pause = Signal(bool(0))
-    sink_pause = Signal(bool(0))
+    eth_source_pause = Signal(bool(0))
+    eth_sink_pause = Signal(bool(0))
 
-    source = eth_ep.EthFrameSource()
+    eth_source = eth_ep.EthFrameSource()
 
-    source_logic = source.create_logic(
+    eth_source_logic = eth_source.create_logic(
         clk,
         rst,
         eth_hdr_ready=input_eth_hdr_ready,
@@ -108,13 +112,13 @@ def bench():
         eth_payload_tready=input_eth_payload_tready,
         eth_payload_tlast=input_eth_payload_tlast,
         eth_payload_tuser=input_eth_payload_tuser,
-        pause=source_pause,
-        name='source'
+        pause=eth_source_pause,
+        name='eth_source'
     )
 
-    sink = eth_ep.EthFrameSink()
+    eth_sink = eth_ep.EthFrameSink()
 
-    sink_logic = sink.create_logic(
+    eth_sink_logic = eth_sink.create_logic(
         clk,
         rst,
         eth_hdr_ready=output_eth_hdr_ready,
@@ -127,8 +131,30 @@ def bench():
         eth_payload_tready=output_eth_payload_tready,
         eth_payload_tlast=output_eth_payload_tlast,
         eth_payload_tuser=output_eth_payload_tuser,
-        pause=sink_pause,
-        name='sink'
+        pause=eth_sink_pause,
+        name='eth_sink'
+    )
+
+    arp_request_source = axis_ep.AXIStreamSource()
+
+    arp_request_source_logic = arp_request_source.create_logic(
+        clk,
+        rst,
+        tdata=(arp_request_ip,),
+        tvalid=arp_request_valid,
+        tready=arp_request_ready,
+        name='arp_request_source'
+    )
+
+    arp_response_sink = axis_ep.AXIStreamSink()
+
+    arp_response_sink_logic = arp_response_sink.create_logic(
+        clk,
+        rst,
+        tdata=(arp_response_error, arp_response_mac),
+        tvalid=arp_response_valid,
+        tready=arp_response_ready,
+        name='arp_response_sink'
     )
 
     # DUT
@@ -164,8 +190,10 @@ def bench():
         output_eth_payload_tuser=output_eth_payload_tuser,
 
         arp_request_valid=arp_request_valid,
+        arp_request_ready=arp_request_ready,
         arp_request_ip=arp_request_ip,
         arp_response_valid=arp_response_valid,
+        arp_response_ready=arp_response_ready,
         arp_response_error=arp_response_error,
         arp_response_mac=arp_response_mac,
 
@@ -214,14 +242,13 @@ def bench():
         test_frame.arp_spa = 0xc0a80164
         test_frame.arp_tha = 0x000000000000
         test_frame.arp_tpa = 0xc0a80165
-        source.send(test_frame.build_eth())
+        eth_source.send(test_frame.build_eth())
         yield clk.posedge
 
-        yield output_eth_payload_tlast.posedge
-        yield clk.posedge
-        yield clk.posedge
+        while eth_sink.empty():
+            yield clk.posedge
 
-        rx_frame = sink.recv()
+        rx_frame = eth_sink.recv()
         check_frame = arp_ep.ARPFrame()
         check_frame.parse_eth(rx_frame)
 
@@ -244,15 +271,15 @@ def bench():
         print("test 2: Cached read")
         current_test.next = 2
 
-        yield clk.posedge
-        arp_request_valid.next = True
-        arp_request_ip.next = 0xc0a80164
-        yield clk.posedge
-        arp_request_valid.next = False
+        arp_request_source.send([(0xc0a80164,)])
 
-        yield arp_response_valid.posedge
-        assert not bool(arp_response_error)
-        assert int(arp_response_mac) == 0x5A5152535455
+        while arp_response_sink.empty():
+            yield clk.posedge
+
+        err, mac = arp_response_sink.recv().data[0]
+
+        assert not err
+        assert mac == 0x5A5152535455
 
         yield delay(100)
 
@@ -260,18 +287,13 @@ def bench():
         print("test 3: Unached read")
         current_test.next = 3
 
-        yield clk.posedge
-        arp_request_valid.next = True
-        arp_request_ip.next = 0xc0a80166
-        yield clk.posedge
-        arp_request_valid.next = False
+        arp_request_source.send([(0xc0a80166,)])
 
         # wait for ARP request packet
-        yield output_eth_payload_tlast.posedge
-        yield clk.posedge
-        yield clk.posedge
+        while eth_sink.empty():
+            yield clk.posedge
 
-        rx_frame = sink.recv()
+        rx_frame = eth_sink.recv()
         check_frame = arp_ep.ARPFrame()
         check_frame.parse_eth(rx_frame)
 
@@ -302,13 +324,17 @@ def bench():
         test_frame.arp_spa = 0xc0a80166
         test_frame.arp_tha = 0xDAD1D2D3D4D5
         test_frame.arp_tpa = 0xc0a80165
-        source.send(test_frame.build_eth())
+        eth_source.send(test_frame.build_eth())
         yield clk.posedge
 
         # wait for lookup
-        yield arp_response_valid.posedge
-        assert not bool(arp_response_error)
-        assert int(arp_response_mac) == 0x6A6162636465
+        while arp_response_sink.empty():
+            yield clk.posedge
+
+        err, mac = arp_response_sink.recv().data[0]
+
+        assert not err
+        assert mac == 0x6A6162636465
 
         yield delay(100)
 
@@ -316,18 +342,13 @@ def bench():
         print("test 4: Unached read, outside of subnet")
         current_test.next = 4
 
-        yield clk.posedge
-        arp_request_valid.next = True
-        arp_request_ip.next = 0x08080808
-        yield clk.posedge
-        arp_request_valid.next = False
+        arp_request_source.send([(0x08080808,)])
 
         # wait for ARP request packet
-        yield output_eth_payload_tlast.posedge
-        yield clk.posedge
-        yield clk.posedge
+        while eth_sink.empty():
+            yield clk.posedge
 
-        rx_frame = sink.recv()
+        rx_frame = eth_sink.recv()
         check_frame = arp_ep.ARPFrame()
         check_frame.parse_eth(rx_frame)
 
@@ -358,13 +379,17 @@ def bench():
         test_frame.arp_spa = 0xc0a80101
         test_frame.arp_tha = 0xDAD1D2D3D4D5
         test_frame.arp_tpa = 0xc0a80165
-        source.send(test_frame.build_eth())
+        eth_source.send(test_frame.build_eth())
         yield clk.posedge
 
         # wait for lookup
-        yield arp_response_valid.posedge
-        assert not bool(arp_response_error)
-        assert int(arp_response_mac) == 0xAABBCCDDEEFF
+        while arp_response_sink.empty():
+            yield clk.posedge
+
+        err, mac = arp_response_sink.recv().data[0]
+
+        assert not err
+        assert mac == 0xAABBCCDDEEFF
 
         yield delay(100)
 
@@ -372,20 +397,20 @@ def bench():
         print("test 5: Unached read, timeout")
         current_test.next = 5
 
-        yield clk.posedge
-        arp_request_valid.next = True
-        arp_request_ip.next = 0xc0a80167
-        yield clk.posedge
-        arp_request_valid.next = False
+        arp_request_source.send([(0xc0a80167,)])
 
-        yield arp_response_valid.posedge
-        assert bool(arp_response_error)
+        while arp_response_sink.empty():
+            yield clk.posedge
+
+        err, mac = arp_response_sink.recv().data[0]
+
+        assert err
 
         # check for 4 ARP requests
-        assert sink.count() == 4
+        assert eth_sink.count() == 4
 
-        while not sink.empty():
-            rx_frame = sink.recv()
+        while not eth_sink.empty():
+            rx_frame = eth_sink.recv()
 
             check_frame = arp_ep.ARPFrame()
             check_frame.parse_eth(rx_frame)
@@ -410,26 +435,26 @@ def bench():
         current_test.next = 6
 
         # subnet broadcast
-        yield clk.posedge
-        arp_request_valid.next = True
-        arp_request_ip.next = 0xc0a801FF
-        yield clk.posedge
-        arp_request_valid.next = False
+        arp_request_source.send([(0xc0a801ff,)])
 
-        yield arp_response_valid.posedge
-        assert not bool(arp_response_error)
-        assert int(arp_response_mac) == 0xFFFFFFFFFFFF
+        while arp_response_sink.empty():
+            yield clk.posedge
+
+        err, mac = arp_response_sink.recv().data[0]
+
+        assert not err
+        assert mac == 0xffffffffffff
 
         # general broadcast
-        yield clk.posedge
-        arp_request_valid.next = True
-        arp_request_ip.next = 0xFFFFFFFF
-        yield clk.posedge
-        arp_request_valid.next = False
+        arp_request_source.send([(0xffffffff,)])
 
-        yield arp_response_valid.posedge
-        assert not bool(arp_response_error)
-        assert int(arp_response_mac) == 0xFFFFFFFFFFFF
+        while arp_response_sink.empty():
+            yield clk.posedge
+
+        err, mac = arp_response_sink.recv().data[0]
+
+        assert not err
+        assert mac == 0xffffffffffff
 
         yield delay(100)
 

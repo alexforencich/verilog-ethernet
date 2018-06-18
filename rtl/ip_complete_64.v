@@ -30,7 +30,7 @@ THE SOFTWARE.
  * IPv4 and ARP block, ethernet frame interface (64 bit datapath)
  */
 module ip_complete_64 #(
-    parameter ARP_CACHE_ADDR_WIDTH = 2,
+    parameter ARP_CACHE_ADDR_WIDTH = 9,
     parameter ARP_REQUEST_RETRY_COUNT = 4,
     parameter ARP_REQUEST_RETRY_INTERVAL = 156250000*2,
     parameter ARP_REQUEST_TIMEOUT = 156250000*30
@@ -145,8 +145,10 @@ This module integrates the IP and ARP modules for a complete IP stack
 */
 
 wire arp_request_valid;
+wire arp_request_ready;
 wire [31:0] arp_request_ip;
 wire arp_response_valid;
+wire arp_response_ready;
 wire arp_response_error;
 wire [47:0] arp_response_mac;
 
@@ -378,8 +380,10 @@ ip_inst (
     .input_ip_payload_tuser(input_ip_payload_tuser),
     // ARP requests
     .arp_request_valid(arp_request_valid),
+    .arp_request_ready(arp_request_ready),
     .arp_request_ip(arp_request_ip),
     .arp_response_valid(arp_response_valid),
+    .arp_response_ready(arp_response_ready),
     .arp_response_error(arp_response_error),
     .arp_response_mac(arp_response_mac),
     // Status
@@ -434,8 +438,10 @@ arp_inst (
     .output_eth_payload_tuser(arp_tx_eth_payload_tuser),
     // ARP requests
     .arp_request_valid(arp_request_valid),
+    .arp_request_ready(arp_request_ready),
     .arp_request_ip(arp_request_ip),
     .arp_response_valid(arp_response_valid),
+    .arp_response_ready(arp_response_ready),
     .arp_response_error(arp_response_error),
     .arp_response_mac(arp_response_mac),
     // Configuration

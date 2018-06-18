@@ -26,12 +26,15 @@ THE SOFTWARE.
 from myhdl import *
 import os
 
+import axis_ep
+
 module = 'arp_cache'
 testbench = 'test_%s' % module
 
 srcs = []
 
 srcs.append("../rtl/%s.v" % module)
+srcs.append("../rtl/lfsr.v")
 srcs.append("%s.v" % testbench)
 
 src = ' '.join(srcs)
@@ -48,6 +51,8 @@ def bench():
     query_request_valid = Signal(bool(0))
     query_request_ip = Signal(intbv(0)[32:])
 
+    query_response_ready = Signal(bool(0))
+
     write_request_valid = Signal(bool(0))
     write_request_ip = Signal(intbv(0)[32:])
     write_request_mac = Signal(intbv(0)[48:])
@@ -55,12 +60,55 @@ def bench():
     clear_cache = Signal(bool(0))
 
     # Outputs
+    query_request_ready = Signal(bool(0))
+
     query_response_valid = Signal(bool(0))
     query_response_error = Signal(bool(0))
     query_response_mac = Signal(intbv(0)[48:])
 
-    write_in_progress = Signal(bool(0))
-    write_complete = Signal(bool(0))
+    write_request_ready = Signal(bool(0))
+
+    # sources and sinks
+    query_request_source_pause = Signal(bool(0))
+    query_response_sink_pause = Signal(bool(0))
+    write_request_source_pause = Signal(bool(0))
+
+    query_request_source = axis_ep.AXIStreamSource()
+
+    query_request_source_logic = query_request_source.create_logic(
+        clk,
+        rst,
+        tdata=(query_request_ip,),
+        tvalid=query_request_valid,
+        tready=query_request_ready,
+        pause=query_request_source_pause,
+        name='query_request_source'
+    )
+
+    query_response_sink = axis_ep.AXIStreamSink()
+
+    query_response_sink_logic = query_response_sink.create_logic(
+        clk,
+        rst,
+        tdata=(query_response_mac,),
+        tvalid=query_response_valid,
+        tready=query_response_ready,
+        tuser=query_response_error,
+        pause=query_response_sink_pause,
+        name='query_response_sink'
+    )
+
+    write_request_source = axis_ep.AXIStreamSource()
+
+    write_request_source_logic = write_request_source.create_logic(
+        clk,
+        rst,
+        tdata=(write_request_ip, write_request_mac),
+        tvalid=write_request_valid,
+        tready=write_request_ready,
+        pause=write_request_source_pause,
+        name='write_request_source'
+    )
 
     # DUT
     if os.system(build_cmd):
@@ -73,16 +121,18 @@ def bench():
         current_test=current_test,
 
         query_request_valid=query_request_valid,
+        query_request_ready=query_request_ready,
         query_request_ip=query_request_ip,
+
         query_response_valid=query_response_valid,
+        query_response_ready=query_response_ready,
         query_response_error=query_response_error,
         query_response_mac=query_response_mac,
 
         write_request_valid=write_request_valid,
+        write_request_ready=write_request_ready,
         write_request_ip=write_request_ip,
         write_request_mac=write_request_mac,
-        write_in_progress=write_in_progress,
-        write_complete=write_complete,
 
         clear_cache=clear_cache
     )
@@ -107,24 +157,13 @@ def bench():
         current_test.next = 1
 
         yield clk.posedge
-        write_request_valid.next = True
-        write_request_ip.next = 0xc0a80111
-        write_request_mac.next = 0x0000c0a80111
-        yield clk.posedge
-        write_request_valid.next = False
+        write_request_source.send([(0xc0a80111, 0x0000c0a80111)])
+        write_request_source.send([(0xc0a80112, 0x0000c0a80112)])
 
-        yield write_complete.posedge
-        yield clk.posedge
+        yield delay(100)
 
-        yield clk.posedge
-        write_request_valid.next = True
-        write_request_ip.next = 0xc0a80112
-        write_request_mac.next = 0x0000c0a80112
-        yield clk.posedge
-        write_request_valid.next = False
-
-        yield write_complete.posedge
-        yield clk.posedge
+        while not write_request_source.empty():
+            yield clk.posedge
 
         yield delay(100)
 
@@ -133,71 +172,47 @@ def bench():
         current_test.next = 2
 
         yield clk.posedge
-        query_request_valid.next = True
-        query_request_ip.next = 0xc0a80111
-        yield clk.posedge
-        query_request_valid.next = False
+        query_request_source.send([(0xc0a80111, )])
+        query_request_source.send([(0xc0a80112, )])
+        query_request_source.send([(0xc0a80113, )])
 
-        yield query_response_valid.posedge
-        assert not bool(query_response_error)
-        assert int(query_response_mac) == 0x0000c0a80111
+        while query_response_sink.empty():
+            yield clk.posedge
 
-        yield clk.posedge
-        query_request_valid.next = True
-        query_request_ip.next = 0xc0a80112
-        yield clk.posedge
-        query_request_valid.next = False
+        resp = query_response_sink.recv()
+        assert resp.data[0][0] == 0x0000c0a80111
+        assert not resp.user[0]
 
-        yield query_response_valid.posedge
-        assert not bool(query_response_error)
-        assert int(query_response_mac) == 0x0000c0a80112
+        while query_response_sink.empty():
+            yield clk.posedge
+
+        resp = query_response_sink.recv()
+        assert resp.data[0][0] == 0x0000c0a80112
+        assert not resp.user[0]
 
         # not in cache; was not written
-        yield clk.posedge
-        query_request_valid.next = True
-        query_request_ip.next = 0xc0a80113
-        yield clk.posedge
-        query_request_valid.next = False
+        while query_response_sink.empty():
+            yield clk.posedge
 
-        yield query_response_valid.posedge
-        assert bool(query_response_error)
+        resp = query_response_sink.recv()
+        assert resp.user[0]
 
         yield delay(100)
+
+        raise StopSimulation
 
         yield clk.posedge
         print("test 3: write more")
         current_test.next = 3
 
         yield clk.posedge
-        write_request_valid.next = True
-        write_request_ip.next = 0xc0a80121
-        write_request_mac.next = 0x0000c0a80121
-        yield clk.posedge
-        write_request_valid.next = False
-
-        yield write_complete.posedge
-        yield clk.posedge
-
-        yield clk.posedge
-        write_request_valid.next = True
-        write_request_ip.next = 0xc0a80122
-        write_request_mac.next = 0x0000c0a80122
-        yield clk.posedge
-        write_request_valid.next = False
-
-        yield write_complete.posedge
-        yield clk.posedge
-
+        write_request_source.send([(0xc0a80121, 0x0000c0a80121)])
+        write_request_source.send([(0xc0a80122, 0x0000c0a80122)])
         # overwrites 0xc0a80121 due to LRU
-        yield clk.posedge
-        write_request_valid.next = True
-        write_request_ip.next = 0xc0a80123
-        write_request_mac.next = 0x0000c0a80123
-        yield clk.posedge
-        write_request_valid.next = False
+        write_request_source.send([(0xc0a80123, 0x0000c0a80123)])
 
-        yield write_complete.posedge
-        yield clk.posedge
+        while not write_request_source.empty():
+            yield clk.posedge
 
         yield delay(100)
 
@@ -206,58 +221,60 @@ def bench():
         current_test.next = 4
 
         yield clk.posedge
-        query_request_valid.next = True
-        query_request_ip.next = 0xc0a80111
-        yield clk.posedge
-        query_request_valid.next = False
+        query_request_source.send([(0xc0a80111, )])
 
-        yield query_response_valid.posedge
-        assert not bool(query_response_error)
-        assert int(query_response_mac) == 0x0000c0a80111
+        while query_response_sink.empty():
+            yield clk.posedge
+
+        resp = query_response_sink.recv()
+        assert resp.data[0][0] == 0x0000c0a80111
+        assert not resp.user[0]
 
         yield clk.posedge
-        query_request_valid.next = True
-        query_request_ip.next = 0xc0a80112
-        yield clk.posedge
-        query_request_valid.next = False
+        query_request_source.send([(0xc0a80112, )])
 
-        yield query_response_valid.posedge
-        assert not bool(query_response_error)
-        assert int(query_response_mac) == 0x0000c0a80112
+        while query_response_sink.empty():
+            yield clk.posedge
+
+        resp = query_response_sink.recv()
+        assert resp.data[0][0] == 0x0000c0a80112
+        assert not resp.user[0]
 
         # not in cache; was overwritten
         yield clk.posedge
-        query_request_valid.next = True
-        query_request_ip.next = 0xc0a80121
-        yield clk.posedge
-        query_request_valid.next = False
+        query_request_source.send([(0xc0a80121, )])
 
-        yield query_response_valid.posedge
-        assert bool(query_response_error)
+        while query_response_sink.empty():
+            yield clk.posedge
 
-        yield clk.posedge
-        query_request_valid.next = True
-        query_request_ip.next = 0xc0a80122
-        yield clk.posedge
-        query_request_valid.next = False
-
-        yield query_response_valid.posedge
-        assert not bool(query_response_error)
-        assert int(query_response_mac) == 0x0000c0a80122
+        resp = query_response_sink.recv()
+        assert resp.user[0]
 
         yield clk.posedge
-        query_request_valid.next = True
-        query_request_ip.next = 0xc0a80123
-        yield clk.posedge
-        query_request_valid.next = False
+        query_request_source.send([(0xc0a80122, )])
 
-        yield query_response_valid.posedge
-        assert not bool(query_response_error)
-        assert int(query_response_mac) == 0x0000c0a80123
+        while query_response_sink.empty():
+            yield clk.posedge
+
+        resp = query_response_sink.recv()
+        assert resp.data[0][0] == 0x0000c0a80122
+        assert not resp.user[0]
+
+        yield clk.posedge
+        query_request_source.send([(0xc0a80123, )])
+
+        while query_response_sink.empty():
+            yield clk.posedge
+
+        resp = query_response_sink.recv()
+        assert resp.data[0][0] == 0x0000c0a80123
+        assert not resp.user[0]
 
         # LRU reset by previous operation
 
         yield delay(100)
+
+        raise StopSimulation
 
         yield clk.posedge
         print("test 5: LRU test")

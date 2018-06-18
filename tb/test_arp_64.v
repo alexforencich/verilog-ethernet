@@ -51,6 +51,7 @@ reg output_eth_payload_tready = 0;
 
 reg arp_request_valid = 0;
 reg [31:0] arp_request_ip = 0;
+reg arp_response_ready = 0;
 
 reg [47:0] local_mac = 0;
 reg [31:0] local_ip = 0;
@@ -72,6 +73,7 @@ wire output_eth_payload_tvalid;
 wire output_eth_payload_tlast;
 wire output_eth_payload_tuser;
 
+wire arp_request_ready;
 wire arp_response_valid;
 wire arp_response_error;
 wire [47:0] arp_response_mac;
@@ -95,6 +97,7 @@ initial begin
         output_eth_payload_tready,
         arp_request_valid,
         arp_request_ip,
+        arp_response_ready,
         local_mac,
         local_ip,
         gateway_ip,
@@ -113,6 +116,7 @@ initial begin
         output_eth_payload_tvalid,
         output_eth_payload_tlast,
         output_eth_payload_tuser,
+        arp_request_ready,
         arp_response_valid,
         arp_response_error,
         arp_response_mac
@@ -158,8 +162,10 @@ UUT (
     .output_eth_payload_tuser(output_eth_payload_tuser),
     // ARP requests
     .arp_request_valid(arp_request_valid),
+    .arp_request_ready(arp_request_ready),
     .arp_request_ip(arp_request_ip),
     .arp_response_valid(arp_response_valid),
+    .arp_response_ready(arp_response_ready),
     .arp_response_error(arp_response_error),
     .arp_response_mac(arp_response_mac),
     // Configuration
