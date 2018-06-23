@@ -543,7 +543,11 @@ eth_mac_1g_inst (
 
 axis_adapter #(
     .INPUT_DATA_WIDTH(8),
-    .OUTPUT_DATA_WIDTH(64)
+    .OUTPUT_DATA_WIDTH(64),
+    .ID_ENABLE(0),
+    .DEST_ENABLE(0),
+    .USER_ENABLE(1),
+    .USER_WIDTH(1)
 )
 gig_rx_axis_adapter_inst (
     .clk(clk),
@@ -566,7 +570,11 @@ gig_rx_axis_adapter_inst (
 
 axis_adapter #(
     .INPUT_DATA_WIDTH(64),
-    .OUTPUT_DATA_WIDTH(8)
+    .OUTPUT_DATA_WIDTH(8),
+    .ID_ENABLE(0),
+    .DEST_ENABLE(0),
+    .USER_ENABLE(1),
+    .USER_WIDTH(1)
 )
 gig_tx_axis_adapter_inst (
     .clk(clk),
