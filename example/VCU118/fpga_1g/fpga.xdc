@@ -105,7 +105,7 @@ set_clock_groups -asynchronous -group [get_clocks phy_sgmii_clk -include_generat
 #set_property -dict {LOC U8  } [get_ports qsfp1_mgt_refclk_1_n] ;# MGTREFCLK1N_231 from U57.29
 #set_property -dict {LOC AM23 IOSTANDARD LVDS} [get_ports qsfp1_recclk_p] ;# to U57.16
 #set_property -dict {LOC AM22 IOSTANDARD LVDS} [get_ports qsfp1_recclk_n] ;# to U57.17
-#set_property -dict {LOC AM21 IOSTANDARD LVCMOS18} [get_ports qsfp1_modesell]
+#set_property -dict {LOC AM21 IOSTANDARD LVCMOS18} [get_ports qsfp1_modsell]
 #set_property -dict {LOC BA22 IOSTANDARD LVCMOS18} [get_ports qsfp1_resetl]
 #set_property -dict {LOC AL21 IOSTANDARD LVCMOS18} [get_ports qsfp1_modprsl]
 #set_property -dict {LOC AP21 IOSTANDARD LVCMOS18} [get_ports qsfp1_intl]
@@ -137,7 +137,7 @@ set_clock_groups -asynchronous -group [get_clocks phy_sgmii_clk -include_generat
 #set_property -dict {LOC N8  } [get_ports qsfp2_mgt_refclk_1_n] ;# MGTREFCLK1N_232 from U57.34
 #set_property -dict {LOC AP23 IOSTANDARD LVDS} [get_ports qsfp2_recclk_p] ;# to U57.12
 #set_property -dict {LOC AP22 IOSTANDARD LVDS} [get_ports qsfp2_recclk_n] ;# to U57.13
-#set_property -dict {LOC AN23 IOSTANDARD LVCMOS18} [get_ports qsfp2_modesell]
+#set_property -dict {LOC AN23 IOSTANDARD LVCMOS18} [get_ports qsfp2_modsell]
 #set_property -dict {LOC AY22 IOSTANDARD LVCMOS18} [get_ports qsfp2_resetl]
 #set_property -dict {LOC AN24 IOSTANDARD LVCMOS18} [get_ports qsfp2_modprsl]
 #set_property -dict {LOC AT21 IOSTANDARD LVCMOS18} [get_ports qsfp2_intl]

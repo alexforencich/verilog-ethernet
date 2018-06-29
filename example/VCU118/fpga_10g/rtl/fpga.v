@@ -80,7 +80,7 @@ module fpga (
     // input  wire       qsfp1_mgt_refclk_1_n,
     // output wire       qsfp1_recclk_p,
     // output wire       qsfp1_recclk_n,
-    output wire       qsfp1_modesell,
+    output wire       qsfp1_modsell,
     output wire       qsfp1_resetl,
     input  wire       qsfp1_modprsl,
     input  wire       qsfp1_intl,
@@ -108,7 +108,7 @@ module fpga (
     // input  wire       qsfp2_mgt_refclk_1_n,
     // output wire       qsfp2_recclk_p,
     // output wire       qsfp2_recclk_n,
-    output wire       qsfp2_modesell,
+    output wire       qsfp2_modsell,
     output wire       qsfp2_resetl,
     input  wire       qsfp2_modprsl,
     input  wire       qsfp2_intl,
@@ -294,7 +294,7 @@ assign i2c_sda_i = i2c_sda;
 assign i2c_sda = i2c_sda_t ? 1'bz : i2c_sda_o;
 
 // XGMII 10G PHY
-assign qsfp1_modesell = 1'b1;
+assign qsfp1_modsell = 1'b0;
 assign qsfp1_resetl = 1'b1;
 assign qsfp1_lpmode = 1'b0;
 
@@ -331,7 +331,7 @@ wire        qsfp1_rx_rst_4_int;
 wire [63:0] qsfp1_rxd_4_int;
 wire [7:0]  qsfp1_rxc_4_int;
 
-assign qsfp2_modesell = 1'b1;
+assign qsfp2_modsell = 1'b0;
 assign qsfp2_resetl = 1'b1;
 assign qsfp2_lpmode = 1'b0;
 

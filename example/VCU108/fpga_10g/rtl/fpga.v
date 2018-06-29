@@ -80,7 +80,7 @@ module fpga (
     // input  wire       qsfp_mgt_refclk_1_n,
     // output wire       qsfp_recclk_p,
     // output wire       qsfp_recclk_n,
-    output wire       qsfp_modesell,
+    output wire       qsfp_modsell,
     output wire       qsfp_resetl,
     input  wire       qsfp_modprsl,
     input  wire       qsfp_intl,
@@ -347,7 +347,7 @@ si570_i2c_master (
 );
 
 // XGMII 10G PHY
-assign qsfp_modesell = 1'b1;
+assign qsfp_modsell = 1'b0;
 assign qsfp_resetl = 1'b1;
 assign qsfp_lpmode = 1'b0;
 
