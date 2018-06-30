@@ -374,6 +374,7 @@ class AXIStreamSink(object):
         self.has_logic = False
         self.queue = []
         self.read_queue = []
+        self.sync = Signal(intbv(0))
 
     def recv(self):
         if self.queue:
@@ -394,6 +395,12 @@ class AXIStreamSink(object):
 
     def empty(self):
         return not self.queue
+
+    def wait(self, timeout=0):
+        if timeout:
+            yield self.sync, delay(timeout)
+        else:
+            yield self.sync
 
     def create_logic(self,
                 clk,
@@ -498,6 +505,7 @@ class AXIStreamSink(object):
                             frame.WL = WL
                             frame.parse(data, keep, id, dest, user)
                             self.queue.append(frame)
+                            self.sync.next = not self.sync
                             if name is not None:
                                 print("[%s] Got frame %s" % (name, repr(frame)))
                             frame = AXIStreamFrame()
