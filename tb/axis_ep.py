@@ -261,7 +261,7 @@ class AXIStreamSource(object):
         return len(self.queue)
 
     def empty(self):
-        return self.count() == 0
+        return not self.queue
 
     def create_logic(self,
                 clk,
@@ -376,12 +376,12 @@ class AXIStreamSink(object):
         self.read_queue = []
 
     def recv(self):
-        if len(self.queue) > 0:
+        if self.queue:
             return self.queue.pop(0)
         return None
 
     def read(self, count=-1):
-        while len(self.queue) > 0:
+        while self.queue:
             self.read_queue.extend(self.queue.pop(0).data)
         if count < 0:
             count = len(self.read_queue)
@@ -393,7 +393,7 @@ class AXIStreamSink(object):
         return len(self.queue)
 
     def empty(self):
-        return self.count() == 0
+        return not self.queue
 
     def create_logic(self,
                 clk,
