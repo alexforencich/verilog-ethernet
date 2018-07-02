@@ -258,9 +258,7 @@ def bench():
 
                     yield wait()
 
-                    yield clk.posedge
-                    yield clk.posedge
-
+                    yield sink.wait()
                     rx_frame = sink.recv()
 
                     assert cobs_decode(enc) == block
@@ -287,9 +285,7 @@ def bench():
 
                     yield wait()
 
-                    yield clk.posedge
-                    yield clk.posedge
-
+                    yield sink.wait()
                     rx_frame = sink.recv()
 
                     assert cobs_decode(enc) == block
@@ -297,6 +293,7 @@ def bench():
                     assert cobs_decode(rx_frame.data[:-1]) == block
                     assert not rx_frame.last_cycle_user
 
+                    yield sink.wait()
                     rx_frame = sink.recv()
 
                     assert cobs_decode(enc) == block
@@ -325,14 +322,13 @@ def bench():
 
                     yield wait()
 
-                    yield clk.posedge
-                    yield clk.posedge
-
+                    yield sink.wait()
                     rx_frame = sink.recv()
 
                     assert cobs_decode(rx_frame.data[:-1]) == None
                     assert rx_frame.last_cycle_user
 
+                    yield sink.wait()
                     rx_frame = sink.recv()
 
                     assert cobs_decode(enc) == block

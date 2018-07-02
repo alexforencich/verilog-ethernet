@@ -44,6 +44,15 @@ Supports power of two depths only.
 Basic frame-based asynchronous FIFO with parametrizable data width and depth.
 Supports power of two depths only.
 
+### axis_cobs_decode
+
+Consistent Overhead Byte Stuffing (COBS) decoder.  Fixed 8 bit width.
+
+### axis_cobs_encode
+
+Consistent Overhead Byte Stuffing (COBS) encoder.  Fixed 8 bit width.
+Configurable zero insertion.
+
 ### axis_crosspoint module
 
 Basic crosspoint switch.  tready signal not supported.  Parametrizable data
@@ -180,6 +189,8 @@ Parametrizable priority encoder.
     axis_arb_mux_4.v                   : 4 port arbitrated multiplexer
     axis_async_fifo.v                  : Asynchronous FIFO
     axis_async_frame_fifo.v            : Asynchronous frame FIFO
+    axis_cobs_decode.v                 : COBS decoder
+    axis_cobs_encode.v                 : COBS encoder
     axis_crosspoint.py                 : Crosspoint switch generator
     axis_crosspoint_4x4.v              : 4x4 crosspoint switch
     axis_demux.py                      : Demultiplexer generator

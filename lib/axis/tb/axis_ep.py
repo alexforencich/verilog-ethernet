@@ -344,7 +344,7 @@ class AXIStreamSource(object):
                             tvalid_int.next = False
                             tlast.next = False
                     if (tlast and tready_int and tvalid) or not tvalid_int:
-                        if len(self.queue) > 0:
+                        if self.queue:
                             frame = self.queue.pop(0)
                             frame.B = B
                             frame.N = N
@@ -397,6 +397,8 @@ class AXIStreamSink(object):
         return not self.queue
 
     def wait(self, timeout=0):
+        if self.queue:
+            return
         if timeout:
             yield self.sync, delay(timeout)
         else:
