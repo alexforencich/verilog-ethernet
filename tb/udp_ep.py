@@ -331,7 +331,7 @@ class UDPFrameSource():
 
     def send(self, frame):
         frame = UDPFrame(frame)
-        if len(self.header_queue) == 0:
+        if not self.header_queue:
             self.header_queue.append(frame)
             self.payload_source.send(frame.payload)
         else:
@@ -415,7 +415,7 @@ class UDPFrameSource():
                     if udp_hdr_ready_int:
                         udp_hdr_valid_int.next = False
                     if (udp_hdr_ready_int and udp_hdr_valid) or not udp_hdr_valid_int:
-                        if len(self.header_queue) > 0:
+                        if self.header_queue:
                             frame = self.header_queue.pop(0)
                             frame.build()
                             eth_dest_mac.next = frame.eth_dest_mac
@@ -444,7 +444,7 @@ class UDPFrameSource():
 
                             udp_hdr_valid_int.next = True
 
-                    if len(self.queue) > 0 and len(self.header_queue) == 0:
+                    if self.queue and not self.header_queue:
                         frame = self.queue.pop(0)
                         self.header_queue.append(frame)
                         self.payload_source.send(frame.payload)
@@ -472,6 +472,8 @@ class UDPFrameSink():
         return not self.queue
 
     def wait(self, timeout=0):
+        if self.queue:
+            return
         if timeout:
             yield self.sync, delay(timeout)
         else:

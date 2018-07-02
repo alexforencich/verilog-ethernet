@@ -148,7 +148,7 @@ class GMIISource(object):
                                 ifg_cnt = 12*2
                             else:
                                 ifg_cnt = 12
-                    elif len(self.queue) > 0:
+                    elif self.queue:
                         frame = GMIIFrame(self.queue.pop(0))
                         d, er = frame.build()
                         if name is not None:
@@ -193,6 +193,8 @@ class GMIISink(object):
         return not self.queue
 
     def wait(self, timeout=0):
+        if self.queue:
+            return
         if timeout:
             yield self.sync, delay(timeout)
         else:

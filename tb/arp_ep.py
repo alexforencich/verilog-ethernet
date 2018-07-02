@@ -216,7 +216,7 @@ class ARPFrameSource():
                     if frame_ready_int:
                         frame_valid_int.next = False
                     if (frame_ready_int and frame_valid) or not frame_valid_int:
-                        if len(self.queue) > 0:
+                        if self.queue:
                             frame = self.queue.pop(0)
                             eth_dest_mac.next = frame.eth_dest_mac
                             eth_src_mac.next = frame.eth_src_mac
@@ -257,6 +257,8 @@ class ARPFrameSink():
         return not self.queue
 
     def wait(self, timeout=0):
+        if self.queue:
+            return
         if timeout:
             yield self.sync, delay(timeout)
         else:

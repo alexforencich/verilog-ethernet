@@ -125,9 +125,15 @@ class EthFrameSource():
         self.has_logic = False
         self.queue = []
         self.payload_source = axis_ep.AXIStreamSource()
+        self.header_queue = []
 
     def send(self, frame):
-        self.queue.append(EthFrame(frame))
+        frame = EthFrame(frame)
+        if not self.header_queue:
+            self.header_queue.append(frame)
+            self.payload_source.send(frame.payload)
+        else:
+            self.queue.append(frame)
 
     def count(self):
         return len(self.queue)
@@ -191,18 +197,22 @@ class EthFrameSource():
                 else:
                     if eth_hdr_ready_int:
                         eth_hdr_valid_int.next = False
-                    if (eth_payload_tlast and eth_hdr_ready_int and eth_hdr_valid) or not eth_hdr_valid_int:
-                        if len(self.queue) > 0:
-                            frame = self.queue.pop(0)
+                    if (eth_hdr_ready_int and eth_hdr_valid) or not eth_hdr_valid_int:
+                        if self.header_queue:
+                            frame = self.header_queue.pop(0)
                             eth_dest_mac.next = frame.eth_dest_mac
                             eth_src_mac.next = frame.eth_src_mac
                             eth_type.next = frame.eth_type
-                            self.payload_source.send(frame.payload)
 
                             if name is not None:
                                 print("[%s] Sending frame %s" % (name, repr(frame)))
 
                             eth_hdr_valid_int.next = True
+
+                    if self.queue and not self.header_queue:
+                        frame = self.queue.pop(0)
+                        self.header_queue.append(frame)
+                        self.payload_source.send(frame.payload)
 
         return instances()
 
@@ -227,6 +237,8 @@ class EthFrameSink():
         return not self.queue
 
     def wait(self, timeout=0):
+        if self.queue:
+            return
         if timeout:
             yield self.sync, delay(timeout)
         else:

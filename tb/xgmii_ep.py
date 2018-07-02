@@ -179,7 +179,7 @@ class XGMIISource(object):
 
                         txd.next = d
                         txc.next = c
-                    elif len(self.queue) > 0:
+                    elif self.queue:
                         frame = self.queue.pop(0)
                         dl, cl = frame.build()
                         if name is not None:
@@ -246,6 +246,8 @@ class XGMIISink(object):
         return not self.queue
 
     def wait(self, timeout=0):
+        if self.queue:
+            return
         if timeout:
             yield self.sync, delay(timeout)
         else:
