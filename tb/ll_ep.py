@@ -84,7 +84,7 @@ class LocalLinkSource(object):
                             src_rdy_out_n_int.next = True
                             eof_out_n.next = True
                     if (not eof_out_n and not dst_rdy_in_n_int and not src_rdy_out_n) or src_rdy_out_n_int:
-                        if len(self.queue) > 0:
+                        if self.queue:
                             frame = self.queue.pop(0)
                             if name is not None:
                                 print("[%s] Sending frame %s" % (name, repr(frame)))
@@ -100,9 +100,10 @@ class LocalLinkSink(object):
     def __init__(self):
         self.has_logic = False
         self.queue = []
+        self.sync = Signal(intbv(0))
 
     def recv(self):
-        if len(self.queue) > 0:
+        if self.queue:
             return self.queue.pop(0)
         return None
 
@@ -110,7 +111,15 @@ class LocalLinkSink(object):
         return len(self.queue)
 
     def empty(self):
-        return self.count() == 0
+        return not self.queue
+
+    def wait(self, timeout=0):
+        if self.queue:
+            return
+        if timeout:
+            yield self.sync, delay(timeout)
+        else:
+            yield self.sync
 
     def create_logic(self,
             clk,
@@ -154,6 +163,7 @@ class LocalLinkSink(object):
                         frame.append(int(data_in))
                         if not eof_in_n:
                             self.queue.append(frame)
+                            self.sync.next = not self.sync
                             if name is not None:
                                 print("[%s] Got frame %s" % (name, repr(frame)))
                             frame = []
