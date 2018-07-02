@@ -168,7 +168,7 @@ class ARPFrameSource():
         return len(self.queue)
 
     def empty(self):
-        return self.count() == 0
+        return not self.queue
 
     def create_logic(self,
                 clk,
@@ -243,16 +243,24 @@ class ARPFrameSink():
     def __init__(self):
         self.has_logic = False
         self.queue = []
+        self.sync = Signal(intbv(0))
 
     def recv(self):
-        if len(self.queue) > 0:
+        if self.queue:
             return self.queue.pop(0)
+        return None
 
     def count(self):
         return len(self.queue)
 
     def empty(self):
-        return self.count() == 0
+        return not self.queue
+
+    def wait(self, timeout=0):
+        if timeout:
+            yield self.sync, delay(timeout)
+        else:
+            yield self.sync
 
     def create_logic(self,
                 clk,
@@ -312,6 +320,7 @@ class ARPFrameSink():
                         frame.arp_tha = int(arp_tha)
                         frame.arp_tpa = int(arp_tpa)
                         self.queue.append(frame)
+                        self.sync.next = not self.sync
 
                         if name is not None:
                             print("[%s] Got frame %s" % (name, repr(frame)))
