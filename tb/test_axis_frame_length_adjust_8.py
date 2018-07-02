@@ -234,10 +234,7 @@ def bench():
 
                         yield wait()
 
-                        yield clk.posedge
-                        yield clk.posedge
-                        yield clk.posedge
-
+                        yield sink.wait()
                         rx_frame = sink.recv()
 
                         lrx = len(rx_frame.data)
@@ -247,6 +244,7 @@ def bench():
                         assert lrx <= lmax
                         assert rx_frame.data[:lm] == test_frame.data[:lm]
 
+                        yield status_sink.wait()
                         status = status_sink.recv()
                         assert status.data[0][0] == (lt < lmin)
                         assert status.data[0][1] == (lt > lmax)
@@ -273,10 +271,7 @@ def bench():
 
                         yield wait()
 
-                        yield clk.posedge
-                        yield clk.posedge
-                        yield clk.posedge
-
+                        yield sink.wait()
                         rx_frame = sink.recv()
 
                         lrx = len(rx_frame.data)
@@ -286,12 +281,14 @@ def bench():
                         assert lrx <= lmax
                         assert rx_frame.data[:lm] == test_frame1.data[:lm]
 
+                        yield status_sink.wait()
                         status = status_sink.recv()
                         assert status.data[0][0] == (lt < lmin)
                         assert status.data[0][1] == (lt > lmax)
                         assert status.data[0][2] == lrx
                         assert status.data[0][3] == lt
 
+                        yield sink.wait()
                         rx_frame = sink.recv()
 
                         lrx = len(rx_frame.data)
@@ -301,6 +298,7 @@ def bench():
                         assert lrx <= lmax
                         assert rx_frame.data[:lm] == test_frame2.data[:lm]
 
+                        yield status_sink.wait()
                         status = status_sink.recv()
                         assert status.data[0][0] == (lt < lmin)
                         assert status.data[0][1] == (lt > lmax)
@@ -329,10 +327,7 @@ def bench():
 
                         yield wait()
 
-                        yield clk.posedge
-                        yield clk.posedge
-                        yield clk.posedge
-
+                        yield sink.wait()
                         rx_frame = sink.recv()
 
                         lrx = len(rx_frame.data)
@@ -344,12 +339,14 @@ def bench():
 
                         assert rx_frame.last_cycle_user
 
+                        yield status_sink.wait()
                         status = status_sink.recv()
                         assert status.data[0][0] == (lt < lmin)
                         assert status.data[0][1] == (lt > lmax)
                         assert status.data[0][2] == lrx
                         assert status.data[0][3] == lt
 
+                        yield sink.wait()
                         rx_frame = sink.recv()
 
                         lrx = len(rx_frame.data)
@@ -359,6 +356,7 @@ def bench():
                         assert lrx <= lmax
                         assert rx_frame.data[:lm] == test_frame2.data[:lm]
 
+                        yield status_sink.wait()
                         status = status_sink.recv()
                         assert status.data[0][0] == (lt < lmin)
                         assert status.data[0][1] == (lt > lmax)

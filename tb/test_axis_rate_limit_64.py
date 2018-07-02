@@ -222,14 +222,8 @@ def bench():
             )
 
             source.send(test_frame)
-            yield clk.posedge
 
-            while input_axis_tvalid or output_axis_tvalid:
-                yield clk.posedge
-            while not input_axis_tready:
-                yield clk.posedge
-            yield clk.posedge
-
+            yield sink.wait()
             rx_frame = sink.recv()
 
             assert rx_frame == test_frame
@@ -250,14 +244,8 @@ def bench():
             )
 
             source.send(test_frame)
-            yield clk.posedge
 
-            while input_axis_tvalid or output_axis_tvalid:
-                yield clk.posedge
-            while not input_axis_tready:
-                yield clk.posedge
-            yield clk.posedge
-
+            yield sink.wait()
             rx_frame = sink.recv()
 
             assert rx_frame == test_frame
@@ -292,12 +280,7 @@ def bench():
             yield clk.posedge
             sink_pause.next = False
 
-            while input_axis_tvalid or output_axis_tvalid:
-                yield clk.posedge
-            while not input_axis_tready:
-                yield clk.posedge
-            yield clk.posedge
-
+            yield sink.wait()
             rx_frame = sink.recv()
 
             assert rx_frame == test_frame
@@ -327,18 +310,13 @@ def bench():
 
             source.send(test_frame1)
             source.send(test_frame2)
-            yield clk.posedge
 
-            while input_axis_tvalid or output_axis_tvalid:
-                yield clk.posedge
-            while not input_axis_tready:
-                yield clk.posedge
-            yield clk.posedge
-
+            yield sink.wait()
             rx_frame = sink.recv()
 
             assert rx_frame == test_frame1
 
+            yield sink.wait()
             rx_frame = sink.recv()
 
             assert rx_frame == test_frame2
@@ -378,16 +356,12 @@ def bench():
                 source_pause.next = False
                 yield clk.posedge
 
-            while input_axis_tvalid or output_axis_tvalid:
-                yield clk.posedge
-            while not input_axis_tready:
-                yield clk.posedge
-            yield clk.posedge
-
+            yield sink.wait()
             rx_frame = sink.recv()
 
             assert rx_frame == test_frame1
 
+            yield sink.wait()
             rx_frame = sink.recv()
 
             assert rx_frame == test_frame2
@@ -427,16 +401,12 @@ def bench():
                 sink_pause.next = False
                 yield clk.posedge
 
-            while input_axis_tvalid or output_axis_tvalid:
-                yield clk.posedge
-            while not input_axis_tready:
-                yield clk.posedge
-            yield clk.posedge
-
+            yield sink.wait()
             rx_frame = sink.recv()
 
             assert rx_frame == test_frame1
 
+            yield sink.wait()
             rx_frame = sink.recv()
 
             assert rx_frame == test_frame2
@@ -458,14 +428,8 @@ def bench():
             )
 
             source.send(test_frame)
-            yield clk.posedge
 
-            while input_axis_tvalid or output_axis_tvalid:
-                yield clk.posedge
-            while not input_axis_tready:
-                yield clk.posedge
-            yield clk.posedge
-
+            yield sink.wait()
             rx_frame = sink.recv()
 
             assert rx_frame == test_frame
@@ -481,6 +445,8 @@ def bench():
                 print("test 8 rate %d / %d" % rate)
                 rate_num.next = rate[0]
                 rate_denom.next = rate[1]
+
+                yield delay(100)
 
                 reset_stats.next = 1
                 yield clk.posedge
@@ -501,21 +467,19 @@ def bench():
 
                 for f in test_frame:
                     source.send(f)
-                yield clk.posedge
-                yield clk.posedge
-
-                while input_axis_tvalid or output_axis_tvalid:
-                    yield clk.posedge
-                while not input_axis_tready:
-                    yield clk.posedge
-
-                stop_time = now()
 
                 rx_frame = []
 
                 for i in range(len(lens)):
-                    if not sink.empty():
-                        rx_frame.append(sink.recv())
+                    yield sink.wait()
+                    rx_frame.append(sink.recv())
+
+                yield clk.posedge
+
+                while not input_axis_tready:
+                    yield clk.posedge
+
+                stop_time = now()
 
                 assert len(rx_frame) == len(test_frame)
 

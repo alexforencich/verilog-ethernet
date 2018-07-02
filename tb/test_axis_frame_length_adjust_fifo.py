@@ -221,12 +221,7 @@ def bench():
 
                         yield wait()
 
-                        yield clk.posedge
-                        yield clk.posedge
-                        yield clk.posedge
-                        yield clk.posedge
-                        yield clk.posedge
-
+                        yield sink.wait()
                         rx_frame = sink.recv()
 
                         lrx = len(rx_frame.data)
@@ -236,6 +231,7 @@ def bench():
                         assert lrx <= lmax
                         assert rx_frame.data[:lm] == test_frame.data[:lm]
 
+                        yield hdr_sink.wait()
                         hdr = hdr_sink.recv()
                         assert hdr.data[0][0] == (lt < lmin)
                         assert hdr.data[0][1] == (lt > lmax)
@@ -262,12 +258,7 @@ def bench():
 
                         yield wait()
 
-                        yield clk.posedge
-                        yield clk.posedge
-                        yield clk.posedge
-                        yield clk.posedge
-                        yield clk.posedge
-
+                        yield sink.wait()
                         rx_frame = sink.recv()
 
                         lrx = len(rx_frame.data)
@@ -277,12 +268,14 @@ def bench():
                         assert lrx <= lmax
                         assert rx_frame.data[:lm] == test_frame1.data[:lm]
 
+                        yield hdr_sink.wait()
                         hdr = hdr_sink.recv()
                         assert hdr.data[0][0] == (lt < lmin)
                         assert hdr.data[0][1] == (lt > lmax)
                         assert hdr.data[0][2] == lrx
                         assert hdr.data[0][3] == lt
 
+                        yield sink.wait()
                         rx_frame = sink.recv()
 
                         lrx = len(rx_frame.data)
@@ -292,6 +285,7 @@ def bench():
                         assert lrx <= lmax
                         assert rx_frame.data[:lm] == test_frame2.data[:lm]
 
+                        yield hdr_sink.wait()
                         hdr = hdr_sink.recv()
                         assert hdr.data[0][0] == (lt < lmin)
                         assert hdr.data[0][1] == (lt > lmax)
@@ -320,12 +314,7 @@ def bench():
 
                         yield wait()
 
-                        yield clk.posedge
-                        yield clk.posedge
-                        yield clk.posedge
-                        yield clk.posedge
-                        yield clk.posedge
-
+                        yield sink.wait()
                         rx_frame = sink.recv()
 
                         lrx = len(rx_frame.data)
@@ -335,6 +324,7 @@ def bench():
                         assert lrx <= lmax
                         assert rx_frame.data[:lm] == test_frame1.data[:lm]
 
+                        yield hdr_sink.wait()
                         hdr = hdr_sink.recv()
                         assert hdr.data[0][0] == (lt < lmin)
                         assert hdr.data[0][1] == (lt > lmax)
@@ -342,6 +332,7 @@ def bench():
                         assert hdr.data[0][3] == lt
                         assert rx_frame.last_cycle_user
 
+                        yield sink.wait()
                         rx_frame = sink.recv()
 
                         lrx = len(rx_frame.data)
@@ -351,6 +342,7 @@ def bench():
                         assert lrx <= lmax
                         assert rx_frame.data[:lm] == test_frame2.data[:lm]
 
+                        yield hdr_sink.wait()
                         hdr = hdr_sink.recv()
                         assert hdr.data[0][0] == (lt < lmin)
                         assert hdr.data[0][1] == (lt > lmax)

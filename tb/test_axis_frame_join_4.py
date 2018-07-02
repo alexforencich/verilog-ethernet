@@ -233,12 +233,8 @@ def bench():
         source_1.send(test_frame_1)
         source_2.send(test_frame_2)
         source_3.send(test_frame_3)
-        yield clk.posedge
 
-        yield output_axis_tlast.posedge
-        yield clk.posedge
-        yield clk.posedge
-
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame.data == struct.pack('>H', tag) + test_frame_0.data + test_frame_1.data + test_frame_2.data + test_frame_3.data
@@ -257,12 +253,8 @@ def bench():
         source_1.send(test_frame_1)
         source_2.send(test_frame_2)
         source_3.send(test_frame_3)
-        yield clk.posedge
 
-        yield output_axis_tlast.posedge
-        yield clk.posedge
-        yield clk.posedge
-
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame.data == struct.pack('>H', tag) + test_frame_0.data + test_frame_1.data + test_frame_2.data + test_frame_3.data
@@ -297,10 +289,7 @@ def bench():
         yield clk.posedge
         sink_pause.next = False
 
-        yield output_axis_tlast.posedge
-        yield clk.posedge
-        yield clk.posedge
-
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame.data == struct.pack('>H', tag) + test_frame_0.data + test_frame_1.data + test_frame_2.data + test_frame_3.data
@@ -327,18 +316,13 @@ def bench():
         source_2.send(test_frame_2b)
         source_3.send(test_frame_3a)
         source_3.send(test_frame_3b)
-        yield clk.posedge
 
-        yield output_axis_tlast.posedge
-        yield clk.posedge
-        yield output_axis_tlast.posedge
-        yield clk.posedge
-        yield clk.posedge
-
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame.data == struct.pack('>H', tag) + test_frame_0a.data + test_frame_1a.data + test_frame_2a.data + test_frame_3a.data
 
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame.data == struct.pack('>H', tag) + test_frame_0b.data + test_frame_1b.data + test_frame_2b.data + test_frame_3b.data
@@ -381,13 +365,12 @@ def bench():
             source_3_pause.next = False
             yield clk.posedge
 
-        yield clk.posedge
-        yield clk.posedge
-
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame.data == struct.pack('>H', tag) + test_frame_0a.data + test_frame_1a.data + test_frame_2a.data + test_frame_3a.data
 
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame.data == struct.pack('>H', tag) + test_frame_0b.data + test_frame_1b.data + test_frame_2b.data + test_frame_3b.data
@@ -424,13 +407,12 @@ def bench():
             sink_pause.next = False
             yield clk.posedge
 
-        yield clk.posedge
-        yield clk.posedge
-
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame.data == struct.pack('>H', tag) + test_frame_0a.data + test_frame_1a.data + test_frame_2a.data + test_frame_3a.data
 
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame.data == struct.pack('>H', tag) + test_frame_0b.data + test_frame_1b.data + test_frame_2b.data + test_frame_3b.data
@@ -450,12 +432,8 @@ def bench():
         source_1.send(test_frame_1)
         source_2.send(test_frame_2)
         source_3.send(test_frame_3)
-        yield clk.posedge
 
-        yield output_axis_tlast.posedge
-        yield clk.posedge
-        yield clk.posedge
-
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame.data == struct.pack('>H', tag) + test_frame_0.data + test_frame_1.data + test_frame_2.data + test_frame_3.data

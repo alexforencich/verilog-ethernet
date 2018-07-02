@@ -369,25 +369,23 @@ def bench():
         source_1.send(test_frame1)
         source_2.send(test_frame2)
         source_3.send(test_frame3)
-        yield clk.posedge
 
-        while input_0_axis_tvalid or input_1_axis_tvalid or input_2_axis_tvalid or input_3_axis_tvalid:
-            yield clk.posedge
-        yield clk.posedge
-        yield clk.posedge
-
+        yield sink_0.wait()
         rx_frame0 = sink_0.recv()
 
         assert rx_frame0 == test_frame0
 
+        yield sink_1.wait()
         rx_frame1 = sink_1.recv()
 
         assert rx_frame1 == test_frame1
 
+        yield sink_2.wait()
         rx_frame2 = sink_2.recv()
 
         assert rx_frame2 == test_frame2
 
+        yield sink_3.wait()
         rx_frame3 = sink_3.recv()
 
         assert rx_frame3 == test_frame3
@@ -411,25 +409,23 @@ def bench():
         source_1.send(test_frame1)
         source_2.send(test_frame2)
         source_3.send(test_frame3)
-        yield clk.posedge
 
-        while input_0_axis_tvalid or input_1_axis_tvalid or input_2_axis_tvalid or input_3_axis_tvalid:
-            yield clk.posedge
-        yield clk.posedge
-        yield clk.posedge
-
+        yield sink_0.wait()
         rx_frame0 = sink_0.recv()
 
         assert rx_frame0 == test_frame3
 
+        yield sink_1.wait()
         rx_frame1 = sink_1.recv()
 
         assert rx_frame1 == test_frame2
 
+        yield sink_2.wait()
         rx_frame2 = sink_2.recv()
 
         assert rx_frame2 == test_frame1
 
+        yield sink_3.wait()
         rx_frame3 = sink_3.recv()
 
         assert rx_frame3 == test_frame0
@@ -447,25 +443,23 @@ def bench():
 
         test_frame0 = axis_ep.AXIStreamFrame(b'\x03\x00\xFF\xFF\x01\x02\x03\x04', id=0, dest=0)
         source_0.send(test_frame0)
-        yield clk.posedge
 
-        while input_0_axis_tvalid or input_1_axis_tvalid or input_2_axis_tvalid or input_3_axis_tvalid:
-            yield clk.posedge
-        yield clk.posedge
-        yield clk.posedge
-
+        yield sink_0.wait()
         rx_frame0 = sink_0.recv()
 
         assert rx_frame0 == test_frame0
 
+        yield sink_1.wait()
         rx_frame1 = sink_1.recv()
 
         assert rx_frame1 == test_frame0
 
+        yield sink_2.wait()
         rx_frame2 = sink_2.recv()
 
         assert rx_frame2 == test_frame0
 
+        yield sink_3.wait()
         rx_frame3 = sink_3.recv()
 
         assert rx_frame3 == test_frame0
