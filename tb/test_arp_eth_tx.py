@@ -188,12 +188,8 @@ def bench():
         test_frame.arp_tha = 0xDAD1D2D3D4D5
         test_frame.arp_tpa = 0xc0a80165
         source.send(test_frame)
-        yield clk.posedge
 
-        yield output_eth_payload_tlast.posedge
-        yield clk.posedge
-        yield clk.posedge
-
+        yield sink.wait()
         rx_frame = sink.recv()
 
         check_frame = arp_ep.ARPFrame()
@@ -229,10 +225,7 @@ def bench():
         yield clk.posedge
         sink_pause.next = False
 
-        yield output_eth_payload_tlast.posedge
-        yield clk.posedge
-        yield clk.posedge
-
+        yield sink.wait()
         rx_frame = sink.recv()
 
         check_frame = arp_ep.ARPFrame()
@@ -273,20 +266,15 @@ def bench():
         test_frame2.arp_tpa = 0xc0a80165
         source.send(test_frame1)
         source.send(test_frame2)
-        yield clk.posedge
 
-        yield output_eth_payload_tlast.posedge
-        yield clk.posedge
-        yield output_eth_payload_tlast.posedge
-        yield clk.posedge
-        yield clk.posedge
-
+        yield sink.wait()
         rx_frame = sink.recv()
 
         check_frame = arp_ep.ARPFrame()
         check_frame.parse_eth(rx_frame)
         assert check_frame == test_frame1
 
+        yield sink.wait()
         rx_frame = sink.recv()
 
         check_frame = arp_ep.ARPFrame()
@@ -338,15 +326,14 @@ def bench():
             sink_pause.next = False
             yield clk.posedge
 
-        yield clk.posedge
-        yield clk.posedge
-
+        yield sink.wait()
         rx_frame = sink.recv()
 
         check_frame = arp_ep.ARPFrame()
         check_frame.parse_eth(rx_frame)
         assert check_frame == test_frame1
 
+        yield sink.wait()
         rx_frame = sink.recv()
 
         check_frame = arp_ep.ARPFrame()

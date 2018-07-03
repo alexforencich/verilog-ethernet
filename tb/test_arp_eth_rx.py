@@ -200,12 +200,8 @@ def bench():
         test_frame.arp_tha = 0xDAD1D2D3D4D5
         test_frame.arp_tpa = 0xc0a80165
         source.send(test_frame.build_eth())
-        yield clk.posedge
 
-        yield output_frame_valid.posedge
-        yield clk.posedge
-        yield clk.posedge
-
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame == test_frame
@@ -232,12 +228,8 @@ def bench():
         eth_frame = test_frame.build_eth()
         eth_frame.payload.data += bytearray(range(10))
         source.send(eth_frame)
-        yield clk.posedge
 
-        yield output_frame_valid.posedge
-        yield clk.posedge
-        yield clk.posedge
-
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame == test_frame
@@ -278,10 +270,7 @@ def bench():
         yield clk.posedge
         sink_pause.next = False
 
-        yield output_frame_valid.posedge
-        yield clk.posedge
-        yield clk.posedge
-
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame == test_frame
@@ -320,18 +309,13 @@ def bench():
         test_frame2.arp_tpa = 0xc0a80165
         source.send(test_frame1.build_eth())
         source.send(test_frame2.build_eth())
-        yield clk.posedge
 
-        yield output_frame_valid.posedge
-        yield clk.posedge
-        yield output_frame_valid.posedge
-        yield clk.posedge
-        yield clk.posedge
-
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame == test_frame1
 
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame == test_frame2
@@ -381,13 +365,12 @@ def bench():
             source_pause.next = False
             yield clk.posedge
 
-        yield clk.posedge
-        yield clk.posedge
-
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame == test_frame1
 
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame == test_frame2
@@ -437,13 +420,12 @@ def bench():
             sink_pause.next = False
             yield clk.posedge
 
-        yield clk.posedge
-        yield clk.posedge
-
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame == test_frame1
 
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame == test_frame2

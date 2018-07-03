@@ -326,10 +326,7 @@ def bench():
 
                 yield wait()
 
-                yield clk.posedge
-                yield clk.posedge
-                yield clk.posedge
-
+                yield sink.wait()
                 rx_frame = sink.recv()
 
                 assert rx_frame == test_frame
@@ -396,14 +393,12 @@ def bench():
 
                 yield wait()
 
-                yield clk.posedge
-                yield clk.posedge
-                yield clk.posedge
-
+                yield sink.wait()
                 rx_frame = sink.recv()
 
                 assert rx_frame == test_frame1
 
+                yield sink.wait()
                 rx_frame = sink.recv()
 
                 assert rx_frame == test_frame2
@@ -472,15 +467,13 @@ def bench():
 
                 yield wait()
 
-                yield clk.posedge
-                yield clk.posedge
-                yield clk.posedge
-
+                yield sink.wait()
                 rx_frame = sink.recv()
 
                 assert rx_frame == test_frame1
                 assert rx_frame.payload.user[-1]
 
+                yield sink.wait()
                 rx_frame = sink.recv()
 
                 assert rx_frame == test_frame2
@@ -549,14 +542,12 @@ def bench():
 
                 yield wait()
 
-                yield clk.posedge
-                yield clk.posedge
-                yield clk.posedge
-
+                yield sink.wait()
                 rx_frame = sink.recv()
 
                 assert rx_frame == test_frame1
 
+                yield sink.wait()
                 rx_frame = sink.recv()
 
                 assert rx_frame == test_frame2
@@ -625,14 +616,12 @@ def bench():
 
                 yield wait()
 
-                yield clk.posedge
-                yield clk.posedge
-                yield clk.posedge
-
+                yield sink.wait()
                 rx_frame = sink.recv()
 
                 assert rx_frame == test_frame1
 
+                yield sink.wait()
                 rx_frame = sink.recv()
 
                 assert rx_frame == test_frame2
@@ -702,15 +691,13 @@ def bench():
 
                 yield wait()
 
-                yield clk.posedge
-                yield clk.posedge
-                yield clk.posedge
-
+                yield sink.wait()
                 rx_frame = sink.recv()
 
                 assert rx_frame == test_frame1
                 assert rx_frame.payload.user[-1]
 
+                yield sink.wait()
                 rx_frame = sink.recv()
 
                 assert rx_frame == test_frame2
@@ -780,15 +767,13 @@ def bench():
 
                 yield wait()
 
-                yield clk.posedge
-                yield clk.posedge
-                yield clk.posedge
-
+                yield sink.wait()
                 rx_frame = sink.recv()
 
                 assert rx_frame == test_frame1
                 assert rx_frame.payload.user[-1]
 
+                yield sink.wait()
                 rx_frame = sink.recv()
 
                 assert rx_frame == test_frame2
@@ -859,15 +844,13 @@ def bench():
 
                 yield wait()
 
-                yield clk.posedge
-                yield clk.posedge
-                yield clk.posedge
-
+                yield sink.wait()
                 rx_frame = sink.recv()
 
                 assert rx_frame.payload.user[-1]
                 assert error_payload_early_termination_asserted
 
+                yield sink.wait()
                 rx_frame = sink.recv()
 
                 assert rx_frame == test_frame2
@@ -938,15 +921,13 @@ def bench():
 
                 yield wait()
 
-                yield clk.posedge
-                yield clk.posedge
-                yield clk.posedge
-
+                yield sink.wait()
                 rx_frame = sink.recv()
 
                 assert rx_frame.payload.user[-1]
                 assert error_payload_early_termination_asserted
 
+                yield sink.wait()
                 rx_frame = sink.recv()
 
                 assert rx_frame == test_frame2
@@ -1018,13 +999,10 @@ def bench():
 
                 yield wait()
 
-                yield clk.posedge
-                yield clk.posedge
-                yield clk.posedge
+                yield sink.wait()
+                rx_frame = sink.recv()
 
                 assert error_header_early_termination_asserted
-
-                rx_frame = sink.recv()
 
                 assert rx_frame == test_frame2
 

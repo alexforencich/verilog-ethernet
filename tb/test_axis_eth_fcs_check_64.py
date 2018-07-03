@@ -200,10 +200,7 @@ def bench():
 
                 yield wait()
 
-                yield clk.posedge
-                yield clk.posedge
-                yield clk.posedge
-
+                yield sink.wait()
                 rx_frame = sink.recv()
 
                 eth_frame = eth_ep.EthFrame()
@@ -245,10 +242,7 @@ def bench():
 
                 yield wait()
 
-                yield clk.posedge
-                yield clk.posedge
-                yield clk.posedge
-
+                yield sink.wait()
                 rx_frame = sink.recv()
 
                 eth_frame = eth_ep.EthFrame()
@@ -258,6 +252,7 @@ def bench():
                 assert eth_frame == test_frame1
                 assert not rx_frame.user[-1]
 
+                yield sink.wait()
                 rx_frame = sink.recv()
 
                 eth_frame = eth_ep.EthFrame()
@@ -301,14 +296,12 @@ def bench():
 
                 yield wait()
 
-                yield clk.posedge
-                yield clk.posedge
-                yield clk.posedge
-
+                yield sink.wait()
                 rx_frame = sink.recv()
 
                 assert rx_frame.user[-1]
 
+                yield sink.wait()
                 rx_frame = sink.recv()
 
                 eth_frame = eth_ep.EthFrame()
@@ -354,16 +347,14 @@ def bench():
 
                 yield wait()
 
-                yield clk.posedge
-                yield clk.posedge
-                yield clk.posedge
+                yield sink.wait()
+                rx_frame = sink.recv()
 
                 assert error_bad_fcs_asserted
 
-                rx_frame = sink.recv()
-
                 assert rx_frame.user[-1]
 
+                yield sink.wait()
                 rx_frame = sink.recv()
 
                 eth_frame = eth_ep.EthFrame()
@@ -393,10 +384,7 @@ def bench():
 
                 yield wait()
 
-                yield clk.posedge
-                yield clk.posedge
-                yield clk.posedge
-
+                yield sink.wait()
                 rx_frame = sink.recv()
 
                 assert test_frame == bytearray(rx_frame)

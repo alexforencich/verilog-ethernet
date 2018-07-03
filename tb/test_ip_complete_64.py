@@ -408,14 +408,7 @@ def bench():
 
         eth_source.send(eth_frame)
 
-        yield clk.posedge
-        yield clk.posedge
-
-        yield wait_normal()
-
-        yield clk.posedge
-        yield clk.posedge
-
+        yield ip_sink.wait()
         rx_frame = ip_sink.recv()
 
         assert rx_frame == test_frame
@@ -455,9 +448,7 @@ def bench():
         ip_source.send(test_frame)
 
         # wait for ARP request packet
-        while eth_sink.empty():
-            yield clk.posedge
-
+        yield eth_sink.wait()
         rx_frame = eth_sink.recv()
         check_frame = arp_ep.ARPFrame()
         check_frame.parse_eth(rx_frame)
@@ -491,14 +482,7 @@ def bench():
         arp_frame.arp_tpa = 0xc0a80164
         eth_source.send(arp_frame.build_eth())
 
-        yield clk.posedge
-        yield clk.posedge
-
-        yield wait_normal()
-
-        yield clk.posedge
-        yield clk.posedge
-
+        yield eth_sink.wait()
         rx_frame = eth_sink.recv()
 
         check_frame = ip_ep.IPFrame()

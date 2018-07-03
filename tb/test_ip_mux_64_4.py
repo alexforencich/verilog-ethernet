@@ -528,14 +528,8 @@ def bench():
         test_frame.build()
 
         source_0.send(test_frame)
-        yield clk.posedge
-        yield clk.posedge
 
-        while input_0_ip_payload_tvalid or input_1_ip_payload_tvalid or input_2_ip_payload_tvalid or input_3_ip_payload_tvalid:
-            yield clk.posedge
-        yield clk.posedge
-        yield clk.posedge
-
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame == test_frame
@@ -569,14 +563,8 @@ def bench():
         test_frame.build()
 
         source_1.send(test_frame)
-        yield clk.posedge
-        yield clk.posedge
 
-        while input_0_ip_payload_tvalid or input_1_ip_payload_tvalid or input_2_ip_payload_tvalid or input_3_ip_payload_tvalid:
-            yield clk.posedge
-        yield clk.posedge
-        yield clk.posedge
-
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame == test_frame
@@ -630,18 +618,13 @@ def bench():
 
         source_0.send(test_frame1)
         source_0.send(test_frame2)
-        yield clk.posedge
-        yield clk.posedge
 
-        while input_0_ip_payload_tvalid or input_1_ip_payload_tvalid or input_2_ip_payload_tvalid or input_3_ip_payload_tvalid:
-            yield clk.posedge
-        yield clk.posedge
-        yield clk.posedge
-
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame == test_frame1
 
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame == test_frame2
@@ -701,13 +684,13 @@ def bench():
         while input_0_ip_payload_tvalid or input_1_ip_payload_tvalid or input_2_ip_payload_tvalid or input_3_ip_payload_tvalid:
             yield clk.posedge
             select.next = 2
-        yield clk.posedge
-        yield clk.posedge
 
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame == test_frame1
 
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame == test_frame2
@@ -778,13 +761,13 @@ def bench():
             source_3_pause.next = False
             yield clk.posedge
             select.next = 2
-        yield clk.posedge
-        yield clk.posedge
 
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame == test_frame1
 
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame == test_frame2
@@ -849,14 +832,13 @@ def bench():
             sink_pause.next = False
             yield clk.posedge
             select.next = 2
-        yield clk.posedge
-        yield clk.posedge
-        yield clk.posedge
 
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame == test_frame1
 
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame == test_frame2

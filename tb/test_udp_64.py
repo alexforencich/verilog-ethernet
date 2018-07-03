@@ -447,16 +447,6 @@ def bench():
         if (tx_error_payload_early_termination):
             tx_error_payload_early_termination_asserted.next = 1
 
-    def wait_normal():
-        i = 8
-        while i > 0:
-            i = max(0, i-1)
-            if (input_ip_payload_tvalid or input_udp_payload_tvalid or
-                    output_ip_payload_tvalid or output_udp_payload_tvalid or
-                    input_ip_hdr_valid or input_udp_hdr_valid):
-                i = 8
-            yield clk.posedge
-
     @instance
     def check():
         yield delay(100)
@@ -497,14 +487,7 @@ def bench():
 
         ip_source.send(ip_frame)
 
-        yield clk.posedge
-        yield clk.posedge
-
-        yield wait_normal()
-
-        yield clk.posedge
-        yield clk.posedge
-
+        yield udp_sink.wait()
         rx_frame = udp_sink.recv()
 
         assert rx_frame == test_frame
@@ -544,14 +527,7 @@ def bench():
 
         udp_source.send(test_frame)
 
-        yield clk.posedge
-        yield clk.posedge
-
-        yield wait_normal()
-
-        yield clk.posedge
-        yield clk.posedge
-
+        yield ip_sink.wait()
         rx_frame = ip_sink.recv()
 
         check_frame = udp_ep.UDPFrame()

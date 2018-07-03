@@ -445,14 +445,7 @@ def bench():
 
         eth_source.send(eth_frame)
 
-        yield clk.posedge
-        yield clk.posedge
-
-        yield wait_normal()
-
-        yield clk.posedge
-        yield clk.posedge
-
+        yield ip_sink.wait()
         rx_frame = ip_sink.recv()
 
         assert rx_frame == test_frame
@@ -490,14 +483,7 @@ def bench():
 
         ip_source.send(test_frame)
 
-        yield clk.posedge
-        yield clk.posedge
-
-        yield wait_normal()
-
-        yield clk.posedge
-        yield clk.posedge
-
+        yield eth_sink.wait()
         rx_frame = eth_sink.recv()
 
         check_frame = ip_ep.IPFrame()

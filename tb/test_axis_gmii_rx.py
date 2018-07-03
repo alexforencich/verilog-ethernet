@@ -180,20 +180,8 @@ def bench():
                 gmii_frame = gmii_ep.GMIIFrame(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+bytearray(axis_frame))
 
                 source.send(gmii_frame)
-                yield clk.posedge
-                yield clk.posedge
 
-                while not clk_enable or not gmii_rx_dv:
-                    yield clk.posedge
-                yield clk.posedge
-
-                while not clk_enable or gmii_rx_dv or output_axis_tvalid:
-                    yield clk.posedge
-
-                yield clk.posedge
-                yield clk.posedge
-                yield clk.posedge
-
+                yield sink.wait()
                 rx_frame = sink.recv()
 
                 eth_frame = eth_ep.EthFrame()
@@ -230,29 +218,8 @@ def bench():
 
                 source.send(gmii_frame1)
                 source.send(gmii_frame2)
-                yield clk.posedge
-                yield clk.posedge
 
-                while not clk_enable or not gmii_rx_dv:
-                    yield clk.posedge
-                yield clk.posedge
-
-                while not clk_enable or gmii_rx_dv or output_axis_tvalid:
-                    yield clk.posedge
-
-                yield clk.posedge
-
-                while not clk_enable or not gmii_rx_dv:
-                    yield clk.posedge
-                yield clk.posedge
-
-                while not clk_enable or gmii_rx_dv or output_axis_tvalid:
-                    yield clk.posedge
-
-                yield clk.posedge
-                yield clk.posedge
-                yield clk.posedge
-
+                yield sink.wait()
                 rx_frame = sink.recv()
 
                 eth_frame = eth_ep.EthFrame()
@@ -261,6 +228,7 @@ def bench():
 
                 assert eth_frame == test_frame1
 
+                yield sink.wait()
                 rx_frame = sink.recv()
 
                 eth_frame = eth_ep.EthFrame()
@@ -303,36 +271,16 @@ def bench():
 
                 source.send(gmii_frame1)
                 source.send(gmii_frame2)
-                yield clk.posedge
-                yield clk.posedge
 
-                while not clk_enable or not gmii_rx_dv:
-                    yield clk.posedge
-                yield clk.posedge
-
-                while not clk_enable or gmii_rx_dv or output_axis_tvalid:
-                    yield clk.posedge
-
-                yield clk.posedge
-
-                while not clk_enable or not gmii_rx_dv:
-                    yield clk.posedge
-                yield clk.posedge
-
-                while not clk_enable or gmii_rx_dv or output_axis_tvalid:
-                    yield clk.posedge
-
-                yield clk.posedge
-                yield clk.posedge
-                yield clk.posedge
+                yield sink.wait()
+                rx_frame = sink.recv()
 
                 assert error_bad_frame_asserted
                 assert error_bad_fcs_asserted
 
-                rx_frame = sink.recv()
-
                 assert rx_frame.user[-1]
 
+                yield sink.wait()
                 rx_frame = sink.recv()
 
                 eth_frame = eth_ep.EthFrame()
@@ -375,36 +323,16 @@ def bench():
 
                 source.send(gmii_frame1)
                 source.send(gmii_frame2)
-                yield clk.posedge
-                yield clk.posedge
 
-                while not clk_enable or not gmii_rx_dv:
-                    yield clk.posedge
-                yield clk.posedge
-
-                while not clk_enable or gmii_rx_dv or output_axis_tvalid:
-                    yield clk.posedge
-
-                yield clk.posedge
-
-                while not clk_enable or not gmii_rx_dv:
-                    yield clk.posedge
-                yield clk.posedge
-
-                while not clk_enable or gmii_rx_dv or output_axis_tvalid:
-                    yield clk.posedge
-
-                yield clk.posedge
-                yield clk.posedge
-                yield clk.posedge
+                yield sink.wait()
+                rx_frame = sink.recv()
 
                 assert error_bad_frame_asserted
                 assert not error_bad_fcs_asserted
 
-                rx_frame = sink.recv()
-
                 assert rx_frame.user[-1]
 
+                yield sink.wait()
                 rx_frame = sink.recv()
 
                 eth_frame = eth_ep.EthFrame()

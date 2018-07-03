@@ -158,16 +158,8 @@ def bench():
             xgmii_frame = xgmii_ep.XGMIIFrame(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+bytearray(axis_frame))
 
             source.send(xgmii_frame)
-            yield clk.posedge
-            yield clk.posedge
 
-            while xgmii_rxc != 0xff or output_axis_tvalid or not source.empty():
-                yield clk.posedge
-
-            yield clk.posedge
-            yield clk.posedge
-            yield clk.posedge
-
+            yield sink.wait()
             rx_frame = sink.recv()
 
             eth_frame = eth_ep.EthFrame()
@@ -205,21 +197,8 @@ def bench():
 
             source.send(xgmii_frame1)
             source.send(xgmii_frame2)
-            yield clk.posedge
-            yield clk.posedge
 
-            while xgmii_rxc != 0xff or output_axis_tvalid or not source.empty():
-                yield clk.posedge
-
-            yield clk.posedge
-
-            while xgmii_rxc != 0xff or output_axis_tvalid or not source.empty():
-                yield clk.posedge
-
-            yield clk.posedge
-            yield clk.posedge
-            yield clk.posedge
-
+            yield sink.wait()
             rx_frame = sink.recv()
 
             eth_frame = eth_ep.EthFrame()
@@ -228,6 +207,7 @@ def bench():
 
             assert eth_frame == test_frame1
 
+            yield sink.wait()
             rx_frame = sink.recv()
 
             eth_frame = eth_ep.EthFrame()
@@ -270,28 +250,16 @@ def bench():
 
             source.send(xgmii_frame1)
             source.send(xgmii_frame2)
-            yield clk.posedge
-            yield clk.posedge
 
-            while xgmii_rxc != 0xff or output_axis_tvalid or not source.empty():
-                yield clk.posedge
-
-            yield clk.posedge
-
-            while xgmii_rxc != 0xff or output_axis_tvalid or not source.empty():
-                yield clk.posedge
-
-            yield clk.posedge
-            yield clk.posedge
-            yield clk.posedge
+            yield sink.wait()
+            rx_frame = sink.recv()
 
             assert error_bad_frame_asserted
             assert error_bad_fcs_asserted
 
-            rx_frame = sink.recv()
-
             assert rx_frame.user[-1]
 
+            yield sink.wait()
             rx_frame = sink.recv()
 
             eth_frame = eth_ep.EthFrame()
@@ -334,28 +302,16 @@ def bench():
 
             source.send(xgmii_frame1)
             source.send(xgmii_frame2)
-            yield clk.posedge
-            yield clk.posedge
 
-            while xgmii_rxc != 0xff or output_axis_tvalid or not source.empty():
-                yield clk.posedge
-
-            yield clk.posedge
-
-            while xgmii_rxc != 0xff or output_axis_tvalid or not source.empty():
-                yield clk.posedge
-
-            yield clk.posedge
-            yield clk.posedge
-            yield clk.posedge
+            yield sink.wait()
+            rx_frame = sink.recv()
 
             assert error_bad_frame_asserted
             assert not error_bad_fcs_asserted
 
-            rx_frame = sink.recv()
-
             assert rx_frame.last_cycle_user
 
+            yield sink.wait()
             rx_frame = sink.recv()
 
             eth_frame = eth_ep.EthFrame()

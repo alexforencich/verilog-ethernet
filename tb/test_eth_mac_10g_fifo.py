@@ -240,20 +240,8 @@ def bench():
         axis_frame = test_frame.build_axis_fcs()
 
         xgmii_source.send(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+bytearray(axis_frame))
-        yield clk.posedge
-        yield clk.posedge
 
-        while xgmii_rxc != 0xff:
-            yield clk.posedge
-
-        yield delay(100)
-
-        while rx_axis_tvalid:
-            yield clk.posedge
-
-        yield clk.posedge
-        yield clk.posedge
-
+        yield axis_sink.wait()
         rx_frame = axis_sink.recv()
 
         eth_frame = eth_ep.EthFrame()
@@ -278,20 +266,8 @@ def bench():
         axis_frame = test_frame.build_axis()
 
         axis_source.send(axis_frame)
-        yield clk.posedge
-        yield clk.posedge
 
-        while tx_axis_tvalid:
-            yield clk.posedge
-
-        yield delay(100)
-
-        while xgmii_txc != 0xff:
-            yield clk.posedge
-
-        yield clk.posedge
-        yield clk.posedge
-
+        yield xgmii_sink.wait()
         rx_frame = xgmii_sink.recv()
 
         assert rx_frame.data[0:8] == bytearray(b'\x55\x55\x55\x55\x55\x55\x55\xD5')

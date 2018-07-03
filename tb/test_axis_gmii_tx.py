@@ -176,20 +176,8 @@ def bench():
                 axis_frame = test_frame.build_axis()
 
                 source.send(axis_frame)
-                yield clk.posedge
-                yield clk.posedge
 
-                while not clk_enable:
-                    yield clk.posedge
-                yield clk.posedge
-
-                while not clk_enable or gmii_tx_en or input_axis_tvalid:
-                    yield clk.posedge
-
-                yield clk.posedge
-                yield clk.posedge
-                yield clk.posedge
-
+                yield sink.wait()
                 rx_frame = sink.recv()
 
                 assert rx_frame.data[0:8] == bytearray(b'\x55\x55\x55\x55\x55\x55\x55\xD5')
@@ -233,29 +221,8 @@ def bench():
 
                 source.send(axis_frame1)
                 source.send(axis_frame2)
-                yield clk.posedge
-                yield clk.posedge
 
-                while not clk_enable:
-                    yield clk.posedge
-                yield clk.posedge
-
-                while not clk_enable or gmii_tx_en or input_axis_tvalid:
-                    yield clk.posedge
-
-                yield clk.posedge
-
-                while not clk_enable:
-                    yield clk.posedge
-                yield clk.posedge
-
-                while not clk_enable or gmii_tx_en or input_axis_tvalid:
-                    yield clk.posedge
-
-                yield clk.posedge
-                yield clk.posedge
-                yield clk.posedge
-
+                yield sink.wait()
                 rx_frame = sink.recv()
 
                 assert rx_frame.data[0:8] == bytearray(b'\x55\x55\x55\x55\x55\x55\x55\xD5')
@@ -273,6 +240,7 @@ def bench():
                 assert eth_frame.eth_type == test_frame1.eth_type
                 assert eth_frame.payload.data.index(test_frame1.payload.data) == 0
 
+                yield sink.wait()
                 rx_frame = sink.recv()
 
                 assert rx_frame.data[0:8] == bytearray(b'\x55\x55\x55\x55\x55\x55\x55\xD5')
@@ -318,29 +286,8 @@ def bench():
 
                 source.send(axis_frame1)
                 source.send(axis_frame2)
-                yield clk.posedge
-                yield clk.posedge
 
-                while not clk_enable:
-                    yield clk.posedge
-                yield clk.posedge
-
-                while not clk_enable or gmii_tx_en or input_axis_tvalid:
-                    yield clk.posedge
-
-                yield clk.posedge
-
-                while not clk_enable:
-                    yield clk.posedge
-                yield clk.posedge
-
-                while not clk_enable or gmii_tx_en or input_axis_tvalid:
-                    yield clk.posedge
-
-                yield clk.posedge
-                yield clk.posedge
-                yield clk.posedge
-
+                yield sink.wait()
                 rx_frame = sink.recv()
 
                 assert rx_frame.data[0:8] == bytearray(b'\x55\x55\x55\x55\x55\x55\x55\xD5')
@@ -348,6 +295,7 @@ def bench():
 
                 # bad packet
 
+                yield sink.wait()
                 rx_frame = sink.recv()
 
                 assert rx_frame.data[0:8] == bytearray(b'\x55\x55\x55\x55\x55\x55\x55\xD5')

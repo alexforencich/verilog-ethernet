@@ -249,11 +249,8 @@ def bench():
         test_frame.arp_tha = 0x000000000000
         test_frame.arp_tpa = 0xc0a80165
         eth_source.send(test_frame.build_eth())
-        yield clk.posedge
 
-        while eth_sink.empty():
-            yield clk.posedge
-
+        yield eth_sink.wait()
         rx_frame = eth_sink.recv()
         check_frame = arp_ep.ARPFrame()
         check_frame.parse_eth(rx_frame)
@@ -279,9 +276,7 @@ def bench():
 
         arp_request_source.send([(0xc0a80164,)])
 
-        while arp_response_sink.empty():
-            yield clk.posedge
-
+        yield arp_response_sink.wait()
         err, mac = arp_response_sink.recv().data[0]
 
         assert not err
@@ -296,9 +291,7 @@ def bench():
         arp_request_source.send([(0xc0a80166,)])
 
         # wait for ARP request packet
-        while eth_sink.empty():
-            yield clk.posedge
-
+        yield eth_sink.wait()
         rx_frame = eth_sink.recv()
         check_frame = arp_ep.ARPFrame()
         check_frame.parse_eth(rx_frame)
@@ -331,12 +324,9 @@ def bench():
         test_frame.arp_tha = 0xDAD1D2D3D4D5
         test_frame.arp_tpa = 0xc0a80165
         eth_source.send(test_frame.build_eth())
-        yield clk.posedge
 
         # wait for lookup
-        while arp_response_sink.empty():
-            yield clk.posedge
-
+        yield arp_response_sink.wait()
         err, mac = arp_response_sink.recv().data[0]
 
         assert not err
@@ -351,9 +341,7 @@ def bench():
         arp_request_source.send([(0x08080808,)])
 
         # wait for ARP request packet
-        while eth_sink.empty():
-            yield clk.posedge
-
+        yield eth_sink.wait()
         rx_frame = eth_sink.recv()
         check_frame = arp_ep.ARPFrame()
         check_frame.parse_eth(rx_frame)
@@ -386,12 +374,9 @@ def bench():
         test_frame.arp_tha = 0xDAD1D2D3D4D5
         test_frame.arp_tpa = 0xc0a80165
         eth_source.send(test_frame.build_eth())
-        yield clk.posedge
 
         # wait for lookup
-        while arp_response_sink.empty():
-            yield clk.posedge
-
+        yield arp_response_sink.wait()
         err, mac = arp_response_sink.recv().data[0]
 
         assert not err
@@ -405,9 +390,7 @@ def bench():
 
         arp_request_source.send([(0xc0a80167,)])
 
-        while arp_response_sink.empty():
-            yield clk.posedge
-
+        yield arp_response_sink.wait()
         err, mac = arp_response_sink.recv().data[0]
 
         assert err
@@ -443,9 +426,7 @@ def bench():
         # subnet broadcast
         arp_request_source.send([(0xc0a801ff,)])
 
-        while arp_response_sink.empty():
-            yield clk.posedge
-
+        yield arp_response_sink.wait()
         err, mac = arp_response_sink.recv().data[0]
 
         assert not err
@@ -454,9 +435,7 @@ def bench():
         # general broadcast
         arp_request_source.send([(0xffffffff,)])
 
-        while arp_response_sink.empty():
-            yield clk.posedge
-
+        yield arp_response_sink.wait()
         err, mac = arp_response_sink.recv().data[0]
 
         assert not err

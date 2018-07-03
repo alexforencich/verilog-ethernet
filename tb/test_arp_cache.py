@@ -176,24 +176,18 @@ def bench():
         query_request_source.send([(0xc0a80112, )])
         query_request_source.send([(0xc0a80113, )])
 
-        while query_response_sink.empty():
-            yield clk.posedge
-
+        yield query_response_sink.wait()
         resp = query_response_sink.recv()
         assert resp.data[0][0] == 0x0000c0a80111
         assert not resp.user[0]
 
-        while query_response_sink.empty():
-            yield clk.posedge
-
+        yield query_response_sink.wait()
         resp = query_response_sink.recv()
         assert resp.data[0][0] == 0x0000c0a80112
         assert not resp.user[0]
 
         # not in cache; was not written
-        while query_response_sink.empty():
-            yield clk.posedge
-
+        yield query_response_sink.wait()
         resp = query_response_sink.recv()
         assert resp.user[0]
 
@@ -223,9 +217,7 @@ def bench():
         yield clk.posedge
         query_request_source.send([(0xc0a80111, )])
 
-        while query_response_sink.empty():
-            yield clk.posedge
-
+        yield query_response_sink.wait()
         resp = query_response_sink.recv()
         assert resp.data[0][0] == 0x0000c0a80111
         assert not resp.user[0]
@@ -233,9 +225,7 @@ def bench():
         yield clk.posedge
         query_request_source.send([(0xc0a80112, )])
 
-        while query_response_sink.empty():
-            yield clk.posedge
-
+        yield query_response_sink.wait()
         resp = query_response_sink.recv()
         assert resp.data[0][0] == 0x0000c0a80112
         assert not resp.user[0]
@@ -244,18 +234,14 @@ def bench():
         yield clk.posedge
         query_request_source.send([(0xc0a80121, )])
 
-        while query_response_sink.empty():
-            yield clk.posedge
-
+        yield query_response_sink.wait()
         resp = query_response_sink.recv()
         assert resp.user[0]
 
         yield clk.posedge
         query_request_source.send([(0xc0a80122, )])
 
-        while query_response_sink.empty():
-            yield clk.posedge
-
+        yield query_response_sink.wait()
         resp = query_response_sink.recv()
         assert resp.data[0][0] == 0x0000c0a80122
         assert not resp.user[0]
@@ -263,9 +249,7 @@ def bench():
         yield clk.posedge
         query_request_source.send([(0xc0a80123, )])
 
-        while query_response_sink.empty():
-            yield clk.posedge
-
+        yield query_response_sink.wait()
         resp = query_response_sink.recv()
         assert resp.data[0][0] == 0x0000c0a80123
         assert not resp.user[0]

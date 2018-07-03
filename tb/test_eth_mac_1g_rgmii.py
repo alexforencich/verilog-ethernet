@@ -260,20 +260,8 @@ def bench():
             axis_frame = test_frame.build_axis_fcs()
 
             rgmii_source.send(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+bytearray(axis_frame))
-            yield rgmii_rx_clk.posedge
-            yield rgmii_rx_clk.posedge
 
-            while not (rgmii_rx_ctl or rgmii_tx_ctl):
-                yield rgmii_rx_clk.posedge
-            yield rgmii_rx_clk.posedge
-
-            while rgmii_rx_ctl or rgmii_tx_ctl or tx_axis_tvalid or rx_axis_tvalid:
-                yield rgmii_rx_clk.posedge
-
-            yield rgmii_rx_clk.posedge
-            yield rgmii_rx_clk.posedge
-            yield rgmii_rx_clk.posedge
-
+            yield axis_sink.wait()
             rx_frame = axis_sink.recv()
 
             eth_frame = eth_ep.EthFrame()
@@ -298,20 +286,8 @@ def bench():
             axis_frame = test_frame.build_axis()
 
             axis_source.send(axis_frame)
-            yield rgmii_rx_clk.posedge
-            yield rgmii_rx_clk.posedge
 
-            while not (rgmii_rx_ctl or rgmii_tx_ctl):
-                yield rgmii_rx_clk.posedge
-            yield rgmii_rx_clk.posedge
-
-            while rgmii_rx_ctl or rgmii_tx_ctl or tx_axis_tvalid or rx_axis_tvalid:
-                yield rgmii_rx_clk.posedge
-
-            yield rgmii_rx_clk.posedge
-            yield rgmii_rx_clk.posedge
-            yield rgmii_rx_clk.posedge
-
+            yield rgmii_sink.wait()
             rx_frame = rgmii_sink.recv()
 
             assert rx_frame.data[0:8] == bytearray(b'\x55\x55\x55\x55\x55\x55\x55\xD5')

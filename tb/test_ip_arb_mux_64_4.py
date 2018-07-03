@@ -522,14 +522,8 @@ def bench():
         test_frame.build()
 
         source_0.send(test_frame)
-        yield clk.posedge
-        yield clk.posedge
 
-        while input_0_ip_payload_tvalid or input_1_ip_payload_tvalid or input_2_ip_payload_tvalid or input_3_ip_payload_tvalid:
-            yield clk.posedge
-        yield clk.posedge
-        yield clk.posedge
-
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame == test_frame
@@ -561,14 +555,8 @@ def bench():
         test_frame.build()
 
         source_1.send(test_frame)
-        yield clk.posedge
-        yield clk.posedge
 
-        while input_0_ip_payload_tvalid or input_1_ip_payload_tvalid or input_2_ip_payload_tvalid or input_3_ip_payload_tvalid:
-            yield clk.posedge
-        yield clk.posedge
-        yield clk.posedge
-
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame == test_frame
@@ -620,18 +608,13 @@ def bench():
 
         source_0.send(test_frame1)
         source_0.send(test_frame2)
-        yield clk.posedge
-        yield clk.posedge
 
-        while input_0_ip_payload_tvalid or input_1_ip_payload_tvalid or input_2_ip_payload_tvalid or input_3_ip_payload_tvalid:
-            yield clk.posedge
-        yield clk.posedge
-        yield clk.posedge
-
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame == test_frame1
 
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame == test_frame2
@@ -683,18 +666,13 @@ def bench():
 
         source_1.send(test_frame1)
         source_2.send(test_frame2)
-        yield clk.posedge
-        yield clk.posedge
 
-        while input_0_ip_payload_tvalid or input_1_ip_payload_tvalid or input_2_ip_payload_tvalid or input_3_ip_payload_tvalid:
-            yield clk.posedge
-        yield clk.posedge
-        yield clk.posedge
-
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame == test_frame1
 
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame == test_frame2
@@ -762,13 +740,13 @@ def bench():
             source_2_pause.next = False
             source_3_pause.next = False
             yield clk.posedge
-        yield clk.posedge
-        yield clk.posedge
 
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame == test_frame1
 
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame == test_frame2
@@ -830,14 +808,13 @@ def bench():
             yield clk.posedge
             sink_pause.next = False
             yield clk.posedge
-        yield clk.posedge
-        yield clk.posedge
-        yield clk.posedge
 
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame == test_frame1
 
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame == test_frame2
@@ -899,31 +876,32 @@ def bench():
         yield clk.posedge
         source_1.send(test_frame1)
 
-        while input_0_ip_payload_tvalid or input_1_ip_payload_tvalid or input_2_ip_payload_tvalid or input_3_ip_payload_tvalid:
-            yield clk.posedge
-        yield clk.posedge
-        yield clk.posedge
-
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame == test_frame1
 
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame == test_frame2
 
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame == test_frame2
 
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame == test_frame2
 
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame == test_frame1
 
+        yield sink.wait()
         rx_frame = sink.recv()
 
         assert rx_frame == test_frame2

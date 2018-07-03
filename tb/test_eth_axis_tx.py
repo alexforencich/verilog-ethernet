@@ -189,10 +189,7 @@ def bench():
 
                 yield wait()
 
-                yield clk.posedge
-                yield clk.posedge
-                yield clk.posedge
-
+                yield sink.wait()
                 rx_frame = sink.recv()
 
                 check_frame = eth_ep.EthFrame()
@@ -227,10 +224,7 @@ def bench():
 
                 yield wait()
 
-                yield clk.posedge
-                yield clk.posedge
-                yield clk.posedge
-
+                yield sink.wait()
                 rx_frame = sink.recv()
 
                 check_frame = eth_ep.EthFrame()
@@ -238,6 +232,7 @@ def bench():
 
                 assert check_frame == test_frame1
 
+                yield sink.wait()
                 rx_frame = sink.recv()
 
                 check_frame = eth_ep.EthFrame()
@@ -274,10 +269,7 @@ def bench():
 
                 yield wait()
 
-                yield clk.posedge
-                yield clk.posedge
-                yield clk.posedge
-
+                yield sink.wait()
                 rx_frame = sink.recv()
 
                 check_frame = eth_ep.EthFrame()
@@ -286,6 +278,7 @@ def bench():
                 assert check_frame == test_frame1
                 assert rx_frame.user[-1]
 
+                yield sink.wait()
                 rx_frame = sink.recv()
 
                 check_frame = eth_ep.EthFrame()
