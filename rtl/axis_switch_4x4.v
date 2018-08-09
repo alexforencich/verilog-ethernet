@@ -253,7 +253,7 @@ assign input_3_axis_tready = input_3_axis_tready_reg;
 // mux for incoming packet
 
 reg [DATA_WIDTH-1:0] current_input_0_axis_tdata;
-reg [DATA_WIDTH-1:0] current_input_0_axis_tkeep;
+reg [KEEP_WIDTH-1:0] current_input_0_axis_tkeep;
 reg                  current_input_0_axis_tvalid;
 reg                  current_input_0_axis_tready;
 reg                  current_input_0_axis_tlast;
@@ -317,7 +317,7 @@ always @* begin
 end
 
 reg [DATA_WIDTH-1:0] current_input_1_axis_tdata;
-reg [DATA_WIDTH-1:0] current_input_1_axis_tkeep;
+reg [KEEP_WIDTH-1:0] current_input_1_axis_tkeep;
 reg                  current_input_1_axis_tvalid;
 reg                  current_input_1_axis_tready;
 reg                  current_input_1_axis_tlast;
@@ -381,7 +381,7 @@ always @* begin
 end
 
 reg [DATA_WIDTH-1:0] current_input_2_axis_tdata;
-reg [DATA_WIDTH-1:0] current_input_2_axis_tkeep;
+reg [KEEP_WIDTH-1:0] current_input_2_axis_tkeep;
 reg                  current_input_2_axis_tvalid;
 reg                  current_input_2_axis_tready;
 reg                  current_input_2_axis_tlast;
@@ -445,7 +445,7 @@ always @* begin
 end
 
 reg [DATA_WIDTH-1:0] current_input_3_axis_tdata;
-reg [DATA_WIDTH-1:0] current_input_3_axis_tkeep;
+reg [KEEP_WIDTH-1:0] current_input_3_axis_tkeep;
 reg                  current_input_3_axis_tvalid;
 reg                  current_input_3_axis_tready;
 reg                  current_input_3_axis_tlast;

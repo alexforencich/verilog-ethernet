@@ -189,7 +189,7 @@ assign input_{{p}}_axis_tready = input_{{p}}_axis_tready_reg;
 // mux for incoming packet
 {% for p in range(n) %}
 reg [DATA_WIDTH-1:0] current_input_{{p}}_axis_tdata;
-reg [DATA_WIDTH-1:0] current_input_{{p}}_axis_tkeep;
+reg [KEEP_WIDTH-1:0] current_input_{{p}}_axis_tkeep;
 reg                  current_input_{{p}}_axis_tvalid;
 reg                  current_input_{{p}}_axis_tready;
 reg                  current_input_{{p}}_axis_tlast;
