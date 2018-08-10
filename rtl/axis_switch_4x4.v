@@ -57,8 +57,8 @@ module axis_switch_4x4 #
     parameter LSB_PRIORITY = "HIGH"
 )
 (
-    input  wire        clk,
-    input  wire        rst,
+    input  wire                   clk,
+    input  wire                   rst,
 
     /*
      * AXI Stream inputs
@@ -189,11 +189,6 @@ reg [3:0] input_3_request_reg = 4'd0, input_3_request_next;
 reg input_3_request_valid_reg = 1'b0, input_3_request_valid_next;
 reg input_3_request_error_reg = 1'b0, input_3_request_error_next;
 
-reg [1:0] select_0_reg = 2'd0, select_0_next;
-reg [1:0] select_1_reg = 2'd0, select_1_next;
-reg [1:0] select_2_reg = 2'd0, select_2_next;
-reg [1:0] select_3_reg = 2'd0, select_3_next;
-
 reg enable_0_reg = 1'b0, enable_0_next;
 reg enable_1_reg = 1'b0, enable_1_next;
 reg enable_2_reg = 1'b0, enable_2_next;
@@ -262,7 +257,7 @@ reg [DEST_WIDTH-1:0] current_input_0_axis_tdest;
 reg [USER_WIDTH-1:0] current_input_0_axis_tuser;
 
 always @* begin
-    case (select_0_reg)
+    case (grant_encoded_0)
         2'd0: begin
             current_input_0_axis_tdata  = input_0_axis_tdata;
             current_input_0_axis_tkeep  = input_0_axis_tkeep;
@@ -326,7 +321,7 @@ reg [DEST_WIDTH-1:0] current_input_1_axis_tdest;
 reg [USER_WIDTH-1:0] current_input_1_axis_tuser;
 
 always @* begin
-    case (select_1_reg)
+    case (grant_encoded_1)
         2'd0: begin
             current_input_1_axis_tdata  = input_0_axis_tdata;
             current_input_1_axis_tkeep  = input_0_axis_tkeep;
@@ -390,7 +385,7 @@ reg [DEST_WIDTH-1:0] current_input_2_axis_tdest;
 reg [USER_WIDTH-1:0] current_input_2_axis_tuser;
 
 always @* begin
-    case (select_2_reg)
+    case (grant_encoded_2)
         2'd0: begin
             current_input_2_axis_tdata  = input_0_axis_tdata;
             current_input_2_axis_tkeep  = input_0_axis_tkeep;
@@ -454,7 +449,7 @@ reg [DEST_WIDTH-1:0] current_input_3_axis_tdest;
 reg [USER_WIDTH-1:0] current_input_3_axis_tuser;
 
 always @* begin
-    case (select_3_reg)
+    case (grant_encoded_3)
         2'd0: begin
             current_input_3_axis_tdata  = input_0_axis_tdata;
             current_input_3_axis_tkeep  = input_0_axis_tkeep;
@@ -641,10 +636,6 @@ assign acknowledge_3[2] = grant_3[2] & input_2_axis_tvalid & input_2_axis_tready
 assign acknowledge_3[3] = grant_3[3] & input_3_axis_tvalid & input_3_axis_tready & input_3_axis_tlast;
 
 always @* begin
-    select_0_next = select_0_reg;
-    select_1_next = select_1_reg;
-    select_2_next = select_2_reg;
-    select_3_next = select_3_reg;
 
     enable_0_next = enable_0_reg;
     enable_1_next = enable_1_reg;
@@ -791,7 +782,6 @@ always @* begin
     end
     if (~enable_0_reg & grant_valid_0) begin
         enable_0_next = 1'b1;
-        select_0_next = grant_encoded_0;
     end
 
     if (current_input_1_axis_tvalid & current_input_1_axis_tready) begin
@@ -801,7 +791,6 @@ always @* begin
     end
     if (~enable_1_reg & grant_valid_1) begin
         enable_1_next = 1'b1;
-        select_1_next = grant_encoded_1;
     end
 
     if (current_input_2_axis_tvalid & current_input_2_axis_tready) begin
@@ -811,7 +800,6 @@ always @* begin
     end
     if (~enable_2_reg & grant_valid_2) begin
         enable_2_next = 1'b1;
-        select_2_next = grant_encoded_2;
     end
 
     if (current_input_3_axis_tvalid & current_input_3_axis_tready) begin
@@ -821,13 +809,12 @@ always @* begin
     end
     if (~enable_3_reg & grant_valid_3) begin
         enable_3_next = 1'b1;
-        select_3_next = grant_encoded_3;
     end
 
     // generate ready signal on selected port
 
     if (enable_0_next) begin
-        case (select_0_next)
+        case (grant_encoded_0)
             2'd0: input_0_axis_tready_next = output_0_axis_tready_int_early;
             2'd1: input_1_axis_tready_next = output_0_axis_tready_int_early;
             2'd2: input_2_axis_tready_next = output_0_axis_tready_int_early;
@@ -836,7 +823,7 @@ always @* begin
     end
 
     if (enable_1_next) begin
-        case (select_1_next)
+        case (grant_encoded_1)
             2'd0: input_0_axis_tready_next = output_1_axis_tready_int_early;
             2'd1: input_1_axis_tready_next = output_1_axis_tready_int_early;
             2'd2: input_2_axis_tready_next = output_1_axis_tready_int_early;
@@ -845,7 +832,7 @@ always @* begin
     end
 
     if (enable_2_next) begin
-        case (select_2_next)
+        case (grant_encoded_2)
             2'd0: input_0_axis_tready_next = output_2_axis_tready_int_early;
             2'd1: input_1_axis_tready_next = output_2_axis_tready_int_early;
             2'd2: input_2_axis_tready_next = output_2_axis_tready_int_early;
@@ -854,7 +841,7 @@ always @* begin
     end
 
     if (enable_3_next) begin
-        case (select_3_next)
+        case (grant_encoded_3)
             2'd0: input_0_axis_tready_next = output_3_axis_tready_int_early;
             2'd1: input_1_axis_tready_next = output_3_axis_tready_int_early;
             2'd2: input_2_axis_tready_next = output_3_axis_tready_int_early;
@@ -920,10 +907,6 @@ always @(posedge clk) begin
         input_3_request_reg <= 4'd0;
         input_3_request_valid_reg <= 1'b0;
         input_3_request_error_reg <= 1'b0;
-        select_0_reg <= 2'd0;
-        select_1_reg <= 2'd0;
-        select_2_reg <= 2'd0;
-        select_3_reg <= 2'd0;
         enable_0_reg <= 1'b0;
         enable_1_reg <= 1'b0;
         enable_2_reg <= 1'b0;
@@ -945,10 +928,6 @@ always @(posedge clk) begin
         input_3_request_reg <= input_3_request_next;
         input_3_request_valid_reg <= input_3_request_valid_next;
         input_3_request_error_reg <= input_3_request_error_next;
-        select_0_reg <= select_0_next;
-        select_1_reg <= select_1_next;
-        select_2_reg <= select_2_next;
-        select_3_reg <= select_3_next;
         enable_0_reg <= enable_0_next;
         enable_1_reg <= enable_1_next;
         enable_2_reg <= enable_2_next;

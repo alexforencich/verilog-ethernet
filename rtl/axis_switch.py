@@ -98,8 +98,8 @@ module {{name}} #
     parameter LSB_PRIORITY = "HIGH"
 )
 (
-    input  wire        clk,
-    input  wire        rst,
+    input  wire                   clk,
+    input  wire                   rst,
 
     /*
      * AXI Stream inputs
@@ -161,9 +161,6 @@ reg input_{{p}}_request_valid_reg = 1'b0, input_{{p}}_request_valid_next;
 reg input_{{p}}_request_error_reg = 1'b0, input_{{p}}_request_error_next;
 {%- endfor %}
 {% for p in range(n) %}
-reg [{{cm-1}}:0] select_{{p}}_reg = {{cm}}'d0, select_{{p}}_next;
-{%- endfor %}
-{% for p in range(n) %}
 reg enable_{{p}}_reg = 1'b0, enable_{{p}}_next;
 {%- endfor %}
 {% for p in range(m) %}
@@ -198,7 +195,7 @@ reg [DEST_WIDTH-1:0] current_input_{{p}}_axis_tdest;
 reg [USER_WIDTH-1:0] current_input_{{p}}_axis_tuser;
 
 always @* begin
-    case (select_{{p}}_reg)
+    case (grant_encoded_{{p}})
 {%- for q in range(m) %}
         {{cm}}'d{{q}}: begin
             current_input_{{p}}_axis_tdata  = input_{{q}}_axis_tdata;
@@ -263,9 +260,6 @@ assign acknowledge_{{p}}[{{q}}] = grant_{{p}}[{{q}}] & input_{{q}}_axis_tvalid &
 {%- endfor %}
 {% endfor %}
 always @* begin
-{%- for p in range(n) %}
-    select_{{p}}_next = select_{{p}}_reg;
-{%- endfor %}
 {% for p in range(n) %}
     enable_{{p}}_next = enable_{{p}}_reg;
 {%- endfor %}
@@ -315,13 +309,12 @@ always @* begin
     end
     if (~enable_{{p}}_reg & grant_valid_{{p}}) begin
         enable_{{p}}_next = 1'b1;
-        select_{{p}}_next = grant_encoded_{{p}};
     end
 {% endfor %}
     // generate ready signal on selected port
 {% for p in range(n) %}
     if (enable_{{p}}_next) begin
-        case (select_{{p}}_next)
+        case (grant_encoded_{{p}})
 {%- for q in range(m) %}
             {{cm}}'d{{q}}: input_{{q}}_axis_tready_next = output_{{p}}_axis_tready_int_early;
 {%- endfor %}
@@ -354,9 +347,6 @@ always @(posedge clk) begin
         input_{{p}}_request_error_reg <= 1'b0;
 {%- endfor %}
 {%- for p in range(n) %}
-        select_{{p}}_reg <= 2'd0;
-{%- endfor %}
-{%- for p in range(n) %}
         enable_{{p}}_reg <= 1'b0;
 {%- endfor %}
 {%- for p in range(m) %}
@@ -367,9 +357,6 @@ always @(posedge clk) begin
         input_{{p}}_request_reg <= input_{{p}}_request_next;
         input_{{p}}_request_valid_reg <= input_{{p}}_request_valid_next;
         input_{{p}}_request_error_reg <= input_{{p}}_request_error_next;
-{%- endfor %}
-{%- for p in range(n) %}
-        select_{{p}}_reg <= select_{{p}}_next;
 {%- endfor %}
 {%- for p in range(n) %}
         enable_{{p}}_reg <= enable_{{p}}_next;
