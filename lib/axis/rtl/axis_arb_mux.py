@@ -120,49 +120,59 @@ wire [{{n-1}}:0] acknowledge;
 wire [{{n-1}}:0] grant;
 wire grant_valid;
 wire [{{w-1}}:0] grant_encoded;
+
+// internal datapath
+reg  [DATA_WIDTH-1:0] output_axis_tdata_int;
+reg  [KEEP_WIDTH-1:0] output_axis_tkeep_int;
+reg                   output_axis_tvalid_int;
+reg                   output_axis_tready_int_reg = 1'b0;
+reg                   output_axis_tlast_int;
+reg  [ID_WIDTH-1:0]   output_axis_tid_int;
+reg  [DEST_WIDTH-1:0] output_axis_tdest_int;
+reg  [USER_WIDTH-1:0] output_axis_tuser_int;
+wire                  output_axis_tready_int_early;
 {% for p in ports %}
-assign acknowledge[{{p}}] = input_{{p}}_axis_tvalid & input_{{p}}_axis_tready & input_{{p}}_axis_tlast;
-assign request[{{p}}] = input_{{p}}_axis_tvalid & ~acknowledge[{{p}}];
+assign input_{{p}}_axis_tready = grant[{{p}}] & output_axis_tready_int_reg;
 {%- endfor %}
 
-// mux instance
-axis_mux_{{n}} #(
-    .DATA_WIDTH(DATA_WIDTH),
-    .KEEP_ENABLE(KEEP_ENABLE),
-    .KEEP_WIDTH(KEEP_WIDTH),
-    .ID_ENABLE(ID_ENABLE),
-    .ID_WIDTH(ID_WIDTH),
-    .DEST_ENABLE(DEST_ENABLE),
-    .DEST_WIDTH(DEST_WIDTH),
-    .USER_ENABLE(USER_ENABLE),
-    .USER_WIDTH(USER_WIDTH)
-)
-mux_inst (
-    .clk(clk),
-    .rst(rst),
+// mux for incoming packet
+reg [DATA_WIDTH-1:0] current_input_tdata;
+reg [KEEP_WIDTH-1:0] current_input_tkeep;
+reg                  current_input_tvalid;
+reg                  current_input_tready;
+reg                  current_input_tlast;
+reg [ID_WIDTH-1:0]   current_input_tid;
+reg [DEST_WIDTH-1:0] current_input_tdest;
+reg [USER_WIDTH-1:0] current_input_tuser;
+always @* begin
+    case (grant_encoded)
 {%- for p in ports %}
-    .input_{{p}}_axis_tdata(input_{{p}}_axis_tdata),
-    .input_{{p}}_axis_tkeep(input_{{p}}_axis_tkeep),
-    .input_{{p}}_axis_tvalid(input_{{p}}_axis_tvalid & grant[{{p}}]),
-    .input_{{p}}_axis_tready(input_{{p}}_axis_tready),
-    .input_{{p}}_axis_tlast(input_{{p}}_axis_tlast),
-    .input_{{p}}_axis_tid(input_{{p}}_axis_tid),
-    .input_{{p}}_axis_tdest(input_{{p}}_axis_tdest),
-    .input_{{p}}_axis_tuser(input_{{p}}_axis_tuser),
+        {{w}}'d{{p}}: begin
+            current_input_tdata  = input_{{p}}_axis_tdata;
+            current_input_tkeep  = input_{{p}}_axis_tkeep;
+            current_input_tvalid = input_{{p}}_axis_tvalid;
+            current_input_tready = input_{{p}}_axis_tready;
+            current_input_tlast  = input_{{p}}_axis_tlast;
+            current_input_tid    = input_{{p}}_axis_tid;
+            current_input_tdest  = input_{{p}}_axis_tdest;
+            current_input_tuser  = input_{{p}}_axis_tuser;
+        end
 {%- endfor %}
-    .output_axis_tdata(output_axis_tdata),
-    .output_axis_tkeep(output_axis_tkeep),
-    .output_axis_tvalid(output_axis_tvalid),
-    .output_axis_tready(output_axis_tready),
-    .output_axis_tlast(output_axis_tlast),
-    .output_axis_tid(output_axis_tid),
-    .output_axis_tdest(output_axis_tdest),
-    .output_axis_tuser(output_axis_tuser),
-    .enable(grant_valid),
-    .select(grant_encoded)
-);
+        default: begin
+            current_input_tdata  = {DATA_WIDTH{1'b0}};
+            current_input_tkeep  = {KEEP_WIDTH{1'b0}};
+            current_input_tvalid = 1'b0;
+            current_input_tready = 1'b0;
+            current_input_tlast  = 1'b0;
+            current_input_tid    = {ID_WIDTH{1'b0}};
+            current_input_tdest  = {DEST_WIDTH{1'b0}};
+            current_input_tuser  = {USER_WIDTH{1'b0}};
+        end
+    endcase
+end
 
 // arbiter instance
+
 arbiter #(
     .PORTS({{n}}),
     .TYPE(ARB_TYPE),
@@ -178,6 +188,126 @@ arb_inst (
     .grant_valid(grant_valid),
     .grant_encoded(grant_encoded)
 );
+
+// request generation
+{%- for p in ports %}
+assign request[{{p}}] = input_{{p}}_axis_tvalid & ~acknowledge[{{p}}];
+{%- endfor %}
+
+// acknowledge generation
+{%- for p in ports %}
+assign acknowledge[{{p}}] = grant[{{p}}] & input_{{p}}_axis_tvalid & input_{{p}}_axis_tready & input_{{p}}_axis_tlast;
+{%- endfor %}
+
+always @* begin
+    // pass through selected packet data
+    output_axis_tdata_int  = current_input_tdata;
+    output_axis_tkeep_int  = current_input_tkeep;
+    output_axis_tvalid_int = current_input_tvalid & current_input_tready;
+    output_axis_tlast_int  = current_input_tlast;
+    output_axis_tid_int    = current_input_tid;
+    output_axis_tdest_int  = current_input_tdest;
+    output_axis_tuser_int  = current_input_tuser;
+end
+
+// output datapath logic
+reg [DATA_WIDTH-1:0] output_axis_tdata_reg  = {DATA_WIDTH{1'b0}};
+reg [KEEP_WIDTH-1:0] output_axis_tkeep_reg  = {KEEP_WIDTH{1'b0}};
+reg                  output_axis_tvalid_reg = 1'b0, output_axis_tvalid_next;
+reg                  output_axis_tlast_reg  = 1'b0;
+reg [ID_WIDTH-1:0]   output_axis_tid_reg    = {ID_WIDTH{1'b0}};
+reg [DEST_WIDTH-1:0] output_axis_tdest_reg  = {DEST_WIDTH{1'b0}};
+reg [USER_WIDTH-1:0] output_axis_tuser_reg  = {USER_WIDTH{1'b0}};
+
+reg [DATA_WIDTH-1:0] temp_axis_tdata_reg  = {DATA_WIDTH{1'b0}};
+reg [KEEP_WIDTH-1:0] temp_axis_tkeep_reg  = {KEEP_WIDTH{1'b0}};
+reg                  temp_axis_tvalid_reg = 1'b0, temp_axis_tvalid_next;
+reg                  temp_axis_tlast_reg  = 1'b0;
+reg [ID_WIDTH-1:0]   temp_axis_tid_reg    = {ID_WIDTH{1'b0}};
+reg [DEST_WIDTH-1:0] temp_axis_tdest_reg  = {DEST_WIDTH{1'b0}};
+reg [USER_WIDTH-1:0] temp_axis_tuser_reg  = {USER_WIDTH{1'b0}};
+
+// datapath control
+reg store_axis_int_to_output;
+reg store_axis_int_to_temp;
+reg store_axis_temp_to_output;
+
+assign output_axis_tdata  = output_axis_tdata_reg;
+assign output_axis_tkeep  = KEEP_ENABLE ? output_axis_tkeep_reg : {KEEP_WIDTH{1'b1}};
+assign output_axis_tvalid = output_axis_tvalid_reg;
+assign output_axis_tlast  = output_axis_tlast_reg;
+assign output_axis_tid    = ID_ENABLE   ? output_axis_tid_reg   : {ID_WIDTH{1'b0}};
+assign output_axis_tdest  = DEST_ENABLE ? output_axis_tdest_reg : {DEST_WIDTH{1'b0}};
+assign output_axis_tuser  = USER_ENABLE ? output_axis_tuser_reg : {USER_WIDTH{1'b0}};
+
+// enable ready input next cycle if output is ready or the temp reg will not be filled on the next cycle (output reg empty or no input)
+assign output_axis_tready_int_early = output_axis_tready | (~temp_axis_tvalid_reg & (~output_axis_tvalid_reg | ~output_axis_tvalid_int));
+
+always @* begin
+    // transfer sink ready state to source
+    output_axis_tvalid_next = output_axis_tvalid_reg;
+    temp_axis_tvalid_next = temp_axis_tvalid_reg;
+
+    store_axis_int_to_output = 1'b0;
+    store_axis_int_to_temp = 1'b0;
+    store_axis_temp_to_output = 1'b0;
+
+    if (output_axis_tready_int_reg) begin
+        // input is ready
+        if (output_axis_tready | ~output_axis_tvalid_reg) begin
+            // output is ready or currently not valid, transfer data to output
+            output_axis_tvalid_next = output_axis_tvalid_int;
+            store_axis_int_to_output = 1'b1;
+        end else begin
+            // output is not ready, store input in temp
+            temp_axis_tvalid_next = output_axis_tvalid_int;
+            store_axis_int_to_temp = 1'b1;
+        end
+    end else if (output_axis_tready) begin
+        // input is not ready, but output is ready
+        output_axis_tvalid_next = temp_axis_tvalid_reg;
+        temp_axis_tvalid_next = 1'b0;
+        store_axis_temp_to_output = 1'b1;
+    end
+end
+
+always @(posedge clk) begin
+    if (rst) begin
+        output_axis_tvalid_reg <= 1'b0;
+        output_axis_tready_int_reg <= 1'b0;
+        temp_axis_tvalid_reg <= 1'b0;
+    end else begin
+        output_axis_tvalid_reg <= output_axis_tvalid_next;
+        output_axis_tready_int_reg <= output_axis_tready_int_early;
+        temp_axis_tvalid_reg <= temp_axis_tvalid_next;
+    end
+
+    // datapath
+    if (store_axis_int_to_output) begin
+        output_axis_tdata_reg <= output_axis_tdata_int;
+        output_axis_tkeep_reg <= output_axis_tkeep_int;
+        output_axis_tlast_reg <= output_axis_tlast_int;
+        output_axis_tid_reg   <= output_axis_tid_int;
+        output_axis_tdest_reg <= output_axis_tdest_int;
+        output_axis_tuser_reg <= output_axis_tuser_int;
+    end else if (store_axis_temp_to_output) begin
+        output_axis_tdata_reg <= temp_axis_tdata_reg;
+        output_axis_tkeep_reg <= temp_axis_tkeep_reg;
+        output_axis_tlast_reg <= temp_axis_tlast_reg;
+        output_axis_tid_reg   <= temp_axis_tid_reg;
+        output_axis_tdest_reg <= temp_axis_tdest_reg;
+        output_axis_tuser_reg <= temp_axis_tuser_reg;
+    end
+
+    if (store_axis_int_to_temp) begin
+        temp_axis_tdata_reg <= output_axis_tdata_int;
+        temp_axis_tkeep_reg <= output_axis_tkeep_int;
+        temp_axis_tlast_reg <= output_axis_tlast_int;
+        temp_axis_tid_reg   <= output_axis_tid_int;
+        temp_axis_tdest_reg <= output_axis_tdest_int;
+        temp_axis_tuser_reg <= output_axis_tuser_int;
+    end
+end
 
 endmodule
 
