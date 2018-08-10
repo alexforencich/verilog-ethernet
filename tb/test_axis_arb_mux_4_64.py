@@ -509,7 +509,7 @@ def bench():
         source_2.send(test_frame2)
         yield clk.posedge
 
-        yield delay(150)
+        yield delay(100)
         yield clk.posedge
         source_1.send(test_frame1)
 
@@ -531,12 +531,12 @@ def bench():
         yield sink.wait()
         rx_frame = sink.recv()
 
-        assert rx_frame == test_frame2
+        assert rx_frame == test_frame1
 
         yield sink.wait()
         rx_frame = sink.recv()
 
-        assert rx_frame == test_frame1
+        assert rx_frame == test_frame2
 
         yield sink.wait()
         rx_frame = sink.recv()
