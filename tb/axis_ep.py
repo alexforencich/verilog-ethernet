@@ -282,22 +282,14 @@ class AXIStreamSource(object):
 
         self.has_logic = True
 
-        tready_int = Signal(bool(False))
-        tvalid_int = Signal(bool(False))
-
-        @always_comb
-        def pause_logic():
-            tready_int.next = tready and not pause
-            tvalid.next = tvalid_int and not pause
-
         @instance
         def logic():
-            frame = AXIStreamFrame()
             data = []
             keep = []
             id = []
             dest = []
             user = []
+            valid = False
             B = 0
             N = len(tdata)
             M = len(tkeep)
@@ -314,6 +306,12 @@ class AXIStreamSource(object):
                 yield clk.posedge, rst.posedge
 
                 if rst:
+                    data = []
+                    keep = []
+                    id = []
+                    dest = []
+                    user = []
+                    valid = False
                     if B > 0:
                         for s in tdata:
                             s.next = 0
@@ -323,10 +321,11 @@ class AXIStreamSource(object):
                     tid.next = 0
                     tdest.next = 0
                     tuser.next = False
-                    tvalid_int.next = False
+                    tvalid.next = False
                     tlast.next = False
                 else:
-                    if tready_int and tvalid:
+                    tvalid.next = valid and (tvalid or not pause)
+                    if tready and tvalid:
                         if len(data) > 0:
                             if B > 0:
                                 l = data.pop(0)
@@ -338,33 +337,34 @@ class AXIStreamSource(object):
                             tid.next = id.pop(0)
                             tdest.next = dest.pop(0)
                             tuser.next = user.pop(0)
-                            tvalid_int.next = True
+                            tvalid.next = not pause
                             tlast.next = len(data) == 0
                         else:
-                            tvalid_int.next = False
+                            tvalid.next = False
                             tlast.next = False
-                    if (tlast and tready_int and tvalid) or not tvalid_int:
-                        if self.queue:
-                            frame = self.queue.pop(0)
-                            frame.B = B
-                            frame.N = N
-                            frame.M = M
-                            frame.WL = WL
-                            data, keep, id, dest, user = frame.build()
-                            if name is not None:
-                                print("[%s] Sending frame %s" % (name, repr(frame)))
-                            if B > 0:
-                                l = data.pop(0)
-                                for i in range(B):
-                                    tdata[i].next = l[i]
-                            else:
-                                tdata.next = data.pop(0)
-                            tkeep.next = keep.pop(0)
-                            tid.next = id.pop(0)
-                            tdest.next = dest.pop(0)
-                            tuser.next = user.pop(0)
-                            tvalid_int.next = True
-                            tlast.next = len(data) == 0
+                            valid = False
+                    if not valid and self.queue:
+                        frame = self.queue.pop(0)
+                        frame.B = B
+                        frame.N = N
+                        frame.M = M
+                        frame.WL = WL
+                        data, keep, id, dest, user = frame.build()
+                        if name is not None:
+                            print("[%s] Sending frame %s" % (name, repr(frame)))
+                        if B > 0:
+                            l = data.pop(0)
+                            for i in range(B):
+                                tdata[i].next = l[i]
+                        else:
+                            tdata.next = data.pop(0)
+                        tkeep.next = keep.pop(0)
+                        tid.next = id.pop(0)
+                        tdest.next = dest.pop(0)
+                        tuser.next = user.pop(0)
+                        tvalid.next = not pause
+                        tlast.next = len(data) == 0
+                        valid = True
 
         return instances()
 
@@ -433,7 +433,6 @@ class AXIStreamSink(object):
 
         @instance
         def logic():
-            frame = AXIStreamFrame()
             data = []
             keep = []
             id = []
@@ -457,7 +456,6 @@ class AXIStreamSink(object):
 
                 if rst:
                     tready_int.next = False
-                    frame = AXIStreamFrame()
                     data = []
                     keep = []
                     id = []
@@ -501,6 +499,7 @@ class AXIStreamSink(object):
                         user.append(int(tuser))
                         first = False
                         if tlast:
+                            frame = AXIStreamFrame()
                             frame.B = B
                             frame.N = N
                             frame.M = M
@@ -510,7 +509,6 @@ class AXIStreamSink(object):
                             self.sync.next = not self.sync
                             if name is not None:
                                 print("[%s] Got frame %s" % (name, repr(frame)))
-                            frame = AXIStreamFrame()
                             data = []
                             keep = []
                             id = []
