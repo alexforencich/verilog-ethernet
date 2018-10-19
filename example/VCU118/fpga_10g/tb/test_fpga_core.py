@@ -204,29 +204,29 @@ def bench():
     qsfp1_4_sink = xgmii_ep.XGMIISink()
     qsfp1_4_sink_logic = qsfp1_4_sink.create_logic(qsfp1_tx_clk_4, qsfp1_tx_rst_4, rxd=qsfp1_txd_4, rxc=qsfp1_txc_4, name='qsfp1_4_sink')
 
-    qsfp1_1_source = xgmii_ep.XGMIISource()
-    qsfp1_1_source_logic = qsfp1_1_source.create_logic(qsfp1_rx_clk_1, qsfp1_rx_rst_1, txd=qsfp1_rxd_1, txc=qsfp1_rxc_1, name='qsfp1_1_source')
+    qsfp2_1_source = xgmii_ep.XGMIISource()
+    qsfp2_1_source_logic = qsfp2_1_source.create_logic(qsfp2_rx_clk_1, qsfp2_rx_rst_1, txd=qsfp2_rxd_1, txc=qsfp2_rxc_1, name='qsfp2_1_source')
 
-    qsfp1_1_sink = xgmii_ep.XGMIISink()
-    qsfp1_1_sink_logic = qsfp1_1_sink.create_logic(qsfp1_tx_clk_1, qsfp1_tx_rst_1, rxd=qsfp1_txd_1, rxc=qsfp1_txc_1, name='qsfp1_1_sink')
+    qsfp2_1_sink = xgmii_ep.XGMIISink()
+    qsfp2_1_sink_logic = qsfp2_1_sink.create_logic(qsfp2_tx_clk_1, qsfp2_tx_rst_1, rxd=qsfp2_txd_1, rxc=qsfp2_txc_1, name='qsfp2_1_sink')
 
-    qsfp1_2_source = xgmii_ep.XGMIISource()
-    qsfp1_2_source_logic = qsfp1_2_source.create_logic(qsfp1_rx_clk_2, qsfp1_rx_rst_2, txd=qsfp1_rxd_2, txc=qsfp1_rxc_2, name='qsfp1_2_source')
+    qsfp2_2_source = xgmii_ep.XGMIISource()
+    qsfp2_2_source_logic = qsfp2_2_source.create_logic(qsfp2_rx_clk_2, qsfp2_rx_rst_2, txd=qsfp2_rxd_2, txc=qsfp2_rxc_2, name='qsfp2_2_source')
 
-    qsfp1_2_sink = xgmii_ep.XGMIISink()
-    qsfp1_2_sink_logic = qsfp1_2_sink.create_logic(qsfp1_tx_clk_2, qsfp1_tx_rst_2, rxd=qsfp1_txd_2, rxc=qsfp1_txc_2, name='qsfp1_2_sink')
+    qsfp2_2_sink = xgmii_ep.XGMIISink()
+    qsfp2_2_sink_logic = qsfp2_2_sink.create_logic(qsfp2_tx_clk_2, qsfp2_tx_rst_2, rxd=qsfp2_txd_2, rxc=qsfp2_txc_2, name='qsfp2_2_sink')
 
-    qsfp1_3_source = xgmii_ep.XGMIISource()
-    qsfp1_3_source_logic = qsfp1_3_source.create_logic(qsfp1_rx_clk_3, qsfp1_rx_rst_3, txd=qsfp1_rxd_3, txc=qsfp1_rxc_3, name='qsfp1_3_source')
+    qsfp2_3_source = xgmii_ep.XGMIISource()
+    qsfp2_3_source_logic = qsfp2_3_source.create_logic(qsfp2_rx_clk_3, qsfp2_rx_rst_3, txd=qsfp2_rxd_3, txc=qsfp2_rxc_3, name='qsfp2_3_source')
 
-    qsfp1_3_sink = xgmii_ep.XGMIISink()
-    qsfp1_3_sink_logic = qsfp1_3_sink.create_logic(qsfp1_tx_clk_3, qsfp1_tx_rst_3, rxd=qsfp1_txd_3, rxc=qsfp1_txc_3, name='qsfp1_3_sink')
+    qsfp2_3_sink = xgmii_ep.XGMIISink()
+    qsfp2_3_sink_logic = qsfp2_3_sink.create_logic(qsfp2_tx_clk_3, qsfp2_tx_rst_3, rxd=qsfp2_txd_3, rxc=qsfp2_txc_3, name='qsfp2_3_sink')
 
-    qsfp1_4_source = xgmii_ep.XGMIISource()
-    qsfp1_4_source_logic = qsfp1_4_source.create_logic(qsfp1_rx_clk_4, qsfp1_rx_rst_4, txd=qsfp1_rxd_4, txc=qsfp1_rxc_4, name='qsfp1_4_source')
+    qsfp2_4_source = xgmii_ep.XGMIISource()
+    qsfp2_4_source_logic = qsfp2_4_source.create_logic(qsfp2_rx_clk_4, qsfp2_rx_rst_4, txd=qsfp2_rxd_4, txc=qsfp2_rxc_4, name='qsfp2_4_source')
 
-    qsfp1_4_sink = xgmii_ep.XGMIISink()
-    qsfp1_4_sink_logic = qsfp1_4_sink.create_logic(qsfp1_tx_clk_4, qsfp1_tx_rst_4, rxd=qsfp1_txd_4, rxc=qsfp1_txc_4, name='qsfp1_4_sink')
+    qsfp2_4_sink = xgmii_ep.XGMIISink()
+    qsfp2_4_sink_logic = qsfp2_4_sink.create_logic(qsfp2_tx_clk_4, qsfp2_tx_rst_4, rxd=qsfp2_txd_4, rxc=qsfp2_txc_4, name='qsfp2_4_sink')
 
     gmii_source = gmii_ep.GMIISource()
 
