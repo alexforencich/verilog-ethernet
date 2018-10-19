@@ -99,6 +99,8 @@ reg [7:0] fcs_output_txc_1;
 
 reg [7:0] ifg_offset;
 
+reg extra_cycle;
+
 reg [15:0] frame_ptr_reg = 16'd0, frame_ptr_next;
 
 reg [7:0] ifg_count_reg = 8'd0, ifg_count_next;
@@ -301,6 +303,7 @@ always @* begin
             fcs_output_txc_0 = 8'b11100000;
             fcs_output_txc_1 = 8'b11111111;
             ifg_offset = 8'd3;
+            extra_cycle = 1'b0;
         end
         8'bzzzzz011: begin
             fcs_output_txd_0 = {16'h07fd, ~crc_next1[31:0], input_tdata_reg[15:0]};
@@ -308,6 +311,7 @@ always @* begin
             fcs_output_txc_0 = 8'b11000000;
             fcs_output_txc_1 = 8'b11111111;
             ifg_offset = 8'd2;
+            extra_cycle = 1'b0;
         end
         8'bzzzz0111: begin
             fcs_output_txd_0 = {8'hfd, ~crc_next2[31:0], input_tdata_reg[23:0]};
@@ -315,6 +319,7 @@ always @* begin
             fcs_output_txc_0 = 8'b10000000;
             fcs_output_txc_1 = 8'b11111111;
             ifg_offset = 8'd1;
+            extra_cycle = 1'b0;
         end
         8'bzzz01111: begin
             fcs_output_txd_0 = {~crc_next3[31:0], input_tdata_reg[31:0]};
@@ -322,6 +327,7 @@ always @* begin
             fcs_output_txc_0 = 8'b00000000;
             fcs_output_txc_1 = 8'b11111111;
             ifg_offset = 8'd8;
+            extra_cycle = 1'b1;
         end
         8'bzz011111: begin
             fcs_output_txd_0 = {~crc_next4[23:0], input_tdata_reg[39:0]};
@@ -329,6 +335,7 @@ always @* begin
             fcs_output_txc_0 = 8'b00000000;
             fcs_output_txc_1 = 8'b11111110;
             ifg_offset = 8'd7;
+            extra_cycle = 1'b1;
         end
         8'bz0111111: begin
             fcs_output_txd_0 = {~crc_next5[15:0], input_tdata_reg[47:0]};
@@ -336,6 +343,7 @@ always @* begin
             fcs_output_txc_0 = 8'b00000000;
             fcs_output_txc_1 = 8'b11111100;
             ifg_offset = 8'd6;
+            extra_cycle = 1'b1;
         end
         8'b01111111: begin
             fcs_output_txd_0 = {~crc_next6[7:0], input_tdata_reg[55:0]};
@@ -343,6 +351,7 @@ always @* begin
             fcs_output_txc_0 = 8'b00000000;
             fcs_output_txc_1 = 8'b11111000;
             ifg_offset = 8'd5;
+            extra_cycle = 1'b1;
         end
         8'b11111111: begin
             fcs_output_txd_0 = input_tdata_reg;
@@ -350,6 +359,7 @@ always @* begin
             fcs_output_txc_0 = 8'b00000000;
             fcs_output_txc_1 = 8'b11110000;
             ifg_offset = 8'd4;
+            extra_cycle = 1'b1;
         end
         default: begin
             fcs_output_txd_0 = 64'd0;
@@ -357,6 +367,7 @@ always @* begin
             fcs_output_txc_0 = 8'd0;
             fcs_output_txc_1 = 8'd0;
             ifg_offset = 8'd0;
+            extra_cycle = 1'b1;
         end
     endcase
 end
@@ -500,7 +511,7 @@ always @* begin
             frame_ptr_next = 16'd0;
 
             ifg_count_next = (ifg_delay > 8'd12 ? ifg_delay : 8'd12) - ifg_offset + (lanes_swapped ? 8'd4 : 8'd0) + deficit_idle_count_reg;
-            if (fcs_output_txc_1 != 8'hff || fcs_output_txc_0 == 8'd0) begin
+            if (extra_cycle) begin
                 state_next = STATE_FCS_2;
             end else begin
                 state_next = STATE_IFG;
@@ -652,8 +663,8 @@ always @(posedge clk) begin
         end else begin
             if (swap_lanes) begin
                 lanes_swapped <= 1'b1;
-                xgmii_txd_reg <= {xgmii_txd_next[31:0], 32'h07070707};
-                xgmii_txc_reg <= {xgmii_txc_next[3:0], 4'b1111};
+                xgmii_txd_reg <= {xgmii_txd_next[31:0], swap_txd};
+                xgmii_txc_reg <= {xgmii_txc_next[3:0], swap_txc};
             end else begin
                 xgmii_txd_reg <= xgmii_txd_next;
                 xgmii_txc_reg <= xgmii_txc_next;

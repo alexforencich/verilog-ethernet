@@ -126,7 +126,7 @@ lfsr #(
     .STYLE("AUTO")
 )
 eth_crc_8 (
-    .data_in(last_cycle ? xgmii_rxd_d1[39:32] : xgmii_rxd_d0[7:0]),
+    .data_in(xgmii_rxd_d0[7:0]),
     .state_in(last_cycle ? crc_state3 : crc_state),
     .data_out(),
     .state_out(crc_next0)
@@ -142,7 +142,7 @@ lfsr #(
     .STYLE("AUTO")
 )
 eth_crc_16 (
-    .data_in(last_cycle ? xgmii_rxd_d1[47:32] : xgmii_rxd_d0[15:0]),
+    .data_in(xgmii_rxd_d0[15:0]),
     .state_in(last_cycle ? crc_state3 : crc_state),
     .data_out(),
     .state_out(crc_next1)
@@ -158,7 +158,7 @@ lfsr #(
     .STYLE("AUTO")
 )
 eth_crc_24 (
-    .data_in(last_cycle ? xgmii_rxd_d1[55:32] : xgmii_rxd_d0[23:0]),
+    .data_in(xgmii_rxd_d0[23:0]),
     .state_in(last_cycle ? crc_state3 : crc_state),
     .data_out(),
     .state_out(crc_next2)
@@ -174,7 +174,7 @@ lfsr #(
     .STYLE("AUTO")
 )
 eth_crc_32 (
-    .data_in(last_cycle ? xgmii_rxd_d1[63:32] : xgmii_rxd_d0[31:0]),
+    .data_in(xgmii_rxd_d0[31:0]),
     .state_in(last_cycle ? crc_state3 : crc_state),
     .data_out(),
     .state_out(crc_next3)
@@ -423,14 +423,19 @@ always @(posedge clk) begin
             xgmii_rxc_d0 <= xgmii_rxc;
         end else if (xgmii_rxc[4] && xgmii_rxd[39:32] == 8'hfb) begin
             lanes_swapped <= 1'b1;
-            xgmii_rxd_d0 <= 64'h0707070707070707;
-            xgmii_rxc_d0 <= 8'b11111111;
+            xgmii_rxd_d0 <= {xgmii_rxd[31:0], swap_rxd};
+            xgmii_rxc_d0 <= {xgmii_rxc[3:0], swap_rxc};
         end else if (lanes_swapped) begin
             xgmii_rxd_d0 <= {xgmii_rxd[31:0], swap_rxd};
             xgmii_rxc_d0 <= {xgmii_rxc[3:0], swap_rxc};
         end else begin
             xgmii_rxd_d0 <= xgmii_rxd;
             xgmii_rxc_d0 <= xgmii_rxc;
+        end
+
+        if (state_next == STATE_LAST) begin
+            xgmii_rxd_d0[31:0] <= xgmii_rxd_d0[63:32];
+            xgmii_rxc_d0[3:0] <= xgmii_rxc_d0[7:4];
         end
 
         xgmii_rxd_d1 <= xgmii_rxd_d0;
