@@ -341,17 +341,55 @@ def bench():
 
                 source.send(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+bytearray(axis_frame))
 
-            yield clk.posedge
-            yield clk.posedge
+            for i in range(10):
+                yield sink.wait()
+                rx_frame = sink.recv()
 
-            while xgmii_rxc != 0xff or output_axis_tvalid or not source.empty():
-                yield clk.posedge
+                eth_frame = eth_ep.EthFrame()
+                eth_frame.parse_axis(rx_frame)
+                eth_frame.update_fcs()
 
-            yield clk.posedge
-            yield clk.posedge
-            yield clk.posedge
+                assert eth_frame == test_frame
 
             yield delay(100)
+
+        yield clk.posedge
+        print("test 6: Ensure 0xfb in FCS in lane 4 is not detected as start code in lane 0")
+        current_test.next = 6
+
+        test_frame = eth_ep.EthFrame()
+        test_frame.eth_dest_mac = 0xDAD1D2D3D4D5
+        test_frame.eth_src_mac = 0x5A5152535455
+        test_frame.eth_type = 0x806f
+        test_frame.payload = bytearray(range(60))
+        test_frame.update_fcs()
+
+        axis_frame = test_frame.build_axis_fcs()
+
+        error_bad_frame_asserted.next = 0
+        error_bad_fcs_asserted.next = 0
+
+        xgmii_frame = xgmii_ep.XGMIIFrame(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+bytearray(axis_frame))
+
+        source.send(xgmii_frame)
+
+        yield sink.wait()
+        rx_frame = sink.recv()
+
+        assert not error_bad_frame_asserted
+        assert not error_bad_fcs_asserted
+
+        assert not rx_frame.last_cycle_user
+
+        eth_frame = eth_ep.EthFrame()
+        eth_frame.parse_axis(rx_frame)
+        eth_frame.update_fcs()
+
+        assert eth_frame == test_frame
+
+        assert sink.empty()
+
+        yield delay(100)
 
         raise StopSimulation
 

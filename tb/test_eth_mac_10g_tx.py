@@ -309,15 +309,21 @@ def bench():
 
                 source.send(axis_frame)
 
-            yield clk.posedge
-            yield clk.posedge
+            for i in range(10):
+                yield sink.wait()
+                rx_frame = sink.recv()
 
-            while xgmii_txc != 0xff or input_axis_tvalid:
-                yield clk.posedge
+                assert rx_frame.data[0:8] == bytearray(b'\x55\x55\x55\x55\x55\x55\x55\xD5')
 
-            yield clk.posedge
-            yield clk.posedge
-            yield clk.posedge
+                eth_frame = eth_ep.EthFrame()
+                eth_frame.parse_axis_fcs(rx_frame.data[8:])
+
+                assert len(eth_frame.payload.data) == max(payload_len, 46)
+                assert eth_frame.eth_fcs == eth_frame.calc_fcs()
+                assert eth_frame.eth_dest_mac == test_frame.eth_dest_mac
+                assert eth_frame.eth_src_mac == test_frame.eth_src_mac
+                assert eth_frame.eth_type == test_frame.eth_type
+                assert eth_frame.payload.data.index(test_frame.payload.data) == 0
 
             yield delay(100)
 
