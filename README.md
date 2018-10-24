@@ -29,7 +29,7 @@ datapath for 10G Ethernet.
 
 ### arp_cache module
 
-Basic LRU cache for ARP entries.  Parametrizable depth.  
+Basic hash-based cache for ARP entries.  Parametrizable depth.  
 
 ### arp_eth_rx module
 
@@ -62,6 +62,30 @@ Ethernet frame check sequence checker.
 ### axis_eth_fcs_insert module
 
 Ethernet frame check sequence inserter.
+
+### axis_gmii_rx module
+
+AXI stream GMII/MII frame receiver with clock enable and MII select.
+
+### axis_gmii_tx module
+
+AXI stream GMII/MII frame transmitter with clock enable and MII select.
+
+### axis_xgmii_rx_32 module
+
+AXI stream XGMII frame receiver with 32 bit datapath.
+
+### axis_xgmii_rx_64 module
+
+AXI stream XGMII frame receiver with 64 bit datapath.
+
+### axis_xgmii_tx_32 module
+
+AXI stream XGMII frame transmitter with 32 bit datapath.
+
+### axis_xgmii_tx_64 module
+
+AXI stream XGMII frame transmitter with 64 bit datapath.
 
 ### eth_arb_mux_N module
 
@@ -115,13 +139,25 @@ Gigabit Ethernet MAC with GMII interface.
 
 Gigabit Ethernet MAC with GMII interface and FIFOs.
 
-### eth_mac_1g_rx module
+### eth_mac_1g_gmii module
 
-Gigabit Ethernet MAC RX with GMII interface.
+Tri-mode Ethernet MAC with GMII/MII interface and automatic PHY rate
+adaptation logic.
 
-### eth_mac_1g_tx module
+### eth_mac_1g_gmii_fifo module
 
-Gigabit Ethernet MAC TX with GMII interface.
+Tri-mode Ethernet MAC with GMII/MII interface, FIFOs, and automatic PHY rate
+adaptation logic.
+
+### eth_mac_1g_rgmii module
+
+Tri-mode Ethernet MAC with RGMII interface and automatic PHY rate adaptation
+logic.
+
+### eth_mac_1g_rgmii_fifo module
+
+Tri-mode Ethernet MAC with RGMII interface, FIFOs, and automatic PHY rate
+adaptation logic.
 
 ### eth_mac_10g module
 
@@ -155,7 +191,7 @@ Can be generated with arbitrary port counts with eth_mux_64.py.
 
 ### gmii_phy_if
 
-GMII PHY interface and clocking logic.
+GMII/MII PHY interface and clocking logic.
 
 ### ip module
 
@@ -241,6 +277,10 @@ Can be generated with arbitrary port counts with ip_mux_64.py.
 
 Fully parametrizable combinatorial parallel LFSR/CRC module.
 
+### rgmii_phy_if
+
+RGMII PHY interface and clocking logic.
+
 ### udp module
 
 UDP block with 8 bit data width for gigabit Ethernet.  Manages UDP packet
@@ -264,6 +304,16 @@ UDP frame arbitrated muliplexer with 8 bit data width for 10G Ethernet.
 Supports priority and round-robin arbitration.
 
 Can be generated with arbitrary port counts with udp_arb_mux_64.py.
+
+### udp_checksum_gen module
+
+UDP checksum generator module.  Calculates UDP length, IP length, and
+UDP checksum fields.
+
+### udp_checksum_gen_64 module
+
+UDP checksum generator module with 64 bit datapath.  Calculates UDP
+length, IP length, and UDP checksum fields.
 
 ### udp_complete module
 
@@ -345,6 +395,12 @@ Can be generated with arbitrary port counts with udp_mux_64.py.
     rtl/axis_eth_fcs_64.v           : Ethernet FCS calculator (64 bit)
     rtl/axis_eth_fcs_insert.v       : Ethernet FCS inserter
     rtl/axis_eth_fcs_check.v        : Ethernet FCS checker
+    rtl/axis_gmii_rx.v              : AXI stream GMII/MII receiver
+    rtl/axis_gmii_tx.v              : AXI stream GMII/MII transmitter
+    rtl/axis_xgmii_rx_32.v          : AXI stream XGMII receiver (32 bit)
+    rtl/axis_xgmii_rx_64.v          : AXI stream XGMII receiver (64 bit)
+    rtl/axis_xgmii_tx_32.v          : AXI stream XGMII transmitter (32 bit)
+    rtl/axis_xgmii_tx_64.v          : AXI stream XGMII transmitter (64 bit)
     rtl/eth_arb_mux_2.v             : 2 port Ethernet frame arbitrated multiplexer
     rtl/eth_arb_mux_4.v             : 4 port Ethernet frame arbitrated multiplexer
     rtl/eth_arb_mux_64.py           : Ethernet frame arbitrated multiplexer generator (64 bit)
@@ -360,8 +416,10 @@ Can be generated with arbitrary port counts with udp_mux_64.py.
     rtl/eth_demux_64_4.v            : 4 port Ethernet frame demultiplexer (64 bit)
     rtl/eth_mac_1g.v                : Gigabit Etherent GMII MAC
     rtl/eth_mac_1g_fifo.v           : Gigabit Etherent GMII MAC with FIFO
-    rtl/eth_mac_1g_rx.v             : Gigabit Etherent GMII MAC RX
-    rtl/eth_mac_1g_tx.v             : Gigabit Etherent GMII MAC TX
+    rtl/eth_mac_1g_gmii.v           : Tri-mode Ethernet GMII/MII MAC
+    rtl/eth_mac_1g_gmii_fifo.v      : Tri-mode Ethernet GMII/MII MAC with FIFO
+    rtl/eth_mac_1g_rgmii.v          : Tri-mode Ethernet RGMII MAC
+    rtl/eth_mac_1g_rgmii_fifo.v     : Tri-mode Ethernet RGMII MAC with FIFO
     rtl/eth_mac_10g.v               : 10G Etherent XGMII MAC
     rtl/eth_mac_10g_fifo.v          : 10G Etherent XGMII MAC with FIFO
     rtl/eth_mac_10g_rx.v            : 10G Etherent XGMII MAC RX
@@ -373,6 +431,7 @@ Can be generated with arbitrary port counts with udp_mux_64.py.
     rtl/eth_mux_64_2.v              : 4 port Ethernet frame multiplexer (64 bit)
     rtl/eth_mux_64_4.v              : 4 port Ethernet frame multiplexer (64 bit)
     rtl/gmii_phy_if.v               : GMII PHY interface
+    rtl/iddr.v                      : Generic DDR input register
     rtl/ip.v                        : IPv4 block
     rtl/ip_64.v                     : IPv4 block (64 bit)
     rtl/ip_arb_mux.py               : IP frame arbitrated multiplexer generator
@@ -394,12 +453,24 @@ Can be generated with arbitrary port counts with udp_mux_64.py.
     rtl/ip_mux_64.py                : IP frame multiplexer generator (64 bit)
     rtl/ip_mux_64_4.v               : 4 port IP frame multiplexer (64 bit)
     rtl/lfsr.v                      : Generic LFSR/CRC module
+    rtl/oddr.v                      : Generic DDR output register
+    rtl/rgmii_phy_if.v              : RGMII PHY interface
+    rtl/ssio_ddr_in.v               : Generic source synchronous IO DDR input module
+    rtl/ssio_ddr_in_diff.v          : Generic source synchronous IO DDR differential input module
+    rtl/ssio_ddr_out.v              : Generic source synchronous IO DDR output module
+    rtl/ssio_ddr_out_diff.v         : Generic source synchronous IO DDR differential output module
+    rtl/ssio_sdr_in.v               : Generic source synchronous IO SDR input module
+    rtl/ssio_sdr_in_diff.v          : Generic source synchronous IO SDR differential input module
+    rtl/ssio_sdr_out.v              : Generic source synchronous IO SDR output module
+    rtl/ssio_sdr_out_diff.v         : Generic source synchronous IO SDR differential output module
     rtl/udp.v                       : UDP block
     rtl/udp_64.v                    : UDP block (64 bit)
     rtl/udp_arb_mux.py              : UDP frame arbitrated multiplexer generator
     rtl/udp_arb_mux_4.v             : 4 port UDP frame arbitrated multiplexer
     rtl/udp_arb_mux_64.py           : UDP frame arbitrated multiplexer generator (64 bit)
     rtl/udp_arb_mux_64_4.v          : 4 port UDP frame arbitrated multiplexer (64 bit)
+    rtl/udp_checksum_gen.v          : UDP checksum generator
+    rtl/udp_checksum_gen_64.v       : UDP checksum generator (64 bit)
     rtl/udp_complete.v              : UDP stack (IP-ARP-UDP)
     rtl/udp_complete_64.v           : UDP stack (IP-ARP-UDP) (64 bit)
     rtl/udp_ip_rx.v                 : UDP frame receiver
@@ -427,8 +498,6 @@ transfer with header data
     hdr_valid  ________/     \_____________________________
                         _____
     hdr_data   XXXXXXXXX_HDR_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-                        ___________ _____ _____
-    tdata      XXXXXXXXX_A0________X_A1__X_A2__XXXXXXXXXXXX
                         ___________ _____ _____
     tdata      XXXXXXXXX_A0________X_A1__X_A2__XXXXXXXXXXXX
                         ___________ _____ _____
@@ -511,5 +580,6 @@ individual test scripts can be run with python directly.
     tb/eth_ep.py         : MyHDL Ethernet frame endpoints
     tb/gmii_ep.py        : MyHDL GMII endpoints
     tb/ip_ep.py          : MyHDL IP frame endpoints
+    tb/rgmii_ep.py       : MyHDL RGMII endpoints
     tb/udp_ep.py         : MyHDL UDP frame endpoints
     tb/xgmii_ep.py       : MyHDL XGMII endpoints
