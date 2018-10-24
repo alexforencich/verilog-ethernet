@@ -31,14 +31,14 @@ import eth_ep
 import xgmii_ep
 
 module = 'eth_mac_10g'
-testbench = 'test_%s' % module
+testbench = 'test_%s_32' % module
 
 srcs = []
 
 srcs.append("../rtl/%s.v" % module)
 srcs.append("../rtl/lfsr.v")
-srcs.append("../rtl/eth_mac_10g_rx.v")
-srcs.append("../rtl/eth_mac_10g_tx.v")
+srcs.append("../rtl/axis_xgmii_rx_32.v")
+srcs.append("../rtl/axis_xgmii_tx_32.v")
 srcs.append("%s.v" % testbench)
 
 src = ' '.join(srcs)
@@ -48,6 +48,9 @@ build_cmd = "iverilog -o %s.vvp %s" % (testbench, src)
 def bench():
 
     # Parameters
+    DATA_WIDTH = 32
+    KEEP_WIDTH = (DATA_WIDTH/8)
+    CTRL_WIDTH = (DATA_WIDTH/8)
     ENABLE_PADDING = 1
     ENABLE_DIC = 1
     MIN_FRAME_LENGTH = 64
@@ -61,24 +64,24 @@ def bench():
     rx_rst = Signal(bool(0))
     tx_clk = Signal(bool(0))
     tx_rst = Signal(bool(0))
-    tx_axis_tdata = Signal(intbv(0)[64:])
-    tx_axis_tkeep = Signal(intbv(0)[8:])
+    tx_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
+    tx_axis_tkeep = Signal(intbv(0)[KEEP_WIDTH:])
     tx_axis_tvalid = Signal(bool(0))
     tx_axis_tlast = Signal(bool(0))
     tx_axis_tuser = Signal(bool(0))
-    xgmii_rxd = Signal(intbv(0x0707070707070707)[64:])
-    xgmii_rxc = Signal(intbv(0xff)[8:])
+    xgmii_rxd = Signal(intbv(0x0707070707070707)[DATA_WIDTH:])
+    xgmii_rxc = Signal(intbv(0xff)[CTRL_WIDTH:])
     ifg_delay = Signal(intbv(0)[8:])
 
     # Outputs
     tx_axis_tready = Signal(bool(0))
-    rx_axis_tdata = Signal(intbv(0)[64:])
-    rx_axis_tkeep = Signal(intbv(0)[8:])
+    rx_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
+    rx_axis_tkeep = Signal(intbv(0)[KEEP_WIDTH:])
     rx_axis_tvalid = Signal(bool(0))
     rx_axis_tlast = Signal(bool(0))
     rx_axis_tuser = Signal(bool(0))
-    xgmii_txd = Signal(intbv(0x0707070707070707)[64:])
-    xgmii_txc = Signal(intbv(0xff)[8:])
+    xgmii_txd = Signal(intbv(0x0707070707070707)[DATA_WIDTH:])
+    xgmii_txc = Signal(intbv(0xff)[CTRL_WIDTH:])
     rx_error_bad_frame = Signal(bool(0))
     rx_error_bad_fcs = Signal(bool(0))
 

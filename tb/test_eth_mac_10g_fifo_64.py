@@ -31,14 +31,14 @@ import eth_ep
 import xgmii_ep
 
 module = 'eth_mac_10g_fifo'
-testbench = 'test_%s' % module
+testbench = 'test_%s_64' % module
 
 srcs = []
 
 srcs.append("../rtl/%s.v" % module)
 srcs.append("../rtl/lfsr.v")
-srcs.append("../rtl/eth_mac_10g_rx.v")
-srcs.append("../rtl/eth_mac_10g_tx.v")
+srcs.append("../rtl/axis_xgmii_rx_64.v")
+srcs.append("../rtl/axis_xgmii_tx_64.v")
 srcs.append("../rtl/eth_mac_10g.v")
 srcs.append("../lib/axis/rtl/axis_async_frame_fifo.v")
 srcs.append("%s.v" % testbench)
@@ -50,6 +50,9 @@ build_cmd = "iverilog -o %s.vvp %s" % (testbench, src)
 def bench():
 
     # Parameters
+    DATA_WIDTH = 64
+    KEEP_WIDTH = (DATA_WIDTH/8)
+    CTRL_WIDTH = (DATA_WIDTH/8)
     ENABLE_PADDING = 1
     ENABLE_DIC = 1
     MIN_FRAME_LENGTH = 64
@@ -67,25 +70,25 @@ def bench():
     tx_rst = Signal(bool(0))
     logic_clk = Signal(bool(0))
     logic_rst = Signal(bool(0))
-    tx_axis_tdata = Signal(intbv(0)[64:])
-    tx_axis_tkeep = Signal(intbv(0)[8:])
+    tx_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
+    tx_axis_tkeep = Signal(intbv(0)[KEEP_WIDTH:])
     tx_axis_tvalid = Signal(bool(0))
     tx_axis_tlast = Signal(bool(0))
     tx_axis_tuser = Signal(bool(0))
     rx_axis_tready = Signal(bool(0))
-    xgmii_rxd = Signal(intbv(0x0707070707070707)[64:])
-    xgmii_rxc = Signal(intbv(0xff)[8:])
+    xgmii_rxd = Signal(intbv(0x0707070707070707)[DATA_WIDTH:])
+    xgmii_rxc = Signal(intbv(0xff)[CTRL_WIDTH:])
     ifg_delay = Signal(intbv(0)[8:])
 
     # Outputs
     tx_axis_tready = Signal(bool(0))
-    rx_axis_tdata = Signal(intbv(0)[64:])
-    rx_axis_tkeep = Signal(intbv(0)[8:])
+    rx_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
+    rx_axis_tkeep = Signal(intbv(0)[KEEP_WIDTH:])
     rx_axis_tvalid = Signal(bool(0))
     rx_axis_tlast = Signal(bool(0))
     rx_axis_tuser = Signal(bool(0))
-    xgmii_txd = Signal(intbv(0x0707070707070707)[64:])
-    xgmii_txc = Signal(intbv(0xff)[8:])
+    xgmii_txd = Signal(intbv(0x0707070707070707)[DATA_WIDTH:])
+    xgmii_txc = Signal(intbv(0xff)[CTRL_WIDTH:])
     tx_fifo_overflow = Signal(bool(0))
     tx_fifo_bad_frame = Signal(bool(0))
     tx_fifo_good_frame = Signal(bool(0))

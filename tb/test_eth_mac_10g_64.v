@@ -29,9 +29,12 @@ THE SOFTWARE.
 /*
  * Testbench for eth_mac_10g
  */
-module test_eth_mac_10g;
+module test_eth_mac_10g_64;
 
 // Parameters
+parameter DATA_WIDTH = 64;
+parameter KEEP_WIDTH = (DATA_WIDTH/8);
+parameter CTRL_WIDTH = (DATA_WIDTH/8);
 parameter ENABLE_PADDING = 1;
 parameter ENABLE_DIC = 1;
 parameter MIN_FRAME_LENGTH = 64;
@@ -45,24 +48,24 @@ reg rx_clk = 0;
 reg rx_rst = 0;
 reg tx_clk = 0;
 reg tx_rst = 0;
-reg [63:0] tx_axis_tdata = 0;
-reg [7:0] tx_axis_tkeep = 0;
+reg [DATA_WIDTH-1:0] tx_axis_tdata = 0;
+reg [KEEP_WIDTH-1:0] tx_axis_tkeep = 0;
 reg tx_axis_tvalid = 0;
 reg tx_axis_tlast = 0;
 reg tx_axis_tuser = 0;
-reg [63:0] xgmii_rxd = 0;
-reg [7:0] xgmii_rxc = 0;
+reg [DATA_WIDTH-1:0] xgmii_rxd = 0;
+reg [CTRL_WIDTH-1:0] xgmii_rxc = 0;
 reg [7:0] ifg_delay = 0;
 
 // Outputs
 wire tx_axis_tready;
-wire [63:0] rx_axis_tdata;
-wire [7:0] rx_axis_tkeep;
+wire [DATA_WIDTH-1:0] rx_axis_tdata;
+wire [KEEP_WIDTH-1:0] rx_axis_tkeep;
 wire rx_axis_tvalid;
 wire rx_axis_tlast;
 wire rx_axis_tuser;
-wire [63:0] xgmii_txd;
-wire [7:0] xgmii_txc;
+wire [DATA_WIDTH-1:0] xgmii_txd;
+wire [CTRL_WIDTH-1:0] xgmii_txc;
 wire rx_error_bad_frame;
 wire rx_error_bad_fcs;
 
@@ -99,11 +102,14 @@ initial begin
     );
 
     // dump file
-    $dumpfile("test_eth_mac_10g.lxt");
-    $dumpvars(0, test_eth_mac_10g);
+    $dumpfile("test_eth_mac_10g_64.lxt");
+    $dumpvars(0, test_eth_mac_10g_64);
 end
 
 eth_mac_10g #(
+    .DATA_WIDTH(DATA_WIDTH),
+    .KEEP_WIDTH(KEEP_WIDTH),
+    .CTRL_WIDTH(CTRL_WIDTH),
     .ENABLE_PADDING(ENABLE_PADDING),
     .ENABLE_DIC(ENABLE_DIC),
     .MIN_FRAME_LENGTH(MIN_FRAME_LENGTH)

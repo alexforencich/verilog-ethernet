@@ -27,16 +27,17 @@ THE SOFTWARE.
 `timescale 1ns / 1ps
 
 /*
- * Testbench for eth_mac_10g_fifo
+ * Testbench for eth_mac_10g
  */
-module test_eth_mac_10g_fifo;
+module test_eth_mac_10g_32;
 
 // Parameters
+parameter DATA_WIDTH = 32;
+parameter KEEP_WIDTH = (DATA_WIDTH/8);
+parameter CTRL_WIDTH = (DATA_WIDTH/8);
 parameter ENABLE_PADDING = 1;
 parameter ENABLE_DIC = 1;
 parameter MIN_FRAME_LENGTH = 64;
-parameter TX_FIFO_ADDR_WIDTH = 9;
-parameter RX_FIFO_ADDR_WIDTH = 9;
 
 // Inputs
 reg clk = 0;
@@ -47,35 +48,26 @@ reg rx_clk = 0;
 reg rx_rst = 0;
 reg tx_clk = 0;
 reg tx_rst = 0;
-reg logic_clk = 0;
-reg logic_rst = 0;
-reg [63:0] tx_axis_tdata = 0;
-reg [7:0] tx_axis_tkeep = 0;
+reg [DATA_WIDTH-1:0] tx_axis_tdata = 0;
+reg [KEEP_WIDTH-1:0] tx_axis_tkeep = 0;
 reg tx_axis_tvalid = 0;
 reg tx_axis_tlast = 0;
 reg tx_axis_tuser = 0;
-reg rx_axis_tready = 0;
-reg [63:0] xgmii_rxd = 0;
-reg [7:0] xgmii_rxc = 0;
+reg [DATA_WIDTH-1:0] xgmii_rxd = 0;
+reg [CTRL_WIDTH-1:0] xgmii_rxc = 0;
 reg [7:0] ifg_delay = 0;
 
 // Outputs
 wire tx_axis_tready;
-wire [63:0] rx_axis_tdata;
-wire [7:0] rx_axis_tkeep;
+wire [DATA_WIDTH-1:0] rx_axis_tdata;
+wire [KEEP_WIDTH-1:0] rx_axis_tkeep;
 wire rx_axis_tvalid;
 wire rx_axis_tlast;
 wire rx_axis_tuser;
-wire [63:0] xgmii_txd;
-wire [7:0] xgmii_txc;
-wire tx_fifo_overflow;
-wire tx_fifo_bad_frame;
-wire tx_fifo_good_frame;
+wire [DATA_WIDTH-1:0] xgmii_txd;
+wire [CTRL_WIDTH-1:0] xgmii_txc;
 wire rx_error_bad_frame;
 wire rx_error_bad_fcs;
-wire rx_fifo_overflow;
-wire rx_fifo_bad_frame;
-wire rx_fifo_good_frame;
 
 initial begin
     // myhdl integration
@@ -87,14 +79,11 @@ initial begin
         rx_rst,
         tx_clk,
         tx_rst,
-        logic_clk,
-        logic_rst,
         tx_axis_tdata,
         tx_axis_tkeep,
         tx_axis_tvalid,
         tx_axis_tlast,
         tx_axis_tuser,
-        rx_axis_tready,
         xgmii_rxd,
         xgmii_rxc,
         ifg_delay
@@ -108,35 +97,28 @@ initial begin
         rx_axis_tuser,
         xgmii_txd,
         xgmii_txc,
-        tx_fifo_overflow,
-        tx_fifo_bad_frame,
-        tx_fifo_good_frame,
         rx_error_bad_frame,
-        rx_error_bad_fcs,
-        rx_fifo_overflow,
-        rx_fifo_bad_frame,
-        rx_fifo_good_frame
+        rx_error_bad_fcs
     );
 
     // dump file
-    $dumpfile("test_eth_mac_10g_fifo.lxt");
-    $dumpvars(0, test_eth_mac_10g_fifo);
+    $dumpfile("test_eth_mac_10g_32.lxt");
+    $dumpvars(0, test_eth_mac_10g_32);
 end
 
-eth_mac_10g_fifo #(
+eth_mac_10g #(
+    .DATA_WIDTH(DATA_WIDTH),
+    .KEEP_WIDTH(KEEP_WIDTH),
+    .CTRL_WIDTH(CTRL_WIDTH),
     .ENABLE_PADDING(ENABLE_PADDING),
     .ENABLE_DIC(ENABLE_DIC),
-    .MIN_FRAME_LENGTH(MIN_FRAME_LENGTH),
-    .TX_FIFO_ADDR_WIDTH(TX_FIFO_ADDR_WIDTH),
-    .RX_FIFO_ADDR_WIDTH(RX_FIFO_ADDR_WIDTH)
+    .MIN_FRAME_LENGTH(MIN_FRAME_LENGTH)
 )
 UUT (
     .rx_clk(rx_clk),
     .rx_rst(rx_rst),
     .tx_clk(tx_clk),
     .tx_rst(tx_rst),
-    .logic_clk(logic_clk),
-    .logic_rst(logic_rst),
     .tx_axis_tdata(tx_axis_tdata),
     .tx_axis_tkeep(tx_axis_tkeep),
     .tx_axis_tvalid(tx_axis_tvalid),
@@ -146,21 +128,14 @@ UUT (
     .rx_axis_tdata(rx_axis_tdata),
     .rx_axis_tkeep(rx_axis_tkeep),
     .rx_axis_tvalid(rx_axis_tvalid),
-    .rx_axis_tready(rx_axis_tready),
     .rx_axis_tlast(rx_axis_tlast),
     .rx_axis_tuser(rx_axis_tuser),
     .xgmii_rxd(xgmii_rxd),
     .xgmii_rxc(xgmii_rxc),
     .xgmii_txd(xgmii_txd),
     .xgmii_txc(xgmii_txc),
-    .tx_fifo_overflow(tx_fifo_overflow),
-    .tx_fifo_bad_frame(tx_fifo_bad_frame),
-    .tx_fifo_good_frame(tx_fifo_good_frame),
     .rx_error_bad_frame(rx_error_bad_frame),
     .rx_error_bad_fcs(rx_error_bad_fcs),
-    .rx_fifo_overflow(rx_fifo_overflow),
-    .rx_fifo_bad_frame(rx_fifo_bad_frame),
-    .rx_fifo_good_frame(rx_fifo_good_frame),
     .ifg_delay(ifg_delay)
 );
 
