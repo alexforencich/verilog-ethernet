@@ -167,14 +167,6 @@ adaptation logic.
 
 10G Ethernet MAC with XGMII interface and FIFOs.
 
-### eth_mac_10g_rx module
-
-10G Ethernet MAC RX with XGMII interface.
-
-### eth_mac_10g_tx module
-
-10G Ethernet MAC TX with XGMII interface.
-
 ### eth_mux_N module
 
 Ethernet frame muliplexer with 8 bit data width for gigabit Ethernet.
@@ -422,8 +414,6 @@ Can be generated with arbitrary port counts with udp_mux_64.py.
     rtl/eth_mac_1g_rgmii_fifo.v     : Tri-mode Ethernet RGMII MAC with FIFO
     rtl/eth_mac_10g.v               : 10G Etherent XGMII MAC
     rtl/eth_mac_10g_fifo.v          : 10G Etherent XGMII MAC with FIFO
-    rtl/eth_mac_10g_rx.v            : 10G Etherent XGMII MAC RX
-    rtl/eth_mac_10g_tx.v            : 10G Etherent XGMII MAC TX
     rtl/eth_mux.py                  : Ethernet frame multiplexer generator
     rtl/eth_mux_2.v                 : 4 port Ethernet frame multiplexer
     rtl/eth_mux_4.v                 : 4 port Ethernet frame multiplexer
