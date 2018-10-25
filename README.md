@@ -32,6 +32,8 @@ necessary.
 Frame-aware AXI stream arbitrated muliplexer with parametrizable data width
 and port count.  Supports priority and round-robin arbitration.
 
+Wrappers can generated with axis_arb_mux_wrap.py.
+
 ### axis_async_fifo module
 
 Configurable word-based or frame-based asynchronous FIFO with parametrizable
@@ -52,7 +54,7 @@ Configurable zero insertion.
 Basic crosspoint switch.  tready signal not supported.  Parametrizable data
 width.  
 
-Can be generated with arbitrary port counts with axis_crosspoint.py.
+Wrappers can generated with axis_crosspoint_wrap.py.
 
 ### axis_demux module
 
@@ -69,6 +71,8 @@ depths only.
 
 Frame joiner with optional tag and parametrizable port count.  8 bit data path
 only.
+
+Wrappers can generated with axis_frame_join_wrap.py.
 
 ### axis_frame_length_adjust module
 
@@ -93,6 +97,8 @@ AXI stream to LocalLink bridge.
 
 Frame-aware AXI stream muliplexer with parametrizable data width and port
 count.
+
+Wrappers can generated with axis_mux_wrap.py.
 
 ### axis_rate_limit module
 
@@ -126,6 +132,8 @@ monolithic frame from multiple monitored points with the same trigger.
 ### axis_switch module
 
 Frame-aware AXI stream switch with parametrizable data width and port count.
+
+Wrappers can generated with axis_switch_wrap.py.
 
 ### axis_tap module
 
