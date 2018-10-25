@@ -112,7 +112,7 @@ if (REG_TYPE > 1) begin
     assign m_axis_tuser  = USER_ENABLE ? m_axis_tuser_reg : {USER_WIDTH{1'b0}};
 
     // enable ready input next cycle if output is ready or the temp reg will not be filled on the next cycle (output reg empty or no input)
-    wire s_axis_tready_early = m_axis_tready | (~temp_m_axis_tvalid_reg & (~m_axis_tvalid_reg | ~s_axis_tvalid));
+    wire s_axis_tready_early = m_axis_tready || (!temp_m_axis_tvalid_reg && (!m_axis_tvalid_reg || !s_axis_tvalid));
 
     always @* begin
         // transfer sink ready state to source
@@ -125,7 +125,7 @@ if (REG_TYPE > 1) begin
 
         if (s_axis_tready_reg) begin
             // input is ready
-            if (m_axis_tready | ~m_axis_tvalid_reg) begin
+            if (m_axis_tready || !m_axis_tvalid_reg) begin
                 // output is ready or currently not valid, transfer data to output
                 m_axis_tvalid_next = s_axis_tvalid;
                 store_axis_input_to_output = 1'b1;
