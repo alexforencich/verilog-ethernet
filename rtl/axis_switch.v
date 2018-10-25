@@ -226,9 +226,9 @@ generate
 
         arbiter #(
             .PORTS(S_COUNT),
-            .TYPE("ROUND_ROBIN"),
+            .TYPE(ARB_TYPE),
             .BLOCK("ACKNOWLEDGE"),
-            .LSB_PRIORITY("HIGH")
+            .LSB_PRIORITY(LSB_PRIORITY)
         )
         arb_inst (
             .clk(clk),
