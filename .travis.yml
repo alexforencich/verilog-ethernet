@@ -11,5 +11,5 @@ before_install:
   - cd $d/myhdl/cosimulation/icarus && make && sudo install -m 0755 -D ./myhdl.vpi /usr/lib/x86_64-linux-gnu/ivl/myhdl.vpi
   - cd $d
 script:
-  - cd tb && py.test
+  - cd tb && IVERILOG_DUMPER=none py.test
 
