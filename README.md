@@ -100,6 +100,11 @@ count.
 
 Wrappers can generated with axis_mux_wrap.py.
 
+### axis_pipeline_register module
+
+Parametrizable register pipeline.  LENGTH parameter determines number of
+register stages.
+
 ### axis_rate_limit module
 
 Fractional rate limiter, supports word and frame modes.  Inserts wait states
