@@ -57,16 +57,16 @@ reg tap_axis_tlast = 0;
 reg [ID_WIDTH-1:0] tap_axis_tid = 0;
 reg [DEST_WIDTH-1:0] tap_axis_tdest = 0;
 reg [USER_WIDTH-1:0] tap_axis_tuser = 0;
-reg output_axis_tready = 0;
+reg m_axis_tready = 0;
 
 // Outputs
-wire [DATA_WIDTH-1:0] output_axis_tdata;
-wire [KEEP_WIDTH-1:0] output_axis_tkeep;
-wire output_axis_tvalid;
-wire output_axis_tlast;
-wire [ID_WIDTH-1:0] output_axis_tid;
-wire [DEST_WIDTH-1:0] output_axis_tdest;
-wire [USER_WIDTH-1:0] output_axis_tuser;
+wire [DATA_WIDTH-1:0] m_axis_tdata;
+wire [KEEP_WIDTH-1:0] m_axis_tkeep;
+wire m_axis_tvalid;
+wire m_axis_tlast;
+wire [ID_WIDTH-1:0] m_axis_tid;
+wire [DEST_WIDTH-1:0] m_axis_tdest;
+wire [USER_WIDTH-1:0] m_axis_tuser;
 
 initial begin
     // myhdl integration
@@ -82,16 +82,16 @@ initial begin
         tap_axis_tid,
         tap_axis_tdest,
         tap_axis_tuser,
-        output_axis_tready
+        m_axis_tready
     );
     $to_myhdl(
-        output_axis_tdata,
-        output_axis_tkeep,
-        output_axis_tvalid,
-        output_axis_tlast,
-        output_axis_tid,
-        output_axis_tdest,
-        output_axis_tuser
+        m_axis_tdata,
+        m_axis_tkeep,
+        m_axis_tvalid,
+        m_axis_tlast,
+        m_axis_tid,
+        m_axis_tdest,
+        m_axis_tuser
     );
 
     // dump file
@@ -125,14 +125,14 @@ UUT (
     .tap_axis_tdest(tap_axis_tdest),
     .tap_axis_tuser(tap_axis_tuser),
     // AXI output
-    .output_axis_tdata(output_axis_tdata),
-    .output_axis_tkeep(output_axis_tkeep),
-    .output_axis_tvalid(output_axis_tvalid),
-    .output_axis_tready(output_axis_tready),
-    .output_axis_tlast(output_axis_tlast),
-    .output_axis_tid(output_axis_tid),
-    .output_axis_tdest(output_axis_tdest),
-    .output_axis_tuser(output_axis_tuser)
+    .m_axis_tdata(m_axis_tdata),
+    .m_axis_tkeep(m_axis_tkeep),
+    .m_axis_tvalid(m_axis_tvalid),
+    .m_axis_tready(m_axis_tready),
+    .m_axis_tlast(m_axis_tlast),
+    .m_axis_tid(m_axis_tid),
+    .m_axis_tdest(m_axis_tdest),
+    .m_axis_tuser(m_axis_tuser)
 );
 
 endmodule
