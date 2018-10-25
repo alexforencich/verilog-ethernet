@@ -49,16 +49,16 @@ module ll_axis_bridge #
     /*
      * AXI output
      */
-    output wire [DATA_WIDTH-1:0]  axis_tdata,
-    output wire                   axis_tvalid,
-    input  wire                   axis_tready,
-    output wire                   axis_tlast
+    output wire [DATA_WIDTH-1:0]  m_axis_tdata,
+    output wire                   m_axis_tvalid,
+    input  wire                   m_axis_tready,
+    output wire                   m_axis_tlast
 );
 
-assign axis_tdata = ll_data_in;
-assign axis_tvalid = ~ll_src_rdy_in_n;
-assign axis_tlast = ~ll_eof_in_n;
+assign m_axis_tdata = ll_data_in;
+assign m_axis_tvalid = !ll_src_rdy_in_n;
+assign m_axis_tlast = !ll_eof_in_n;
 
-assign ll_dst_rdy_out_n = ~axis_tready;
+assign ll_dst_rdy_out_n = !m_axis_tready;
 
 endmodule

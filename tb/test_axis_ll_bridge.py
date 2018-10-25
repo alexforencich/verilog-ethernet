@@ -51,9 +51,9 @@ def bench():
     rst = Signal(bool(0))
     current_test = Signal(intbv(0)[8:])
 
-    axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
-    axis_tvalid = Signal(bool(0))
-    axis_tlast = Signal(bool(0))
+    s_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
+    s_axis_tvalid = Signal(bool(0))
+    s_axis_tlast = Signal(bool(0))
     ll_dst_rdy_in_n = Signal(bool(1))
 
     # Outputs
@@ -61,7 +61,7 @@ def bench():
     ll_sof_out_n = Signal(bool(1))
     ll_eof_out_n = Signal(bool(1))
     ll_src_rdy_out_n = Signal(bool(1))
-    axis_tready = Signal(bool(0))
+    s_axis_tready = Signal(bool(0))
 
     # sources and sinks
     source_pause = Signal(bool(0))
@@ -72,10 +72,10 @@ def bench():
     source_logic = source.create_logic(
         clk,
         rst,
-        tdata=axis_tdata,
-        tvalid=axis_tvalid,
-        tready=axis_tready,
-        tlast=axis_tlast,
+        tdata=s_axis_tdata,
+        tvalid=s_axis_tvalid,
+        tready=s_axis_tready,
+        tlast=s_axis_tlast,
         pause=source_pause,
         name='source'
     )
@@ -104,10 +104,10 @@ def bench():
         rst=rst,
         current_test=current_test,
 
-        axis_tdata=axis_tdata,
-        axis_tvalid=axis_tvalid,
-        axis_tready=axis_tready,
-        axis_tlast=axis_tlast,
+        s_axis_tdata=s_axis_tdata,
+        s_axis_tvalid=s_axis_tvalid,
+        s_axis_tready=s_axis_tready,
+        s_axis_tlast=s_axis_tlast,
 
         ll_data_out=ll_data_out,
         ll_sof_out_n=ll_sof_out_n,
