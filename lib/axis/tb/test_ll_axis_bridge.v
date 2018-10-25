@@ -43,13 +43,13 @@ reg [DATA_WIDTH-1:0] ll_data_in = 0;
 reg ll_sof_in_n = 1;
 reg ll_eof_in_n = 1;
 reg ll_src_rdy_in_n = 1;
-reg axis_tready = 0;
+reg m_axis_tready = 0;
 
 // Outputs
 wire ll_dst_rdy_out_n;
-wire [DATA_WIDTH-1:0] axis_tdata;
-wire axis_tvalid;
-wire axis_tlast;
+wire [DATA_WIDTH-1:0] m_axis_tdata;
+wire m_axis_tvalid;
+wire m_axis_tlast;
 
 initial begin
     // myhdl integration
@@ -61,12 +61,12 @@ initial begin
         ll_sof_in_n,
         ll_eof_in_n,
         ll_src_rdy_in_n,
-        axis_tready
+        m_axis_tready
     );
     $to_myhdl(
-        axis_tdata,
-        axis_tvalid,
-        axis_tlast,
+        m_axis_tdata,
+        m_axis_tvalid,
+        m_axis_tlast,
         ll_dst_rdy_out_n
     );
 
@@ -88,10 +88,10 @@ UUT (
     .ll_src_rdy_in_n(ll_src_rdy_in_n),
     .ll_dst_rdy_out_n(ll_dst_rdy_out_n),
     // axi output
-    .axis_tdata(axis_tdata),
-    .axis_tvalid(axis_tvalid),
-    .axis_tready(axis_tready),
-    .axis_tlast(axis_tlast)
+    .m_axis_tdata(m_axis_tdata),
+    .m_axis_tvalid(m_axis_tvalid),
+    .m_axis_tready(m_axis_tready),
+    .m_axis_tlast(m_axis_tlast)
 );
 
 endmodule

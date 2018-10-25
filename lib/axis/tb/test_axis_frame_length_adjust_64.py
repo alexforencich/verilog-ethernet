@@ -58,27 +58,27 @@ def bench():
     rst = Signal(bool(0))
     current_test = Signal(intbv(0)[8:])
 
-    input_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
-    input_axis_tkeep = Signal(intbv(1)[KEEP_WIDTH:])
-    input_axis_tvalid = Signal(bool(0))
-    input_axis_tlast = Signal(bool(0))
-    input_axis_tid = Signal(intbv(0)[ID_WIDTH:])
-    input_axis_tdest = Signal(intbv(0)[DEST_WIDTH:])
-    input_axis_tuser = Signal(intbv(0)[USER_WIDTH:])
-    output_axis_tready = Signal(bool(0))
+    s_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
+    s_axis_tkeep = Signal(intbv(1)[KEEP_WIDTH:])
+    s_axis_tvalid = Signal(bool(0))
+    s_axis_tlast = Signal(bool(0))
+    s_axis_tid = Signal(intbv(0)[ID_WIDTH:])
+    s_axis_tdest = Signal(intbv(0)[DEST_WIDTH:])
+    s_axis_tuser = Signal(intbv(0)[USER_WIDTH:])
+    m_axis_tready = Signal(bool(0))
     status_ready = Signal(bool(0))
     length_min = Signal(intbv(0)[16:])
     length_max = Signal(intbv(0)[16:])
 
     # Outputs
-    input_axis_tready = Signal(bool(0))
-    output_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
-    output_axis_tkeep = Signal(intbv(1)[KEEP_WIDTH:])
-    output_axis_tvalid = Signal(bool(0))
-    output_axis_tlast = Signal(bool(0))
-    output_axis_tid = Signal(intbv(0)[ID_WIDTH:])
-    output_axis_tdest = Signal(intbv(0)[DEST_WIDTH:])
-    output_axis_tuser = Signal(intbv(0)[USER_WIDTH:])
+    s_axis_tready = Signal(bool(0))
+    m_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
+    m_axis_tkeep = Signal(intbv(1)[KEEP_WIDTH:])
+    m_axis_tvalid = Signal(bool(0))
+    m_axis_tlast = Signal(bool(0))
+    m_axis_tid = Signal(intbv(0)[ID_WIDTH:])
+    m_axis_tdest = Signal(intbv(0)[DEST_WIDTH:])
+    m_axis_tuser = Signal(intbv(0)[USER_WIDTH:])
     status_valid = Signal(bool(0))
     status_frame_pad = Signal(bool(0))
     status_frame_truncate = Signal(bool(0))
@@ -95,14 +95,14 @@ def bench():
     source_logic = source.create_logic(
         clk,
         rst,
-        tdata=input_axis_tdata,
-        tkeep=input_axis_tkeep,
-        tvalid=input_axis_tvalid,
-        tready=input_axis_tready,
-        tlast=input_axis_tlast,
-        tid=input_axis_tid,
-        tdest=input_axis_tdest,
-        tuser=input_axis_tuser,
+        tdata=s_axis_tdata,
+        tkeep=s_axis_tkeep,
+        tvalid=s_axis_tvalid,
+        tready=s_axis_tready,
+        tlast=s_axis_tlast,
+        tid=s_axis_tid,
+        tdest=s_axis_tdest,
+        tuser=s_axis_tuser,
         pause=source_pause,
         name='source'
     )
@@ -112,14 +112,14 @@ def bench():
     sink_logic = sink.create_logic(
         clk,
         rst,
-        tdata=output_axis_tdata,
-        tkeep=output_axis_tkeep,
-        tvalid=output_axis_tvalid,
-        tready=output_axis_tready,
-        tlast=output_axis_tlast,
-        tid=output_axis_tid,
-        tdest=output_axis_tdest,
-        tuser=output_axis_tuser,
+        tdata=m_axis_tdata,
+        tkeep=m_axis_tkeep,
+        tvalid=m_axis_tvalid,
+        tready=m_axis_tready,
+        tlast=m_axis_tlast,
+        tid=m_axis_tid,
+        tdest=m_axis_tdest,
+        tuser=m_axis_tuser,
         pause=sink_pause,
         name='sink'
     )
@@ -146,23 +146,23 @@ def bench():
         rst=rst,
         current_test=current_test,
 
-        input_axis_tdata=input_axis_tdata,
-        input_axis_tkeep=input_axis_tkeep,
-        input_axis_tvalid=input_axis_tvalid,
-        input_axis_tready=input_axis_tready,
-        input_axis_tlast=input_axis_tlast,
-        input_axis_tid=input_axis_tid,
-        input_axis_tdest=input_axis_tdest,
-        input_axis_tuser=input_axis_tuser,
+        s_axis_tdata=s_axis_tdata,
+        s_axis_tkeep=s_axis_tkeep,
+        s_axis_tvalid=s_axis_tvalid,
+        s_axis_tready=s_axis_tready,
+        s_axis_tlast=s_axis_tlast,
+        s_axis_tid=s_axis_tid,
+        s_axis_tdest=s_axis_tdest,
+        s_axis_tuser=s_axis_tuser,
 
-        output_axis_tdata=output_axis_tdata,
-        output_axis_tkeep=output_axis_tkeep,
-        output_axis_tvalid=output_axis_tvalid,
-        output_axis_tready=output_axis_tready,
-        output_axis_tlast=output_axis_tlast,
-        output_axis_tid=output_axis_tid,
-        output_axis_tdest=output_axis_tdest,
-        output_axis_tuser=output_axis_tuser,
+        m_axis_tdata=m_axis_tdata,
+        m_axis_tkeep=m_axis_tkeep,
+        m_axis_tvalid=m_axis_tvalid,
+        m_axis_tready=m_axis_tready,
+        m_axis_tlast=m_axis_tlast,
+        m_axis_tid=m_axis_tid,
+        m_axis_tdest=m_axis_tdest,
+        m_axis_tuser=m_axis_tuser,
 
         status_valid=status_valid,
         status_ready=status_ready,
@@ -180,11 +180,11 @@ def bench():
         clk.next = not clk
 
     def wait_normal():
-        while input_axis_tvalid or output_axis_tvalid:
+        while s_axis_tvalid or m_axis_tvalid:
             yield clk.posedge
 
     def wait_pause_source():
-        while input_axis_tvalid or output_axis_tvalid:
+        while s_axis_tvalid or m_axis_tvalid:
             source_pause.next = True
             yield clk.posedge
             yield clk.posedge
@@ -193,7 +193,7 @@ def bench():
             yield clk.posedge
 
     def wait_pause_sink():
-        while input_axis_tvalid or output_axis_tvalid:
+        while s_axis_tvalid or m_axis_tvalid:
             sink_pause.next = True
             yield clk.posedge
             yield clk.posedge

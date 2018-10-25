@@ -27,22 +27,18 @@ related by an integer multiple (e.g. 2 words and 6 words, but not 4 words
 and 6 words).  Wait states will be inserted on the wider bus side when
 necessary.
 
-### axis_arb_mux_N module
+### axis_arb_mux module
 
-Frame-aware AXI stream arbitrated muliplexer with parametrizable data width.
-Supports priority and round-robin arbitration.
+Frame-aware AXI stream arbitrated muliplexer with parametrizable data width
+and port count.  Supports priority and round-robin arbitration.
 
-Can be generated with arbitrary port counts with axis_arb_mux.py.
+Wrappers can generated with axis_arb_mux_wrap.py.
 
 ### axis_async_fifo module
 
-Basic word-based asynchronous FIFO with parametrizable data width and depth.
-Supports power of two depths only.
-
-### axis_async_frame_fifo module
-
-Basic frame-based asynchronous FIFO with parametrizable data width and depth.
-Supports power of two depths only.
+Configurable word-based or frame-based asynchronous FIFO with parametrizable
+data width, depth, type, and bad frame detection.  Supports power of two
+depths only.
 
 ### axis_cobs_decode
 
@@ -58,29 +54,25 @@ Configurable zero insertion.
 Basic crosspoint switch.  tready signal not supported.  Parametrizable data
 width.  
 
-Can be generated with arbitrary port counts with axis_crosspoint.py.
+Wrappers can generated with axis_crosspoint_wrap.py.
 
-### axis_demux_N module
+### axis_demux module
 
-Frame-aware AXI stream demuliplexer with parametrizable data width.
-
-Can be generated with arbitrary port counts with axis_demux.py.
+Frame-aware AXI stream demuliplexer with parametrizable data width and port
+count.
 
 ### axis_fifo module
 
-Basic word-based synchronous FIFO with parametrizable data width and depth.
-Supports power of two depths only.
+Configurable word-based or frame-based synchronous FIFO with parametrizable
+data width, depth, type, and bad frame detection.  Supports power of two
+depths only.
 
-### axis_frame_fifo module
+### axis_frame_join module
 
-Basic frame-based synchronous FIFO with parametrizable data width and depth.
-Supports power of two depths only.
+Frame joiner with optional tag and parametrizable port count.  8 bit data path
+only.
 
-### axis_frame_join_N module
-
-Frame joiner with optional tag.  8 bit data path only.
-
-Can be generated with arbitrary port counts with axis_frame_join.py.
+Wrappers can generated with axis_frame_join_wrap.py.
 
 ### axis_frame_length_adjust module
 
@@ -101,11 +93,17 @@ Length limits are configurable at run time.
 
 AXI stream to LocalLink bridge.
 
-### axis_mux_N module
+### axis_mux module
 
-Frame-aware AXI stream muliplexer with parametrizable data width.
+Frame-aware AXI stream muliplexer with parametrizable data width and port
+count.
 
-Can be generated with arbitrary port counts with axis_mux.py.
+Wrappers can generated with axis_mux_wrap.py.
+
+### axis_pipeline_register module
+
+Parametrizable register pipeline.  LENGTH parameter determines number of
+register stages.
 
 ### axis_rate_limit module
 
@@ -116,7 +114,8 @@ Parametrizable data width.  Rate and mode are configurable at run time.
 
 ### axis_register module
 
-Datapath register.  Use to improve timing for long routes.  
+Datapath register with parameter to select between skid buffer, simple buffer,
+and bypass.  Use to improve timing for long routes.
 
 ### axis_srl_fifo module
 
@@ -135,17 +134,17 @@ AXI stream interface.  Trigger signal used to reset and dump counts out of AXI
 interface, along with tag value.  Use with axis_frame_join_N to form a single
 monolithic frame from multiple monitored points with the same trigger.
 
-### axis_switch_NxN module
+### axis_switch module
 
-Frame-aware AXI stream switch with parametrizable data width.
+Frame-aware AXI stream switch with parametrizable data width and port count.
 
-Can be generated with arbitrary port counts with axis_switch.py.
+Wrappers can generated with axis_switch_wrap.py.
 
 ### axis_tap module
 
 AXI stream tap module.  Used to make a copy of an AXI stream bus without
 affecting the bus.  Back-pressure on the output results in truncated frames
-with tuser set.  
+with tuser set.
 
 ### ll_axis_bridge module
 
@@ -185,31 +184,23 @@ Parametrizable priority encoder.
 
     arbiter.v                          : General-purpose parametrizable arbiter
     axis_adapter.v                     : Parametrizable bus width adapter
-    axis_arb_mux.py                    : Arbitrated multiplexer generator
-    axis_arb_mux_4.v                   : 4 port arbitrated multiplexer
-    axis_async_fifo.v                  : Asynchronous FIFO
-    axis_async_frame_fifo.v            : Asynchronous frame FIFO
+    axis_arb_mux.v                     : Parametrizable arbitrated multiplexer
+    axis_async_fifo.v                  : Parametrizable asynchronous FIFO
     axis_cobs_decode.v                 : COBS decoder
     axis_cobs_encode.v                 : COBS encoder
-    axis_crosspoint.py                 : Crosspoint switch generator
-    axis_crosspoint_4x4.v              : 4x4 crosspoint switch
-    axis_demux.py                      : Demultiplexer generator
-    axis_demux_4.v                     : 4 port demultiplexer
-    axis_fifo.v                        : Synchronous FIFO
-    axis_frame_fifo.v                  : Synchronous frame FIFO
-    axis_frame_join.py                 : Frame joiner generator
-    axis_frame_join_4.v                : 4 port frame joiner
+    axis_crosspoint.v                  : Parametrizable crosspoint switch
+    axis_demux.v                       : Parametrizable demultiplexer
+    axis_fifo.v                        : Parametrizable synchronous FIFO
+    axis_frame_join.v                  : Parametrizable frame joiner
     axis_frame_length_adjust.v         : Frame length adjuster
     axis_frame_length_adjust_fifo.v    : Frame length adjuster with FIFO
     axis_ll_bridge.v                   : AXI stream to LocalLink bridge
-    axis_mux.py                        : Multiplexer generator
-    axis_mux_4.v                       : 4 port multiplexer
+    axis_mux.v                         : Multiplexer generator
     axis_rate_limit.v                  : Fractional rate limiter
     axis_register.v                    : AXI Stream register
     axis_srl_fifo.v                    : SRL-based FIFO
     axis_srl_register.v                : SRL-based register
-    axis_switch.py                     : AXI stream switch generator
-    axis_switch_4x4.v                  : 4x4 port AXI stream switch
+    axis_switch.v                      : Parametrizable AXI stream switch
     axis_stat_counter.v                : Statistics counter
     axis_tap.v                         : AXI stream tap
     ll_axis_bridge.v                   : LocalLink to AXI stream bridge

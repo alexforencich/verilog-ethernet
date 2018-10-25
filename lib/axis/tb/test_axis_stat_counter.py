@@ -66,16 +66,16 @@ def bench():
     monitor_axis_tready = Signal(bool(0))
     monitor_axis_tlast = Signal(bool(0))
     monitor_axis_tuser = Signal(bool(0))
-    output_axis_tready = Signal(bool(0))
+    m_axis_tready = Signal(bool(0))
 
     tag = Signal(intbv(16)[TAG_WIDTH:])
     trigger = Signal(bool(0))
 
     # Outputs
-    output_axis_tdata = Signal(intbv(0)[8:])
-    output_axis_tvalid = Signal(bool(0))
-    output_axis_tlast = Signal(bool(0))
-    output_axis_tuser = Signal(bool(0))
+    m_axis_tdata = Signal(intbv(0)[8:])
+    m_axis_tvalid = Signal(bool(0))
+    m_axis_tlast = Signal(bool(0))
+    m_axis_tuser = Signal(bool(0))
     busy = Signal(bool(0))
 
     # sources and sinks
@@ -118,11 +118,11 @@ def bench():
     sink_logic = sink.create_logic(
         clk,
         rst,
-        tdata=output_axis_tdata,
-        tvalid=output_axis_tvalid,
-        tready=output_axis_tready,
-        tlast=output_axis_tlast,
-        tuser=output_axis_tuser,
+        tdata=m_axis_tdata,
+        tvalid=m_axis_tvalid,
+        tready=m_axis_tready,
+        tlast=m_axis_tlast,
+        tuser=m_axis_tuser,
         pause=sink_pause,
         name='sink'
     )
@@ -144,11 +144,11 @@ def bench():
         monitor_axis_tlast=monitor_axis_tlast,
         monitor_axis_tuser=monitor_axis_tuser,
 
-        output_axis_tdata=output_axis_tdata,
-        output_axis_tvalid=output_axis_tvalid,
-        output_axis_tready=output_axis_tready,
-        output_axis_tlast=output_axis_tlast,
-        output_axis_tuser=output_axis_tuser,
+        m_axis_tdata=m_axis_tdata,
+        m_axis_tvalid=m_axis_tvalid,
+        m_axis_tready=m_axis_tready,
+        m_axis_tlast=m_axis_tlast,
+        m_axis_tuser=m_axis_tuser,
 
         tag=tag,
         trigger=trigger,
@@ -192,7 +192,7 @@ def bench():
         trigger.next = 0
         yield clk.posedge
 
-        while output_axis_tvalid:
+        while m_axis_tvalid:
             yield clk.posedge
         yield clk.posedge
         yield clk.posedge
@@ -231,7 +231,7 @@ def bench():
         yield clk.posedge
         trigger.next = 0
 
-        while trigger or output_axis_tvalid:
+        while trigger or m_axis_tvalid:
             sink_pause.next = True
             yield clk.posedge
             yield clk.posedge
@@ -281,7 +281,7 @@ def bench():
         while monitor_axis_tvalid:
             yield clk.posedge
 
-        while output_axis_tvalid:
+        while m_axis_tvalid:
             yield clk.posedge
 
         yield clk.posedge
@@ -291,7 +291,7 @@ def bench():
         trigger.next = 0
         yield clk.posedge
 
-        while output_axis_tvalid:
+        while m_axis_tvalid:
             yield clk.posedge
         yield clk.posedge
         yield clk.posedge
@@ -336,7 +336,7 @@ def bench():
         while monitor_axis_tvalid:
             yield clk.posedge
 
-        while output_axis_tvalid:
+        while m_axis_tvalid:
             yield clk.posedge
 
         yield clk.posedge
@@ -346,7 +346,7 @@ def bench():
         trigger.next = 0
         yield clk.posedge
 
-        while output_axis_tvalid:
+        while m_axis_tvalid:
             yield clk.posedge
         yield clk.posedge
         yield clk.posedge
@@ -405,7 +405,7 @@ def bench():
         while monitor_axis_tvalid:
             yield clk.posedge
 
-        while output_axis_tvalid:
+        while m_axis_tvalid:
             yield clk.posedge
 
         yield clk.posedge
@@ -415,7 +415,7 @@ def bench():
         trigger.next = 0
         yield clk.posedge
 
-        while output_axis_tvalid:
+        while m_axis_tvalid:
             yield clk.posedge
         yield clk.posedge
         yield clk.posedge
@@ -467,7 +467,7 @@ def bench():
         while monitor_axis_tvalid:
             yield clk.posedge
 
-        while output_axis_tvalid:
+        while m_axis_tvalid:
             yield clk.posedge
 
         yield clk.posedge
@@ -477,7 +477,7 @@ def bench():
         trigger.next = 0
         yield clk.posedge
 
-        while output_axis_tvalid:
+        while m_axis_tvalid:
             yield clk.posedge
         yield clk.posedge
         yield clk.posedge
@@ -529,7 +529,7 @@ def bench():
         while monitor_axis_tvalid:
             yield clk.posedge
 
-        while output_axis_tvalid:
+        while m_axis_tvalid:
             yield clk.posedge
 
         yield clk.posedge
@@ -539,7 +539,7 @@ def bench():
         trigger.next = 0
         yield clk.posedge
 
-        while output_axis_tvalid:
+        while m_axis_tvalid:
             yield clk.posedge
         yield clk.posedge
         yield clk.posedge
@@ -591,7 +591,7 @@ def bench():
         while monitor_axis_tvalid:
             yield clk.posedge
 
-        while output_axis_tvalid:
+        while m_axis_tvalid:
             yield clk.posedge
 
         yield clk.posedge
@@ -601,7 +601,7 @@ def bench():
         trigger.next = 0
         yield clk.posedge
 
-        while output_axis_tvalid:
+        while m_axis_tvalid:
             yield clk.posedge
         yield clk.posedge
         yield clk.posedge
@@ -651,7 +651,7 @@ def bench():
         while monitor_axis_tvalid:
             yield clk.posedge
 
-        while output_axis_tvalid:
+        while m_axis_tvalid:
             yield clk.posedge
 
         yield clk.posedge
@@ -661,7 +661,7 @@ def bench():
         trigger.next = 0
         yield clk.posedge
 
-        while output_axis_tvalid:
+        while m_axis_tvalid:
             yield clk.posedge
         yield clk.posedge
         yield clk.posedge
@@ -720,7 +720,7 @@ def bench():
         while monitor_axis_tvalid:
             yield clk.posedge
 
-        while output_axis_tvalid:
+        while m_axis_tvalid:
             yield clk.posedge
 
         yield clk.posedge
@@ -730,7 +730,7 @@ def bench():
         trigger.next = 0
         yield clk.posedge
 
-        while output_axis_tvalid:
+        while m_axis_tvalid:
             yield clk.posedge
         yield clk.posedge
         yield clk.posedge

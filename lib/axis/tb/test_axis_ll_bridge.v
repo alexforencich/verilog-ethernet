@@ -39,9 +39,9 @@ reg clk = 0;
 reg rst = 0;
 reg [7:0] current_test = 0;
 
-reg [DATA_WIDTH-1:0] axis_tdata = 0;
-reg axis_tvalid = 0;
-reg axis_tlast = 0;
+reg [DATA_WIDTH-1:0] s_axis_tdata = 0;
+reg s_axis_tvalid = 0;
+reg s_axis_tlast = 0;
 reg ll_dst_rdy_in_n = 1;
 
 // Outputs
@@ -49,7 +49,7 @@ wire [DATA_WIDTH-1:0] ll_data_out;
 wire ll_sof_out_n;
 wire ll_eof_out_n;
 wire ll_src_rdy_out_n;
-wire axis_tready;
+wire s_axis_tready;
 
 initial begin
     // myhdl integration
@@ -57,9 +57,9 @@ initial begin
         clk,
         rst,
         current_test,
-        axis_tdata,
-        axis_tvalid,
-        axis_tlast,
+        s_axis_tdata,
+        s_axis_tvalid,
+        s_axis_tlast,
         ll_dst_rdy_in_n
     );
     $to_myhdl(
@@ -67,7 +67,7 @@ initial begin
         ll_sof_out_n,
         ll_eof_out_n,
         ll_src_rdy_out_n,
-        axis_tready
+        s_axis_tready
     );
 
     // dump file
@@ -82,10 +82,10 @@ UUT (
     .clk(clk),
     .rst(rst),
     // axi input
-    .axis_tdata(axis_tdata),
-    .axis_tvalid(axis_tvalid),
-    .axis_tready(axis_tready),
-    .axis_tlast(axis_tlast),
+    .s_axis_tdata(s_axis_tdata),
+    .s_axis_tvalid(s_axis_tvalid),
+    .s_axis_tready(s_axis_tready),
+    .s_axis_tlast(s_axis_tlast),
     // locallink output
     .ll_data_out(ll_data_out),
     .ll_sof_out_n(ll_sof_out_n),

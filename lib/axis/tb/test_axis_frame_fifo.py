@@ -28,8 +28,8 @@ import os
 
 import axis_ep
 
-module = 'axis_frame_fifo'
-testbench = 'test_%s' % module
+module = 'axis_fifo'
+testbench = 'test_axis_frame_fifo'
 
 srcs = []
 
@@ -47,12 +47,14 @@ def bench():
     DATA_WIDTH = 8
     KEEP_ENABLE = (DATA_WIDTH>8)
     KEEP_WIDTH = (DATA_WIDTH/8)
+    LAST_ENABLE = 1
     ID_ENABLE = 1
     ID_WIDTH = 8
     DEST_ENABLE = 1
     DEST_WIDTH = 8
     USER_ENABLE = 1
     USER_WIDTH = 1
+    FRAME_FIFO = 1
     USER_BAD_FRAME_VALUE = 1
     USER_BAD_FRAME_MASK = 1
     DROP_BAD_FRAME = 1
@@ -63,27 +65,27 @@ def bench():
     rst = Signal(bool(0))
     current_test = Signal(intbv(0)[8:])
 
-    input_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
-    input_axis_tkeep = Signal(intbv(1)[KEEP_WIDTH:])
-    input_axis_tvalid = Signal(bool(0))
-    input_axis_tlast = Signal(bool(0))
-    input_axis_tid = Signal(intbv(0)[ID_WIDTH:])
-    input_axis_tdest = Signal(intbv(0)[DEST_WIDTH:])
-    input_axis_tuser = Signal(intbv(0)[USER_WIDTH:])
-    output_axis_tready = Signal(bool(0))
+    s_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
+    s_axis_tkeep = Signal(intbv(1)[KEEP_WIDTH:])
+    s_axis_tvalid = Signal(bool(0))
+    s_axis_tlast = Signal(bool(0))
+    s_axis_tid = Signal(intbv(0)[ID_WIDTH:])
+    s_axis_tdest = Signal(intbv(0)[DEST_WIDTH:])
+    s_axis_tuser = Signal(intbv(0)[USER_WIDTH:])
+    m_axis_tready = Signal(bool(0))
 
     # Outputs
-    input_axis_tready = Signal(bool(0))
-    output_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
-    output_axis_tkeep = Signal(intbv(1)[KEEP_WIDTH:])
-    output_axis_tvalid = Signal(bool(0))
-    output_axis_tlast = Signal(bool(0))
-    output_axis_tid = Signal(intbv(0)[ID_WIDTH:])
-    output_axis_tdest = Signal(intbv(0)[DEST_WIDTH:])
-    output_axis_tuser = Signal(intbv(0)[USER_WIDTH:])
-    overflow = Signal(bool(0))
-    bad_frame = Signal(bool(0))
-    good_frame = Signal(bool(0))
+    s_axis_tready = Signal(bool(0))
+    m_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
+    m_axis_tkeep = Signal(intbv(1)[KEEP_WIDTH:])
+    m_axis_tvalid = Signal(bool(0))
+    m_axis_tlast = Signal(bool(0))
+    m_axis_tid = Signal(intbv(0)[ID_WIDTH:])
+    m_axis_tdest = Signal(intbv(0)[DEST_WIDTH:])
+    m_axis_tuser = Signal(intbv(0)[USER_WIDTH:])
+    status_overflow = Signal(bool(0))
+    status_bad_frame = Signal(bool(0))
+    status_good_frame = Signal(bool(0))
 
     # sources and sinks
     source_pause = Signal(bool(0))
@@ -94,14 +96,14 @@ def bench():
     source_logic = source.create_logic(
         clk,
         rst,
-        tdata=input_axis_tdata,
-        tkeep=input_axis_tkeep,
-        tvalid=input_axis_tvalid,
-        tready=input_axis_tready,
-        tlast=input_axis_tlast,
-        tid=input_axis_tid,
-        tdest=input_axis_tdest,
-        tuser=input_axis_tuser,
+        tdata=s_axis_tdata,
+        tkeep=s_axis_tkeep,
+        tvalid=s_axis_tvalid,
+        tready=s_axis_tready,
+        tlast=s_axis_tlast,
+        tid=s_axis_tid,
+        tdest=s_axis_tdest,
+        tuser=s_axis_tuser,
         pause=source_pause,
         name='source'
     )
@@ -111,14 +113,14 @@ def bench():
     sink_logic = sink.create_logic(
         clk,
         rst,
-        tdata=output_axis_tdata,
-        tkeep=output_axis_tkeep,
-        tvalid=output_axis_tvalid,
-        tready=output_axis_tready,
-        tlast=output_axis_tlast,
-        tid=output_axis_tid,
-        tdest=output_axis_tdest,
-        tuser=output_axis_tuser,
+        tdata=m_axis_tdata,
+        tkeep=m_axis_tkeep,
+        tvalid=m_axis_tvalid,
+        tready=m_axis_tready,
+        tlast=m_axis_tlast,
+        tid=m_axis_tid,
+        tdest=m_axis_tdest,
+        tuser=m_axis_tuser,
         pause=sink_pause,
         name='sink'
     )
@@ -133,45 +135,45 @@ def bench():
         rst=rst,
         current_test=current_test,
 
-        input_axis_tdata=input_axis_tdata,
-        input_axis_tkeep=input_axis_tkeep,
-        input_axis_tvalid=input_axis_tvalid,
-        input_axis_tready=input_axis_tready,
-        input_axis_tlast=input_axis_tlast,
-        input_axis_tid=input_axis_tid,
-        input_axis_tdest=input_axis_tdest,
-        input_axis_tuser=input_axis_tuser,
+        s_axis_tdata=s_axis_tdata,
+        s_axis_tkeep=s_axis_tkeep,
+        s_axis_tvalid=s_axis_tvalid,
+        s_axis_tready=s_axis_tready,
+        s_axis_tlast=s_axis_tlast,
+        s_axis_tid=s_axis_tid,
+        s_axis_tdest=s_axis_tdest,
+        s_axis_tuser=s_axis_tuser,
 
-        output_axis_tdata=output_axis_tdata,
-        output_axis_tkeep=output_axis_tkeep,
-        output_axis_tvalid=output_axis_tvalid,
-        output_axis_tready=output_axis_tready,
-        output_axis_tlast=output_axis_tlast,
-        output_axis_tid=output_axis_tid,
-        output_axis_tdest=output_axis_tdest,
-        output_axis_tuser=output_axis_tuser,
+        m_axis_tdata=m_axis_tdata,
+        m_axis_tkeep=m_axis_tkeep,
+        m_axis_tvalid=m_axis_tvalid,
+        m_axis_tready=m_axis_tready,
+        m_axis_tlast=m_axis_tlast,
+        m_axis_tid=m_axis_tid,
+        m_axis_tdest=m_axis_tdest,
+        m_axis_tuser=m_axis_tuser,
 
-        overflow=overflow,
-        bad_frame=bad_frame,
-        good_frame=good_frame
+        status_overflow=status_overflow,
+        status_bad_frame=status_bad_frame,
+        status_good_frame=status_good_frame
     )
 
     @always(delay(4))
     def clkgen():
         clk.next = not clk
 
-    overflow_asserted = Signal(bool(0))
-    bad_frame_asserted = Signal(bool(0))
-    good_frame_asserted = Signal(bool(0))
+    status_overflow_asserted = Signal(bool(0))
+    status_bad_frame_asserted = Signal(bool(0))
+    status_good_frame_asserted = Signal(bool(0))
 
     @always(clk.posedge)
     def monitor():
-        if (overflow):
-            overflow_asserted.next = 1
-        if (bad_frame):
-            bad_frame_asserted.next = 1
-        if (good_frame):
-            good_frame_asserted.next = 1
+        if (status_overflow):
+            status_overflow_asserted.next = 1
+        if (status_bad_frame):
+            status_bad_frame_asserted.next = 1
+        if (status_good_frame):
+            status_good_frame_asserted.next = 1
 
     @instance
     def check():
@@ -199,9 +201,9 @@ def bench():
             dest=1
         )
 
-        overflow_asserted.next = 0
-        bad_frame_asserted.next = 0
-        good_frame_asserted.next = 0
+        status_overflow_asserted.next = 0
+        status_bad_frame_asserted.next = 0
+        status_good_frame_asserted.next = 0
 
         source.send(test_frame)
 
@@ -210,9 +212,9 @@ def bench():
 
         assert rx_frame == test_frame
 
-        assert not overflow_asserted
-        assert not bad_frame_asserted
-        assert good_frame_asserted
+        assert not status_overflow_asserted
+        assert not status_bad_frame_asserted
+        assert status_good_frame_asserted
 
         yield delay(100)
 
@@ -229,9 +231,9 @@ def bench():
             dest=1
         )
 
-        overflow_asserted.next = 0
-        bad_frame_asserted.next = 0
-        good_frame_asserted.next = 0
+        status_overflow_asserted.next = 0
+        status_bad_frame_asserted.next = 0
+        status_good_frame_asserted.next = 0
 
         source.send(test_frame)
 
@@ -240,9 +242,9 @@ def bench():
 
         assert rx_frame == test_frame
 
-        assert not overflow_asserted
-        assert not bad_frame_asserted
-        assert good_frame_asserted
+        assert not status_overflow_asserted
+        assert not status_bad_frame_asserted
+        assert status_good_frame_asserted
 
         yield clk.posedge
         print("test 3: test packet with pauses")
@@ -257,9 +259,9 @@ def bench():
             dest=1
         )
 
-        overflow_asserted.next = 0
-        bad_frame_asserted.next = 0
-        good_frame_asserted.next = 0
+        status_overflow_asserted.next = 0
+        status_bad_frame_asserted.next = 0
+        status_good_frame_asserted.next = 0
 
         source.send(test_frame)
         yield clk.posedge
@@ -283,9 +285,9 @@ def bench():
 
         assert rx_frame == test_frame
 
-        assert not overflow_asserted
-        assert not bad_frame_asserted
-        assert good_frame_asserted
+        assert not status_overflow_asserted
+        assert not status_bad_frame_asserted
+        assert status_good_frame_asserted
 
         yield delay(100)
 
@@ -310,9 +312,9 @@ def bench():
             dest=2
         )
 
-        overflow_asserted.next = 0
-        bad_frame_asserted.next = 0
-        good_frame_asserted.next = 0
+        status_overflow_asserted.next = 0
+        status_bad_frame_asserted.next = 0
+        status_good_frame_asserted.next = 0
 
         source.send(test_frame1)
         source.send(test_frame2)
@@ -327,9 +329,9 @@ def bench():
 
         assert rx_frame == test_frame2
 
-        assert not overflow_asserted
-        assert not bad_frame_asserted
-        assert good_frame_asserted
+        assert not status_overflow_asserted
+        assert not status_bad_frame_asserted
+        assert status_good_frame_asserted
 
         yield delay(100)
 
@@ -354,15 +356,15 @@ def bench():
             dest=2
         )
 
-        overflow_asserted.next = 0
-        bad_frame_asserted.next = 0
-        good_frame_asserted.next = 0
+        status_overflow_asserted.next = 0
+        status_bad_frame_asserted.next = 0
+        status_good_frame_asserted.next = 0
 
         source.send(test_frame1)
         source.send(test_frame2)
         yield clk.posedge
 
-        while input_axis_tvalid or output_axis_tvalid:
+        while s_axis_tvalid or m_axis_tvalid:
             source_pause.next = True
             yield clk.posedge
             yield clk.posedge
@@ -380,9 +382,9 @@ def bench():
 
         assert rx_frame == test_frame2
 
-        assert not overflow_asserted
-        assert not bad_frame_asserted
-        assert good_frame_asserted
+        assert not status_overflow_asserted
+        assert not status_bad_frame_asserted
+        assert status_good_frame_asserted
 
         yield delay(100)
 
@@ -407,15 +409,15 @@ def bench():
             dest=2
         )
 
-        overflow_asserted.next = 0
-        bad_frame_asserted.next = 0
-        good_frame_asserted.next = 0
+        status_overflow_asserted.next = 0
+        status_bad_frame_asserted.next = 0
+        status_good_frame_asserted.next = 0
 
         source.send(test_frame1)
         source.send(test_frame2)
         yield clk.posedge
 
-        while input_axis_tvalid or output_axis_tvalid:
+        while s_axis_tvalid or m_axis_tvalid:
             sink_pause.next = True
             yield clk.posedge
             yield clk.posedge
@@ -433,9 +435,9 @@ def bench():
 
         assert rx_frame == test_frame2
 
-        assert not overflow_asserted
-        assert not bad_frame_asserted
-        assert good_frame_asserted
+        assert not status_overflow_asserted
+        assert not status_bad_frame_asserted
+        assert status_good_frame_asserted
 
         yield delay(100)
 
@@ -453,9 +455,9 @@ def bench():
             last_cycle_user=1
         )
 
-        overflow_asserted.next = 0
-        bad_frame_asserted.next = 0
-        good_frame_asserted.next = 0
+        status_overflow_asserted.next = 0
+        status_bad_frame_asserted.next = 0
+        status_good_frame_asserted.next = 0
 
         source.send(test_frame)
         yield clk.posedge
@@ -464,9 +466,9 @@ def bench():
 
         assert sink.empty()
 
-        assert not overflow_asserted
-        assert bad_frame_asserted
-        assert not good_frame_asserted
+        assert not status_overflow_asserted
+        assert status_bad_frame_asserted
+        assert not status_good_frame_asserted
 
         yield delay(100)
 
@@ -483,9 +485,9 @@ def bench():
             dest=1
         )
 
-        overflow_asserted.next = 0
-        bad_frame_asserted.next = 0
-        good_frame_asserted.next = 0
+        status_overflow_asserted.next = 0
+        status_bad_frame_asserted.next = 0
+        status_good_frame_asserted.next = 0
 
         source.send(test_frame)
         yield clk.posedge
@@ -494,9 +496,9 @@ def bench():
 
         assert sink.empty()
 
-        assert overflow_asserted
-        assert not bad_frame_asserted
-        assert not good_frame_asserted
+        assert status_overflow_asserted
+        assert not status_bad_frame_asserted
+        assert not status_good_frame_asserted
 
         yield delay(100)
 

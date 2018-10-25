@@ -27,11 +27,13 @@ THE SOFTWARE.
 `timescale 1ns / 1ps
 
 /*
- * Testbench for axis_frame_join_4
+ * Testbench for axis_frame_join
  */
 module test_axis_frame_join_4;
 
 // Parameters
+parameter S_COUNT = 4;
+parameter DATA_WIDTH = 8;
 parameter TAG_ENABLE = 1;
 parameter TAG_WIDTH = 16;
 
@@ -40,34 +42,19 @@ reg clk = 0;
 reg rst = 0;
 reg [7:0] current_test = 0;
 
-reg [7:0] input_0_axis_tdata = 0;
-reg input_0_axis_tvalid = 0;
-reg input_0_axis_tlast = 0;
-reg input_0_axis_tuser = 0;
-reg [7:0] input_1_axis_tdata = 0;
-reg input_1_axis_tvalid = 0;
-reg input_1_axis_tlast = 0;
-reg input_1_axis_tuser = 0;
-reg [7:0] input_2_axis_tdata = 0;
-reg input_2_axis_tvalid = 0;
-reg input_2_axis_tlast = 0;
-reg input_2_axis_tuser = 0;
-reg [7:0] input_3_axis_tdata = 0;
-reg input_3_axis_tvalid = 0;
-reg input_3_axis_tlast = 0;
-reg input_3_axis_tuser = 0;
-reg output_axis_tready = 0;
+reg [S_COUNT*DATA_WIDTH-1:0] s_axis_tdata = 0;
+reg [S_COUNT-1:0] s_axis_tvalid = 0;
+reg [S_COUNT-1:0] s_axis_tlast = 0;
+reg [S_COUNT-1:0] s_axis_tuser = 0;
+reg m_axis_tready = 0;
 reg [TAG_WIDTH-1:0] tag = 0;
 
 // Outputs
-wire input_0_axis_tready;
-wire input_1_axis_tready;
-wire input_2_axis_tready;
-wire input_3_axis_tready;
-wire [7:0] output_axis_tdata;
-wire output_axis_tvalid;
-wire output_axis_tlast;
-wire output_axis_tuser;
+wire [S_COUNT-1:0] s_axis_tready;
+wire [7:0] m_axis_tdata;
+wire m_axis_tvalid;
+wire m_axis_tlast;
+wire m_axis_tuser;
 wire busy;
 
 initial begin
@@ -76,34 +63,19 @@ initial begin
         clk,
         rst,
         current_test,
-        input_0_axis_tdata,
-        input_0_axis_tvalid,
-        input_0_axis_tlast,
-        input_0_axis_tuser,
-        input_1_axis_tdata,
-        input_1_axis_tvalid,
-        input_1_axis_tlast,
-        input_1_axis_tuser,
-        input_2_axis_tdata,
-        input_2_axis_tvalid,
-        input_2_axis_tlast,
-        input_2_axis_tuser,
-        input_3_axis_tdata,
-        input_3_axis_tvalid,
-        input_3_axis_tlast,
-        input_3_axis_tuser,
-        output_axis_tready,
+        s_axis_tdata,
+        s_axis_tvalid,
+        s_axis_tlast,
+        s_axis_tuser,
+        m_axis_tready,
         tag
     );
     $to_myhdl(
-        input_0_axis_tready,
-        input_1_axis_tready,
-        input_2_axis_tready,
-        input_3_axis_tready,
-        output_axis_tdata,
-        output_axis_tvalid,
-        output_axis_tlast,
-        output_axis_tuser,
+        s_axis_tready,
+        m_axis_tdata,
+        m_axis_tvalid,
+        m_axis_tlast,
+        m_axis_tuser,
         busy
     );
 
@@ -112,7 +84,9 @@ initial begin
     $dumpvars(0, test_axis_frame_join_4);
 end
 
-axis_frame_join_4 #(
+axis_frame_join #(
+    .S_COUNT(S_COUNT),
+    .DATA_WIDTH(DATA_WIDTH),
     .TAG_ENABLE(TAG_ENABLE),
     .TAG_WIDTH(TAG_WIDTH)
 )
@@ -120,32 +94,17 @@ UUT (
     .clk(clk),
     .rst(rst),
     // axi input
-    .input_0_axis_tdata(input_0_axis_tdata),
-    .input_0_axis_tvalid(input_0_axis_tvalid),
-    .input_0_axis_tready(input_0_axis_tready),
-    .input_0_axis_tlast(input_0_axis_tlast),
-    .input_0_axis_tuser(input_0_axis_tuser),
-    .input_1_axis_tdata(input_1_axis_tdata),
-    .input_1_axis_tvalid(input_1_axis_tvalid),
-    .input_1_axis_tready(input_1_axis_tready),
-    .input_1_axis_tlast(input_1_axis_tlast),
-    .input_1_axis_tuser(input_1_axis_tuser),
-    .input_2_axis_tdata(input_2_axis_tdata),
-    .input_2_axis_tvalid(input_2_axis_tvalid),
-    .input_2_axis_tready(input_2_axis_tready),
-    .input_2_axis_tlast(input_2_axis_tlast),
-    .input_2_axis_tuser(input_2_axis_tuser),
-    .input_3_axis_tdata(input_3_axis_tdata),
-    .input_3_axis_tvalid(input_3_axis_tvalid),
-    .input_3_axis_tready(input_3_axis_tready),
-    .input_3_axis_tlast(input_3_axis_tlast),
-    .input_3_axis_tuser(input_3_axis_tuser),
+    .s_axis_tdata(s_axis_tdata),
+    .s_axis_tvalid(s_axis_tvalid),
+    .s_axis_tready(s_axis_tready),
+    .s_axis_tlast(s_axis_tlast),
+    .s_axis_tuser(s_axis_tuser),
     // axi output
-    .output_axis_tdata(output_axis_tdata),
-    .output_axis_tvalid(output_axis_tvalid),
-    .output_axis_tready(output_axis_tready),
-    .output_axis_tlast(output_axis_tlast),
-    .output_axis_tuser(output_axis_tuser),
+    .m_axis_tdata(m_axis_tdata),
+    .m_axis_tvalid(m_axis_tvalid),
+    .m_axis_tready(m_axis_tready),
+    .m_axis_tlast(m_axis_tlast),
+    .m_axis_tuser(m_axis_tuser),
     // config
     .tag(tag),
     // status

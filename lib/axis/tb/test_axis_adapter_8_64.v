@@ -32,12 +32,12 @@ THE SOFTWARE.
 module test_axis_adapter_8_64;
 
 // Parameters
-parameter INPUT_DATA_WIDTH = 8;
-parameter INPUT_KEEP_ENABLE = (INPUT_DATA_WIDTH>8);
-parameter INPUT_KEEP_WIDTH = (INPUT_DATA_WIDTH/8);
-parameter OUTPUT_DATA_WIDTH = 64;
-parameter OUTPUT_KEEP_ENABLE = (OUTPUT_DATA_WIDTH>8);
-parameter OUTPUT_KEEP_WIDTH = (OUTPUT_DATA_WIDTH/8);
+parameter S_DATA_WIDTH = 8;
+parameter S_KEEP_ENABLE = (S_DATA_WIDTH>8);
+parameter S_KEEP_WIDTH = (S_DATA_WIDTH/8);
+parameter M_DATA_WIDTH = 64;
+parameter M_KEEP_ENABLE = (M_DATA_WIDTH>8);
+parameter M_KEEP_WIDTH = (M_DATA_WIDTH/8);
 parameter ID_ENABLE = 1;
 parameter ID_WIDTH = 8;
 parameter DEST_ENABLE = 1;
@@ -50,24 +50,24 @@ reg clk = 0;
 reg rst = 0;
 reg [7:0] current_test = 0;
 
-reg [INPUT_DATA_WIDTH-1:0] input_axis_tdata = 0;
-reg [INPUT_KEEP_WIDTH-1:0] input_axis_tkeep = 0;
-reg input_axis_tvalid = 0;
-reg input_axis_tlast = 0;
-reg [ID_WIDTH-1:0] input_axis_tid = 0;
-reg [DEST_WIDTH-1:0] input_axis_tdest = 0;
-reg [USER_WIDTH-1:0] input_axis_tuser = 0;
-reg output_axis_tready = 0;
+reg [S_DATA_WIDTH-1:0] s_axis_tdata = 0;
+reg [S_KEEP_WIDTH-1:0] s_axis_tkeep = 0;
+reg s_axis_tvalid = 0;
+reg s_axis_tlast = 0;
+reg [ID_WIDTH-1:0] s_axis_tid = 0;
+reg [DEST_WIDTH-1:0] s_axis_tdest = 0;
+reg [USER_WIDTH-1:0] s_axis_tuser = 0;
+reg m_axis_tready = 0;
 
 // Outputs
-wire input_axis_tready;
-wire [OUTPUT_DATA_WIDTH-1:0] output_axis_tdata;
-wire [OUTPUT_KEEP_WIDTH-1:0] output_axis_tkeep;
-wire output_axis_tvalid;
-wire output_axis_tlast;
-wire [ID_WIDTH-1:0] output_axis_tid;
-wire [DEST_WIDTH-1:0] output_axis_tdest;
-wire [USER_WIDTH-1:0] output_axis_tuser;
+wire s_axis_tready;
+wire [M_DATA_WIDTH-1:0] m_axis_tdata;
+wire [M_KEEP_WIDTH-1:0] m_axis_tkeep;
+wire m_axis_tvalid;
+wire m_axis_tlast;
+wire [ID_WIDTH-1:0] m_axis_tid;
+wire [DEST_WIDTH-1:0] m_axis_tdest;
+wire [USER_WIDTH-1:0] m_axis_tuser;
 
 initial begin
     // myhdl integration
@@ -75,24 +75,24 @@ initial begin
         clk,
         rst,
         current_test,
-        input_axis_tdata,
-        input_axis_tkeep,
-        input_axis_tvalid,
-        input_axis_tlast,
-        input_axis_tid,
-        input_axis_tdest,
-        input_axis_tuser,
-        output_axis_tready
+        s_axis_tdata,
+        s_axis_tkeep,
+        s_axis_tvalid,
+        s_axis_tlast,
+        s_axis_tid,
+        s_axis_tdest,
+        s_axis_tuser,
+        m_axis_tready
     );
     $to_myhdl(
-        input_axis_tready,
-        output_axis_tdata,
-        output_axis_tkeep,
-        output_axis_tvalid,
-        output_axis_tlast,
-        output_axis_tid,
-        output_axis_tdest,
-        output_axis_tuser
+        s_axis_tready,
+        m_axis_tdata,
+        m_axis_tkeep,
+        m_axis_tvalid,
+        m_axis_tlast,
+        m_axis_tid,
+        m_axis_tdest,
+        m_axis_tuser
     );
 
     // dump file
@@ -101,12 +101,12 @@ initial begin
 end
 
 axis_adapter #(
-    .INPUT_DATA_WIDTH(INPUT_DATA_WIDTH),
-    .INPUT_KEEP_ENABLE(INPUT_KEEP_ENABLE),
-    .INPUT_KEEP_WIDTH(INPUT_KEEP_WIDTH),
-    .OUTPUT_DATA_WIDTH(OUTPUT_DATA_WIDTH),
-    .OUTPUT_KEEP_ENABLE(OUTPUT_KEEP_ENABLE),
-    .OUTPUT_KEEP_WIDTH(OUTPUT_KEEP_WIDTH),
+    .S_DATA_WIDTH(S_DATA_WIDTH),
+    .S_KEEP_ENABLE(S_KEEP_ENABLE),
+    .S_KEEP_WIDTH(S_KEEP_WIDTH),
+    .M_DATA_WIDTH(M_DATA_WIDTH),
+    .M_KEEP_ENABLE(M_KEEP_ENABLE),
+    .M_KEEP_WIDTH(M_KEEP_WIDTH),
     .ID_ENABLE(ID_ENABLE),
     .ID_WIDTH(ID_WIDTH),
     .DEST_ENABLE(DEST_ENABLE),
@@ -118,23 +118,23 @@ UUT (
     .clk(clk),
     .rst(rst),
     // AXI input
-    .input_axis_tdata(input_axis_tdata),
-    .input_axis_tkeep(input_axis_tkeep),
-    .input_axis_tvalid(input_axis_tvalid),
-    .input_axis_tready(input_axis_tready),
-    .input_axis_tlast(input_axis_tlast),
-    .input_axis_tid(input_axis_tid),
-    .input_axis_tdest(input_axis_tdest),
-    .input_axis_tuser(input_axis_tuser),
+    .s_axis_tdata(s_axis_tdata),
+    .s_axis_tkeep(s_axis_tkeep),
+    .s_axis_tvalid(s_axis_tvalid),
+    .s_axis_tready(s_axis_tready),
+    .s_axis_tlast(s_axis_tlast),
+    .s_axis_tid(s_axis_tid),
+    .s_axis_tdest(s_axis_tdest),
+    .s_axis_tuser(s_axis_tuser),
     // AXI output
-    .output_axis_tdata(output_axis_tdata),
-    .output_axis_tkeep(output_axis_tkeep),
-    .output_axis_tvalid(output_axis_tvalid),
-    .output_axis_tready(output_axis_tready),
-    .output_axis_tlast(output_axis_tlast),
-    .output_axis_tid(output_axis_tid),
-    .output_axis_tdest(output_axis_tdest),
-    .output_axis_tuser(output_axis_tuser)
+    .m_axis_tdata(m_axis_tdata),
+    .m_axis_tkeep(m_axis_tkeep),
+    .m_axis_tvalid(m_axis_tvalid),
+    .m_axis_tready(m_axis_tready),
+    .m_axis_tlast(m_axis_tlast),
+    .m_axis_tid(m_axis_tid),
+    .m_axis_tdest(m_axis_tdest),
+    .m_axis_tuser(m_axis_tuser)
 );
 
 endmodule

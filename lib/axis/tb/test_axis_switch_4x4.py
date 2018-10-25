@@ -27,13 +27,15 @@ from myhdl import *
 import os
 
 import axis_ep
+import math
 
-module = 'axis_switch_4x4'
-testbench = 'test_%s' % module
+module = 'axis_switch'
+testbench = 'test_%s_4x4' % module
 
 srcs = []
 
 srcs.append("../rtl/%s.v" % module)
+srcs.append("../rtl/axis_register.v")
 srcs.append("../rtl/arbiter.v")
 srcs.append("../rtl/priority_encoder.v")
 srcs.append("%s.v" % testbench)
@@ -45,26 +47,21 @@ build_cmd = "iverilog -o %s.vvp %s" % (testbench, src)
 def bench():
 
     # Parameters
+    S_COUNT = 4
+    M_COUNT = 4
     DATA_WIDTH = 8
     KEEP_ENABLE = (DATA_WIDTH>8)
     KEEP_WIDTH = (DATA_WIDTH/8)
     ID_ENABLE = 1
     ID_WIDTH = 8
-    DEST_WIDTH = 3
+    DEST_WIDTH = math.ceil(math.log(M_COUNT+1, 2))
     USER_ENABLE = 1
     USER_WIDTH = 1
-    OUT_0_BASE = 0
-    OUT_0_TOP = 0
-    OUT_0_CONNECT = 0xf
-    OUT_1_BASE = 1
-    OUT_1_TOP = 1
-    OUT_1_CONNECT = 0xf
-    OUT_2_BASE = 2
-    OUT_2_TOP = 2
-    OUT_2_CONNECT = 0xf
-    OUT_3_BASE = 3
-    OUT_3_TOP = 3
-    OUT_3_CONNECT = 0xf
+    M_BASE = [0, 1, 2, 3]
+    M_TOP = [0, 1, 2, 3]
+    M_CONNECT = [0b1111]*M_COUNT
+    S_REG_TYPE = 0
+    M_REG_TYPE = 2
     ARB_TYPE = "ROUND_ROBIN"
     LSB_PRIORITY = "HIGH"
 
@@ -73,218 +70,98 @@ def bench():
     rst = Signal(bool(0))
     current_test = Signal(intbv(0)[8:])
 
-    input_0_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
-    input_0_axis_tkeep = Signal(intbv(1)[KEEP_WIDTH:])
-    input_0_axis_tvalid = Signal(bool(0))
-    input_0_axis_tlast = Signal(bool(0))
-    input_0_axis_tid = Signal(intbv(0)[ID_WIDTH:])
-    input_0_axis_tdest = Signal(intbv(0)[DEST_WIDTH:])
-    input_0_axis_tuser = Signal(intbv(0)[USER_WIDTH:])
-    input_1_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
-    input_1_axis_tkeep = Signal(intbv(1)[KEEP_WIDTH:])
-    input_1_axis_tvalid = Signal(bool(0))
-    input_1_axis_tlast = Signal(bool(0))
-    input_1_axis_tid = Signal(intbv(0)[ID_WIDTH:])
-    input_1_axis_tdest = Signal(intbv(0)[DEST_WIDTH:])
-    input_1_axis_tuser = Signal(intbv(0)[USER_WIDTH:])
-    input_2_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
-    input_2_axis_tkeep = Signal(intbv(1)[KEEP_WIDTH:])
-    input_2_axis_tvalid = Signal(bool(0))
-    input_2_axis_tlast = Signal(bool(0))
-    input_2_axis_tid = Signal(intbv(0)[ID_WIDTH:])
-    input_2_axis_tdest = Signal(intbv(0)[DEST_WIDTH:])
-    input_2_axis_tuser = Signal(intbv(0)[USER_WIDTH:])
-    input_3_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
-    input_3_axis_tkeep = Signal(intbv(1)[KEEP_WIDTH:])
-    input_3_axis_tvalid = Signal(bool(0))
-    input_3_axis_tlast = Signal(bool(0))
-    input_3_axis_tid = Signal(intbv(0)[ID_WIDTH:])
-    input_3_axis_tdest = Signal(intbv(0)[DEST_WIDTH:])
-    input_3_axis_tuser = Signal(intbv(0)[USER_WIDTH:])
-    output_0_axis_tready = Signal(bool(0))
-    output_1_axis_tready = Signal(bool(0))
-    output_2_axis_tready = Signal(bool(0))
-    output_3_axis_tready = Signal(bool(0))
+    s_axis_tdata_list = [Signal(intbv(0)[DATA_WIDTH:]) for i in range(S_COUNT)]
+    s_axis_tkeep_list = [Signal(intbv(1)[KEEP_WIDTH:]) for i in range(S_COUNT)]
+    s_axis_tvalid_list = [Signal(bool(0)) for i in range(S_COUNT)]
+    s_axis_tlast_list = [Signal(bool(0)) for i in range(S_COUNT)]
+    s_axis_tid_list = [Signal(intbv(0)[ID_WIDTH:]) for i in range(S_COUNT)]
+    s_axis_tdest_list = [Signal(intbv(0)[DEST_WIDTH:]) for i in range(S_COUNT)]
+    s_axis_tuser_list = [Signal(intbv(0)[USER_WIDTH:]) for i in range(S_COUNT)]
+
+    s_axis_tdata = ConcatSignal(*reversed(s_axis_tdata_list))
+    s_axis_tkeep = ConcatSignal(*reversed(s_axis_tkeep_list))
+    s_axis_tvalid = ConcatSignal(*reversed(s_axis_tvalid_list))
+    s_axis_tlast = ConcatSignal(*reversed(s_axis_tlast_list))
+    s_axis_tid = ConcatSignal(*reversed(s_axis_tid_list))
+    s_axis_tdest = ConcatSignal(*reversed(s_axis_tdest_list))
+    s_axis_tuser = ConcatSignal(*reversed(s_axis_tuser_list))
+
+    m_axis_tready_list = [Signal(bool(0)) for i in range(M_COUNT)]
+
+    m_axis_tready = ConcatSignal(*reversed(m_axis_tready_list))
 
     # Outputs
-    input_0_axis_tready = Signal(bool(0))
-    input_1_axis_tready = Signal(bool(0))
-    input_2_axis_tready = Signal(bool(0))
-    input_3_axis_tready = Signal(bool(0))
-    output_0_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
-    output_0_axis_tkeep = Signal(intbv(1)[KEEP_WIDTH:])
-    output_0_axis_tvalid = Signal(bool(0))
-    output_0_axis_tlast = Signal(bool(0))
-    output_0_axis_tid = Signal(intbv(0)[ID_WIDTH:])
-    output_0_axis_tdest = Signal(intbv(0)[DEST_WIDTH:])
-    output_0_axis_tuser = Signal(intbv(0)[USER_WIDTH:])
-    output_1_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
-    output_1_axis_tkeep = Signal(intbv(1)[KEEP_WIDTH:])
-    output_1_axis_tvalid = Signal(bool(0))
-    output_1_axis_tlast = Signal(bool(0))
-    output_1_axis_tid = Signal(intbv(0)[ID_WIDTH:])
-    output_1_axis_tdest = Signal(intbv(0)[DEST_WIDTH:])
-    output_1_axis_tuser = Signal(intbv(0)[USER_WIDTH:])
-    output_2_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
-    output_2_axis_tkeep = Signal(intbv(1)[KEEP_WIDTH:])
-    output_2_axis_tvalid = Signal(bool(0))
-    output_2_axis_tlast = Signal(bool(0))
-    output_2_axis_tid = Signal(intbv(0)[ID_WIDTH:])
-    output_2_axis_tdest = Signal(intbv(0)[DEST_WIDTH:])
-    output_2_axis_tuser = Signal(intbv(0)[USER_WIDTH:])
-    output_3_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
-    output_3_axis_tkeep = Signal(intbv(1)[KEEP_WIDTH:])
-    output_3_axis_tvalid = Signal(bool(0))
-    output_3_axis_tlast = Signal(bool(0))
-    output_3_axis_tid = Signal(intbv(0)[ID_WIDTH:])
-    output_3_axis_tdest = Signal(intbv(0)[DEST_WIDTH:])
-    output_3_axis_tuser = Signal(intbv(0)[USER_WIDTH:])
+    s_axis_tready = Signal(intbv(0)[S_COUNT:])
+
+    s_axis_tready_list = [s_axis_tready(i) for i in range(S_COUNT)]
+
+    m_axis_tdata = Signal(intbv(0)[M_COUNT*DATA_WIDTH:])
+    m_axis_tkeep = Signal(intbv(0xf)[M_COUNT*KEEP_WIDTH:])
+    m_axis_tvalid = Signal(intbv(0)[M_COUNT:])
+    m_axis_tlast = Signal(intbv(0)[M_COUNT:])
+    m_axis_tid = Signal(intbv(0)[M_COUNT*ID_WIDTH:])
+    m_axis_tdest = Signal(intbv(0)[M_COUNT*DEST_WIDTH:])
+    m_axis_tuser = Signal(intbv(0)[M_COUNT*USER_WIDTH:])
+
+    m_axis_tdata_list = [m_axis_tdata((i+1)*DATA_WIDTH, i*DATA_WIDTH) for i in range(M_COUNT)]
+    m_axis_tkeep_list = [m_axis_tkeep((i+1)*KEEP_WIDTH, i*KEEP_WIDTH) for i in range(M_COUNT)]
+    m_axis_tvalid_list = [m_axis_tvalid(i) for i in range(M_COUNT)]
+    m_axis_tlast_list = [m_axis_tlast(i) for i in range(M_COUNT)]
+    m_axis_tid_list = [m_axis_tid((i+1)*ID_WIDTH, i*ID_WIDTH) for i in range(M_COUNT)]
+    m_axis_tdest_list = [m_axis_tdest((i+1)*DEST_WIDTH, i*DEST_WIDTH) for i in range(M_COUNT)]
+    m_axis_tuser_list = [m_axis_tuser((i+1)*USER_WIDTH, i*USER_WIDTH) for i in range(M_COUNT)]
 
     # sources and sinks
-    source_0_pause = Signal(bool(0))
-    source_1_pause = Signal(bool(0))
-    source_2_pause = Signal(bool(0))
-    source_3_pause = Signal(bool(0))
-    sink_0_pause = Signal(bool(0))
-    sink_1_pause = Signal(bool(0))
-    sink_2_pause = Signal(bool(0))
-    sink_3_pause = Signal(bool(0))
+    source_pause_list = []
+    source_list = []
+    source_logic_list = []
+    sink_pause_list = []
+    sink_list = []
+    sink_logic_list = []
 
-    source_0 = axis_ep.AXIStreamSource()
+    for k in range(S_COUNT):
+        s = axis_ep.AXIStreamSource()
+        p = Signal(bool(0))
 
-    source_0_logic = source_0.create_logic(
-        clk,
-        rst,
-        tdata=input_0_axis_tdata,
-        tkeep=input_0_axis_tkeep,
-        tvalid=input_0_axis_tvalid,
-        tready=input_0_axis_tready,
-        tlast=input_0_axis_tlast,
-        tid=input_0_axis_tid,
-        tdest=input_0_axis_tdest,
-        tuser=input_0_axis_tuser,
-        pause=source_0_pause,
-        name='source_0'
-    )
+        source_list.append(s)
+        source_pause_list.append(p)
 
-    source_1 = axis_ep.AXIStreamSource()
+        source_logic_list.append(s.create_logic(
+            clk,
+            rst,
+            tdata=s_axis_tdata_list[k],
+            tkeep=s_axis_tkeep_list[k],
+            tvalid=s_axis_tvalid_list[k],
+            tready=s_axis_tready_list[k],
+            tlast=s_axis_tlast_list[k],
+            tid=s_axis_tid_list[k],
+            tdest=s_axis_tdest_list[k],
+            tuser=s_axis_tuser_list[k],
+            pause=p,
+            name='source_%d' % k
+        ))
 
-    source_1_logic = source_1.create_logic(
-        clk,
-        rst,
-        tdata=input_1_axis_tdata,
-        tkeep=input_1_axis_tkeep,
-        tvalid=input_1_axis_tvalid,
-        tready=input_1_axis_tready,
-        tlast=input_1_axis_tlast,
-        tid=input_1_axis_tid,
-        tdest=input_1_axis_tdest,
-        tuser=input_1_axis_tuser,
-        pause=source_1_pause,
-        name='source_1'
-    )
+    for k in range(M_COUNT):
+        s = axis_ep.AXIStreamSink()
+        p = Signal(bool(0))
 
-    source_2 = axis_ep.AXIStreamSource()
+        sink_list.append(s)
+        sink_pause_list.append(p)
 
-    source_2_logic = source_2.create_logic(
-        clk,
-        rst,
-        tdata=input_2_axis_tdata,
-        tkeep=input_2_axis_tkeep,
-        tvalid=input_2_axis_tvalid,
-        tready=input_2_axis_tready,
-        tlast=input_2_axis_tlast,
-        tid=input_2_axis_tid,
-        tdest=input_2_axis_tdest,
-        tuser=input_2_axis_tuser,
-        pause=source_2_pause,
-        name='source_2'
-    )
-
-    source_3 = axis_ep.AXIStreamSource()
-
-    source_3_logic = source_3.create_logic(
-        clk,
-        rst,
-        tdata=input_3_axis_tdata,
-        tkeep=input_3_axis_tkeep,
-        tvalid=input_3_axis_tvalid,
-        tready=input_3_axis_tready,
-        tlast=input_3_axis_tlast,
-        tid=input_3_axis_tid,
-        tdest=input_3_axis_tdest,
-        tuser=input_3_axis_tuser,
-        pause=source_3_pause,
-        name='source_3'
-    )
-
-    sink_0 = axis_ep.AXIStreamSink()
-
-    sink_0_logic = sink_0.create_logic(
-        clk,
-        rst,
-        tdata=output_0_axis_tdata,
-        tkeep=output_0_axis_tkeep,
-        tvalid=output_0_axis_tvalid,
-        tready=output_0_axis_tready,
-        tlast=output_0_axis_tlast,
-        tid=output_0_axis_tid,
-        tdest=output_0_axis_tdest,
-        tuser=output_0_axis_tuser,
-        pause=sink_0_pause,
-        name='sink_0'
-    )
-
-    sink_1 = axis_ep.AXIStreamSink()
-
-    sink_1_logic = sink_1.create_logic(
-        clk,
-        rst,
-        tdata=output_1_axis_tdata,
-        tkeep=output_1_axis_tkeep,
-        tvalid=output_1_axis_tvalid,
-        tready=output_1_axis_tready,
-        tlast=output_1_axis_tlast,
-        tid=output_1_axis_tid,
-        tdest=output_1_axis_tdest,
-        tuser=output_1_axis_tuser,
-        pause=sink_1_pause,
-        name='sink_1'
-    )
-
-    sink_2 = axis_ep.AXIStreamSink()
-
-    sink_2_logic = sink_2.create_logic(
-        clk,
-        rst,
-        tdata=output_2_axis_tdata,
-        tkeep=output_2_axis_tkeep,
-        tvalid=output_2_axis_tvalid,
-        tready=output_2_axis_tready,
-        tlast=output_2_axis_tlast,
-        tid=output_2_axis_tid,
-        tdest=output_2_axis_tdest,
-        tuser=output_2_axis_tuser,
-        pause=sink_2_pause,
-        name='sink_2'
-    )
-
-    sink_3 = axis_ep.AXIStreamSink()
-
-    sink_3_logic = sink_3.create_logic(
-        clk,
-        rst,
-        tdata=output_3_axis_tdata,
-        tkeep=output_3_axis_tkeep,
-        tvalid=output_3_axis_tvalid,
-        tready=output_3_axis_tready,
-        tlast=output_3_axis_tlast,
-        tid=output_3_axis_tid,
-        tdest=output_3_axis_tdest,
-        tuser=output_3_axis_tuser,
-        pause=sink_3_pause,
-        name='sink_3'
-    )
+        sink_logic_list.append(s.create_logic(
+            clk,
+            rst,
+            tdata=m_axis_tdata_list[k],
+            tkeep=m_axis_tkeep_list[k],
+            tvalid=m_axis_tvalid_list[k],
+            tready=m_axis_tready_list[k],
+            tlast=m_axis_tlast_list[k],
+            tid=m_axis_tid_list[k],
+            tdest=m_axis_tdest_list[k],
+            tuser=m_axis_tuser_list[k],
+            pause=p,
+            name='sink_%d' % k
+        ))
 
     # DUT
     if os.system(build_cmd):
@@ -296,71 +173,23 @@ def bench():
         rst=rst,
         current_test=current_test,
 
-        input_0_axis_tdata=input_0_axis_tdata,
-        input_0_axis_tkeep=input_0_axis_tkeep,
-        input_0_axis_tvalid=input_0_axis_tvalid,
-        input_0_axis_tready=input_0_axis_tready,
-        input_0_axis_tlast=input_0_axis_tlast,
-        input_0_axis_tid=input_0_axis_tid,
-        input_0_axis_tdest=input_0_axis_tdest,
-        input_0_axis_tuser=input_0_axis_tuser,
-        input_1_axis_tdata=input_1_axis_tdata,
-        input_1_axis_tkeep=input_1_axis_tkeep,
-        input_1_axis_tvalid=input_1_axis_tvalid,
-        input_1_axis_tready=input_1_axis_tready,
-        input_1_axis_tlast=input_1_axis_tlast,
-        input_1_axis_tid=input_1_axis_tid,
-        input_1_axis_tdest=input_1_axis_tdest,
-        input_1_axis_tuser=input_1_axis_tuser,
-        input_2_axis_tdata=input_2_axis_tdata,
-        input_2_axis_tkeep=input_2_axis_tkeep,
-        input_2_axis_tvalid=input_2_axis_tvalid,
-        input_2_axis_tready=input_2_axis_tready,
-        input_2_axis_tlast=input_2_axis_tlast,
-        input_2_axis_tid=input_2_axis_tid,
-        input_2_axis_tdest=input_2_axis_tdest,
-        input_2_axis_tuser=input_2_axis_tuser,
-        input_3_axis_tdata=input_3_axis_tdata,
-        input_3_axis_tkeep=input_3_axis_tkeep,
-        input_3_axis_tvalid=input_3_axis_tvalid,
-        input_3_axis_tready=input_3_axis_tready,
-        input_3_axis_tlast=input_3_axis_tlast,
-        input_3_axis_tid=input_3_axis_tid,
-        input_3_axis_tdest=input_3_axis_tdest,
-        input_3_axis_tuser=input_3_axis_tuser,
+        s_axis_tdata=s_axis_tdata,
+        s_axis_tkeep=s_axis_tkeep,
+        s_axis_tvalid=s_axis_tvalid,
+        s_axis_tready=s_axis_tready,
+        s_axis_tlast=s_axis_tlast,
+        s_axis_tid=s_axis_tid,
+        s_axis_tdest=s_axis_tdest,
+        s_axis_tuser=s_axis_tuser,
 
-        output_0_axis_tdata=output_0_axis_tdata,
-        output_0_axis_tkeep=output_0_axis_tkeep,
-        output_0_axis_tvalid=output_0_axis_tvalid,
-        output_0_axis_tready=output_0_axis_tready,
-        output_0_axis_tlast=output_0_axis_tlast,
-        output_0_axis_tid=output_0_axis_tid,
-        output_0_axis_tdest=output_0_axis_tdest,
-        output_0_axis_tuser=output_0_axis_tuser,
-        output_1_axis_tdata=output_1_axis_tdata,
-        output_1_axis_tkeep=output_1_axis_tkeep,
-        output_1_axis_tvalid=output_1_axis_tvalid,
-        output_1_axis_tready=output_1_axis_tready,
-        output_1_axis_tlast=output_1_axis_tlast,
-        output_1_axis_tid=output_1_axis_tid,
-        output_1_axis_tdest=output_1_axis_tdest,
-        output_1_axis_tuser=output_1_axis_tuser,
-        output_2_axis_tdata=output_2_axis_tdata,
-        output_2_axis_tkeep=output_2_axis_tkeep,
-        output_2_axis_tvalid=output_2_axis_tvalid,
-        output_2_axis_tready=output_2_axis_tready,
-        output_2_axis_tlast=output_2_axis_tlast,
-        output_2_axis_tid=output_2_axis_tid,
-        output_2_axis_tdest=output_2_axis_tdest,
-        output_2_axis_tuser=output_2_axis_tuser,
-        output_3_axis_tdata=output_3_axis_tdata,
-        output_3_axis_tkeep=output_3_axis_tkeep,
-        output_3_axis_tvalid=output_3_axis_tvalid,
-        output_3_axis_tready=output_3_axis_tready,
-        output_3_axis_tlast=output_3_axis_tlast,
-        output_3_axis_tid=output_3_axis_tid,
-        output_3_axis_tdest=output_3_axis_tdest,
-        output_3_axis_tuser=output_3_axis_tuser
+        m_axis_tdata=m_axis_tdata,
+        m_axis_tkeep=m_axis_tkeep,
+        m_axis_tvalid=m_axis_tvalid,
+        m_axis_tready=m_axis_tready,
+        m_axis_tlast=m_axis_tlast,
+        m_axis_tid=m_axis_tid,
+        m_axis_tdest=m_axis_tdest,
+        m_axis_tuser=m_axis_tuser
     )
 
     @always(delay(4))
@@ -368,37 +197,37 @@ def bench():
         clk.next = not clk
 
     def wait_normal():
-        while input_0_axis_tvalid or input_1_axis_tvalid or input_2_axis_tvalid or input_3_axis_tvalid:
+        while s_axis_tvalid:
             yield clk.posedge
 
     def wait_pause_source():
-        while input_0_axis_tvalid or input_1_axis_tvalid or input_2_axis_tvalid or input_3_axis_tvalid:
-            source_0_pause.next = True
-            source_1_pause.next = True
-            source_2_pause.next = True
-            source_3_pause.next = True
+        while s_axis_tvalid:
+            source_pause_list[0].next = True
+            source_pause_list[1].next = True
+            source_pause_list[2].next = True
+            source_pause_list[3].next = True
             yield clk.posedge
             yield clk.posedge
             yield clk.posedge
-            source_0_pause.next = False
-            source_1_pause.next = False
-            source_2_pause.next = False
-            source_3_pause.next = False
+            source_pause_list[0].next = False
+            source_pause_list[1].next = False
+            source_pause_list[2].next = False
+            source_pause_list[3].next = False
             yield clk.posedge
 
     def wait_pause_sink():
-        while input_0_axis_tvalid or input_1_axis_tvalid or input_2_axis_tvalid or input_3_axis_tvalid:
-            sink_0_pause.next = True
-            sink_1_pause.next = True
-            sink_2_pause.next = True
-            sink_3_pause.next = True
+        while s_axis_tvalid:
+            sink_pause_list[0].next = True
+            sink_pause_list[1].next = True
+            sink_pause_list[2].next = True
+            sink_pause_list[3].next = True
             yield clk.posedge
             yield clk.posedge
             yield clk.posedge
-            sink_0_pause.next = False
-            sink_1_pause.next = False
-            sink_2_pause.next = False
-            sink_3_pause.next = False
+            sink_pause_list[0].next = False
+            sink_pause_list[1].next = False
+            sink_pause_list[2].next = False
+            sink_pause_list[3].next = False
             yield clk.posedge
 
     @instance
@@ -424,32 +253,32 @@ def bench():
         test_frame3 = axis_ep.AXIStreamFrame(b'\x01\x03\x03\xFF\x01\x02\x03\x04\x05\x06\x07\x08', id=3, dest=3)
 
         for wait in wait_normal, wait_pause_source, wait_pause_sink:
-            source_0.send(test_frame0)
-            source_1.send(test_frame1)
-            source_2.send(test_frame2)
-            source_3.send(test_frame3)
+            source_list[0].send(test_frame0)
+            source_list[1].send(test_frame1)
+            source_list[2].send(test_frame2)
+            source_list[3].send(test_frame3)
             yield clk.posedge
             yield clk.posedge
 
             yield wait()
 
-            yield sink_0.wait()
-            rx_frame0 = sink_0.recv()
+            yield sink_list[0].wait()
+            rx_frame0 = sink_list[0].recv()
 
             assert rx_frame0 == test_frame0
 
-            yield sink_1.wait()
-            rx_frame1 = sink_1.recv()
+            yield sink_list[1].wait()
+            rx_frame1 = sink_list[1].recv()
 
             assert rx_frame1 == test_frame1
 
-            yield sink_2.wait()
-            rx_frame2 = sink_2.recv()
+            yield sink_list[2].wait()
+            rx_frame2 = sink_list[2].recv()
 
             assert rx_frame2 == test_frame2
 
-            yield sink_3.wait()
-            rx_frame3 = sink_3.recv()
+            yield sink_list[3].wait()
+            rx_frame3 = sink_list[3].recv()
 
             assert rx_frame3 == test_frame3
 
@@ -465,32 +294,32 @@ def bench():
         test_frame3 = axis_ep.AXIStreamFrame(b'\x02\x03\x00\xFF\x01\x02\x03\x04\x05\x06\x07\x08', id=3, dest=0)
 
         for wait in wait_normal, wait_pause_source, wait_pause_sink:
-            source_0.send(test_frame0)
-            source_1.send(test_frame1)
-            source_2.send(test_frame2)
-            source_3.send(test_frame3)
+            source_list[0].send(test_frame0)
+            source_list[1].send(test_frame1)
+            source_list[2].send(test_frame2)
+            source_list[3].send(test_frame3)
             yield clk.posedge
             yield clk.posedge
 
             yield wait()
 
-            yield sink_0.wait()
-            rx_frame0 = sink_0.recv()
+            yield sink_list[0].wait()
+            rx_frame0 = sink_list[0].recv()
 
             assert rx_frame0 == test_frame3
 
-            yield sink_1.wait()
-            rx_frame1 = sink_1.recv()
+            yield sink_list[1].wait()
+            rx_frame1 = sink_list[1].recv()
 
             assert rx_frame1 == test_frame2
 
-            yield sink_2.wait()
-            rx_frame2 = sink_2.recv()
+            yield sink_list[2].wait()
+            rx_frame2 = sink_list[2].recv()
 
             assert rx_frame2 == test_frame1
 
-            yield sink_3.wait()
-            rx_frame3 = sink_3.recv()
+            yield sink_list[3].wait()
+            rx_frame3 = sink_list[3].recv()
 
             assert rx_frame3 == test_frame0
 
@@ -506,32 +335,32 @@ def bench():
         test_frame3 = axis_ep.AXIStreamFrame(b'\x02\x00\x03\xFF\x01\x02\x03\x04\x05\x06\x07\x08', id=0, dest=3)
 
         for wait in wait_normal, wait_pause_source, wait_pause_sink:
-            source_0.send(test_frame0)
-            source_0.send(test_frame1)
-            source_0.send(test_frame2)
-            source_0.send(test_frame3)
+            source_list[0].send(test_frame0)
+            source_list[0].send(test_frame1)
+            source_list[0].send(test_frame2)
+            source_list[0].send(test_frame3)
             yield clk.posedge
             yield clk.posedge
 
             yield wait()
 
-            yield sink_0.wait()
-            rx_frame0 = sink_0.recv()
+            yield sink_list[0].wait()
+            rx_frame0 = sink_list[0].recv()
 
             assert rx_frame0 == test_frame0
 
-            yield sink_1.wait()
-            rx_frame1 = sink_1.recv()
+            yield sink_list[1].wait()
+            rx_frame1 = sink_list[1].recv()
 
             assert rx_frame1 == test_frame1
 
-            yield sink_2.wait()
-            rx_frame2 = sink_2.recv()
+            yield sink_list[2].wait()
+            rx_frame2 = sink_list[2].recv()
 
             assert rx_frame2 == test_frame2
 
-            yield sink_3.wait()
-            rx_frame3 = sink_3.recv()
+            yield sink_list[3].wait()
+            rx_frame3 = sink_list[3].recv()
 
             assert rx_frame3 == test_frame3
 
@@ -547,32 +376,32 @@ def bench():
         test_frame3 = axis_ep.AXIStreamFrame(b'\x02\x03\x00\xFF\x01\x02\x03\x04\x05\x06\x07\x08', id=3, dest=0)
 
         for wait in wait_normal, wait_pause_source, wait_pause_sink:
-            source_0.send(test_frame0)
+            source_list[0].send(test_frame0)
             yield clk.posedge
-            source_1.send(test_frame1)
-            source_2.send(test_frame2)
-            source_3.send(test_frame3)
+            source_list[1].send(test_frame1)
+            source_list[2].send(test_frame2)
+            source_list[3].send(test_frame3)
             yield clk.posedge
 
             yield wait()
 
-            yield sink_0.wait()
-            rx_frame0 = sink_0.recv()
+            yield sink_list[0].wait()
+            rx_frame0 = sink_list[0].recv()
 
             assert rx_frame0 == test_frame0
 
-            yield sink_0.wait()
-            rx_frame1 = sink_0.recv()
+            yield sink_list[0].wait()
+            rx_frame1 = sink_list[0].recv()
 
             assert rx_frame1 == test_frame1
 
-            yield sink_0.wait()
-            rx_frame2 = sink_0.recv()
+            yield sink_list[0].wait()
+            rx_frame2 = sink_list[0].recv()
 
             assert rx_frame2 == test_frame2
 
-            yield sink_0.wait()
-            rx_frame3 = sink_0.recv()
+            yield sink_list[0].wait()
+            rx_frame3 = sink_list[0].recv()
 
             assert rx_frame3 == test_frame3
 
@@ -588,22 +417,22 @@ def bench():
         test_frame3 = axis_ep.AXIStreamFrame(b'\x01\x03\x05\xFF\x01\x02\x03\x04\x05\x06\x07\x08', id=3, dest=5)
 
         for wait in wait_normal, wait_pause_source, wait_pause_sink:
-            source_0.send(test_frame0)
-            source_1.send(test_frame1)
-            source_2.send(test_frame2)
-            source_3.send(test_frame3)
+            source_list[0].send(test_frame0)
+            source_list[1].send(test_frame1)
+            source_list[2].send(test_frame2)
+            source_list[3].send(test_frame3)
             yield clk.posedge
             yield clk.posedge
 
             yield wait()
 
-            yield sink_0.wait()
-            rx_frame0 = sink_0.recv()
+            yield sink_list[0].wait()
+            rx_frame0 = sink_list[0].recv()
 
             assert rx_frame0 == test_frame0
 
-            yield sink_1.wait()
-            rx_frame1 = sink_1.recv()
+            yield sink_list[1].wait()
+            rx_frame1 = sink_list[1].recv()
 
             assert rx_frame1 == test_frame1
 

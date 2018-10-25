@@ -27,13 +27,13 @@ from myhdl import *
 import os
 
 module = 'arbiter'
-testbench = 'test_%s' % module
+testbench = 'test_%s_rr' % module
 
 srcs = []
 
 srcs.append("../rtl/%s.v" % module)
 srcs.append("../rtl/priority_encoder.v")
-srcs.append("%s_rr.v" % testbench)
+srcs.append("%s.v" % testbench)
 
 src = ' '.join(srcs)
 

@@ -68,16 +68,16 @@ def bench():
     tap_axis_tid = Signal(intbv(0)[ID_WIDTH:])
     tap_axis_tdest = Signal(intbv(0)[DEST_WIDTH:])
     tap_axis_tuser = Signal(intbv(0)[USER_WIDTH:])
-    output_axis_tready = Signal(bool(0))
+    m_axis_tready = Signal(bool(0))
 
     # Outputs
-    output_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
-    output_axis_tkeep = Signal(intbv(1)[KEEP_WIDTH:])
-    output_axis_tvalid = Signal(bool(0))
-    output_axis_tlast = Signal(bool(0))
-    output_axis_tid = Signal(intbv(0)[ID_WIDTH:])
-    output_axis_tdest = Signal(intbv(0)[DEST_WIDTH:])
-    output_axis_tuser = Signal(intbv(0)[USER_WIDTH:])
+    m_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
+    m_axis_tkeep = Signal(intbv(1)[KEEP_WIDTH:])
+    m_axis_tvalid = Signal(bool(0))
+    m_axis_tlast = Signal(bool(0))
+    m_axis_tid = Signal(intbv(0)[ID_WIDTH:])
+    m_axis_tdest = Signal(intbv(0)[DEST_WIDTH:])
+    m_axis_tuser = Signal(intbv(0)[USER_WIDTH:])
 
     # sources and sinks
     source_pause = Signal(bool(0))
@@ -105,14 +105,14 @@ def bench():
     sink_logic = sink.create_logic(
         clk,
         rst,
-        tdata=output_axis_tdata,
-        tkeep=output_axis_tkeep,
-        tvalid=output_axis_tvalid,
-        tready=output_axis_tready,
-        tlast=output_axis_tlast,
-        tid=output_axis_tid,
-        tdest=output_axis_tdest,
-        tuser=output_axis_tuser,
+        tdata=m_axis_tdata,
+        tkeep=m_axis_tkeep,
+        tvalid=m_axis_tvalid,
+        tready=m_axis_tready,
+        tlast=m_axis_tlast,
+        tid=m_axis_tid,
+        tdest=m_axis_tdest,
+        tuser=m_axis_tuser,
         pause=sink_pause,
         name='sink'
     )
@@ -136,14 +136,14 @@ def bench():
         tap_axis_tdest=tap_axis_tdest,
         tap_axis_tuser=tap_axis_tuser,
 
-        output_axis_tdata=output_axis_tdata,
-        output_axis_tkeep=output_axis_tkeep,
-        output_axis_tvalid=output_axis_tvalid,
-        output_axis_tready=output_axis_tready,
-        output_axis_tlast=output_axis_tlast,
-        output_axis_tid=output_axis_tid,
-        output_axis_tdest=output_axis_tdest,
-        output_axis_tuser=output_axis_tuser
+        m_axis_tdata=m_axis_tdata,
+        m_axis_tkeep=m_axis_tkeep,
+        m_axis_tvalid=m_axis_tvalid,
+        m_axis_tready=m_axis_tready,
+        m_axis_tlast=m_axis_tlast,
+        m_axis_tid=m_axis_tid,
+        m_axis_tdest=m_axis_tdest,
+        m_axis_tuser=m_axis_tuser
     )
 
     @always(delay(4))
@@ -328,7 +328,7 @@ def bench():
         source.send(test_frame2)
         yield clk.posedge
 
-        while tap_axis_tvalid or output_axis_tvalid:
+        while tap_axis_tvalid or m_axis_tvalid:
             source_pause.next = True
             yield clk.posedge
             yield clk.posedge
@@ -373,7 +373,7 @@ def bench():
         source.send(test_frame2)
         yield clk.posedge
 
-        while tap_axis_tvalid or output_axis_tvalid:
+        while tap_axis_tvalid or m_axis_tvalid:
             sink_pause.next = True
             yield clk.posedge
             yield clk.posedge

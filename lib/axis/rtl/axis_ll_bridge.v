@@ -40,10 +40,10 @@ module axis_ll_bridge #
     /*
      * AXI input
      */
-    input  wire [DATA_WIDTH-1:0]  axis_tdata,
-    input  wire                   axis_tvalid,
-    output wire                   axis_tready,
-    input  wire                   axis_tlast,
+    input  wire [DATA_WIDTH-1:0]  s_axis_tdata,
+    input  wire                   s_axis_tvalid,
+    output wire                   s_axis_tready,
+    input  wire                   s_axis_tlast,
 
     /*
      * LocalLink output
@@ -61,19 +61,19 @@ always @(posedge clk) begin
     if (rst) begin
         last_tlast = 1'b1;
     end else begin
-        if (axis_tvalid & axis_tready) last_tlast = axis_tlast;
+        if (s_axis_tvalid && s_axis_tready) last_tlast = s_axis_tlast;
     end
 end
 
 // high for packet length 1 -> cannot set SOF and EOF in same cycle
 // invalid packets are discarded
-wire invalid = axis_tvalid & axis_tlast & last_tlast;
+wire invalid = s_axis_tvalid && s_axis_tlast && last_tlast;
 
-assign axis_tready = ~ll_dst_rdy_in_n;
+assign s_axis_tready = !ll_dst_rdy_in_n;
 
-assign ll_data_out = axis_tdata;
-assign ll_sof_out_n = ~(last_tlast & axis_tvalid & ~invalid);
-assign ll_eof_out_n = ~(axis_tlast & ~invalid);
-assign ll_src_rdy_out_n = ~(axis_tvalid & ~invalid);
+assign ll_data_out = s_axis_tdata;
+assign ll_sof_out_n = !(last_tlast && s_axis_tvalid && !invalid);
+assign ll_eof_out_n = !(s_axis_tlast && !invalid);
+assign ll_src_rdy_out_n = !(s_axis_tvalid && !invalid);
 
 endmodule

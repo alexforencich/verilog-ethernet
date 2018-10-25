@@ -54,15 +54,15 @@ reg monitor_axis_tvalid = 0;
 reg monitor_axis_tready = 0;
 reg monitor_axis_tlast = 0;
 reg monitor_axis_tuser = 0;
-reg output_axis_tready = 0;
+reg m_axis_tready = 0;
 reg [TAG_WIDTH-1:0] tag = 0;
 reg trigger = 0;
 
 // Outputs
-wire [7:0] output_axis_tdata;
-wire output_axis_tvalid;
-wire output_axis_tlast;
-wire output_axis_tuser;
+wire [7:0] m_axis_tdata;
+wire m_axis_tvalid;
+wire m_axis_tlast;
+wire m_axis_tuser;
 wire busy;
 
 initial begin
@@ -77,15 +77,15 @@ initial begin
         monitor_axis_tready,
         monitor_axis_tlast,
         monitor_axis_tuser,
-        output_axis_tready,
+        m_axis_tready,
         tag,
         trigger
     );
     $to_myhdl(
-        output_axis_tdata,
-        output_axis_tvalid,
-        output_axis_tlast,
-        output_axis_tuser,
+        m_axis_tdata,
+        m_axis_tvalid,
+        m_axis_tlast,
+        m_axis_tuser,
         busy
     );
 
@@ -115,11 +115,11 @@ UUT (
     .monitor_axis_tready(monitor_axis_tready),
     .monitor_axis_tlast(monitor_axis_tlast),
     // axi output
-    .output_axis_tdata(output_axis_tdata),
-    .output_axis_tvalid(output_axis_tvalid),
-    .output_axis_tready(output_axis_tready),
-    .output_axis_tlast(output_axis_tlast),
-    .output_axis_tuser(output_axis_tuser),
+    .m_axis_tdata(m_axis_tdata),
+    .m_axis_tvalid(m_axis_tvalid),
+    .m_axis_tready(m_axis_tready),
+    .m_axis_tlast(m_axis_tlast),
+    .m_axis_tuser(m_axis_tuser),
     // configuration
     .tag(tag),
     .trigger(trigger),
