@@ -50,26 +50,26 @@ module axis_srl_fifo #
     /*
      * AXI input
      */
-    input  wire [DATA_WIDTH-1:0]  input_axis_tdata,
-    input  wire [KEEP_WIDTH-1:0]  input_axis_tkeep,
-    input  wire                   input_axis_tvalid,
-    output wire                   input_axis_tready,
-    input  wire                   input_axis_tlast,
-    input  wire [ID_WIDTH-1:0]    input_axis_tid,
-    input  wire [DEST_WIDTH-1:0]  input_axis_tdest,
-    input  wire [USER_WIDTH-1:0]  input_axis_tuser,
+    input  wire [DATA_WIDTH-1:0]      s_axis_tdata,
+    input  wire [KEEP_WIDTH-1:0]      s_axis_tkeep,
+    input  wire                       s_axis_tvalid,
+    output wire                       s_axis_tready,
+    input  wire                       s_axis_tlast,
+    input  wire [ID_WIDTH-1:0]        s_axis_tid,
+    input  wire [DEST_WIDTH-1:0]      s_axis_tdest,
+    input  wire [USER_WIDTH-1:0]      s_axis_tuser,
 
     /*
      * AXI output
      */
-    output wire [DATA_WIDTH-1:0]  output_axis_tdata,
-    output wire [KEEP_WIDTH-1:0]  output_axis_tkeep,
-    output wire                   output_axis_tvalid,
-    input  wire                   output_axis_tready,
-    output wire                   output_axis_tlast,
-    output wire [ID_WIDTH-1:0]    output_axis_tid,
-    output wire [DEST_WIDTH-1:0]  output_axis_tdest,
-    output wire [USER_WIDTH-1:0]  output_axis_tuser,
+    output wire [DATA_WIDTH-1:0]      m_axis_tdata,
+    output wire [KEEP_WIDTH-1:0]      m_axis_tkeep,
+    output wire                       m_axis_tvalid,
+    input  wire                       m_axis_tready,
+    output wire                       m_axis_tlast,
+    output wire [ID_WIDTH-1:0]        m_axis_tid,
+    output wire [DEST_WIDTH-1:0]      m_axis_tdest,
+    output wire [USER_WIDTH-1:0]      m_axis_tuser,
 
     /*
      * Status
@@ -86,32 +86,32 @@ localparam WIDTH       = USER_OFFSET + (USER_ENABLE ? USER_WIDTH : 0);
 
 reg [WIDTH-1:0] data_reg[DEPTH-1:0];
 reg [$clog2(DEPTH+1)-1:0] ptr_reg = 0;
-reg full_reg = 0, full_next;
-reg empty_reg = 1, empty_next;
+reg full_reg = 1'b0, full_next;
+reg empty_reg = 1'b1, empty_next;
 
-wire [WIDTH-1:0] input_axis;
+wire [WIDTH-1:0] s_axis;
 
-wire [WIDTH-1:0] output_axis = data_reg[ptr_reg-1];
+wire [WIDTH-1:0] m_axis = data_reg[ptr_reg-1];
 
-assign input_axis_tready = ~full_reg;
+assign s_axis_tready = !full_reg;
 
 generate
-    assign input_axis[DATA_WIDTH-1:0] = input_axis_tdata;
-    if (KEEP_ENABLE) assign input_axis[KEEP_OFFSET +: KEEP_WIDTH] = input_axis_tkeep;
-    if (LAST_ENABLE) assign input_axis[LAST_OFFSET]               = input_axis_tlast;
-    if (ID_ENABLE)   assign input_axis[ID_OFFSET   +: ID_WIDTH]   = input_axis_tid;
-    if (DEST_ENABLE) assign input_axis[DEST_OFFSET +: DEST_WIDTH] = input_axis_tdest;
-    if (USER_ENABLE) assign input_axis[USER_OFFSET +: USER_WIDTH] = input_axis_tuser;
+    assign s_axis[DATA_WIDTH-1:0] = s_axis_tdata;
+    if (KEEP_ENABLE) assign s_axis[KEEP_OFFSET +: KEEP_WIDTH] = s_axis_tkeep;
+    if (LAST_ENABLE) assign s_axis[LAST_OFFSET]               = s_axis_tlast;
+    if (ID_ENABLE)   assign s_axis[ID_OFFSET   +: ID_WIDTH]   = s_axis_tid;
+    if (DEST_ENABLE) assign s_axis[DEST_OFFSET +: DEST_WIDTH] = s_axis_tdest;
+    if (USER_ENABLE) assign s_axis[USER_OFFSET +: USER_WIDTH] = s_axis_tuser;
 endgenerate
 
-assign output_axis_tvalid = ~empty_reg;
+assign m_axis_tvalid = !empty_reg;
 
-assign output_axis_tdata = output_axis[DATA_WIDTH-1:0];
-assign output_axis_tkeep = KEEP_ENABLE ? output_axis[KEEP_OFFSET +: KEEP_WIDTH] : {KEEP_WIDTH{1'b1}};
-assign output_axis_tlast = LAST_ENABLE ? output_axis[LAST_OFFSET]               : 1'b1;
-assign output_axis_tid   = ID_ENABLE   ? output_axis[ID_OFFSET   +: ID_WIDTH]   : {ID_WIDTH{1'b0}};
-assign output_axis_tdest = DEST_ENABLE ? output_axis[DEST_OFFSET +: DEST_WIDTH] : {DEST_WIDTH{1'b0}};
-assign output_axis_tuser = USER_ENABLE ? output_axis[USER_OFFSET +: USER_WIDTH] : {USER_WIDTH{1'b0}};
+assign m_axis_tdata = m_axis[DATA_WIDTH-1:0];
+assign m_axis_tkeep = KEEP_ENABLE ? m_axis[KEEP_OFFSET +: KEEP_WIDTH] : {KEEP_WIDTH{1'b1}};
+assign m_axis_tlast = LAST_ENABLE ? m_axis[LAST_OFFSET]               : 1'b1;
+assign m_axis_tid   = ID_ENABLE   ? m_axis[ID_OFFSET   +: ID_WIDTH]   : {ID_WIDTH{1'b0}};
+assign m_axis_tdest = DEST_ENABLE ? m_axis[DEST_OFFSET +: DEST_WIDTH] : {DEST_WIDTH{1'b0}};
+assign m_axis_tuser = USER_ENABLE ? m_axis[USER_OFFSET +: USER_WIDTH] : {USER_WIDTH{1'b0}};
 
 assign count = ptr_reg;
 
@@ -133,33 +133,33 @@ initial begin
 end
 
 always @* begin
-    shift = 0;
-    inc = 0;
-    dec = 0;
+    shift = 1'b0;
+    inc = 1'b0;
+    dec = 1'b0;
     full_next = full_reg;
     empty_next = empty_reg;
 
-    if (output_axis_tready & input_axis_tvalid & ~full_reg) begin
-        shift = 1;
+    if (m_axis_tready && s_axis_tvalid && s_axis_tready) begin
+        shift = 1'b1;
         inc = ptr_empty;
-        empty_next = 0;
-    end else if (output_axis_tready & output_axis_tvalid) begin
-        dec = 1;
-        full_next = 0;
+        empty_next = 1'b0;
+    end else if (m_axis_tready && m_axis_tvalid) begin
+        dec = 1'b1;
+        full_next = 1'b0;
         empty_next = ptr_empty1;
-    end else if (input_axis_tvalid & input_axis_tready) begin
-        shift = 1;
-        inc = 1;
+    end else if (s_axis_tvalid && s_axis_tready) begin
+        shift = 1'b1;
+        inc = 1'b1;
         full_next = ptr_full1;
-        empty_next = 0;
+        empty_next = 1'b0;
     end
 end
 
 always @(posedge clk) begin
     if (rst) begin
         ptr_reg <= 0;
-        full_reg <= 0;
-        empty_reg <= 1;
+        full_reg <= 1'b0;
+        empty_reg <= 1'b1;
     end else begin
         if (inc) begin
             ptr_reg <= ptr_reg + 1;
@@ -174,7 +174,7 @@ always @(posedge clk) begin
     end
 
     if (shift) begin
-        data_reg[0] <= input_axis;
+        data_reg[0] <= s_axis;
         for (i = 0; i < DEPTH-1; i = i + 1) begin
             data_reg[i+1] <= data_reg[i];
         end
