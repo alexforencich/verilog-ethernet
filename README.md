@@ -34,13 +34,9 @@ and port count.  Supports priority and round-robin arbitration.
 
 ### axis_async_fifo module
 
-Basic word-based asynchronous FIFO with parametrizable data width and depth.
-Supports power of two depths only.
-
-### axis_async_frame_fifo module
-
-Basic frame-based asynchronous FIFO with parametrizable data width and depth.
-Supports power of two depths only.
+Configurable word-based or frame-based asynchronous FIFO with parametrizable
+data width, depth, type, and bad frame detection.  Supports power of two
+depths only.
 
 ### axis_cobs_decode
 
@@ -65,13 +61,9 @@ count.
 
 ### axis_fifo module
 
-Basic word-based synchronous FIFO with parametrizable data width and depth.
-Supports power of two depths only.
-
-### axis_frame_fifo module
-
-Basic frame-based synchronous FIFO with parametrizable data width and depth.
-Supports power of two depths only.
+Configurable word-based or frame-based synchronous FIFO with parametrizable
+data width, depth, type, and bad frame detection.  Supports power of two
+depths only.
 
 ### axis_frame_join module
 
@@ -111,7 +103,8 @@ Parametrizable data width.  Rate and mode are configurable at run time.
 
 ### axis_register module
 
-Datapath register.  Use to improve timing for long routes.  
+Datapath register with parameter to select between skid buffer, simple buffer,
+and bypass.  Use to improve timing for long routes.
 
 ### axis_srl_fifo module
 
@@ -138,7 +131,7 @@ Frame-aware AXI stream switch with parametrizable data width and port count.
 
 AXI stream tap module.  Used to make a copy of an AXI stream bus without
 affecting the bus.  Back-pressure on the output results in truncated frames
-with tuser set.  
+with tuser set.
 
 ### ll_axis_bridge module
 
@@ -179,20 +172,17 @@ Parametrizable priority encoder.
     arbiter.v                          : General-purpose parametrizable arbiter
     axis_adapter.v                     : Parametrizable bus width adapter
     axis_arb_mux.v                     : Parametrizable arbitrated multiplexer
-    axis_async_fifo.v                  : Asynchronous FIFO
-    axis_async_frame_fifo.v            : Asynchronous frame FIFO
+    axis_async_fifo.v                  : Parametrizable asynchronous FIFO
     axis_cobs_decode.v                 : COBS decoder
     axis_cobs_encode.v                 : COBS encoder
     axis_crosspoint.v                  : Parametrizable crosspoint switch
     axis_demux.v                       : Parametrizable demultiplexer
-    axis_fifo.v                        : Synchronous FIFO
-    axis_frame_fifo.v                  : Synchronous frame FIFO
+    axis_fifo.v                        : Parametrizable synchronous FIFO
     axis_frame_join.v                  : Parametrizable frame joiner
     axis_frame_length_adjust.v         : Frame length adjuster
     axis_frame_length_adjust_fifo.v    : Frame length adjuster with FIFO
     axis_ll_bridge.v                   : AXI stream to LocalLink bridge
-    axis_mux.py                        : Multiplexer generator
-    axis_mux_4.v                       : 4 port multiplexer
+    axis_mux.v                         : Multiplexer generator
     axis_rate_limit.v                  : Fractional rate limiter
     axis_register.v                    : AXI Stream register
     axis_srl_fifo.v                    : SRL-based FIFO
