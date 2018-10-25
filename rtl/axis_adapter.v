@@ -87,6 +87,7 @@ localparam DATA_WIDTH = EXPAND_BUS ? M_DATA_WIDTH : S_DATA_WIDTH;
 localparam KEEP_WIDTH = EXPAND_BUS ? M_KEEP_WIDTH_INT : S_KEEP_WIDTH_INT;
 // required number of cycles to match widths
 localparam CYCLE_COUNT = EXPAND_BUS ? (M_KEEP_WIDTH_INT / S_KEEP_WIDTH_INT) : (S_KEEP_WIDTH_INT / M_KEEP_WIDTH_INT);
+localparam CYCLE_COUNT_WIDTH = CYCLE_COUNT == 1 ? 1 : $clog2(CYCLE_COUNT);
 // data width and keep width per cycle
 localparam CYCLE_DATA_WIDTH = DATA_WIDTH / CYCLE_COUNT;
 localparam CYCLE_KEEP_WIDTH = KEEP_WIDTH / CYCLE_COUNT;
@@ -117,7 +118,7 @@ localparam [2:0]
 
 reg [2:0] state_reg = STATE_IDLE, state_next;
 
-reg [7:0] cycle_count_reg = 8'd0, cycle_count_next;
+reg [CYCLE_COUNT_WIDTH-1:0] cycle_count_reg = 0, cycle_count_next;
 
 reg last_cycle;
 
@@ -148,6 +149,8 @@ always @* begin
 
     cycle_count_next = cycle_count_reg;
 
+    last_cycle = 0;
+
     temp_tdata_next = temp_tdata_reg;
     temp_tkeep_next = temp_tkeep_reg;
     temp_tlast_next = temp_tlast_reg;
@@ -155,13 +158,19 @@ always @* begin
     temp_tdest_next = temp_tdest_reg;
     temp_tuser_next = temp_tuser_reg;
 
-    m_axis_tdata_int  = {M_DATA_WIDTH{1'b0}};
-    m_axis_tkeep_int  = {M_KEEP_WIDTH{1'b0}};
+    if (EXPAND_BUS) begin
+        m_axis_tdata_int  = temp_tdata_reg;
+        m_axis_tkeep_int  = temp_tkeep_reg;
+        m_axis_tlast_int  = temp_tlast_reg;
+    end else begin
+        m_axis_tdata_int  = {M_DATA_WIDTH{1'b0}};
+        m_axis_tkeep_int  = {M_KEEP_WIDTH{1'b0}};
+        m_axis_tlast_int  = 1'b0;
+    end
     m_axis_tvalid_int = 1'b0;
-    m_axis_tlast_int  = 1'b0;
-    m_axis_tid_int    = {ID_WIDTH{1'b0}};
-    m_axis_tdest_int  = {DEST_WIDTH{1'b0}};
-    m_axis_tuser_int  = {USER_WIDTH{1'b0}};
+    m_axis_tid_int    = temp_tid_reg;
+    m_axis_tdest_int  = temp_tdest_reg;
+    m_axis_tuser_int  = temp_tuser_reg;
 
     s_axis_tready_next = 1'b0;
 
@@ -202,7 +211,7 @@ always @* begin
                     temp_tuser_next = s_axis_tuser;
 
                     // first input cycle complete
-                    cycle_count_next = 8'd1;
+                    cycle_count_next = 1;
 
                     if (s_axis_tlast) begin
                         // got last signal on first cycle, so output it
@@ -224,7 +233,7 @@ always @* begin
 
                 if (s_axis_tready && s_axis_tvalid) begin
                     // word transfer in - store it in data register
-                    cycle_count_next = 8'd0;
+                    cycle_count_next = 0;
 
                     // is this the last cycle?
                     if (CYCLE_COUNT == 1) begin
@@ -259,7 +268,7 @@ always @* begin
 
                     if (m_axis_tready_int_reg) begin
                         // if output register is ready for first word, then move on to the next one
-                        cycle_count_next = 8'd1;
+                        cycle_count_next = 1;
                     end
 
                     if (!last_cycle || !m_axis_tready_int_reg) begin
@@ -340,7 +349,7 @@ always @* begin
                         temp_tuser_next = s_axis_tuser;
 
                         // first input cycle complete
-                        cycle_count_next = 8'd1;
+                        cycle_count_next = 1;
 
                         if (s_axis_tlast) begin
                             // got last signal on first cycle, so output it
@@ -412,15 +421,14 @@ end
 always @(posedge clk) begin
     if (rst) begin
         state_reg <= STATE_IDLE;
-        cycle_count_reg <= 8'd0;
         s_axis_tready_reg <= 1'b0;
     end else begin
         state_reg <= state_next;
 
         s_axis_tready_reg <= s_axis_tready_next;
-
-        cycle_count_reg <= cycle_count_next;
     end
+
+    cycle_count_reg <= cycle_count_next;
 
     temp_tdata_reg <= temp_tdata_next;
     temp_tkeep_reg <= temp_tkeep_next;
