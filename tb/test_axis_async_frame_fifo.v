@@ -27,7 +27,7 @@ THE SOFTWARE.
 `timescale 1ns / 1ps
 
 /*
- * Testbench for axis_async_frame_fifo
+ * Testbench for axis_async_fifo
  */
 module test_axis_async_frame_fifo;
 
@@ -36,12 +36,14 @@ parameter ADDR_WIDTH = 9;
 parameter DATA_WIDTH = 8;
 parameter KEEP_ENABLE = (DATA_WIDTH>8);
 parameter KEEP_WIDTH = (DATA_WIDTH/8);
+parameter LAST_ENABLE = 1;
 parameter ID_ENABLE = 1;
 parameter ID_WIDTH = 8;
 parameter DEST_ENABLE = 1;
 parameter DEST_WIDTH = 8;
 parameter USER_ENABLE = 1;
 parameter USER_WIDTH = 1;
+parameter FRAME_FIFO = 1;
 parameter USER_BAD_FRAME_VALUE = 1'b1;
 parameter USER_BAD_FRAME_MASK = 1'b1;
 parameter DROP_BAD_FRAME = 1;
@@ -49,66 +51,66 @@ parameter DROP_WHEN_FULL = 0;
 
 // Inputs
 reg async_rst = 0;
-reg input_clk = 0;
-reg output_clk = 0;
+reg s_clk = 0;
+reg m_clk = 0;
 reg [7:0] current_test = 0;
 
-reg [DATA_WIDTH-1:0] input_axis_tdata = 0;
-reg [KEEP_WIDTH-1:0] input_axis_tkeep = 0;
-reg input_axis_tvalid = 0;
-reg input_axis_tlast = 0;
-reg [ID_WIDTH-1:0] input_axis_tid = 0;
-reg [DEST_WIDTH-1:0] input_axis_tdest = 0;
-reg [USER_WIDTH-1:0] input_axis_tuser = 0;
-reg output_axis_tready = 0;
+reg [DATA_WIDTH-1:0] s_axis_tdata = 0;
+reg [KEEP_WIDTH-1:0] s_axis_tkeep = 0;
+reg s_axis_tvalid = 0;
+reg s_axis_tlast = 0;
+reg [ID_WIDTH-1:0] s_axis_tid = 0;
+reg [DEST_WIDTH-1:0] s_axis_tdest = 0;
+reg [USER_WIDTH-1:0] s_axis_tuser = 0;
+reg m_axis_tready = 0;
 
 // Outputs
-wire input_axis_tready;
-wire [DATA_WIDTH-1:0] output_axis_tdata;
-wire [KEEP_WIDTH-1:0] output_axis_tkeep;
-wire output_axis_tvalid;
-wire output_axis_tlast;
-wire [ID_WIDTH-1:0] output_axis_tid;
-wire [DEST_WIDTH-1:0] output_axis_tdest;
-wire [USER_WIDTH-1:0] output_axis_tuser;
-wire input_status_overflow;
-wire input_status_bad_frame;
-wire input_status_good_frame;
-wire output_status_overflow;
-wire output_status_bad_frame;
-wire output_status_good_frame;
+wire s_axis_tready;
+wire [DATA_WIDTH-1:0] m_axis_tdata;
+wire [KEEP_WIDTH-1:0] m_axis_tkeep;
+wire m_axis_tvalid;
+wire m_axis_tlast;
+wire [ID_WIDTH-1:0] m_axis_tid;
+wire [DEST_WIDTH-1:0] m_axis_tdest;
+wire [USER_WIDTH-1:0] m_axis_tuser;
+wire s_status_overflow;
+wire s_status_bad_frame;
+wire s_status_good_frame;
+wire m_status_overflow;
+wire m_status_bad_frame;
+wire m_status_good_frame;
 
 initial begin
     // myhdl integration
     $from_myhdl(
         async_rst,
-        input_clk,
-        output_clk,
+        s_clk,
+        m_clk,
         current_test,
-        input_axis_tdata,
-        input_axis_tkeep,
-        input_axis_tvalid,
-        input_axis_tlast,
-        input_axis_tid,
-        input_axis_tdest,
-        input_axis_tuser,
-        output_axis_tready
+        s_axis_tdata,
+        s_axis_tkeep,
+        s_axis_tvalid,
+        s_axis_tlast,
+        s_axis_tid,
+        s_axis_tdest,
+        s_axis_tuser,
+        m_axis_tready
     );
     $to_myhdl(
-        input_axis_tready,
-        output_axis_tdata,
-        output_axis_tkeep,
-        output_axis_tvalid,
-        output_axis_tlast,
-        output_axis_tid,
-        output_axis_tdest,
-        output_axis_tuser,
-        input_status_overflow,
-        input_status_bad_frame,
-        input_status_good_frame,
-        output_status_overflow,
-        output_status_bad_frame,
-        output_status_good_frame
+        s_axis_tready,
+        m_axis_tdata,
+        m_axis_tkeep,
+        m_axis_tvalid,
+        m_axis_tlast,
+        m_axis_tid,
+        m_axis_tdest,
+        m_axis_tuser,
+        s_status_overflow,
+        s_status_bad_frame,
+        s_status_good_frame,
+        m_status_overflow,
+        m_status_bad_frame,
+        m_status_good_frame
     );
 
     // dump file
@@ -116,17 +118,19 @@ initial begin
     $dumpvars(0, test_axis_async_frame_fifo);
 end
 
-axis_async_frame_fifo #(
+axis_async_fifo #(
     .ADDR_WIDTH(ADDR_WIDTH),
     .DATA_WIDTH(DATA_WIDTH),
     .KEEP_ENABLE(KEEP_ENABLE),
     .KEEP_WIDTH(KEEP_WIDTH),
+    .LAST_ENABLE(LAST_ENABLE),
     .ID_ENABLE(ID_ENABLE),
     .ID_WIDTH(ID_WIDTH),
     .DEST_ENABLE(DEST_ENABLE),
     .DEST_WIDTH(DEST_WIDTH),
     .USER_ENABLE(USER_ENABLE),
     .USER_WIDTH(USER_WIDTH),
+    .FRAME_FIFO(FRAME_FIFO),
     .USER_BAD_FRAME_VALUE(USER_BAD_FRAME_VALUE),
     .USER_BAD_FRAME_MASK(USER_BAD_FRAME_MASK),
     .DROP_BAD_FRAME(DROP_BAD_FRAME),
@@ -136,32 +140,32 @@ UUT (
     // Common reset
     .async_rst(async_rst),
     // AXI input
-    .input_clk(input_clk),
-    .input_axis_tdata(input_axis_tdata),
-    .input_axis_tkeep(input_axis_tkeep),
-    .input_axis_tvalid(input_axis_tvalid),
-    .input_axis_tready(input_axis_tready),
-    .input_axis_tlast(input_axis_tlast),
-    .input_axis_tid(input_axis_tid),
-    .input_axis_tdest(input_axis_tdest),
-    .input_axis_tuser(input_axis_tuser),
+    .s_clk(s_clk),
+    .s_axis_tdata(s_axis_tdata),
+    .s_axis_tkeep(s_axis_tkeep),
+    .s_axis_tvalid(s_axis_tvalid),
+    .s_axis_tready(s_axis_tready),
+    .s_axis_tlast(s_axis_tlast),
+    .s_axis_tid(s_axis_tid),
+    .s_axis_tdest(s_axis_tdest),
+    .s_axis_tuser(s_axis_tuser),
     // AXI output
-    .output_clk(output_clk),
-    .output_axis_tdata(output_axis_tdata),
-    .output_axis_tkeep(output_axis_tkeep),
-    .output_axis_tvalid(output_axis_tvalid),
-    .output_axis_tready(output_axis_tready),
-    .output_axis_tlast(output_axis_tlast),
-    .output_axis_tid(output_axis_tid),
-    .output_axis_tdest(output_axis_tdest),
-    .output_axis_tuser(output_axis_tuser),
+    .m_clk(m_clk),
+    .m_axis_tdata(m_axis_tdata),
+    .m_axis_tkeep(m_axis_tkeep),
+    .m_axis_tvalid(m_axis_tvalid),
+    .m_axis_tready(m_axis_tready),
+    .m_axis_tlast(m_axis_tlast),
+    .m_axis_tid(m_axis_tid),
+    .m_axis_tdest(m_axis_tdest),
+    .m_axis_tuser(m_axis_tuser),
     // Status
-    .input_status_overflow(input_status_overflow),
-    .input_status_bad_frame(input_status_bad_frame),
-    .input_status_good_frame(input_status_good_frame),
-    .output_status_overflow(output_status_overflow),
-    .output_status_bad_frame(output_status_bad_frame),
-    .output_status_good_frame(output_status_good_frame)
+    .s_status_overflow(s_status_overflow),
+    .s_status_bad_frame(s_status_bad_frame),
+    .s_status_good_frame(s_status_good_frame),
+    .m_status_overflow(m_status_overflow),
+    .m_status_bad_frame(m_status_bad_frame),
+    .m_status_good_frame(m_status_good_frame)
 );
 
 endmodule
