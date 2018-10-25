@@ -180,9 +180,9 @@ frame_fifo_inst (
     .m_axis_tdest(m_axis_tdest),
     .m_axis_tuser(m_axis_tuser),
     // Status
-    .overflow(),
-    .bad_frame(),
-    .good_frame()
+    .status_overflow(),
+    .status_bad_frame(),
+    .status_good_frame()
 );
 
 axis_fifo #(
@@ -217,9 +217,9 @@ header_fifo_inst (
     .m_axis_tdest(),
     .m_axis_tuser(),
     // Status
-    .overflow(),
-    .bad_frame(),
-    .good_frame()
+    .status_overflow(),
+    .status_bad_frame(),
+    .status_good_frame()
 );
 
 endmodule

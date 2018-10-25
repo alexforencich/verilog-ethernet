@@ -133,9 +133,9 @@ code_fifo_inst (
     .m_axis_tdest(),
     .m_axis_tuser(code_fifo_out_tuser),
     // Status
-    .overflow(),
-    .bad_frame(),
-    .good_frame()
+    .status_overflow(),
+    .status_bad_frame(),
+    .status_good_frame()
 );
 
 reg [7:0] data_fifo_in_tdata;
@@ -180,9 +180,9 @@ data_fifo_inst (
     .m_axis_tdest(),
     .m_axis_tuser(),
     // Status
-    .overflow(),
-    .bad_frame(),
-    .good_frame()
+    .status_overflow(),
+    .status_bad_frame(),
+    .status_good_frame()
 );
 
 always @* begin
