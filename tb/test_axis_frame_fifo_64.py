@@ -83,9 +83,9 @@ def bench():
     m_axis_tid = Signal(intbv(0)[ID_WIDTH:])
     m_axis_tdest = Signal(intbv(0)[DEST_WIDTH:])
     m_axis_tuser = Signal(intbv(0)[USER_WIDTH:])
-    overflow = Signal(bool(0))
-    bad_frame = Signal(bool(0))
-    good_frame = Signal(bool(0))
+    status_overflow = Signal(bool(0))
+    status_bad_frame = Signal(bool(0))
+    status_good_frame = Signal(bool(0))
 
     # sources and sinks
     source_pause = Signal(bool(0))
@@ -153,27 +153,27 @@ def bench():
         m_axis_tdest=m_axis_tdest,
         m_axis_tuser=m_axis_tuser,
 
-        overflow=overflow,
-        bad_frame=bad_frame,
-        good_frame=good_frame
+        status_overflow=status_overflow,
+        status_bad_frame=status_bad_frame,
+        status_good_frame=status_good_frame
     )
 
     @always(delay(4))
     def clkgen():
         clk.next = not clk
 
-    overflow_asserted = Signal(bool(0))
-    bad_frame_asserted = Signal(bool(0))
-    good_frame_asserted = Signal(bool(0))
+    status_overflow_asserted = Signal(bool(0))
+    status_bad_frame_asserted = Signal(bool(0))
+    status_good_frame_asserted = Signal(bool(0))
 
     @always(clk.posedge)
     def monitor():
-        if (overflow):
-            overflow_asserted.next = 1
-        if (bad_frame):
-            bad_frame_asserted.next = 1
-        if (good_frame):
-            good_frame_asserted.next = 1
+        if (status_overflow):
+            status_overflow_asserted.next = 1
+        if (status_bad_frame):
+            status_bad_frame_asserted.next = 1
+        if (status_good_frame):
+            status_good_frame_asserted.next = 1
 
     @instance
     def check():
@@ -201,9 +201,9 @@ def bench():
             dest=1
         )
 
-        overflow_asserted.next = 0
-        bad_frame_asserted.next = 0
-        good_frame_asserted.next = 0
+        status_overflow_asserted.next = 0
+        status_bad_frame_asserted.next = 0
+        status_good_frame_asserted.next = 0
 
         source.send(test_frame)
 
@@ -212,9 +212,9 @@ def bench():
 
         assert rx_frame == test_frame
 
-        assert not overflow_asserted
-        assert not bad_frame_asserted
-        assert good_frame_asserted
+        assert not status_overflow_asserted
+        assert not status_bad_frame_asserted
+        assert status_good_frame_asserted
 
         yield delay(100)
 
@@ -231,9 +231,9 @@ def bench():
             dest=1
         )
 
-        overflow_asserted.next = 0
-        bad_frame_asserted.next = 0
-        good_frame_asserted.next = 0
+        status_overflow_asserted.next = 0
+        status_bad_frame_asserted.next = 0
+        status_good_frame_asserted.next = 0
 
         source.send(test_frame)
 
@@ -242,9 +242,9 @@ def bench():
 
         assert rx_frame == test_frame
 
-        assert not overflow_asserted
-        assert not bad_frame_asserted
-        assert good_frame_asserted
+        assert not status_overflow_asserted
+        assert not status_bad_frame_asserted
+        assert status_good_frame_asserted
 
         yield clk.posedge
         print("test 3: test packet with pauses")
@@ -259,9 +259,9 @@ def bench():
             dest=1
         )
 
-        overflow_asserted.next = 0
-        bad_frame_asserted.next = 0
-        good_frame_asserted.next = 0
+        status_overflow_asserted.next = 0
+        status_bad_frame_asserted.next = 0
+        status_good_frame_asserted.next = 0
 
         source.send(test_frame)
         yield clk.posedge
@@ -285,9 +285,9 @@ def bench():
 
         assert rx_frame == test_frame
 
-        assert not overflow_asserted
-        assert not bad_frame_asserted
-        assert good_frame_asserted
+        assert not status_overflow_asserted
+        assert not status_bad_frame_asserted
+        assert status_good_frame_asserted
 
         yield delay(100)
 
@@ -312,9 +312,9 @@ def bench():
             dest=2
         )
 
-        overflow_asserted.next = 0
-        bad_frame_asserted.next = 0
-        good_frame_asserted.next = 0
+        status_overflow_asserted.next = 0
+        status_bad_frame_asserted.next = 0
+        status_good_frame_asserted.next = 0
 
         source.send(test_frame1)
         source.send(test_frame2)
@@ -329,9 +329,9 @@ def bench():
 
         assert rx_frame == test_frame2
 
-        assert not overflow_asserted
-        assert not bad_frame_asserted
-        assert good_frame_asserted
+        assert not status_overflow_asserted
+        assert not status_bad_frame_asserted
+        assert status_good_frame_asserted
 
         yield delay(100)
 
@@ -356,9 +356,9 @@ def bench():
             dest=2
         )
 
-        overflow_asserted.next = 0
-        bad_frame_asserted.next = 0
-        good_frame_asserted.next = 0
+        status_overflow_asserted.next = 0
+        status_bad_frame_asserted.next = 0
+        status_good_frame_asserted.next = 0
 
         source.send(test_frame1)
         source.send(test_frame2)
@@ -382,9 +382,9 @@ def bench():
 
         assert rx_frame == test_frame2
 
-        assert not overflow_asserted
-        assert not bad_frame_asserted
-        assert good_frame_asserted
+        assert not status_overflow_asserted
+        assert not status_bad_frame_asserted
+        assert status_good_frame_asserted
 
         yield delay(100)
 
@@ -409,9 +409,9 @@ def bench():
             dest=2
         )
 
-        overflow_asserted.next = 0
-        bad_frame_asserted.next = 0
-        good_frame_asserted.next = 0
+        status_overflow_asserted.next = 0
+        status_bad_frame_asserted.next = 0
+        status_good_frame_asserted.next = 0
 
         source.send(test_frame1)
         source.send(test_frame2)
@@ -435,9 +435,9 @@ def bench():
 
         assert rx_frame == test_frame2
 
-        assert not overflow_asserted
-        assert not bad_frame_asserted
-        assert good_frame_asserted
+        assert not status_overflow_asserted
+        assert not status_bad_frame_asserted
+        assert status_good_frame_asserted
 
         yield delay(100)
 
@@ -455,9 +455,9 @@ def bench():
             last_cycle_user=1
         )
 
-        overflow_asserted.next = 0
-        bad_frame_asserted.next = 0
-        good_frame_asserted.next = 0
+        status_overflow_asserted.next = 0
+        status_bad_frame_asserted.next = 0
+        status_good_frame_asserted.next = 0
 
         source.send(test_frame)
         yield clk.posedge
@@ -466,9 +466,9 @@ def bench():
 
         assert sink.empty()
 
-        assert not overflow_asserted
-        assert bad_frame_asserted
-        assert not good_frame_asserted
+        assert not status_overflow_asserted
+        assert status_bad_frame_asserted
+        assert not status_good_frame_asserted
 
         yield delay(100)
 
@@ -485,9 +485,9 @@ def bench():
             dest=1
         )
 
-        overflow_asserted.next = 0
-        bad_frame_asserted.next = 0
-        good_frame_asserted.next = 0
+        status_overflow_asserted.next = 0
+        status_bad_frame_asserted.next = 0
+        status_good_frame_asserted.next = 0
 
         source.send(test_frame)
         yield clk.posedge
@@ -496,9 +496,9 @@ def bench():
 
         assert sink.empty()
 
-        assert overflow_asserted
-        assert not bad_frame_asserted
-        assert not good_frame_asserted
+        assert status_overflow_asserted
+        assert not status_bad_frame_asserted
+        assert not status_good_frame_asserted
 
         yield delay(100)
 

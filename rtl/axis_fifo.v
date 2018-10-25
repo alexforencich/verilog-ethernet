@@ -79,9 +79,9 @@ module axis_fifo #
     /*
      * Status
      */
-    output wire                   overflow,
-    output wire                   bad_frame,
-    output wire                   good_frame
+    output wire                   status_overflow,
+    output wire                   status_bad_frame,
+    output wire                   status_good_frame
 );
 
 // check configuration
@@ -168,9 +168,9 @@ assign m_axis_tid   = ID_ENABLE   ? m_axis_reg[ID_OFFSET   +: ID_WIDTH]   : {ID_
 assign m_axis_tdest = DEST_ENABLE ? m_axis_reg[DEST_OFFSET +: DEST_WIDTH] : {DEST_WIDTH{1'b0}};
 assign m_axis_tuser = USER_ENABLE ? m_axis_reg[USER_OFFSET +: USER_WIDTH] : {USER_WIDTH{1'b0}};
 
-assign overflow = overflow_reg;
-assign bad_frame = bad_frame_reg;
-assign good_frame = good_frame_reg;
+assign status_overflow = overflow_reg;
+assign status_bad_frame = bad_frame_reg;
+assign status_good_frame = good_frame_reg;
 
 // Write logic
 always @* begin

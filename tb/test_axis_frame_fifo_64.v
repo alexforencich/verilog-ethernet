@@ -72,9 +72,9 @@ wire m_axis_tlast;
 wire [ID_WIDTH-1:0] m_axis_tid;
 wire [DEST_WIDTH-1:0] m_axis_tdest;
 wire [USER_WIDTH-1:0] m_axis_tuser;
-wire overflow;
-wire bad_frame;
-wire good_frame;
+wire status_overflow;
+wire status_bad_frame;
+wire status_good_frame;
 
 initial begin
     // myhdl integration
@@ -100,9 +100,9 @@ initial begin
         m_axis_tid,
         m_axis_tdest,
         m_axis_tuser,
-        overflow,
-        bad_frame,
-        good_frame
+        status_overflow,
+        status_bad_frame,
+        status_good_frame
     );
 
     // dump file
@@ -150,9 +150,9 @@ UUT (
     .m_axis_tdest(m_axis_tdest),
     .m_axis_tuser(m_axis_tuser),
     // Status
-    .overflow(overflow),
-    .bad_frame(bad_frame),
-    .good_frame(good_frame)
+    .status_overflow(status_overflow),
+    .status_bad_frame(status_bad_frame),
+    .status_good_frame(status_good_frame)
 );
 
 endmodule

@@ -248,6 +248,7 @@ class AXIStreamFrame(object):
 
 class AXIStreamSource(object):
     def __init__(self):
+        self.active = False
         self.has_logic = False
         self.queue = []
 
@@ -262,6 +263,13 @@ class AXIStreamSource(object):
 
     def empty(self):
         return not self.queue
+
+    def idle(self):
+        return not self.queue and not self.active
+
+    def wait(self):
+        while not self.idle():
+            yield self.clk.posedge
 
     def create_logic(self,
                 clk,
@@ -289,7 +297,7 @@ class AXIStreamSource(object):
             id = []
             dest = []
             user = []
-            valid = False
+            self.active = False
             B = 0
             N = len(tdata)
             M = len(tkeep)
@@ -311,7 +319,7 @@ class AXIStreamSource(object):
                     id = []
                     dest = []
                     user = []
-                    valid = False
+                    self.active = False
                     if B > 0:
                         for s in tdata:
                             s.next = 0
@@ -324,7 +332,7 @@ class AXIStreamSource(object):
                     tvalid.next = False
                     tlast.next = False
                 else:
-                    tvalid.next = valid and (tvalid or not pause)
+                    tvalid.next = self.active and (tvalid or not pause)
                     if tready and tvalid:
                         if len(data) > 0:
                             if B > 0:
@@ -342,8 +350,8 @@ class AXIStreamSource(object):
                         else:
                             tvalid.next = False
                             tlast.next = False
-                            valid = False
-                    if not valid and self.queue:
+                            self.active = False
+                    if not self.active and self.queue:
                         frame = self.queue.pop(0)
                         frame.B = B
                         frame.N = N
@@ -364,13 +372,14 @@ class AXIStreamSource(object):
                         tuser.next = user.pop(0)
                         tvalid.next = not pause
                         tlast.next = len(data) == 0
-                        valid = True
+                        self.active = True
 
         return instances()
 
 
 class AXIStreamSink(object):
     def __init__(self):
+        self.active = False
         self.has_logic = False
         self.queue = []
         self.read_queue = []
@@ -395,6 +404,9 @@ class AXIStreamSink(object):
 
     def empty(self):
         return not self.queue
+
+    def idle(self):
+        return not self.active
 
     def wait(self, timeout=0):
         if self.queue:
@@ -462,6 +474,7 @@ class AXIStreamSink(object):
                     dest = []
                     user = []
                     first = True
+                    self.active = False
                 else:
                     tready_int.next = True
 
@@ -498,6 +511,7 @@ class AXIStreamSink(object):
                         dest.append(int(tdest))
                         user.append(int(tuser))
                         first = False
+                        self.active = True
                         if tlast:
                             frame = AXIStreamFrame()
                             frame.B = B
@@ -507,6 +521,7 @@ class AXIStreamSink(object):
                             frame.parse(data, keep, id, dest, user)
                             self.queue.append(frame)
                             self.sync.next = not self.sync
+                            self.active = False
                             if name is not None:
                                 print("[%s] Got frame %s" % (name, repr(frame)))
                             data = []
