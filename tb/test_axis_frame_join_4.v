@@ -32,8 +32,8 @@ THE SOFTWARE.
 module test_axis_frame_join_4;
 
 // Parameters
-parameter DATA_WIDTH = 8;
 parameter S_COUNT = 4;
+parameter DATA_WIDTH = 8;
 parameter TAG_ENABLE = 1;
 parameter TAG_WIDTH = 16;
 
@@ -85,8 +85,8 @@ initial begin
 end
 
 axis_frame_join #(
-    .DATA_WIDTH(DATA_WIDTH),
     .S_COUNT(S_COUNT),
+    .DATA_WIDTH(DATA_WIDTH),
     .TAG_ENABLE(TAG_ENABLE),
     .TAG_WIDTH(TAG_WIDTH)
 )

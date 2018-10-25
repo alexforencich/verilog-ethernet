@@ -31,8 +31,8 @@ THE SOFTWARE.
  */
 module axis_frame_join #
 (
-    parameter DATA_WIDTH = 8,
     parameter S_COUNT = 4,
+    parameter DATA_WIDTH = 8,
     parameter TAG_ENABLE = 1,
     parameter TAG_WIDTH = 16
 )

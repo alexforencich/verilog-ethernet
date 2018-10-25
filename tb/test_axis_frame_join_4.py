@@ -44,8 +44,8 @@ build_cmd = "iverilog -o %s.vvp %s" % (testbench, src)
 def bench():
 
     # Parameters
-    DATA_WIDTH = 8
     S_COUNT = 4
+    DATA_WIDTH = 8
     TAG_ENABLE = 1
     TAG_WIDTH = 16
 
