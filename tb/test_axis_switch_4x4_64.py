@@ -27,6 +27,7 @@ from myhdl import *
 import os
 
 import axis_ep
+import math
 
 module = 'axis_switch'
 testbench = 'test_%s_4x4_64' % module
@@ -53,21 +54,14 @@ def bench():
     KEEP_WIDTH = (DATA_WIDTH/8)
     ID_ENABLE = 1
     ID_WIDTH = 8
-    DEST_WIDTH = 3
+    DEST_WIDTH = math.ceil(math.log(M_COUNT+1, 2))
     USER_ENABLE = 1
     USER_WIDTH = 1
-    OUT_0_BASE = 0
-    OUT_0_TOP = 0
-    OUT_0_CONNECT = 0xf
-    OUT_1_BASE = 1
-    OUT_1_TOP = 1
-    OUT_1_CONNECT = 0xf
-    OUT_2_BASE = 2
-    OUT_2_TOP = 2
-    OUT_2_CONNECT = 0xf
-    OUT_3_BASE = 3
-    OUT_3_TOP = 3
-    OUT_3_CONNECT = 0xf
+    M_BASE = [0, 1, 2, 3]
+    M_TOP = [0, 1, 2, 3]
+    M_CONNECT = [0b1111]*M_COUNT
+    S_REG_TYPE = 0
+    M_REG_TYPE = 2
     ARB_TYPE = "ROUND_ROBIN"
     LSB_PRIORITY = "HIGH"
 
