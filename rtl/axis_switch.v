@@ -141,6 +141,8 @@ generate
         reg drop_reg = 1'b0, drop_next;
         reg select_valid_reg = 1'b0, select_valid_next;
 
+        integer k;
+
         always @* begin
             select_next = select_reg;
             drop_next = drop_reg && !(int_s_axis_tvalid[m] && int_s_axis_tready[m] && int_s_axis_tlast[m]);
@@ -150,9 +152,9 @@ generate
                 select_next = 1'b0;
                 select_valid_next = 1'b0;
                 drop_next = 1'b1;
-                for (i = 0; i < M_COUNT; i = i + 1) begin
-                    if (int_s_axis_tdest[m*DEST_WIDTH +: DEST_WIDTH] >= M_BASE[i*32 +: 32] && int_s_axis_tdest[m*DEST_WIDTH +: DEST_WIDTH] <= M_TOP[i*32 +: 32] && (M_CONNECT & (1 << (m+i*S_COUNT)))) begin
-                        select_next = i;
+                for (k = 0; k < M_COUNT; k = k + 1) begin
+                    if (int_s_axis_tdest[m*DEST_WIDTH +: DEST_WIDTH] >= M_BASE[k*32 +: 32] && int_s_axis_tdest[m*DEST_WIDTH +: DEST_WIDTH] <= M_TOP[k*32 +: 32] && (M_CONNECT & (1 << (m+k*S_COUNT)))) begin
+                        select_next = k;
                         select_valid_next = 1'b1;
                         drop_next = 1'b0;
                     end
