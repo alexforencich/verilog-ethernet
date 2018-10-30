@@ -46,7 +46,7 @@ srcs.append("../rtl/iddr.v")
 srcs.append("../rtl/oddr.v")
 srcs.append("../rtl/ssio_ddr_in.v")
 srcs.append("../rtl/ssio_ddr_out.v")
-srcs.append("../lib/axis/rtl/axis_async_frame_fifo.v")
+srcs.append("../lib/axis/rtl/axis_async_fifo.v")
 srcs.append("%s.v" % testbench)
 
 src = ' '.join(srcs)

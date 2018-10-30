@@ -40,7 +40,7 @@ srcs.append("../rtl/lfsr.v")
 srcs.append("../rtl/axis_gmii_rx.v")
 srcs.append("../rtl/axis_gmii_tx.v")
 srcs.append("../rtl/eth_mac_1g.v")
-srcs.append("../lib/axis/rtl/axis_async_frame_fifo.v")
+srcs.append("../lib/axis/rtl/axis_async_fifo.v")
 srcs.append("%s.v" % testbench)
 
 src = ' '.join(srcs)
