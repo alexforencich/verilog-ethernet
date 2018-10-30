@@ -125,7 +125,7 @@ def bench():
     axis_source = axis_ep.AXIStreamSource()
 
     axis_source_logic = axis_source.create_logic(
-        tx_clk,
+        gtx_clk, #tx_clk,
         tx_rst,
         tdata=tx_axis_tdata,
         tvalid=tx_axis_tvalid,
