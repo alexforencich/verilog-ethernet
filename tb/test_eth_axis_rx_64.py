@@ -206,6 +206,7 @@ def bench():
 
                 yield wait()
 
+                yield clk.posedge
                 yield sink.wait()
                 rx_frame = sink.recv()
 
@@ -241,11 +242,13 @@ def bench():
 
                 yield wait()
 
+                yield clk.posedge
                 yield sink.wait()
                 rx_frame = sink.recv()
 
                 assert rx_frame == test_frame1
 
+                yield clk.posedge
                 yield sink.wait()
                 rx_frame = sink.recv()
 
@@ -283,12 +286,14 @@ def bench():
 
                 yield wait()
 
+                yield clk.posedge
                 yield sink.wait()
                 rx_frame = sink.recv()
 
                 assert rx_frame == test_frame1
                 assert rx_frame.payload.user[-1]
 
+                yield clk.posedge
                 yield sink.wait()
                 rx_frame = sink.recv()
 
@@ -329,6 +334,7 @@ def bench():
 
                 yield wait()
 
+                yield clk.posedge
                 yield sink.wait()
                 rx_frame = sink.recv()
 
