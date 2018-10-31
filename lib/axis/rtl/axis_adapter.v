@@ -74,23 +74,23 @@ module axis_adapter #
 );
 
 // force keep width to 1 when disabled
-localparam S_KEEP_WIDTH_INT = S_KEEP_ENABLE ? S_KEEP_WIDTH : 1;
-localparam M_KEEP_WIDTH_INT = M_KEEP_ENABLE ? M_KEEP_WIDTH : 1;
+parameter S_KEEP_WIDTH_INT = S_KEEP_ENABLE ? S_KEEP_WIDTH : 1;
+parameter M_KEEP_WIDTH_INT = M_KEEP_ENABLE ? M_KEEP_WIDTH : 1;
 
 // bus word sizes (must be identical)
-localparam S_DATA_WORD_SIZE = S_DATA_WIDTH / S_KEEP_WIDTH_INT;
-localparam M_DATA_WORD_SIZE = M_DATA_WIDTH / M_KEEP_WIDTH_INT;
+parameter S_DATA_WORD_SIZE = S_DATA_WIDTH / S_KEEP_WIDTH_INT;
+parameter M_DATA_WORD_SIZE = M_DATA_WIDTH / M_KEEP_WIDTH_INT;
 // output bus is wider
-localparam EXPAND_BUS = M_KEEP_WIDTH_INT > S_KEEP_WIDTH_INT;
+parameter EXPAND_BUS = M_KEEP_WIDTH_INT > S_KEEP_WIDTH_INT;
 // total data and keep widths
-localparam DATA_WIDTH = EXPAND_BUS ? M_DATA_WIDTH : S_DATA_WIDTH;
-localparam KEEP_WIDTH = EXPAND_BUS ? M_KEEP_WIDTH_INT : S_KEEP_WIDTH_INT;
+parameter DATA_WIDTH = EXPAND_BUS ? M_DATA_WIDTH : S_DATA_WIDTH;
+parameter KEEP_WIDTH = EXPAND_BUS ? M_KEEP_WIDTH_INT : S_KEEP_WIDTH_INT;
 // required number of cycles to match widths
-localparam CYCLE_COUNT = EXPAND_BUS ? (M_KEEP_WIDTH_INT / S_KEEP_WIDTH_INT) : (S_KEEP_WIDTH_INT / M_KEEP_WIDTH_INT);
-localparam CYCLE_COUNT_WIDTH = CYCLE_COUNT == 1 ? 1 : $clog2(CYCLE_COUNT);
+parameter CYCLE_COUNT = EXPAND_BUS ? (M_KEEP_WIDTH_INT / S_KEEP_WIDTH_INT) : (S_KEEP_WIDTH_INT / M_KEEP_WIDTH_INT);
+parameter CYCLE_COUNT_WIDTH = CYCLE_COUNT == 1 ? 1 : $clog2(CYCLE_COUNT);
 // data width and keep width per cycle
-localparam CYCLE_DATA_WIDTH = DATA_WIDTH / CYCLE_COUNT;
-localparam CYCLE_KEEP_WIDTH = KEEP_WIDTH / CYCLE_COUNT;
+parameter CYCLE_DATA_WIDTH = DATA_WIDTH / CYCLE_COUNT;
+parameter CYCLE_KEEP_WIDTH = KEEP_WIDTH / CYCLE_COUNT;
 
 // bus width assertions
 initial begin
