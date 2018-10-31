@@ -35,7 +35,6 @@ testbench = 'test_%s' % module
 srcs = []
 
 srcs.append("../rtl/%s.v" % module)
-srcs.append("../rtl/axis_crosspoint_16x16.v")
 srcs.append("../lib/eth/rtl/eth_mac_10g_fifo.v")
 srcs.append("../lib/eth/rtl/eth_mac_10g.v")
 srcs.append("../lib/eth/rtl/axis_xgmii_rx_64.v")
@@ -43,7 +42,8 @@ srcs.append("../lib/eth/rtl/axis_xgmii_tx_64.v")
 srcs.append("../lib/eth/rtl/lfsr.v")
 srcs.append("../lib/eth/rtl/eth_axis_rx_64.v")
 srcs.append("../lib/eth/rtl/eth_axis_tx_64.v")
-srcs.append("../lib/eth/lib/axis/rtl/axis_async_frame_fifo.v")
+srcs.append("../lib/eth/lib/axis/rtl/axis_crosspoint.v")
+srcs.append("../lib/eth/lib/axis/rtl/axis_async_fifo.v")
 srcs.append("%s.v" % testbench)
 
 src = ' '.join(srcs)

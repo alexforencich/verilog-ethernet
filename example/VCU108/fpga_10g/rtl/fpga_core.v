@@ -366,7 +366,9 @@ eth_mac_10g_fifo #(
     .ENABLE_DIC(1),
     .MIN_FRAME_LENGTH(64),
     .TX_FIFO_ADDR_WIDTH(9),
-    .RX_FIFO_ADDR_WIDTH(9)
+    .TX_FRAME_FIFO(1),
+    .RX_FIFO_ADDR_WIDTH(9),
+    .RX_FRAME_FIFO(1)
 )
 eth_mac_10g_fifo_inst (
     .rx_clk(clk),
@@ -438,7 +440,9 @@ eth_mac_1g_fifo #(
     .ENABLE_PADDING(1),
     .MIN_FRAME_LENGTH(64),
     .TX_FIFO_ADDR_WIDTH(12),
-    .RX_FIFO_ADDR_WIDTH(12)
+    .TX_FRAME_FIFO(1),
+    .RX_FIFO_ADDR_WIDTH(12),
+    .RX_FRAME_FIFO(1)
 )
 eth_mac_1g_inst (
     .rx_clk(phy_gmii_clk),
@@ -485,8 +489,8 @@ eth_mac_1g_inst (
 );
 
 axis_adapter #(
-    .INPUT_DATA_WIDTH(8),
-    .OUTPUT_DATA_WIDTH(64),
+    .S_DATA_WIDTH(8),
+    .M_DATA_WIDTH(64),
     .ID_ENABLE(0),
     .DEST_ENABLE(0),
     .USER_ENABLE(1),
@@ -496,24 +500,24 @@ gig_rx_axis_adapter_inst (
     .clk(clk),
     .rst(rst),
     // AXI input
-    .input_axis_tdata(gig_rx_axis_tdata),
-    .input_axis_tkeep(1'b1),
-    .input_axis_tvalid(gig_rx_axis_tvalid),
-    .input_axis_tready(gig_rx_axis_tready),
-    .input_axis_tlast(gig_rx_axis_tlast),
-    .input_axis_tuser(gig_rx_axis_tuser),
+    .s_axis_tdata(gig_rx_axis_tdata),
+    .s_axis_tkeep(1'b1),
+    .s_axis_tvalid(gig_rx_axis_tvalid),
+    .s_axis_tready(gig_rx_axis_tready),
+    .s_axis_tlast(gig_rx_axis_tlast),
+    .s_axis_tuser(gig_rx_axis_tuser),
     // AXI output
-    .output_axis_tdata(gig_rx_axis_tdata_64),
-    .output_axis_tkeep(gig_rx_axis_tkeep_64),
-    .output_axis_tvalid(gig_rx_axis_tvalid_64),
-    .output_axis_tready(gig_rx_axis_tready_64),
-    .output_axis_tlast(gig_rx_axis_tlast_64),
-    .output_axis_tuser(gig_rx_axis_tuser_64)
+    .m_axis_tdata(gig_rx_axis_tdata_64),
+    .m_axis_tkeep(gig_rx_axis_tkeep_64),
+    .m_axis_tvalid(gig_rx_axis_tvalid_64),
+    .m_axis_tready(gig_rx_axis_tready_64),
+    .m_axis_tlast(gig_rx_axis_tlast_64),
+    .m_axis_tuser(gig_rx_axis_tuser_64)
 );
 
 axis_adapter #(
-    .INPUT_DATA_WIDTH(64),
-    .OUTPUT_DATA_WIDTH(8),
+    .S_DATA_WIDTH(64),
+    .M_DATA_WIDTH(8),
     .ID_ENABLE(0),
     .DEST_ENABLE(0),
     .USER_ENABLE(1),
@@ -523,19 +527,19 @@ gig_tx_axis_adapter_inst (
     .clk(clk),
     .rst(rst),
     // AXI input
-    .input_axis_tdata(gig_tx_axis_tdata_64),
-    .input_axis_tkeep(gig_tx_axis_tkeep_64),
-    .input_axis_tvalid(gig_tx_axis_tvalid_64),
-    .input_axis_tready(gig_tx_axis_tready_64),
-    .input_axis_tlast(gig_tx_axis_tlast_64),
-    .input_axis_tuser(gig_tx_axis_tuser_64),
+    .s_axis_tdata(gig_tx_axis_tdata_64),
+    .s_axis_tkeep(gig_tx_axis_tkeep_64),
+    .s_axis_tvalid(gig_tx_axis_tvalid_64),
+    .s_axis_tready(gig_tx_axis_tready_64),
+    .s_axis_tlast(gig_tx_axis_tlast_64),
+    .s_axis_tuser(gig_tx_axis_tuser_64),
     // AXI output
-    .output_axis_tdata(gig_tx_axis_tdata),
-    .output_axis_tkeep(),
-    .output_axis_tvalid(gig_tx_axis_tvalid),
-    .output_axis_tready(gig_tx_axis_tready),
-    .output_axis_tlast(gig_tx_axis_tlast),
-    .output_axis_tuser(gig_tx_axis_tuser)
+    .m_axis_tdata(gig_tx_axis_tdata),
+    .m_axis_tkeep(),
+    .m_axis_tvalid(gig_tx_axis_tvalid),
+    .m_axis_tready(gig_tx_axis_tready),
+    .m_axis_tlast(gig_tx_axis_tlast),
+    .m_axis_tuser(gig_tx_axis_tuser)
 );
 
 // tap port mux logic
@@ -576,25 +580,20 @@ always @* begin
     end
 end
 
-axis_switch_4x4 #(
+axis_switch #(
+    .S_COUNT(3),
+    .M_COUNT(3),
     .DATA_WIDTH(64),
     .KEEP_WIDTH(8),
     .ID_ENABLE(0),
     .DEST_WIDTH(2),
     .USER_ENABLE(1),
     .USER_WIDTH(1),
-    .OUT_0_BASE(0),
-    .OUT_0_TOP(0),
-    .OUT_0_CONNECT(4'b1111),
-    .OUT_1_BASE(1),
-    .OUT_1_TOP(1),
-    .OUT_1_CONNECT(4'b1111),
-    .OUT_2_BASE(2),
-    .OUT_2_TOP(2),
-    .OUT_2_CONNECT(4'b1111),
-    .OUT_3_BASE(3),
-    .OUT_3_TOP(3),
-    .OUT_3_CONNECT(4'b1111),
+    .M_BASE({32'd2, 32'd1, 32'd0}),
+    .M_TOP({32'd2, 32'd1, 32'd0}),
+    .M_CONNECT({3{3'b111}}),
+    .S_REG_TYPE(0),
+    .M_REG_TYPE(1),
     .ARB_TYPE("PRIORITY"),
     .LSB_PRIORITY("HIGH")
 )
@@ -602,71 +601,23 @@ axis_switch_inst (
     .clk(clk),
     .rst(rst),
     // AXI inputs
-    .input_0_axis_tdata(mac_rx_axis_tdata),
-    .input_0_axis_tkeep(mac_rx_axis_tkeep),
-    .input_0_axis_tvalid(mac_rx_axis_tvalid),
-    .input_0_axis_tready(mac_rx_axis_tready),
-    .input_0_axis_tlast(mac_rx_axis_tlast),
-    .input_0_axis_tid(0),
-    .input_0_axis_tdest(mac_rx_tdest),
-    .input_0_axis_tuser(mac_rx_axis_tuser),
-    .input_1_axis_tdata(tx_axis_tdata),
-    .input_1_axis_tkeep(tx_axis_tkeep),
-    .input_1_axis_tvalid(tx_axis_tvalid),
-    .input_1_axis_tready(tx_axis_tready),
-    .input_1_axis_tlast(tx_axis_tlast),
-    .input_1_axis_tid(0),
-    .input_1_axis_tdest(tx_tdest),
-    .input_1_axis_tuser(tx_axis_tuser),
-    .input_2_axis_tdata(gig_rx_axis_tdata_64),
-    .input_2_axis_tkeep(gig_rx_axis_tkeep_64),
-    .input_2_axis_tvalid(gig_rx_axis_tvalid_64),
-    .input_2_axis_tready(gig_rx_axis_tready_64),
-    .input_2_axis_tlast(gig_rx_axis_tlast_64),
-    .input_2_axis_tid(0),
-    .input_2_axis_tdest(gig_rx_tdest),
-    .input_2_axis_tuser(gig_rx_axis_tuser_64),
-    .input_3_axis_tdata(64'd0),
-    .input_3_axis_tkeep(8'd0),
-    .input_3_axis_tvalid(1'b0),
-    .input_3_axis_tready(),
-    .input_3_axis_tlast(1'b0),
-    .input_3_axis_tid(0),
-    .input_3_axis_tdest(2'd0),
-    .input_3_axis_tuser(1'b0),
+    .s_axis_tdata({ gig_rx_axis_tdata_64,  tx_axis_tdata,  mac_rx_axis_tdata}),
+    .s_axis_tkeep({ gig_rx_axis_tkeep_64,  tx_axis_tkeep,  mac_rx_axis_tkeep}),
+    .s_axis_tvalid({gig_rx_axis_tvalid_64, tx_axis_tvalid, mac_rx_axis_tvalid}),
+    .s_axis_tready({gig_rx_axis_tready_64, tx_axis_tready, mac_rx_axis_tready}),
+    .s_axis_tlast({ gig_rx_axis_tlast_64,  tx_axis_tlast,  mac_rx_axis_tlast}),
+    .s_axis_tid(0),
+    .s_axis_tdest({ gig_rx_tdest,          tx_tdest,       mac_rx_tdest}),
+    .s_axis_tuser({ gig_rx_axis_tuser_64,  tx_axis_tuser,  mac_rx_axis_tuser}),
     // AXI outputs
-    .output_0_axis_tdata(mac_tx_axis_tdata),
-    .output_0_axis_tkeep(mac_tx_axis_tkeep),
-    .output_0_axis_tvalid(mac_tx_axis_tvalid),
-    .output_0_axis_tready(mac_tx_axis_tready),
-    .output_0_axis_tlast(mac_tx_axis_tlast),
-    .output_0_axis_tid(),
-    .output_0_axis_tdest(),
-    .output_0_axis_tuser(mac_tx_axis_tuser),
-    .output_1_axis_tdata(rx_axis_tdata),
-    .output_1_axis_tkeep(rx_axis_tkeep),
-    .output_1_axis_tvalid(rx_axis_tvalid),
-    .output_1_axis_tready(rx_axis_tready),
-    .output_1_axis_tlast(rx_axis_tlast),
-    .output_1_axis_tid(),
-    .output_1_axis_tdest(),
-    .output_1_axis_tuser(rx_axis_tuser),
-    .output_2_axis_tdata(gig_tx_axis_tdata_64),
-    .output_2_axis_tkeep(gig_tx_axis_tkeep_64),
-    .output_2_axis_tvalid(gig_tx_axis_tvalid_64),
-    .output_2_axis_tready(gig_tx_axis_tready_64),
-    .output_2_axis_tlast(gig_tx_axis_tlast_64),
-    .output_2_axis_tid(),
-    .output_2_axis_tdest(),
-    .output_2_axis_tuser(gig_tx_axis_tuser_64),
-    .output_3_axis_tdata(),
-    .output_3_axis_tkeep(),
-    .output_3_axis_tvalid(),
-    .output_3_axis_tready(1'b1),
-    .output_3_axis_tlast(),
-    .output_3_axis_tid(),
-    .output_3_axis_tdest(),
-    .output_3_axis_tuser()
+    .m_axis_tdata({ gig_tx_axis_tdata_64,  rx_axis_tdata,  mac_tx_axis_tdata}),
+    .m_axis_tkeep({ gig_tx_axis_tkeep_64,  rx_axis_tkeep,  mac_tx_axis_tkeep}),
+    .m_axis_tvalid({gig_tx_axis_tvalid_64, rx_axis_tvalid, mac_tx_axis_tvalid}),
+    .m_axis_tready({gig_tx_axis_tready_64, rx_axis_tready, mac_tx_axis_tready}),
+    .m_axis_tlast({ gig_tx_axis_tlast_64,  rx_axis_tlast,  mac_tx_axis_tlast}),
+    .m_axis_tid(),
+    .m_axis_tdest(),
+    .m_axis_tuser({ gig_tx_axis_tuser_64,  rx_axis_tuser,  mac_tx_axis_tuser})
 );
 
 eth_axis_rx_64
@@ -870,31 +821,37 @@ axis_fifo #(
     .ID_ENABLE(0),
     .DEST_ENABLE(0),
     .USER_ENABLE(1),
-    .USER_WIDTH(1)
+    .USER_WIDTH(1),
+    .FRAME_FIFO(0)
 )
 udp_payload_fifo (
     .clk(clk),
     .rst(rst),
 
     // AXI input
-    .input_axis_tdata(rx_fifo_udp_payload_tdata),
-    .input_axis_tkeep(rx_fifo_udp_payload_tkeep),
-    .input_axis_tvalid(rx_fifo_udp_payload_tvalid),
-    .input_axis_tready(rx_fifo_udp_payload_tready),
-    .input_axis_tlast(rx_fifo_udp_payload_tlast),
-    .input_axis_tid(0),
-    .input_axis_tdest(0),
-    .input_axis_tuser(rx_fifo_udp_payload_tuser),
+    .s_axis_tdata(rx_fifo_udp_payload_tdata),
+    .s_axis_tkeep(rx_fifo_udp_payload_tkeep),
+    .s_axis_tvalid(rx_fifo_udp_payload_tvalid),
+    .s_axis_tready(rx_fifo_udp_payload_tready),
+    .s_axis_tlast(rx_fifo_udp_payload_tlast),
+    .s_axis_tid(0),
+    .s_axis_tdest(0),
+    .s_axis_tuser(rx_fifo_udp_payload_tuser),
 
     // AXI output
-    .output_axis_tdata(tx_fifo_udp_payload_tdata),
-    .output_axis_tkeep(tx_fifo_udp_payload_tkeep),
-    .output_axis_tvalid(tx_fifo_udp_payload_tvalid),
-    .output_axis_tready(tx_fifo_udp_payload_tready),
-    .output_axis_tlast(tx_fifo_udp_payload_tlast),
-    .output_axis_tid(),
-    .output_axis_tdest(),
-    .output_axis_tuser(tx_fifo_udp_payload_tuser)
+    .m_axis_tdata(tx_fifo_udp_payload_tdata),
+    .m_axis_tkeep(tx_fifo_udp_payload_tkeep),
+    .m_axis_tvalid(tx_fifo_udp_payload_tvalid),
+    .m_axis_tready(tx_fifo_udp_payload_tready),
+    .m_axis_tlast(tx_fifo_udp_payload_tlast),
+    .m_axis_tid(),
+    .m_axis_tdest(),
+    .m_axis_tuser(tx_fifo_udp_payload_tuser),
+
+    // Status
+    .status_overflow(),
+    .status_bad_frame(),
+    .status_good_frame()
 );
 
 endmodule

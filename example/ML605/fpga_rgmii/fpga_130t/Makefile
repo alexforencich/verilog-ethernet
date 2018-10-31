@@ -47,7 +47,7 @@ SYN_FILES += lib/eth/rtl/eth_mux_2.v
 SYN_FILES += lib/eth/lib/axis/rtl/arbiter.v
 SYN_FILES += lib/eth/lib/axis/rtl/priority_encoder.v
 SYN_FILES += lib/eth/lib/axis/rtl/axis_fifo.v
-SYN_FILES += lib/eth/lib/axis/rtl/axis_async_frame_fifo.v
+SYN_FILES += lib/eth/lib/axis/rtl/axis_async_fifo.v
 #SYN_FILES += coregen/dcm_i100_o125/dcm_i100_o125.v
 
 # UCF files

@@ -318,7 +318,9 @@ eth_mac_1g_rgmii_fifo #(
     .ENABLE_PADDING(1),
     .MIN_FRAME_LENGTH(64),
     .TX_FIFO_ADDR_WIDTH(12),
-    .RX_FIFO_ADDR_WIDTH(12)
+    .TX_FRAME_FIFO(1),
+    .RX_FIFO_ADDR_WIDTH(12),
+    .RX_FRAME_FIFO(1)
 )
 eth_mac_inst (
     .gtx_clk(clk),
@@ -549,31 +551,37 @@ axis_fifo #(
     .ID_ENABLE(0),
     .DEST_ENABLE(0),
     .USER_ENABLE(1),
-    .USER_WIDTH(1)
+    .USER_WIDTH(1),
+    .FRAME_FIFO(0)
 )
 udp_payload_fifo (
     .clk(clk),
     .rst(rst),
 
     // AXI input
-    .input_axis_tdata(rx_fifo_udp_payload_tdata),
-    .input_axis_tkeep(0),
-    .input_axis_tvalid(rx_fifo_udp_payload_tvalid),
-    .input_axis_tready(rx_fifo_udp_payload_tready),
-    .input_axis_tlast(rx_fifo_udp_payload_tlast),
-    .input_axis_tid(0),
-    .input_axis_tdest(0),
-    .input_axis_tuser(rx_fifo_udp_payload_tuser),
+    .s_axis_tdata(rx_fifo_udp_payload_tdata),
+    .s_axis_tkeep(0),
+    .s_axis_tvalid(rx_fifo_udp_payload_tvalid),
+    .s_axis_tready(rx_fifo_udp_payload_tready),
+    .s_axis_tlast(rx_fifo_udp_payload_tlast),
+    .s_axis_tid(0),
+    .s_axis_tdest(0),
+    .s_axis_tuser(rx_fifo_udp_payload_tuser),
 
     // AXI output
-    .output_axis_tdata(tx_fifo_udp_payload_tdata),
-    .output_axis_tkeep(),
-    .output_axis_tvalid(tx_fifo_udp_payload_tvalid),
-    .output_axis_tready(tx_fifo_udp_payload_tready),
-    .output_axis_tlast(tx_fifo_udp_payload_tlast),
-    .output_axis_tid(),
-    .output_axis_tdest(),
-    .output_axis_tuser(tx_fifo_udp_payload_tuser)
+    .m_axis_tdata(tx_fifo_udp_payload_tdata),
+    .m_axis_tkeep(),
+    .m_axis_tvalid(tx_fifo_udp_payload_tvalid),
+    .m_axis_tready(tx_fifo_udp_payload_tready),
+    .m_axis_tlast(tx_fifo_udp_payload_tlast),
+    .m_axis_tid(),
+    .m_axis_tdest(),
+    .m_axis_tuser(tx_fifo_udp_payload_tuser),
+
+    // Status
+    .status_overflow(),
+    .status_bad_frame(),
+    .status_good_frame()
 );
 
 endmodule

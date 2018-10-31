@@ -70,7 +70,7 @@ srcs.append("../lib/eth/rtl/eth_mux_2.v")
 srcs.append("../lib/eth/lib/axis/rtl/arbiter.v")
 srcs.append("../lib/eth/lib/axis/rtl/priority_encoder.v")
 srcs.append("../lib/eth/lib/axis/rtl/axis_fifo.v")
-srcs.append("../lib/eth/lib/axis/rtl/axis_async_frame_fifo.v")
+srcs.append("../lib/eth/lib/axis/rtl/axis_async_fifo.v")
 srcs.append("%s.v" % testbench)
 
 src = ' '.join(srcs)

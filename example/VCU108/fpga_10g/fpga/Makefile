@@ -44,8 +44,9 @@ SYN_FILES += lib/eth/lib/axis/rtl/arbiter.v
 SYN_FILES += lib/eth/lib/axis/rtl/priority_encoder.v
 SYN_FILES += lib/eth/lib/axis/rtl/axis_adapter.v
 SYN_FILES += lib/eth/lib/axis/rtl/axis_fifo.v
-SYN_FILES += lib/eth/lib/axis/rtl/axis_switch_4x4.v
-SYN_FILES += lib/eth/lib/axis/rtl/axis_async_frame_fifo.v
+SYN_FILES += lib/eth/lib/axis/rtl/axis_switch.v
+SYN_FILES += lib/eth/lib/axis/rtl/axis_register.v
+SYN_FILES += lib/eth/lib/axis/rtl/axis_async_fifo.v
 
 # XDC files
 XDC_FILES = fpga.xdc
