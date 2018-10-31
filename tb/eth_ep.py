@@ -122,10 +122,12 @@ class EthFrame(object):
 
 class EthFrameSource():
     def __init__(self):
+        self.active = False
         self.has_logic = False
         self.queue = []
         self.payload_source = axis_ep.AXIStreamSource()
         self.header_queue = []
+        self.clk = Signal(bool(0))
 
     def send(self, frame):
         frame = EthFrame(frame)
@@ -140,6 +142,13 @@ class EthFrameSource():
 
     def empty(self):
         return not self.queue
+
+    def idle(self):
+        return not self.queue and not self.active and self.payload_source.idle()
+
+    def wait(self):
+        while not self.idle():
+            yield self.clk.posedge
 
     def create_logic(self,
                 clk,
@@ -163,9 +172,7 @@ class EthFrameSource():
 
         self.has_logic = True
 
-        eth_hdr_ready_int = Signal(bool(False))
-        eth_hdr_valid_int = Signal(bool(False))
-        eth_payload_pause = Signal(bool(False))
+        self.clk = clk
 
         eth_payload_source = self.payload_source.create_logic(
             clk=clk,
@@ -176,14 +183,8 @@ class EthFrameSource():
             tready=eth_payload_tready,
             tlast=eth_payload_tlast,
             tuser=eth_payload_tuser,
-            pause=eth_payload_pause,
+            pause=pause,
         )
-
-        @always_comb
-        def pause_logic():
-            eth_hdr_ready_int.next = eth_hdr_ready and not pause
-            eth_hdr_valid.next = eth_hdr_valid_int and not pause
-            eth_payload_pause.next = pause # or eth_hdr_valid_int
 
         @instance
         def logic():
@@ -193,21 +194,24 @@ class EthFrameSource():
                 yield clk.posedge, rst.posedge
 
                 if rst:
-                    eth_hdr_valid_int.next = False
+                    eth_hdr_valid.next = False
+                    self.active = False
                 else:
-                    if eth_hdr_ready_int:
-                        eth_hdr_valid_int.next = False
-                    if (eth_hdr_ready_int and eth_hdr_valid) or not eth_hdr_valid_int:
-                        if self.header_queue:
-                            frame = self.header_queue.pop(0)
-                            eth_dest_mac.next = frame.eth_dest_mac
-                            eth_src_mac.next = frame.eth_src_mac
-                            eth_type.next = frame.eth_type
+                    eth_hdr_valid.next = self.active and (eth_hdr_valid or not pause)
+                    if eth_hdr_ready and eth_hdr_valid:
+                        eth_hdr_valid.next = False
+                        self.active = False
+                    if not self.active and self.header_queue:
+                        frame = self.header_queue.pop(0)
+                        eth_dest_mac.next = frame.eth_dest_mac
+                        eth_src_mac.next = frame.eth_src_mac
+                        eth_type.next = frame.eth_type
 
-                            if name is not None:
-                                print("[%s] Sending frame %s" % (name, repr(frame)))
+                        if name is not None:
+                            print("[%s] Sending frame %s" % (name, repr(frame)))
 
-                            eth_hdr_valid_int.next = True
+                        eth_hdr_valid.next = not pause
+                        self.active = True
 
                     if self.queue and not self.header_queue:
                         frame = self.queue.pop(0)

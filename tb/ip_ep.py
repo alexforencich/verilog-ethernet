@@ -239,10 +239,12 @@ class IPFrame(object):
 
 class IPFrameSource():
     def __init__(self):
+        self.active = False
         self.has_logic = False
         self.queue = []
         self.payload_source = axis_ep.AXIStreamSource()
         self.header_queue = []
+        self.clk = Signal(bool(0))
 
     def send(self, frame):
         frame = IPFrame(frame)
@@ -257,6 +259,13 @@ class IPFrameSource():
 
     def empty(self):
         return not self.queue
+
+    def idle(self):
+        return not self.queue and not self.active and self.payload_source.idle()
+
+    def wait(self):
+        while not self.idle():
+            yield self.clk.posedge
 
     def create_logic(self,
                 clk,
@@ -293,9 +302,7 @@ class IPFrameSource():
 
         self.has_logic = True
 
-        ip_hdr_ready_int = Signal(bool(False))
-        ip_hdr_valid_int = Signal(bool(False))
-        ip_payload_pause = Signal(bool(False))
+        self.clk = clk
 
         ip_payload_source = self.payload_source.create_logic(
             clk=clk,
@@ -306,14 +313,8 @@ class IPFrameSource():
             tready=ip_payload_tready,
             tlast=ip_payload_tlast,
             tuser=ip_payload_tuser,
-            pause=ip_payload_pause,
+            pause=pause,
         )
-
-        @always_comb
-        def pause_logic():
-            ip_hdr_ready_int.next = ip_hdr_ready and not pause
-            ip_hdr_valid.next = ip_hdr_valid_int and not pause
-            ip_payload_pause.next = pause
 
         @instance
         def logic():
@@ -321,35 +322,38 @@ class IPFrameSource():
                 yield clk.posedge, rst.posedge
 
                 if rst:
-                    ip_hdr_valid_int.next = False
+                    ip_hdr_valid.next = False
+                    self.active = False
                 else:
-                    if ip_hdr_ready_int:
-                        ip_hdr_valid_int.next = False
-                    if (ip_hdr_ready_int and ip_hdr_valid) or not ip_hdr_valid_int:
-                        if self.header_queue:
-                            frame = self.header_queue.pop(0)
-                            frame.build()
-                            eth_dest_mac.next = frame.eth_dest_mac
-                            eth_src_mac.next = frame.eth_src_mac
-                            eth_type.next = frame.eth_type
-                            ip_version.next = frame.ip_version
-                            ip_ihl.next = frame.ip_ihl
-                            ip_dscp.next = frame.ip_dscp
-                            ip_ecn.next = frame.ip_ecn
-                            ip_length.next = frame.ip_length
-                            ip_identification.next = frame.ip_identification
-                            ip_flags.next = frame.ip_flags
-                            ip_fragment_offset.next = frame.ip_fragment_offset
-                            ip_ttl.next = frame.ip_ttl
-                            ip_protocol.next = frame.ip_protocol
-                            ip_header_checksum.next = frame.ip_header_checksum
-                            ip_source_ip.next = frame.ip_source_ip
-                            ip_dest_ip.next = frame.ip_dest_ip
+                    ip_hdr_valid.next = self.active and (ip_hdr_valid or not pause)
+                    if ip_hdr_ready and ip_hdr_valid:
+                        ip_hdr_valid.next = False
+                        self.active = False
+                    if not self.active and self.header_queue:
+                        frame = self.header_queue.pop(0)
+                        frame.build()
+                        eth_dest_mac.next = frame.eth_dest_mac
+                        eth_src_mac.next = frame.eth_src_mac
+                        eth_type.next = frame.eth_type
+                        ip_version.next = frame.ip_version
+                        ip_ihl.next = frame.ip_ihl
+                        ip_dscp.next = frame.ip_dscp
+                        ip_ecn.next = frame.ip_ecn
+                        ip_length.next = frame.ip_length
+                        ip_identification.next = frame.ip_identification
+                        ip_flags.next = frame.ip_flags
+                        ip_fragment_offset.next = frame.ip_fragment_offset
+                        ip_ttl.next = frame.ip_ttl
+                        ip_protocol.next = frame.ip_protocol
+                        ip_header_checksum.next = frame.ip_header_checksum
+                        ip_source_ip.next = frame.ip_source_ip
+                        ip_dest_ip.next = frame.ip_dest_ip
 
-                            if name is not None:
-                                print("[%s] Sending frame %s" % (name, repr(frame)))
+                        if name is not None:
+                            print("[%s] Sending frame %s" % (name, repr(frame)))
 
-                            ip_hdr_valid_int.next = True
+                        ip_hdr_valid.next = not pause
+                        self.active = True
 
                     if self.queue and not self.header_queue:
                         frame = self.queue.pop(0)

@@ -324,10 +324,12 @@ class UDPFrame(object):
 
 class UDPFrameSource():
     def __init__(self):
+        self.active = False
         self.has_logic = False
         self.queue = []
         self.payload_source = axis_ep.AXIStreamSource()
         self.header_queue = []
+        self.clk = Signal(bool(0))
 
     def send(self, frame):
         frame = UDPFrame(frame)
@@ -342,6 +344,13 @@ class UDPFrameSource():
 
     def empty(self):
         return not self.queue
+
+    def idle(self):
+        return not self.queue and not self.active and self.payload_source.idle()
+
+    def wait(self):
+        while not self.idle():
+            yield self.clk.posedge
 
     def create_logic(self,
                 clk,
@@ -382,9 +391,7 @@ class UDPFrameSource():
 
         self.has_logic = True
 
-        udp_hdr_ready_int = Signal(bool(False))
-        udp_hdr_valid_int = Signal(bool(False))
-        udp_payload_pause = Signal(bool(False))
+        self.clk = clk
 
         udp_payload_source = self.payload_source.create_logic(
             clk=clk,
@@ -395,14 +402,8 @@ class UDPFrameSource():
             tready=udp_payload_tready,
             tlast=udp_payload_tlast,
             tuser=udp_payload_tuser,
-            pause=udp_payload_pause,
+            pause=pause,
         )
-
-        @always_comb
-        def pause_logic():
-            udp_hdr_ready_int.next = udp_hdr_ready and not pause
-            udp_hdr_valid.next = udp_hdr_valid_int and not pause
-            udp_payload_pause.next = pause
 
         @instance
         def logic():
@@ -410,39 +411,42 @@ class UDPFrameSource():
                 yield clk.posedge, rst.posedge
 
                 if rst:
-                    udp_hdr_valid_int.next = False
+                    udp_hdr_valid.next = False
+                    self.active = False
                 else:
-                    if udp_hdr_ready_int:
-                        udp_hdr_valid_int.next = False
-                    if (udp_hdr_ready_int and udp_hdr_valid) or not udp_hdr_valid_int:
-                        if self.header_queue:
-                            frame = self.header_queue.pop(0)
-                            frame.build()
-                            eth_dest_mac.next = frame.eth_dest_mac
-                            eth_src_mac.next = frame.eth_src_mac
-                            eth_type.next = frame.eth_type
-                            ip_version.next = frame.ip_version
-                            ip_ihl.next = frame.ip_ihl
-                            ip_dscp.next = frame.ip_dscp
-                            ip_ecn.next = frame.ip_ecn
-                            ip_length.next = frame.ip_length
-                            ip_identification.next = frame.ip_identification
-                            ip_flags.next = frame.ip_flags
-                            ip_fragment_offset.next = frame.ip_fragment_offset
-                            ip_ttl.next = frame.ip_ttl
-                            ip_protocol.next = frame.ip_protocol
-                            ip_header_checksum.next = frame.ip_header_checksum
-                            ip_source_ip.next = frame.ip_source_ip
-                            ip_dest_ip.next = frame.ip_dest_ip
-                            udp_source_port.next = frame.udp_source_port
-                            udp_dest_port.next = frame.udp_dest_port
-                            udp_length.next = frame.udp_length
-                            udp_checksum.next = frame.udp_checksum
+                    udp_hdr_valid.next = self.active and (udp_hdr_valid or not pause)
+                    if udp_hdr_ready and udp_hdr_valid:
+                        udp_hdr_valid.next = False
+                        self.active = False
+                    if not self.active and self.header_queue:
+                        frame = self.header_queue.pop(0)
+                        frame.build()
+                        eth_dest_mac.next = frame.eth_dest_mac
+                        eth_src_mac.next = frame.eth_src_mac
+                        eth_type.next = frame.eth_type
+                        ip_version.next = frame.ip_version
+                        ip_ihl.next = frame.ip_ihl
+                        ip_dscp.next = frame.ip_dscp
+                        ip_ecn.next = frame.ip_ecn
+                        ip_length.next = frame.ip_length
+                        ip_identification.next = frame.ip_identification
+                        ip_flags.next = frame.ip_flags
+                        ip_fragment_offset.next = frame.ip_fragment_offset
+                        ip_ttl.next = frame.ip_ttl
+                        ip_protocol.next = frame.ip_protocol
+                        ip_header_checksum.next = frame.ip_header_checksum
+                        ip_source_ip.next = frame.ip_source_ip
+                        ip_dest_ip.next = frame.ip_dest_ip
+                        udp_source_port.next = frame.udp_source_port
+                        udp_dest_port.next = frame.udp_dest_port
+                        udp_length.next = frame.udp_length
+                        udp_checksum.next = frame.udp_checksum
 
-                            if name is not None:
-                                print("[%s] Sending frame %s" % (name, repr(frame)))
+                        if name is not None:
+                            print("[%s] Sending frame %s" % (name, repr(frame)))
 
-                            udp_hdr_valid_int.next = True
+                        udp_hdr_valid.next = not pause
+                        self.active = True
 
                     if self.queue and not self.header_queue:
                         frame = self.queue.pop(0)

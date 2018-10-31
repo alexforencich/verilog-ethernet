@@ -158,8 +158,10 @@ class ARPFrame(object):
 
 class ARPFrameSource():
     def __init__(self):
+        self.active = False
         self.has_logic = False
         self.queue = []
+        self.clk = Signal(bool(0))
 
     def send(self, frame):
         self.queue.append(ARPFrame(frame))
@@ -169,6 +171,13 @@ class ARPFrameSource():
 
     def empty(self):
         return not self.queue
+
+    def idle(self):
+        return not self.queue and not self.active
+
+    def wait(self):
+        while not self.idle():
+            yield self.clk.posedge
 
     def create_logic(self,
                 clk,
@@ -195,13 +204,7 @@ class ARPFrameSource():
 
         self.has_logic = True
 
-        frame_ready_int = Signal(bool(False))
-        frame_valid_int = Signal(bool(False))
-
-        @always_comb
-        def pause_logic():
-            frame_ready_int.next = frame_ready and not pause
-            frame_valid.next = frame_valid_int and not pause
+        self.clk = clk
 
         @instance
         def logic():
@@ -211,30 +214,33 @@ class ARPFrameSource():
                 yield clk.posedge, rst.posedge
 
                 if rst:
-                    frame_valid_int.next = False
+                    frame_valid.next = False
+                    self.active = False
                 else:
-                    if frame_ready_int:
-                        frame_valid_int.next = False
-                    if (frame_ready_int and frame_valid) or not frame_valid_int:
-                        if self.queue:
-                            frame = self.queue.pop(0)
-                            eth_dest_mac.next = frame.eth_dest_mac
-                            eth_src_mac.next = frame.eth_src_mac
-                            eth_type.next = frame.eth_type
-                            arp_htype.next = frame.arp_htype
-                            arp_ptype.next = frame.arp_ptype
-                            arp_hlen.next = frame.arp_hlen
-                            arp_plen.next = frame.arp_plen
-                            arp_oper.next = frame.arp_oper
-                            arp_sha.next = frame.arp_sha
-                            arp_spa.next = frame.arp_spa
-                            arp_tha.next = frame.arp_tha
-                            arp_tpa.next = frame.arp_tpa
+                    frame_valid.next = self.active and (frame_valid or not pause)
+                    if frame_ready and frame_valid:
+                        frame_valid.next = False
+                        self.active = False
+                    if not self.active and self.queue:
+                        frame = self.queue.pop(0)
+                        eth_dest_mac.next = frame.eth_dest_mac
+                        eth_src_mac.next = frame.eth_src_mac
+                        eth_type.next = frame.eth_type
+                        arp_htype.next = frame.arp_htype
+                        arp_ptype.next = frame.arp_ptype
+                        arp_hlen.next = frame.arp_hlen
+                        arp_plen.next = frame.arp_plen
+                        arp_oper.next = frame.arp_oper
+                        arp_sha.next = frame.arp_sha
+                        arp_spa.next = frame.arp_spa
+                        arp_tha.next = frame.arp_tha
+                        arp_tpa.next = frame.arp_tpa
 
-                            if name is not None:
-                                print("[%s] Sending frame %s" % (name, repr(frame)))
+                        if name is not None:
+                            print("[%s] Sending frame %s" % (name, repr(frame)))
 
-                            frame_valid_int.next = True
+                        frame_valid.next = not pause
+                        self.active = True
 
         return instances()
 
