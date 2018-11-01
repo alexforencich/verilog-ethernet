@@ -27,134 +27,85 @@ THE SOFTWARE.
 `timescale 1ns / 1ps
 
 /*
- * Testbench for ip_arb_mux_4
+ * Testbench for ip_arb_mux
  */
 module test_ip_arb_mux_4;
+
+// Parameters
+parameter S_COUNT = 4;
+parameter DATA_WIDTH = 8;
+parameter KEEP_ENABLE = (DATA_WIDTH>8);
+parameter KEEP_WIDTH = (DATA_WIDTH/8);
+parameter ID_ENABLE = 1;
+parameter ID_WIDTH = 8;
+parameter DEST_ENABLE = 1;
+parameter DEST_WIDTH = 8;
+parameter USER_ENABLE = 1;
+parameter USER_WIDTH = 1;
+parameter ARB_TYPE = "PRIORITY";
+parameter LSB_PRIORITY = "HIGH";
 
 // Inputs
 reg clk = 0;
 reg rst = 0;
 reg [7:0] current_test = 0;
 
-reg input_0_ip_hdr_valid = 0;
-reg [47:0] input_0_eth_dest_mac = 0;
-reg [47:0] input_0_eth_src_mac = 0;
-reg [15:0] input_0_eth_type = 0;
-reg [3:0] input_0_ip_version = 0;
-reg [3:0] input_0_ip_ihl = 0;
-reg [5:0] input_0_ip_dscp = 0;
-reg [1:0] input_0_ip_ecn = 0;
-reg [15:0] input_0_ip_length = 0;
-reg [15:0] input_0_ip_identification = 0;
-reg [2:0] input_0_ip_flags = 0;
-reg [12:0] input_0_ip_fragment_offset = 0;
-reg [7:0] input_0_ip_ttl = 0;
-reg [7:0] input_0_ip_protocol = 0;
-reg [15:0] input_0_ip_header_checksum = 0;
-reg [31:0] input_0_ip_source_ip = 0;
-reg [31:0] input_0_ip_dest_ip = 0;
-reg [7:0] input_0_ip_payload_tdata = 0;
-reg input_0_ip_payload_tvalid = 0;
-reg input_0_ip_payload_tlast = 0;
-reg input_0_ip_payload_tuser = 0;
-reg input_1_ip_hdr_valid = 0;
-reg [47:0] input_1_eth_dest_mac = 0;
-reg [47:0] input_1_eth_src_mac = 0;
-reg [15:0] input_1_eth_type = 0;
-reg [3:0] input_1_ip_version = 0;
-reg [3:0] input_1_ip_ihl = 0;
-reg [5:0] input_1_ip_dscp = 0;
-reg [1:0] input_1_ip_ecn = 0;
-reg [15:0] input_1_ip_length = 0;
-reg [15:0] input_1_ip_identification = 0;
-reg [2:0] input_1_ip_flags = 0;
-reg [12:0] input_1_ip_fragment_offset = 0;
-reg [7:0] input_1_ip_ttl = 0;
-reg [7:0] input_1_ip_protocol = 0;
-reg [15:0] input_1_ip_header_checksum = 0;
-reg [31:0] input_1_ip_source_ip = 0;
-reg [31:0] input_1_ip_dest_ip = 0;
-reg [7:0] input_1_ip_payload_tdata = 0;
-reg input_1_ip_payload_tvalid = 0;
-reg input_1_ip_payload_tlast = 0;
-reg input_1_ip_payload_tuser = 0;
-reg input_2_ip_hdr_valid = 0;
-reg [47:0] input_2_eth_dest_mac = 0;
-reg [47:0] input_2_eth_src_mac = 0;
-reg [15:0] input_2_eth_type = 0;
-reg [3:0] input_2_ip_version = 0;
-reg [3:0] input_2_ip_ihl = 0;
-reg [5:0] input_2_ip_dscp = 0;
-reg [1:0] input_2_ip_ecn = 0;
-reg [15:0] input_2_ip_length = 0;
-reg [15:0] input_2_ip_identification = 0;
-reg [2:0] input_2_ip_flags = 0;
-reg [12:0] input_2_ip_fragment_offset = 0;
-reg [7:0] input_2_ip_ttl = 0;
-reg [7:0] input_2_ip_protocol = 0;
-reg [15:0] input_2_ip_header_checksum = 0;
-reg [31:0] input_2_ip_source_ip = 0;
-reg [31:0] input_2_ip_dest_ip = 0;
-reg [7:0] input_2_ip_payload_tdata = 0;
-reg input_2_ip_payload_tvalid = 0;
-reg input_2_ip_payload_tlast = 0;
-reg input_2_ip_payload_tuser = 0;
-reg input_3_ip_hdr_valid = 0;
-reg [47:0] input_3_eth_dest_mac = 0;
-reg [47:0] input_3_eth_src_mac = 0;
-reg [15:0] input_3_eth_type = 0;
-reg [3:0] input_3_ip_version = 0;
-reg [3:0] input_3_ip_ihl = 0;
-reg [5:0] input_3_ip_dscp = 0;
-reg [1:0] input_3_ip_ecn = 0;
-reg [15:0] input_3_ip_length = 0;
-reg [15:0] input_3_ip_identification = 0;
-reg [2:0] input_3_ip_flags = 0;
-reg [12:0] input_3_ip_fragment_offset = 0;
-reg [7:0] input_3_ip_ttl = 0;
-reg [7:0] input_3_ip_protocol = 0;
-reg [15:0] input_3_ip_header_checksum = 0;
-reg [31:0] input_3_ip_source_ip = 0;
-reg [31:0] input_3_ip_dest_ip = 0;
-reg [7:0] input_3_ip_payload_tdata = 0;
-reg input_3_ip_payload_tvalid = 0;
-reg input_3_ip_payload_tlast = 0;
-reg input_3_ip_payload_tuser = 0;
+reg [S_COUNT-1:0] s_ip_hdr_valid = 0;
+reg [S_COUNT*48-1:0] s_eth_dest_mac = 0;
+reg [S_COUNT*48-1:0] s_eth_src_mac = 0;
+reg [S_COUNT*16-1:0] s_eth_type = 0;
+reg [S_COUNT*4-1:0] s_ip_version = 0;
+reg [S_COUNT*4-1:0] s_ip_ihl = 0;
+reg [S_COUNT*6-1:0] s_ip_dscp = 0;
+reg [S_COUNT*2-1:0] s_ip_ecn = 0;
+reg [S_COUNT*16-1:0] s_ip_length = 0;
+reg [S_COUNT*16-1:0] s_ip_identification = 0;
+reg [S_COUNT*3-1:0] s_ip_flags = 0;
+reg [S_COUNT*13-1:0] s_ip_fragment_offset = 0;
+reg [S_COUNT*8-1:0] s_ip_ttl = 0;
+reg [S_COUNT*8-1:0] s_ip_protocol = 0;
+reg [S_COUNT*16-1:0] s_ip_header_checksum = 0;
+reg [S_COUNT*32-1:0] s_ip_source_ip = 0;
+reg [S_COUNT*32-1:0] s_ip_dest_ip = 0;
+reg [S_COUNT*DATA_WIDTH-1:0] s_ip_payload_axis_tdata = 0;
+reg [S_COUNT*KEEP_WIDTH-1:0] s_ip_payload_axis_tkeep = 0;
+reg [S_COUNT-1:0] s_ip_payload_axis_tvalid = 0;
+reg [S_COUNT-1:0] s_ip_payload_axis_tlast = 0;
+reg [S_COUNT*ID_WIDTH-1:0] s_ip_payload_axis_tid = 0;
+reg [S_COUNT*DEST_WIDTH-1:0] s_ip_payload_axis_tdest = 0;
+reg [S_COUNT*USER_WIDTH-1:0] s_ip_payload_axis_tuser = 0;
 
-reg output_ip_hdr_ready = 0;
-reg output_ip_payload_tready = 0;
+reg m_ip_hdr_ready = 0;
+reg m_ip_payload_axis_tready = 0;
 
 // Outputs
-wire input_0_ip_payload_tready;
-wire input_0_ip_hdr_ready;
-wire input_1_ip_payload_tready;
-wire input_1_ip_hdr_ready;
-wire input_2_ip_payload_tready;
-wire input_2_ip_hdr_ready;
-wire input_3_ip_payload_tready;
-wire input_3_ip_hdr_ready;
+wire [S_COUNT-1:0] s_ip_hdr_ready;
+wire [S_COUNT-1:0] s_ip_payload_axis_tready;
 
-wire output_ip_hdr_valid;
-wire [47:0] output_eth_dest_mac;
-wire [47:0] output_eth_src_mac;
-wire [15:0] output_eth_type;
-wire [3:0] output_ip_version;
-wire [3:0] output_ip_ihl;
-wire [5:0] output_ip_dscp;
-wire [1:0] output_ip_ecn;
-wire [15:0] output_ip_length;
-wire [15:0] output_ip_identification;
-wire [2:0] output_ip_flags;
-wire [12:0] output_ip_fragment_offset;
-wire [7:0] output_ip_ttl;
-wire [7:0] output_ip_protocol;
-wire [15:0] output_ip_header_checksum;
-wire [31:0] output_ip_source_ip;
-wire [31:0] output_ip_dest_ip;
-wire [7:0] output_ip_payload_tdata;
-wire output_ip_payload_tvalid;
-wire output_ip_payload_tlast;
-wire output_ip_payload_tuser;
+wire m_ip_hdr_valid;
+wire [47:0] m_eth_dest_mac;
+wire [47:0] m_eth_src_mac;
+wire [15:0] m_eth_type;
+wire [3:0] m_ip_version;
+wire [3:0] m_ip_ihl;
+wire [5:0] m_ip_dscp;
+wire [1:0] m_ip_ecn;
+wire [15:0] m_ip_length;
+wire [15:0] m_ip_identification;
+wire [2:0] m_ip_flags;
+wire [12:0] m_ip_fragment_offset;
+wire [7:0] m_ip_ttl;
+wire [7:0] m_ip_protocol;
+wire [15:0] m_ip_header_checksum;
+wire [31:0] m_ip_source_ip;
+wire [31:0] m_ip_dest_ip;
+wire [DATA_WIDTH-1:0] m_ip_payload_axis_tdata;
+wire [KEEP_WIDTH-1:0] m_ip_payload_axis_tkeep;
+wire m_ip_payload_axis_tvalid;
+wire m_ip_payload_axis_tlast;
+wire [ID_WIDTH-1:0] m_ip_payload_axis_tid;
+wire [DEST_WIDTH-1:0] m_ip_payload_axis_tdest;
+wire [USER_WIDTH-1:0] m_ip_payload_axis_tuser;
 
 initial begin
     // myhdl integration
@@ -162,123 +113,60 @@ initial begin
         clk,
         rst,
         current_test,
-        input_0_ip_hdr_valid,
-        input_0_eth_dest_mac,
-        input_0_eth_src_mac,
-        input_0_eth_type,
-        input_0_ip_version,
-        input_0_ip_ihl,
-        input_0_ip_dscp,
-        input_0_ip_ecn,
-        input_0_ip_length,
-        input_0_ip_identification,
-        input_0_ip_flags,
-        input_0_ip_fragment_offset,
-        input_0_ip_ttl,
-        input_0_ip_protocol,
-        input_0_ip_header_checksum,
-        input_0_ip_source_ip,
-        input_0_ip_dest_ip,
-        input_0_ip_payload_tdata,
-        input_0_ip_payload_tvalid,
-        input_0_ip_payload_tlast,
-        input_0_ip_payload_tuser,
-        input_1_ip_hdr_valid,
-        input_1_eth_dest_mac,
-        input_1_eth_src_mac,
-        input_1_eth_type,
-        input_1_ip_version,
-        input_1_ip_ihl,
-        input_1_ip_dscp,
-        input_1_ip_ecn,
-        input_1_ip_length,
-        input_1_ip_identification,
-        input_1_ip_flags,
-        input_1_ip_fragment_offset,
-        input_1_ip_ttl,
-        input_1_ip_protocol,
-        input_1_ip_header_checksum,
-        input_1_ip_source_ip,
-        input_1_ip_dest_ip,
-        input_1_ip_payload_tdata,
-        input_1_ip_payload_tvalid,
-        input_1_ip_payload_tlast,
-        input_1_ip_payload_tuser,
-        input_2_ip_hdr_valid,
-        input_2_eth_dest_mac,
-        input_2_eth_src_mac,
-        input_2_eth_type,
-        input_2_ip_version,
-        input_2_ip_ihl,
-        input_2_ip_dscp,
-        input_2_ip_ecn,
-        input_2_ip_length,
-        input_2_ip_identification,
-        input_2_ip_flags,
-        input_2_ip_fragment_offset,
-        input_2_ip_ttl,
-        input_2_ip_protocol,
-        input_2_ip_header_checksum,
-        input_2_ip_source_ip,
-        input_2_ip_dest_ip,
-        input_2_ip_payload_tdata,
-        input_2_ip_payload_tvalid,
-        input_2_ip_payload_tlast,
-        input_2_ip_payload_tuser,
-        input_3_ip_hdr_valid,
-        input_3_eth_dest_mac,
-        input_3_eth_src_mac,
-        input_3_eth_type,
-        input_3_ip_version,
-        input_3_ip_ihl,
-        input_3_ip_dscp,
-        input_3_ip_ecn,
-        input_3_ip_length,
-        input_3_ip_identification,
-        input_3_ip_flags,
-        input_3_ip_fragment_offset,
-        input_3_ip_ttl,
-        input_3_ip_protocol,
-        input_3_ip_header_checksum,
-        input_3_ip_source_ip,
-        input_3_ip_dest_ip,
-        input_3_ip_payload_tdata,
-        input_3_ip_payload_tvalid,
-        input_3_ip_payload_tlast,
-        input_3_ip_payload_tuser,
-        output_ip_hdr_ready,
-        output_ip_payload_tready
+        s_ip_hdr_valid,
+        s_eth_dest_mac,
+        s_eth_src_mac,
+        s_eth_type,
+        s_ip_version,
+        s_ip_ihl,
+        s_ip_dscp,
+        s_ip_ecn,
+        s_ip_length,
+        s_ip_identification,
+        s_ip_flags,
+        s_ip_fragment_offset,
+        s_ip_ttl,
+        s_ip_protocol,
+        s_ip_header_checksum,
+        s_ip_source_ip,
+        s_ip_dest_ip,
+        s_ip_payload_axis_tdata,
+        s_ip_payload_axis_tkeep,
+        s_ip_payload_axis_tvalid,
+        s_ip_payload_axis_tlast,
+        s_ip_payload_axis_tid,
+        s_ip_payload_axis_tdest,
+        s_ip_payload_axis_tuser,
+        m_ip_hdr_ready,
+        m_ip_payload_axis_tready
     );
     $to_myhdl(
-        input_0_ip_hdr_ready,
-        input_0_ip_payload_tready,
-        input_1_ip_hdr_ready,
-        input_1_ip_payload_tready,
-        input_2_ip_hdr_ready,
-        input_2_ip_payload_tready,
-        input_3_ip_hdr_ready,
-        input_3_ip_payload_tready,
-        output_ip_hdr_valid,
-        output_eth_dest_mac,
-        output_eth_src_mac,
-        output_eth_type,
-        output_ip_version,
-        output_ip_ihl,
-        output_ip_dscp,
-        output_ip_ecn,
-        output_ip_length,
-        output_ip_identification,
-        output_ip_flags,
-        output_ip_fragment_offset,
-        output_ip_ttl,
-        output_ip_protocol,
-        output_ip_header_checksum,
-        output_ip_source_ip,
-        output_ip_dest_ip,
-        output_ip_payload_tdata,
-        output_ip_payload_tvalid,
-        output_ip_payload_tlast,
-        output_ip_payload_tuser
+        s_ip_hdr_ready,
+        s_ip_payload_axis_tready,
+        m_ip_hdr_valid,
+        m_eth_dest_mac,
+        m_eth_src_mac,
+        m_eth_type,
+        m_ip_version,
+        m_ip_ihl,
+        m_ip_dscp,
+        m_ip_ecn,
+        m_ip_length,
+        m_ip_identification,
+        m_ip_flags,
+        m_ip_fragment_offset,
+        m_ip_ttl,
+        m_ip_protocol,
+        m_ip_header_checksum,
+        m_ip_source_ip,
+        m_ip_dest_ip,
+        m_ip_payload_axis_tdata,
+        m_ip_payload_axis_tkeep,
+        m_ip_payload_axis_tvalid,
+        m_ip_payload_axis_tlast,
+        m_ip_payload_axis_tid,
+        m_ip_payload_axis_tdest,
+        m_ip_payload_axis_tuser
     );
 
     // dump file
@@ -286,127 +174,77 @@ initial begin
     $dumpvars(0, test_ip_arb_mux_4);
 end
 
-ip_arb_mux_4
+ip_arb_mux #(
+    .S_COUNT(S_COUNT),
+    .DATA_WIDTH(DATA_WIDTH),
+    .KEEP_ENABLE(KEEP_ENABLE),
+    .KEEP_WIDTH(KEEP_WIDTH),
+    .ID_ENABLE(ID_ENABLE),
+    .ID_WIDTH(ID_WIDTH),
+    .DEST_ENABLE(DEST_ENABLE),
+    .DEST_WIDTH(DEST_WIDTH),
+    .USER_ENABLE(USER_ENABLE),
+    .USER_WIDTH(USER_WIDTH),
+    .ARB_TYPE(ARB_TYPE),
+    .LSB_PRIORITY(LSB_PRIORITY)
+)
 UUT (
     .clk(clk),
     .rst(rst),
-    // IP frame inputs
-    .input_0_ip_hdr_valid(input_0_ip_hdr_valid),
-    .input_0_ip_hdr_ready(input_0_ip_hdr_ready),
-    .input_0_eth_dest_mac(input_0_eth_dest_mac),
-    .input_0_eth_src_mac(input_0_eth_src_mac),
-    .input_0_eth_type(input_0_eth_type),
-    .input_0_ip_version(input_0_ip_version),
-    .input_0_ip_ihl(input_0_ip_ihl),
-    .input_0_ip_dscp(input_0_ip_dscp),
-    .input_0_ip_ecn(input_0_ip_ecn),
-    .input_0_ip_length(input_0_ip_length),
-    .input_0_ip_identification(input_0_ip_identification),
-    .input_0_ip_flags(input_0_ip_flags),
-    .input_0_ip_fragment_offset(input_0_ip_fragment_offset),
-    .input_0_ip_ttl(input_0_ip_ttl),
-    .input_0_ip_protocol(input_0_ip_protocol),
-    .input_0_ip_header_checksum(input_0_ip_header_checksum),
-    .input_0_ip_source_ip(input_0_ip_source_ip),
-    .input_0_ip_dest_ip(input_0_ip_dest_ip),
-    .input_0_ip_payload_tdata(input_0_ip_payload_tdata),
-    .input_0_ip_payload_tvalid(input_0_ip_payload_tvalid),
-    .input_0_ip_payload_tready(input_0_ip_payload_tready),
-    .input_0_ip_payload_tlast(input_0_ip_payload_tlast),
-    .input_0_ip_payload_tuser(input_0_ip_payload_tuser),
-    .input_1_ip_hdr_valid(input_1_ip_hdr_valid),
-    .input_1_ip_hdr_ready(input_1_ip_hdr_ready),
-    .input_1_eth_dest_mac(input_1_eth_dest_mac),
-    .input_1_eth_src_mac(input_1_eth_src_mac),
-    .input_1_eth_type(input_1_eth_type),
-    .input_1_ip_version(input_1_ip_version),
-    .input_1_ip_ihl(input_1_ip_ihl),
-    .input_1_ip_dscp(input_1_ip_dscp),
-    .input_1_ip_ecn(input_1_ip_ecn),
-    .input_1_ip_length(input_1_ip_length),
-    .input_1_ip_identification(input_1_ip_identification),
-    .input_1_ip_flags(input_1_ip_flags),
-    .input_1_ip_fragment_offset(input_1_ip_fragment_offset),
-    .input_1_ip_ttl(input_1_ip_ttl),
-    .input_1_ip_protocol(input_1_ip_protocol),
-    .input_1_ip_header_checksum(input_1_ip_header_checksum),
-    .input_1_ip_source_ip(input_1_ip_source_ip),
-    .input_1_ip_dest_ip(input_1_ip_dest_ip),
-    .input_1_ip_payload_tdata(input_1_ip_payload_tdata),
-    .input_1_ip_payload_tvalid(input_1_ip_payload_tvalid),
-    .input_1_ip_payload_tready(input_1_ip_payload_tready),
-    .input_1_ip_payload_tlast(input_1_ip_payload_tlast),
-    .input_1_ip_payload_tuser(input_1_ip_payload_tuser),
-    .input_2_ip_hdr_valid(input_2_ip_hdr_valid),
-    .input_2_ip_hdr_ready(input_2_ip_hdr_ready),
-    .input_2_eth_dest_mac(input_2_eth_dest_mac),
-    .input_2_eth_src_mac(input_2_eth_src_mac),
-    .input_2_eth_type(input_2_eth_type),
-    .input_2_ip_version(input_2_ip_version),
-    .input_2_ip_ihl(input_2_ip_ihl),
-    .input_2_ip_dscp(input_2_ip_dscp),
-    .input_2_ip_ecn(input_2_ip_ecn),
-    .input_2_ip_length(input_2_ip_length),
-    .input_2_ip_identification(input_2_ip_identification),
-    .input_2_ip_flags(input_2_ip_flags),
-    .input_2_ip_fragment_offset(input_2_ip_fragment_offset),
-    .input_2_ip_ttl(input_2_ip_ttl),
-    .input_2_ip_protocol(input_2_ip_protocol),
-    .input_2_ip_header_checksum(input_2_ip_header_checksum),
-    .input_2_ip_source_ip(input_2_ip_source_ip),
-    .input_2_ip_dest_ip(input_2_ip_dest_ip),
-    .input_2_ip_payload_tdata(input_2_ip_payload_tdata),
-    .input_2_ip_payload_tvalid(input_2_ip_payload_tvalid),
-    .input_2_ip_payload_tready(input_2_ip_payload_tready),
-    .input_2_ip_payload_tlast(input_2_ip_payload_tlast),
-    .input_2_ip_payload_tuser(input_2_ip_payload_tuser),
-    .input_3_ip_hdr_valid(input_3_ip_hdr_valid),
-    .input_3_ip_hdr_ready(input_3_ip_hdr_ready),
-    .input_3_eth_dest_mac(input_3_eth_dest_mac),
-    .input_3_eth_src_mac(input_3_eth_src_mac),
-    .input_3_eth_type(input_3_eth_type),
-    .input_3_ip_version(input_3_ip_version),
-    .input_3_ip_ihl(input_3_ip_ihl),
-    .input_3_ip_dscp(input_3_ip_dscp),
-    .input_3_ip_ecn(input_3_ip_ecn),
-    .input_3_ip_length(input_3_ip_length),
-    .input_3_ip_identification(input_3_ip_identification),
-    .input_3_ip_flags(input_3_ip_flags),
-    .input_3_ip_fragment_offset(input_3_ip_fragment_offset),
-    .input_3_ip_ttl(input_3_ip_ttl),
-    .input_3_ip_protocol(input_3_ip_protocol),
-    .input_3_ip_header_checksum(input_3_ip_header_checksum),
-    .input_3_ip_source_ip(input_3_ip_source_ip),
-    .input_3_ip_dest_ip(input_3_ip_dest_ip),
-    .input_3_ip_payload_tdata(input_3_ip_payload_tdata),
-    .input_3_ip_payload_tvalid(input_3_ip_payload_tvalid),
-    .input_3_ip_payload_tready(input_3_ip_payload_tready),
-    .input_3_ip_payload_tlast(input_3_ip_payload_tlast),
-    .input_3_ip_payload_tuser(input_3_ip_payload_tuser),
-    // IP frame output
-    .output_ip_hdr_valid(output_ip_hdr_valid),
-    .output_ip_hdr_ready(output_ip_hdr_ready),
-    .output_eth_dest_mac(output_eth_dest_mac),
-    .output_eth_src_mac(output_eth_src_mac),
-    .output_eth_type(output_eth_type),
-    .output_ip_version(output_ip_version),
-    .output_ip_ihl(output_ip_ihl),
-    .output_ip_dscp(output_ip_dscp),
-    .output_ip_ecn(output_ip_ecn),
-    .output_ip_length(output_ip_length),
-    .output_ip_identification(output_ip_identification),
-    .output_ip_flags(output_ip_flags),
-    .output_ip_fragment_offset(output_ip_fragment_offset),
-    .output_ip_ttl(output_ip_ttl),
-    .output_ip_protocol(output_ip_protocol),
-    .output_ip_header_checksum(output_ip_header_checksum),
-    .output_ip_source_ip(output_ip_source_ip),
-    .output_ip_dest_ip(output_ip_dest_ip),
-    .output_ip_payload_tdata(output_ip_payload_tdata),
-    .output_ip_payload_tvalid(output_ip_payload_tvalid),
-    .output_ip_payload_tready(output_ip_payload_tready),
-    .output_ip_payload_tlast(output_ip_payload_tlast),
-    .output_ip_payload_tuser(output_ip_payload_tuser)
+    // Ethernet frame inputs
+    .s_ip_hdr_valid(s_ip_hdr_valid),
+    .s_ip_hdr_ready(s_ip_hdr_ready),
+    .s_eth_dest_mac(s_eth_dest_mac),
+    .s_eth_src_mac(s_eth_src_mac),
+    .s_eth_type(s_eth_type),
+    .s_ip_version(s_ip_version),
+    .s_ip_ihl(s_ip_ihl),
+    .s_ip_dscp(s_ip_dscp),
+    .s_ip_ecn(s_ip_ecn),
+    .s_ip_length(s_ip_length),
+    .s_ip_identification(s_ip_identification),
+    .s_ip_flags(s_ip_flags),
+    .s_ip_fragment_offset(s_ip_fragment_offset),
+    .s_ip_ttl(s_ip_ttl),
+    .s_ip_protocol(s_ip_protocol),
+    .s_ip_header_checksum(s_ip_header_checksum),
+    .s_ip_source_ip(s_ip_source_ip),
+    .s_ip_dest_ip(s_ip_dest_ip),
+    .s_ip_payload_axis_tdata(s_ip_payload_axis_tdata),
+    .s_ip_payload_axis_tkeep(s_ip_payload_axis_tkeep),
+    .s_ip_payload_axis_tvalid(s_ip_payload_axis_tvalid),
+    .s_ip_payload_axis_tready(s_ip_payload_axis_tready),
+    .s_ip_payload_axis_tlast(s_ip_payload_axis_tlast),
+    .s_ip_payload_axis_tid(s_ip_payload_axis_tid),
+    .s_ip_payload_axis_tdest(s_ip_payload_axis_tdest),
+    .s_ip_payload_axis_tuser(s_ip_payload_axis_tuser),
+    // Ethernet frame output
+    .m_ip_hdr_valid(m_ip_hdr_valid),
+    .m_ip_hdr_ready(m_ip_hdr_ready),
+    .m_eth_dest_mac(m_eth_dest_mac),
+    .m_eth_src_mac(m_eth_src_mac),
+    .m_eth_type(m_eth_type),
+    .m_ip_version(m_ip_version),
+    .m_ip_ihl(m_ip_ihl),
+    .m_ip_dscp(m_ip_dscp),
+    .m_ip_ecn(m_ip_ecn),
+    .m_ip_length(m_ip_length),
+    .m_ip_identification(m_ip_identification),
+    .m_ip_flags(m_ip_flags),
+    .m_ip_fragment_offset(m_ip_fragment_offset),
+    .m_ip_ttl(m_ip_ttl),
+    .m_ip_protocol(m_ip_protocol),
+    .m_ip_header_checksum(m_ip_header_checksum),
+    .m_ip_source_ip(m_ip_source_ip),
+    .m_ip_dest_ip(m_ip_dest_ip),
+    .m_ip_payload_axis_tdata(m_ip_payload_axis_tdata),
+    .m_ip_payload_axis_tkeep(m_ip_payload_axis_tkeep),
+    .m_ip_payload_axis_tvalid(m_ip_payload_axis_tvalid),
+    .m_ip_payload_axis_tready(m_ip_payload_axis_tready),
+    .m_ip_payload_axis_tlast(m_ip_payload_axis_tlast),
+    .m_ip_payload_axis_tid(m_ip_payload_axis_tid),
+    .m_ip_payload_axis_tdest(m_ip_payload_axis_tdest),
+    .m_ip_payload_axis_tuser(m_ip_payload_axis_tuser)
 );
 
 endmodule
