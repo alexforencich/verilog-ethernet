@@ -253,44 +253,48 @@ assign input_eth_payload_tready = (input_select_ip_reg & ip_rx_eth_payload_tread
 /*
  * Output arbiter
  */
-eth_arb_mux_2
-eth_arb_mux_2_inst (
+eth_arb_mux #(
+    .S_COUNT(2),
+    .DATA_WIDTH(8),
+    .KEEP_ENABLE(0),
+    .ID_ENABLE(0),
+    .DEST_ENABLE(0),
+    .USER_ENABLE(1),
+    .USER_WIDTH(1),
+    .ARB_TYPE("PRIORITY"),
+    .LSB_PRIORITY("HIGH")
+)
+eth_arb_mux_inst (
     .clk(clk),
     .rst(rst),
     // Ethernet frame inputs
-    // ARP input (highest priority)
-    .input_0_eth_hdr_valid(arp_tx_eth_hdr_valid),
-    .input_0_eth_hdr_ready(arp_tx_eth_hdr_ready),
-    .input_0_eth_dest_mac(arp_tx_eth_dest_mac),
-    .input_0_eth_src_mac(arp_tx_eth_src_mac),
-    .input_0_eth_type(arp_tx_eth_type),
-    .input_0_eth_payload_tdata(arp_tx_eth_payload_tdata),
-    .input_0_eth_payload_tvalid(arp_tx_eth_payload_tvalid),
-    .input_0_eth_payload_tready(arp_tx_eth_payload_tready),
-    .input_0_eth_payload_tlast(arp_tx_eth_payload_tlast),
-    .input_0_eth_payload_tuser(arp_tx_eth_payload_tuser),
-    // IP input (lowest priority)
-    .input_1_eth_hdr_valid(ip_tx_eth_hdr_valid),
-    .input_1_eth_hdr_ready(ip_tx_eth_hdr_ready),
-    .input_1_eth_dest_mac(ip_tx_eth_dest_mac),
-    .input_1_eth_src_mac(ip_tx_eth_src_mac),
-    .input_1_eth_type(ip_tx_eth_type),
-    .input_1_eth_payload_tdata(ip_tx_eth_payload_tdata),
-    .input_1_eth_payload_tvalid(ip_tx_eth_payload_tvalid),
-    .input_1_eth_payload_tready(ip_tx_eth_payload_tready),
-    .input_1_eth_payload_tlast(ip_tx_eth_payload_tlast),
-    .input_1_eth_payload_tuser(ip_tx_eth_payload_tuser),
+    .s_eth_hdr_valid({ip_tx_eth_hdr_valid, arp_tx_eth_hdr_valid}),
+    .s_eth_hdr_ready({ip_tx_eth_hdr_ready, arp_tx_eth_hdr_ready}),
+    .s_eth_dest_mac({ip_tx_eth_dest_mac, arp_tx_eth_dest_mac}),
+    .s_eth_src_mac({ip_tx_eth_src_mac, arp_tx_eth_src_mac}),
+    .s_eth_type({ip_tx_eth_type, arp_tx_eth_type}),
+    .s_eth_payload_axis_tdata({ip_tx_eth_payload_tdata, arp_tx_eth_payload_tdata}),
+    .s_eth_payload_axis_tkeep(0),
+    .s_eth_payload_axis_tvalid({ip_tx_eth_payload_tvalid, arp_tx_eth_payload_tvalid}),
+    .s_eth_payload_axis_tready({ip_tx_eth_payload_tready, arp_tx_eth_payload_tready}),
+    .s_eth_payload_axis_tlast({ip_tx_eth_payload_tlast, arp_tx_eth_payload_tlast}),
+    .s_eth_payload_axis_tid(0),
+    .s_eth_payload_axis_tdest(0),
+    .s_eth_payload_axis_tuser({ip_tx_eth_payload_tuser, arp_tx_eth_payload_tuser}),
     // Ethernet frame output
-    .output_eth_hdr_valid(output_eth_hdr_valid),
-    .output_eth_hdr_ready(output_eth_hdr_ready),
-    .output_eth_dest_mac(output_eth_dest_mac),
-    .output_eth_src_mac(output_eth_src_mac),
-    .output_eth_type(output_eth_type),
-    .output_eth_payload_tdata(output_eth_payload_tdata),
-    .output_eth_payload_tvalid(output_eth_payload_tvalid),
-    .output_eth_payload_tready(output_eth_payload_tready),
-    .output_eth_payload_tlast(output_eth_payload_tlast),
-    .output_eth_payload_tuser(output_eth_payload_tuser)
+    .m_eth_hdr_valid(output_eth_hdr_valid),
+    .m_eth_hdr_ready(output_eth_hdr_ready),
+    .m_eth_dest_mac(output_eth_dest_mac),
+    .m_eth_src_mac(output_eth_src_mac),
+    .m_eth_type(output_eth_type),
+    .m_eth_payload_axis_tdata(output_eth_payload_tdata),
+    .m_eth_payload_axis_tkeep(),
+    .m_eth_payload_axis_tvalid(output_eth_payload_tvalid),
+    .m_eth_payload_axis_tready(output_eth_payload_tready),
+    .m_eth_payload_axis_tlast(output_eth_payload_tlast),
+    .m_eth_payload_axis_tid(),
+    .m_eth_payload_axis_tdest(),
+    .m_eth_payload_axis_tuser(output_eth_payload_tuser)
 );
 
 /*
