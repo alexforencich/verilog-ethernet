@@ -208,7 +208,7 @@ udp_mux #(
 UUT (
     .clk(clk),
     .rst(rst),
-    // Ethernet frame inputs
+    // UDP frame inputs
     .s_udp_hdr_valid(s_udp_hdr_valid),
     .s_udp_hdr_ready(s_udp_hdr_ready),
     .s_eth_dest_mac(s_eth_dest_mac),
@@ -239,7 +239,7 @@ UUT (
     .s_udp_payload_axis_tid(s_udp_payload_axis_tid),
     .s_udp_payload_axis_tdest(s_udp_payload_axis_tdest),
     .s_udp_payload_axis_tuser(s_udp_payload_axis_tuser),
-    // Ethernet frame output
+    // UDP frame output
     .m_udp_hdr_valid(m_udp_hdr_valid),
     .m_udp_hdr_ready(m_udp_hdr_ready),
     .m_eth_dest_mac(m_eth_dest_mac),

@@ -192,7 +192,7 @@ ip_mux #(
 UUT (
     .clk(clk),
     .rst(rst),
-    // Ethernet frame inputs
+    // IP frame inputs
     .s_ip_hdr_valid(s_ip_hdr_valid),
     .s_ip_hdr_ready(s_ip_hdr_ready),
     .s_eth_dest_mac(s_eth_dest_mac),
@@ -219,7 +219,7 @@ UUT (
     .s_ip_payload_axis_tid(s_ip_payload_axis_tid),
     .s_ip_payload_axis_tdest(s_ip_payload_axis_tdest),
     .s_ip_payload_axis_tuser(s_ip_payload_axis_tuser),
-    // Ethernet frame output
+    // IP frame output
     .m_ip_hdr_valid(m_ip_hdr_valid),
     .m_ip_hdr_ready(m_ip_hdr_ready),
     .m_eth_dest_mac(m_eth_dest_mac),
