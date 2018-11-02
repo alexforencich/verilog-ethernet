@@ -27,157 +27,95 @@ THE SOFTWARE.
 `timescale 1ns / 1ps
 
 /*
- * Testbench for udp_demux_4
+ * Testbench for udp_demux
  */
 module test_udp_demux_4;
+
+// Parameters
+parameter M_COUNT = 4;
+parameter DATA_WIDTH = 8;
+parameter KEEP_ENABLE = (DATA_WIDTH>8);
+parameter KEEP_WIDTH = (DATA_WIDTH/8);
+parameter ID_ENABLE = 1;
+parameter ID_WIDTH = 8;
+parameter DEST_ENABLE = 1;
+parameter DEST_WIDTH = 8;
+parameter USER_ENABLE = 1;
+parameter USER_WIDTH = 1;
 
 // Inputs
 reg clk = 0;
 reg rst = 0;
 reg [7:0] current_test = 0;
 
-reg input_udp_hdr_valid = 0;
-reg [47:0] input_eth_dest_mac = 0;
-reg [47:0] input_eth_src_mac = 0;
-reg [15:0] input_eth_type = 0;
-reg [3:0] input_ip_version = 0;
-reg [3:0] input_ip_ihl = 0;
-reg [5:0] input_ip_dscp = 0;
-reg [1:0] input_ip_ecn = 0;
-reg [15:0] input_ip_length = 0;
-reg [15:0] input_ip_identification = 0;
-reg [2:0] input_ip_flags = 0;
-reg [12:0] input_ip_fragment_offset = 0;
-reg [7:0] input_ip_ttl = 0;
-reg [7:0] input_ip_protocol = 0;
-reg [15:0] input_ip_header_checksum = 0;
-reg [31:0] input_ip_source_ip = 0;
-reg [31:0] input_ip_dest_ip = 0;
-reg [15:0] input_udp_source_port = 0;
-reg [15:0] input_udp_dest_port = 0;
-reg [15:0] input_udp_length = 0;
-reg [15:0] input_udp_checksum = 0;
-reg [7:0] input_udp_payload_tdata = 0;
-reg input_udp_payload_tvalid = 0;
-reg input_udp_payload_tlast = 0;
-reg input_udp_payload_tuser = 0;
+reg s_udp_hdr_valid = 0;
+reg [47:0] s_eth_dest_mac = 0;
+reg [47:0] s_eth_src_mac = 0;
+reg [15:0] s_eth_type = 0;
+reg [3:0] s_ip_version = 0;
+reg [3:0] s_ip_ihl = 0;
+reg [5:0] s_ip_dscp = 0;
+reg [1:0] s_ip_ecn = 0;
+reg [15:0] s_ip_length = 0;
+reg [15:0] s_ip_identification = 0;
+reg [2:0] s_ip_flags = 0;
+reg [12:0] s_ip_fragment_offset = 0;
+reg [7:0] s_ip_ttl = 0;
+reg [7:0] s_ip_protocol = 0;
+reg [15:0] s_ip_header_checksum = 0;
+reg [31:0] s_ip_source_ip = 0;
+reg [31:0] s_ip_dest_ip = 0;
+reg [15:0] s_udp_source_port = 0;
+reg [15:0] s_udp_dest_port = 0;
+reg [15:0] s_udp_length = 0;
+reg [15:0] s_udp_checksum = 0;
+reg [DATA_WIDTH-1:0] s_udp_payload_axis_tdata = 0;
+reg [KEEP_WIDTH-1:0] s_udp_payload_axis_tkeep = 0;
+reg s_udp_payload_axis_tvalid = 0;
+reg s_udp_payload_axis_tlast = 0;
+reg [ID_WIDTH-1:0] s_udp_payload_axis_tid = 0;
+reg [DEST_WIDTH-1:0] s_udp_payload_axis_tdest = 0;
+reg [USER_WIDTH-1:0] s_udp_payload_axis_tuser = 0;
 
-reg output_0_udp_hdr_ready = 0;
-reg output_0_udp_payload_tready = 0;
-reg output_1_udp_hdr_ready = 0;
-reg output_1_udp_payload_tready = 0;
-reg output_2_udp_hdr_ready = 0;
-reg output_2_udp_payload_tready = 0;
-reg output_3_udp_hdr_ready = 0;
-reg output_3_udp_payload_tready = 0;
+reg [M_COUNT-1:0] m_udp_hdr_ready = 0;
+reg [M_COUNT-1:0] m_udp_payload_axis_tready = 0;
 
 reg enable = 0;
+reg drop = 0;
 reg [1:0] select = 0;
 
 // Outputs
-wire input_udp_hdr_ready;
-wire input_udp_payload_tready;
+wire s_udp_hdr_ready;
+wire s_udp_payload_axis_tready;
 
-wire output_0_udp_hdr_valid;
-wire [47:0] output_0_eth_dest_mac;
-wire [47:0] output_0_eth_src_mac;
-wire [15:0] output_0_eth_type;
-wire [3:0] output_0_ip_version;
-wire [3:0] output_0_ip_ihl;
-wire [5:0] output_0_ip_dscp;
-wire [1:0] output_0_ip_ecn;
-wire [15:0] output_0_ip_length;
-wire [15:0] output_0_ip_identification;
-wire [2:0] output_0_ip_flags;
-wire [12:0] output_0_ip_fragment_offset;
-wire [7:0] output_0_ip_ttl;
-wire [7:0] output_0_ip_protocol;
-wire [15:0] output_0_ip_header_checksum;
-wire [31:0] output_0_ip_source_ip;
-wire [31:0] output_0_ip_dest_ip;
-wire [15:0] output_0_udp_source_port;
-wire [15:0] output_0_udp_dest_port;
-wire [15:0] output_0_udp_length;
-wire [15:0] output_0_udp_checksum;
-wire [7:0] output_0_udp_payload_tdata;
-wire output_0_udp_payload_tvalid;
-wire output_0_udp_payload_tlast;
-wire output_0_udp_payload_tuser;
-wire output_1_udp_hdr_valid;
-wire [47:0] output_1_eth_dest_mac;
-wire [47:0] output_1_eth_src_mac;
-wire [15:0] output_1_eth_type;
-wire [3:0] output_1_ip_version;
-wire [3:0] output_1_ip_ihl;
-wire [5:0] output_1_ip_dscp;
-wire [1:0] output_1_ip_ecn;
-wire [15:0] output_1_ip_length;
-wire [15:0] output_1_ip_identification;
-wire [2:0] output_1_ip_flags;
-wire [12:0] output_1_ip_fragment_offset;
-wire [7:0] output_1_ip_ttl;
-wire [7:0] output_1_ip_protocol;
-wire [15:0] output_1_ip_header_checksum;
-wire [31:0] output_1_ip_source_ip;
-wire [31:0] output_1_ip_dest_ip;
-wire [15:0] output_1_udp_source_port;
-wire [15:0] output_1_udp_dest_port;
-wire [15:0] output_1_udp_length;
-wire [15:0] output_1_udp_checksum;
-wire [7:0] output_1_udp_payload_tdata;
-wire output_1_udp_payload_tvalid;
-wire output_1_udp_payload_tlast;
-wire output_1_udp_payload_tuser;
-wire output_2_udp_hdr_valid;
-wire [47:0] output_2_eth_dest_mac;
-wire [47:0] output_2_eth_src_mac;
-wire [15:0] output_2_eth_type;
-wire [3:0] output_2_ip_version;
-wire [3:0] output_2_ip_ihl;
-wire [5:0] output_2_ip_dscp;
-wire [1:0] output_2_ip_ecn;
-wire [15:0] output_2_ip_length;
-wire [15:0] output_2_ip_identification;
-wire [2:0] output_2_ip_flags;
-wire [12:0] output_2_ip_fragment_offset;
-wire [7:0] output_2_ip_ttl;
-wire [7:0] output_2_ip_protocol;
-wire [15:0] output_2_ip_header_checksum;
-wire [31:0] output_2_ip_source_ip;
-wire [31:0] output_2_ip_dest_ip;
-wire [15:0] output_2_udp_source_port;
-wire [15:0] output_2_udp_dest_port;
-wire [15:0] output_2_udp_length;
-wire [15:0] output_2_udp_checksum;
-wire [7:0] output_2_udp_payload_tdata;
-wire output_2_udp_payload_tvalid;
-wire output_2_udp_payload_tlast;
-wire output_2_udp_payload_tuser;
-wire output_3_udp_hdr_valid;
-wire [47:0] output_3_eth_dest_mac;
-wire [47:0] output_3_eth_src_mac;
-wire [15:0] output_3_eth_type;
-wire [3:0] output_3_ip_version;
-wire [3:0] output_3_ip_ihl;
-wire [5:0] output_3_ip_dscp;
-wire [1:0] output_3_ip_ecn;
-wire [15:0] output_3_ip_length;
-wire [15:0] output_3_ip_identification;
-wire [2:0] output_3_ip_flags;
-wire [12:0] output_3_ip_fragment_offset;
-wire [7:0] output_3_ip_ttl;
-wire [7:0] output_3_ip_protocol;
-wire [15:0] output_3_ip_header_checksum;
-wire [31:0] output_3_ip_source_ip;
-wire [31:0] output_3_ip_dest_ip;
-wire [15:0] output_3_udp_source_port;
-wire [15:0] output_3_udp_dest_port;
-wire [15:0] output_3_udp_length;
-wire [15:0] output_3_udp_checksum;
-wire [7:0] output_3_udp_payload_tdata;
-wire output_3_udp_payload_tvalid;
-wire output_3_udp_payload_tlast;
-wire output_3_udp_payload_tuser;
+wire [M_COUNT-1:0] m_udp_hdr_valid;
+wire [M_COUNT*48-1:0] m_eth_dest_mac;
+wire [M_COUNT*48-1:0] m_eth_src_mac;
+wire [M_COUNT*16-1:0] m_eth_type;
+wire [M_COUNT*4-1:0] m_ip_version;
+wire [M_COUNT*4-1:0] m_ip_ihl;
+wire [M_COUNT*6-1:0] m_ip_dscp;
+wire [M_COUNT*2-1:0] m_ip_ecn;
+wire [M_COUNT*16-1:0] m_ip_length;
+wire [M_COUNT*16-1:0] m_ip_identification;
+wire [M_COUNT*3-1:0] m_ip_flags;
+wire [M_COUNT*13-1:0] m_ip_fragment_offset;
+wire [M_COUNT*8-1:0] m_ip_ttl;
+wire [M_COUNT*8-1:0] m_ip_protocol;
+wire [M_COUNT*16-1:0] m_ip_header_checksum;
+wire [M_COUNT*32-1:0] m_ip_source_ip;
+wire [M_COUNT*32-1:0] m_ip_dest_ip;
+wire [M_COUNT*16-1:0] m_udp_source_port;
+wire [M_COUNT*16-1:0] m_udp_dest_port;
+wire [M_COUNT*16-1:0] m_udp_length;
+wire [M_COUNT*16-1:0] m_udp_checksum;
+wire [M_COUNT*DATA_WIDTH-1:0] m_udp_payload_axis_tdata;
+wire [M_COUNT*KEEP_WIDTH-1:0] m_udp_payload_axis_tkeep;
+wire [M_COUNT-1:0] m_udp_payload_axis_tvalid;
+wire [M_COUNT-1:0] m_udp_payload_axis_tlast;
+wire [M_COUNT*ID_WIDTH-1:0] m_udp_payload_axis_tid;
+wire [M_COUNT*DEST_WIDTH-1:0] m_udp_payload_axis_tdest;
+wire [M_COUNT*USER_WIDTH-1:0] m_udp_payload_axis_tuser;
 
 initial begin
     // myhdl integration
@@ -185,145 +123,71 @@ initial begin
         clk,
         rst,
         current_test,
-        input_udp_hdr_valid,
-        input_eth_dest_mac,
-        input_eth_src_mac,
-        input_eth_type,
-        input_ip_version,
-        input_ip_ihl,
-        input_ip_dscp,
-        input_ip_ecn,
-        input_ip_length,
-        input_ip_identification,
-        input_ip_flags,
-        input_ip_fragment_offset,
-        input_ip_ttl,
-        input_ip_protocol,
-        input_ip_header_checksum,
-        input_ip_source_ip,
-        input_ip_dest_ip,
-        input_udp_source_port,
-        input_udp_dest_port,
-        input_udp_length,
-        input_udp_checksum,
-        input_udp_payload_tdata,
-        input_udp_payload_tvalid,
-        input_udp_payload_tlast,
-        input_udp_payload_tuser,
-        output_0_udp_hdr_ready,
-        output_0_udp_payload_tready,
-        output_1_udp_hdr_ready,
-        output_1_udp_payload_tready,
-        output_2_udp_hdr_ready,
-        output_2_udp_payload_tready,
-        output_3_udp_hdr_ready,
-        output_3_udp_payload_tready,
+        s_udp_hdr_valid,
+        s_eth_dest_mac,
+        s_eth_src_mac,
+        s_eth_type,
+        s_ip_version,
+        s_ip_ihl,
+        s_ip_dscp,
+        s_ip_ecn,
+        s_ip_length,
+        s_ip_identification,
+        s_ip_flags,
+        s_ip_fragment_offset,
+        s_ip_ttl,
+        s_ip_protocol,
+        s_ip_header_checksum,
+        s_ip_source_ip,
+        s_ip_dest_ip,
+        s_udp_source_port,
+        s_udp_dest_port,
+        s_udp_length,
+        s_udp_checksum,
+        s_udp_payload_axis_tdata,
+        s_udp_payload_axis_tkeep,
+        s_udp_payload_axis_tvalid,
+        s_udp_payload_axis_tlast,
+        s_udp_payload_axis_tid,
+        s_udp_payload_axis_tdest,
+        s_udp_payload_axis_tuser,
+        m_udp_hdr_ready,
+        m_udp_payload_axis_tready,
         enable,
+        drop,
         select
     );
     $to_myhdl(
-        input_udp_hdr_ready,
-        input_udp_payload_tready,
-        output_0_udp_hdr_valid,
-        output_0_eth_dest_mac,
-        output_0_eth_src_mac,
-        output_0_eth_type,
-        output_0_ip_version,
-        output_0_ip_ihl,
-        output_0_ip_dscp,
-        output_0_ip_ecn,
-        output_0_ip_length,
-        output_0_ip_identification,
-        output_0_ip_flags,
-        output_0_ip_fragment_offset,
-        output_0_ip_ttl,
-        output_0_ip_protocol,
-        output_0_ip_header_checksum,
-        output_0_ip_source_ip,
-        output_0_ip_dest_ip,
-        output_0_udp_source_port,
-        output_0_udp_dest_port,
-        output_0_udp_length,
-        output_0_udp_checksum,
-        output_0_udp_payload_tdata,
-        output_0_udp_payload_tvalid,
-        output_0_udp_payload_tlast,
-        output_0_udp_payload_tuser,
-        output_1_udp_hdr_valid,
-        output_1_eth_dest_mac,
-        output_1_eth_src_mac,
-        output_1_eth_type,
-        output_1_ip_version,
-        output_1_ip_ihl,
-        output_1_ip_dscp,
-        output_1_ip_ecn,
-        output_1_ip_length,
-        output_1_ip_identification,
-        output_1_ip_flags,
-        output_1_ip_fragment_offset,
-        output_1_ip_ttl,
-        output_1_ip_protocol,
-        output_1_ip_header_checksum,
-        output_1_ip_source_ip,
-        output_1_ip_dest_ip,
-        output_1_udp_source_port,
-        output_1_udp_dest_port,
-        output_1_udp_length,
-        output_1_udp_checksum,
-        output_1_udp_payload_tdata,
-        output_1_udp_payload_tvalid,
-        output_1_udp_payload_tlast,
-        output_1_udp_payload_tuser,
-        output_2_udp_hdr_valid,
-        output_2_eth_dest_mac,
-        output_2_eth_src_mac,
-        output_2_eth_type,
-        output_2_ip_version,
-        output_2_ip_ihl,
-        output_2_ip_dscp,
-        output_2_ip_ecn,
-        output_2_ip_length,
-        output_2_ip_identification,
-        output_2_ip_flags,
-        output_2_ip_fragment_offset,
-        output_2_ip_ttl,
-        output_2_ip_protocol,
-        output_2_ip_header_checksum,
-        output_2_ip_source_ip,
-        output_2_ip_dest_ip,
-        output_2_udp_source_port,
-        output_2_udp_dest_port,
-        output_2_udp_length,
-        output_2_udp_checksum,
-        output_2_udp_payload_tdata,
-        output_2_udp_payload_tvalid,
-        output_2_udp_payload_tlast,
-        output_2_udp_payload_tuser,
-        output_3_udp_hdr_valid,
-        output_3_eth_dest_mac,
-        output_3_eth_src_mac,
-        output_3_eth_type,
-        output_3_ip_version,
-        output_3_ip_ihl,
-        output_3_ip_dscp,
-        output_3_ip_ecn,
-        output_3_ip_length,
-        output_3_ip_identification,
-        output_3_ip_flags,
-        output_3_ip_fragment_offset,
-        output_3_ip_ttl,
-        output_3_ip_protocol,
-        output_3_ip_header_checksum,
-        output_3_ip_source_ip,
-        output_3_ip_dest_ip,
-        output_3_udp_source_port,
-        output_3_udp_dest_port,
-        output_3_udp_length,
-        output_3_udp_checksum,
-        output_3_udp_payload_tdata,
-        output_3_udp_payload_tvalid,
-        output_3_udp_payload_tlast,
-        output_3_udp_payload_tuser
+        s_udp_hdr_ready,
+        s_udp_payload_axis_tready,
+        m_udp_hdr_valid,
+        m_eth_dest_mac,
+        m_eth_src_mac,
+        m_eth_type,
+        m_ip_version,
+        m_ip_ihl,
+        m_ip_dscp,
+        m_ip_ecn,
+        m_ip_length,
+        m_ip_identification,
+        m_ip_flags,
+        m_ip_fragment_offset,
+        m_ip_ttl,
+        m_ip_protocol,
+        m_ip_header_checksum,
+        m_ip_source_ip,
+        m_ip_dest_ip,
+        m_udp_source_port,
+        m_udp_dest_port,
+        m_udp_length,
+        m_udp_checksum,
+        m_udp_payload_axis_tdata,
+        m_udp_payload_axis_tkeep,
+        m_udp_payload_axis_tvalid,
+        m_udp_payload_axis_tlast,
+        m_udp_payload_axis_tid,
+        m_udp_payload_axis_tdest,
+        m_udp_payload_axis_tuser
     );
 
     // dump file
@@ -331,149 +195,86 @@ initial begin
     $dumpvars(0, test_udp_demux_4);
 end
 
-udp_demux_4
+udp_demux #(
+    .M_COUNT(M_COUNT),
+    .DATA_WIDTH(DATA_WIDTH),
+    .KEEP_ENABLE(KEEP_ENABLE),
+    .KEEP_WIDTH(KEEP_WIDTH),
+    .ID_ENABLE(ID_ENABLE),
+    .ID_WIDTH(ID_WIDTH),
+    .DEST_ENABLE(DEST_ENABLE),
+    .DEST_WIDTH(DEST_WIDTH),
+    .USER_ENABLE(USER_ENABLE),
+    .USER_WIDTH(USER_WIDTH)
+)
 UUT (
     .clk(clk),
     .rst(rst),
     // UDP frame input
-    .input_udp_hdr_valid(input_udp_hdr_valid),
-    .input_udp_hdr_ready(input_udp_hdr_ready),
-    .input_eth_dest_mac(input_eth_dest_mac),
-    .input_eth_src_mac(input_eth_src_mac),
-    .input_eth_type(input_eth_type),
-    .input_ip_version(input_ip_version),
-    .input_ip_ihl(input_ip_ihl),
-    .input_ip_dscp(input_ip_dscp),
-    .input_ip_ecn(input_ip_ecn),
-    .input_ip_length(input_ip_length),
-    .input_ip_identification(input_ip_identification),
-    .input_ip_flags(input_ip_flags),
-    .input_ip_fragment_offset(input_ip_fragment_offset),
-    .input_ip_ttl(input_ip_ttl),
-    .input_ip_protocol(input_ip_protocol),
-    .input_ip_header_checksum(input_ip_header_checksum),
-    .input_ip_source_ip(input_ip_source_ip),
-    .input_ip_dest_ip(input_ip_dest_ip),
-    .input_udp_source_port(input_udp_source_port),
-    .input_udp_dest_port(input_udp_dest_port),
-    .input_udp_length(input_udp_length),
-    .input_udp_checksum(input_udp_checksum),
-    .input_udp_payload_tdata(input_udp_payload_tdata),
-    .input_udp_payload_tvalid(input_udp_payload_tvalid),
-    .input_udp_payload_tready(input_udp_payload_tready),
-    .input_udp_payload_tlast(input_udp_payload_tlast),
-    .input_udp_payload_tuser(input_udp_payload_tuser),
+    .s_udp_hdr_valid(s_udp_hdr_valid),
+    .s_udp_hdr_ready(s_udp_hdr_ready),
+    .s_eth_dest_mac(s_eth_dest_mac),
+    .s_eth_src_mac(s_eth_src_mac),
+    .s_eth_type(s_eth_type),
+    .s_ip_version(s_ip_version),
+    .s_ip_ihl(s_ip_ihl),
+    .s_ip_dscp(s_ip_dscp),
+    .s_ip_ecn(s_ip_ecn),
+    .s_ip_length(s_ip_length),
+    .s_ip_identification(s_ip_identification),
+    .s_ip_flags(s_ip_flags),
+    .s_ip_fragment_offset(s_ip_fragment_offset),
+    .s_ip_ttl(s_ip_ttl),
+    .s_ip_protocol(s_ip_protocol),
+    .s_ip_header_checksum(s_ip_header_checksum),
+    .s_ip_source_ip(s_ip_source_ip),
+    .s_ip_dest_ip(s_ip_dest_ip),
+    .s_udp_source_port(s_udp_source_port),
+    .s_udp_dest_port(s_udp_dest_port),
+    .s_udp_length(s_udp_length),
+    .s_udp_checksum(s_udp_checksum),
+    .s_udp_payload_axis_tdata(s_udp_payload_axis_tdata),
+    .s_udp_payload_axis_tkeep(s_udp_payload_axis_tkeep),
+    .s_udp_payload_axis_tvalid(s_udp_payload_axis_tvalid),
+    .s_udp_payload_axis_tready(s_udp_payload_axis_tready),
+    .s_udp_payload_axis_tlast(s_udp_payload_axis_tlast),
+    .s_udp_payload_axis_tid(s_udp_payload_axis_tid),
+    .s_udp_payload_axis_tdest(s_udp_payload_axis_tdest),
+    .s_udp_payload_axis_tuser(s_udp_payload_axis_tuser),
     // UDP frame outputs
-    .output_0_udp_hdr_valid(output_0_udp_hdr_valid),
-    .output_0_udp_hdr_ready(output_0_udp_hdr_ready),
-    .output_0_eth_dest_mac(output_0_eth_dest_mac),
-    .output_0_eth_src_mac(output_0_eth_src_mac),
-    .output_0_eth_type(output_0_eth_type),
-    .output_0_ip_version(output_0_ip_version),
-    .output_0_ip_ihl(output_0_ip_ihl),
-    .output_0_ip_dscp(output_0_ip_dscp),
-    .output_0_ip_ecn(output_0_ip_ecn),
-    .output_0_ip_length(output_0_ip_length),
-    .output_0_ip_identification(output_0_ip_identification),
-    .output_0_ip_flags(output_0_ip_flags),
-    .output_0_ip_fragment_offset(output_0_ip_fragment_offset),
-    .output_0_ip_ttl(output_0_ip_ttl),
-    .output_0_ip_protocol(output_0_ip_protocol),
-    .output_0_ip_header_checksum(output_0_ip_header_checksum),
-    .output_0_ip_source_ip(output_0_ip_source_ip),
-    .output_0_ip_dest_ip(output_0_ip_dest_ip),
-    .output_0_udp_source_port(output_0_udp_source_port),
-    .output_0_udp_dest_port(output_0_udp_dest_port),
-    .output_0_udp_length(output_0_udp_length),
-    .output_0_udp_checksum(output_0_udp_checksum),
-    .output_0_udp_payload_tdata(output_0_udp_payload_tdata),
-    .output_0_udp_payload_tvalid(output_0_udp_payload_tvalid),
-    .output_0_udp_payload_tready(output_0_udp_payload_tready),
-    .output_0_udp_payload_tlast(output_0_udp_payload_tlast),
-    .output_0_udp_payload_tuser(output_0_udp_payload_tuser),
-    .output_1_udp_hdr_valid(output_1_udp_hdr_valid),
-    .output_1_udp_hdr_ready(output_1_udp_hdr_ready),
-    .output_1_eth_dest_mac(output_1_eth_dest_mac),
-    .output_1_eth_src_mac(output_1_eth_src_mac),
-    .output_1_eth_type(output_1_eth_type),
-    .output_1_ip_version(output_1_ip_version),
-    .output_1_ip_ihl(output_1_ip_ihl),
-    .output_1_ip_dscp(output_1_ip_dscp),
-    .output_1_ip_ecn(output_1_ip_ecn),
-    .output_1_ip_length(output_1_ip_length),
-    .output_1_ip_identification(output_1_ip_identification),
-    .output_1_ip_flags(output_1_ip_flags),
-    .output_1_ip_fragment_offset(output_1_ip_fragment_offset),
-    .output_1_ip_ttl(output_1_ip_ttl),
-    .output_1_ip_protocol(output_1_ip_protocol),
-    .output_1_ip_header_checksum(output_1_ip_header_checksum),
-    .output_1_ip_source_ip(output_1_ip_source_ip),
-    .output_1_ip_dest_ip(output_1_ip_dest_ip),
-    .output_1_udp_source_port(output_1_udp_source_port),
-    .output_1_udp_dest_port(output_1_udp_dest_port),
-    .output_1_udp_length(output_1_udp_length),
-    .output_1_udp_checksum(output_1_udp_checksum),
-    .output_1_udp_payload_tdata(output_1_udp_payload_tdata),
-    .output_1_udp_payload_tvalid(output_1_udp_payload_tvalid),
-    .output_1_udp_payload_tready(output_1_udp_payload_tready),
-    .output_1_udp_payload_tlast(output_1_udp_payload_tlast),
-    .output_1_udp_payload_tuser(output_1_udp_payload_tuser),
-    .output_2_udp_hdr_valid(output_2_udp_hdr_valid),
-    .output_2_udp_hdr_ready(output_2_udp_hdr_ready),
-    .output_2_eth_dest_mac(output_2_eth_dest_mac),
-    .output_2_eth_src_mac(output_2_eth_src_mac),
-    .output_2_eth_type(output_2_eth_type),
-    .output_2_ip_version(output_2_ip_version),
-    .output_2_ip_ihl(output_2_ip_ihl),
-    .output_2_ip_dscp(output_2_ip_dscp),
-    .output_2_ip_ecn(output_2_ip_ecn),
-    .output_2_ip_length(output_2_ip_length),
-    .output_2_ip_identification(output_2_ip_identification),
-    .output_2_ip_flags(output_2_ip_flags),
-    .output_2_ip_fragment_offset(output_2_ip_fragment_offset),
-    .output_2_ip_ttl(output_2_ip_ttl),
-    .output_2_ip_protocol(output_2_ip_protocol),
-    .output_2_ip_header_checksum(output_2_ip_header_checksum),
-    .output_2_ip_source_ip(output_2_ip_source_ip),
-    .output_2_ip_dest_ip(output_2_ip_dest_ip),
-    .output_2_udp_source_port(output_2_udp_source_port),
-    .output_2_udp_dest_port(output_2_udp_dest_port),
-    .output_2_udp_length(output_2_udp_length),
-    .output_2_udp_checksum(output_2_udp_checksum),
-    .output_2_udp_payload_tdata(output_2_udp_payload_tdata),
-    .output_2_udp_payload_tvalid(output_2_udp_payload_tvalid),
-    .output_2_udp_payload_tready(output_2_udp_payload_tready),
-    .output_2_udp_payload_tlast(output_2_udp_payload_tlast),
-    .output_2_udp_payload_tuser(output_2_udp_payload_tuser),
-    .output_3_udp_hdr_valid(output_3_udp_hdr_valid),
-    .output_3_udp_hdr_ready(output_3_udp_hdr_ready),
-    .output_3_eth_dest_mac(output_3_eth_dest_mac),
-    .output_3_eth_src_mac(output_3_eth_src_mac),
-    .output_3_eth_type(output_3_eth_type),
-    .output_3_ip_version(output_3_ip_version),
-    .output_3_ip_ihl(output_3_ip_ihl),
-    .output_3_ip_dscp(output_3_ip_dscp),
-    .output_3_ip_ecn(output_3_ip_ecn),
-    .output_3_ip_length(output_3_ip_length),
-    .output_3_ip_identification(output_3_ip_identification),
-    .output_3_ip_flags(output_3_ip_flags),
-    .output_3_ip_fragment_offset(output_3_ip_fragment_offset),
-    .output_3_ip_ttl(output_3_ip_ttl),
-    .output_3_ip_protocol(output_3_ip_protocol),
-    .output_3_ip_header_checksum(output_3_ip_header_checksum),
-    .output_3_ip_source_ip(output_3_ip_source_ip),
-    .output_3_ip_dest_ip(output_3_ip_dest_ip),
-    .output_3_udp_source_port(output_3_udp_source_port),
-    .output_3_udp_dest_port(output_3_udp_dest_port),
-    .output_3_udp_length(output_3_udp_length),
-    .output_3_udp_checksum(output_3_udp_checksum),
-    .output_3_udp_payload_tdata(output_3_udp_payload_tdata),
-    .output_3_udp_payload_tvalid(output_3_udp_payload_tvalid),
-    .output_3_udp_payload_tready(output_3_udp_payload_tready),
-    .output_3_udp_payload_tlast(output_3_udp_payload_tlast),
-    .output_3_udp_payload_tuser(output_3_udp_payload_tuser),
+    .m_udp_hdr_valid(m_udp_hdr_valid),
+    .m_udp_hdr_ready(m_udp_hdr_ready),
+    .m_eth_dest_mac(m_eth_dest_mac),
+    .m_eth_src_mac(m_eth_src_mac),
+    .m_eth_type(m_eth_type),
+    .m_ip_version(m_ip_version),
+    .m_ip_ihl(m_ip_ihl),
+    .m_ip_dscp(m_ip_dscp),
+    .m_ip_ecn(m_ip_ecn),
+    .m_ip_length(m_ip_length),
+    .m_ip_identification(m_ip_identification),
+    .m_ip_flags(m_ip_flags),
+    .m_ip_fragment_offset(m_ip_fragment_offset),
+    .m_ip_ttl(m_ip_ttl),
+    .m_ip_protocol(m_ip_protocol),
+    .m_ip_header_checksum(m_ip_header_checksum),
+    .m_ip_source_ip(m_ip_source_ip),
+    .m_ip_dest_ip(m_ip_dest_ip),
+    .m_udp_source_port(m_udp_source_port),
+    .m_udp_dest_port(m_udp_dest_port),
+    .m_udp_length(m_udp_length),
+    .m_udp_checksum(m_udp_checksum),
+    .m_udp_payload_axis_tdata(m_udp_payload_axis_tdata),
+    .m_udp_payload_axis_tkeep(m_udp_payload_axis_tkeep),
+    .m_udp_payload_axis_tvalid(m_udp_payload_axis_tvalid),
+    .m_udp_payload_axis_tready(m_udp_payload_axis_tready),
+    .m_udp_payload_axis_tlast(m_udp_payload_axis_tlast),
+    .m_udp_payload_axis_tid(m_udp_payload_axis_tid),
+    .m_udp_payload_axis_tdest(m_udp_payload_axis_tdest),
+    .m_udp_payload_axis_tuser(m_udp_payload_axis_tuser),
     // Control
     .enable(enable),
+    .drop(drop),
     .select(select)
 );
 
