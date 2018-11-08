@@ -60,10 +60,10 @@ def bench():
     mii_select = Signal(bool(0))
 
     # Outputs
-    output_axis_tdata = Signal(intbv(0)[8:])
-    output_axis_tvalid = Signal(bool(0))
-    output_axis_tlast = Signal(bool(0))
-    output_axis_tuser = Signal(bool(0))
+    m_axis_tdata = Signal(intbv(0)[8:])
+    m_axis_tvalid = Signal(bool(0))
+    m_axis_tlast = Signal(bool(0))
+    m_axis_tuser = Signal(bool(0))
     error_bad_frame = Signal(bool(0))
     error_bad_fcs = Signal(bool(0))
 
@@ -86,10 +86,10 @@ def bench():
     sink_logic = sink.create_logic(
         clk,
         rst,
-        tdata=output_axis_tdata,
-        tvalid=output_axis_tvalid,
-        tlast=output_axis_tlast,
-        tuser=output_axis_tuser,
+        tdata=m_axis_tdata,
+        tvalid=m_axis_tvalid,
+        tlast=m_axis_tlast,
+        tuser=m_axis_tuser,
         name='sink'
     )
 
@@ -107,10 +107,10 @@ def bench():
         gmii_rx_dv=gmii_rx_dv,
         gmii_rx_er=gmii_rx_er,
 
-        output_axis_tdata=output_axis_tdata,
-        output_axis_tvalid=output_axis_tvalid,
-        output_axis_tlast=output_axis_tlast,
-        output_axis_tuser=output_axis_tuser,
+        m_axis_tdata=m_axis_tdata,
+        m_axis_tvalid=m_axis_tvalid,
+        m_axis_tlast=m_axis_tlast,
+        m_axis_tuser=m_axis_tuser,
 
         clk_enable=clk_enable,
         mii_select=mii_select,

@@ -48,32 +48,32 @@ def bench():
     rst = Signal(bool(0))
     current_test = Signal(intbv(0)[8:])
 
-    input_eth_hdr_valid = Signal(bool(0))
-    input_eth_dest_mac = Signal(intbv(0)[48:])
-    input_eth_src_mac = Signal(intbv(0)[48:])
-    input_eth_type = Signal(intbv(0)[16:])
-    input_eth_payload_tdata = Signal(intbv(0)[8:])
-    input_eth_payload_tvalid = Signal(bool(0))
-    input_eth_payload_tlast = Signal(bool(0))
-    input_eth_payload_tuser = Signal(bool(0))
-    output_frame_ready = Signal(bool(0))
+    s_eth_hdr_valid = Signal(bool(0))
+    s_eth_dest_mac = Signal(intbv(0)[48:])
+    s_eth_src_mac = Signal(intbv(0)[48:])
+    s_eth_type = Signal(intbv(0)[16:])
+    s_eth_payload_axis_tdata = Signal(intbv(0)[8:])
+    s_eth_payload_axis_tvalid = Signal(bool(0))
+    s_eth_payload_axis_tlast = Signal(bool(0))
+    s_eth_payload_axis_tuser = Signal(bool(0))
+    m_frame_ready = Signal(bool(0))
 
     # Outputs
-    input_eth_hdr_ready = Signal(bool(0))
-    input_eth_payload_tready = Signal(bool(0))
-    output_frame_valid = Signal(bool(0))
-    output_eth_dest_mac = Signal(intbv(0)[48:])
-    output_eth_src_mac = Signal(intbv(0)[48:])
-    output_eth_type = Signal(intbv(0)[16:])
-    output_arp_htype = Signal(intbv(0)[16:])
-    output_arp_ptype = Signal(intbv(0)[16:])
-    output_arp_hlen = Signal(intbv(0)[8:])
-    output_arp_plen = Signal(intbv(0)[8:])
-    output_arp_oper = Signal(intbv(0)[16:])
-    output_arp_sha = Signal(intbv(0)[48:])
-    output_arp_spa = Signal(intbv(0)[32:])
-    output_arp_tha = Signal(intbv(0)[48:])
-    output_arp_tpa = Signal(intbv(0)[32:])
+    s_eth_hdr_ready = Signal(bool(0))
+    s_eth_payload_axis_tready = Signal(bool(0))
+    m_frame_valid = Signal(bool(0))
+    m_eth_dest_mac = Signal(intbv(0)[48:])
+    m_eth_src_mac = Signal(intbv(0)[48:])
+    m_eth_type = Signal(intbv(0)[16:])
+    m_arp_htype = Signal(intbv(0)[16:])
+    m_arp_ptype = Signal(intbv(0)[16:])
+    m_arp_hlen = Signal(intbv(0)[8:])
+    m_arp_plen = Signal(intbv(0)[8:])
+    m_arp_oper = Signal(intbv(0)[16:])
+    m_arp_sha = Signal(intbv(0)[48:])
+    m_arp_spa = Signal(intbv(0)[32:])
+    m_arp_tha = Signal(intbv(0)[48:])
+    m_arp_tpa = Signal(intbv(0)[32:])
     busy = Signal(bool(0))
     error_header_early_termination = Signal(bool(0))
     error_invalid_header = Signal(bool(0))
@@ -87,16 +87,16 @@ def bench():
     source_logic = source.create_logic(
         clk,
         rst,
-        eth_hdr_ready=input_eth_hdr_ready,
-        eth_hdr_valid=input_eth_hdr_valid,
-        eth_dest_mac=input_eth_dest_mac,
-        eth_src_mac=input_eth_src_mac,
-        eth_type=input_eth_type,
-        eth_payload_tdata=input_eth_payload_tdata,
-        eth_payload_tvalid=input_eth_payload_tvalid,
-        eth_payload_tready=input_eth_payload_tready,
-        eth_payload_tlast=input_eth_payload_tlast,
-        eth_payload_tuser=input_eth_payload_tuser,
+        eth_hdr_ready=s_eth_hdr_ready,
+        eth_hdr_valid=s_eth_hdr_valid,
+        eth_dest_mac=s_eth_dest_mac,
+        eth_src_mac=s_eth_src_mac,
+        eth_type=s_eth_type,
+        eth_payload_tdata=s_eth_payload_axis_tdata,
+        eth_payload_tvalid=s_eth_payload_axis_tvalid,
+        eth_payload_tready=s_eth_payload_axis_tready,
+        eth_payload_tlast=s_eth_payload_axis_tlast,
+        eth_payload_tuser=s_eth_payload_axis_tuser,
         pause=source_pause,
         name='source'
     )
@@ -106,20 +106,20 @@ def bench():
     sink_logic = sink.create_logic(
         clk,
         rst,
-        frame_ready=output_frame_ready,
-        frame_valid=output_frame_valid,
-        eth_dest_mac=output_eth_dest_mac,
-        eth_src_mac=output_eth_src_mac,
-        eth_type=output_eth_type,
-        arp_htype=output_arp_htype,
-        arp_ptype=output_arp_ptype,
-        arp_hlen=output_arp_hlen,
-        arp_plen=output_arp_plen,
-        arp_oper=output_arp_oper,
-        arp_sha=output_arp_sha,
-        arp_spa=output_arp_spa,
-        arp_tha=output_arp_tha,
-        arp_tpa=output_arp_tpa,
+        frame_ready=m_frame_ready,
+        frame_valid=m_frame_valid,
+        eth_dest_mac=m_eth_dest_mac,
+        eth_src_mac=m_eth_src_mac,
+        eth_type=m_eth_type,
+        arp_htype=m_arp_htype,
+        arp_ptype=m_arp_ptype,
+        arp_hlen=m_arp_hlen,
+        arp_plen=m_arp_plen,
+        arp_oper=m_arp_oper,
+        arp_sha=m_arp_sha,
+        arp_spa=m_arp_spa,
+        arp_tha=m_arp_tha,
+        arp_tpa=m_arp_tpa,
         pause=sink_pause,
         name='sink'
     )
@@ -134,31 +134,31 @@ def bench():
         rst=rst,
         current_test=current_test,
 
-        input_eth_hdr_valid=input_eth_hdr_valid,
-        input_eth_hdr_ready=input_eth_hdr_ready,
-        input_eth_dest_mac=input_eth_dest_mac,
-        input_eth_src_mac=input_eth_src_mac,
-        input_eth_type=input_eth_type,
-        input_eth_payload_tdata=input_eth_payload_tdata,
-        input_eth_payload_tvalid=input_eth_payload_tvalid,
-        input_eth_payload_tready=input_eth_payload_tready,
-        input_eth_payload_tlast=input_eth_payload_tlast,
-        input_eth_payload_tuser=input_eth_payload_tuser,
+        s_eth_hdr_valid=s_eth_hdr_valid,
+        s_eth_hdr_ready=s_eth_hdr_ready,
+        s_eth_dest_mac=s_eth_dest_mac,
+        s_eth_src_mac=s_eth_src_mac,
+        s_eth_type=s_eth_type,
+        s_eth_payload_axis_tdata=s_eth_payload_axis_tdata,
+        s_eth_payload_axis_tvalid=s_eth_payload_axis_tvalid,
+        s_eth_payload_axis_tready=s_eth_payload_axis_tready,
+        s_eth_payload_axis_tlast=s_eth_payload_axis_tlast,
+        s_eth_payload_axis_tuser=s_eth_payload_axis_tuser,
 
-        output_frame_valid=output_frame_valid,
-        output_frame_ready=output_frame_ready,
-        output_eth_dest_mac=output_eth_dest_mac,
-        output_eth_src_mac=output_eth_src_mac,
-        output_eth_type=output_eth_type,
-        output_arp_htype=output_arp_htype,
-        output_arp_ptype=output_arp_ptype,
-        output_arp_hlen=output_arp_hlen,
-        output_arp_plen=output_arp_plen,
-        output_arp_oper=output_arp_oper,
-        output_arp_sha=output_arp_sha,
-        output_arp_spa=output_arp_spa,
-        output_arp_tha=output_arp_tha,
-        output_arp_tpa=output_arp_tpa,
+        m_frame_valid=m_frame_valid,
+        m_frame_ready=m_frame_ready,
+        m_eth_dest_mac=m_eth_dest_mac,
+        m_eth_src_mac=m_eth_src_mac,
+        m_eth_type=m_eth_type,
+        m_arp_htype=m_arp_htype,
+        m_arp_ptype=m_arp_ptype,
+        m_arp_hlen=m_arp_hlen,
+        m_arp_plen=m_arp_plen,
+        m_arp_oper=m_arp_oper,
+        m_arp_sha=m_arp_sha,
+        m_arp_spa=m_arp_spa,
+        m_arp_tha=m_arp_tha,
+        m_arp_tpa=m_arp_tpa,
 
         busy=busy,
         error_header_early_termination=error_header_early_termination,
@@ -357,7 +357,7 @@ def bench():
         yield clk.posedge
         yield clk.posedge
 
-        while input_eth_payload_tvalid:
+        while s_eth_payload_axis_tvalid:
             source_pause.next = True
             yield clk.posedge
             yield clk.posedge
@@ -412,7 +412,7 @@ def bench():
         yield clk.posedge
         yield clk.posedge
 
-        while input_eth_payload_tvalid:
+        while s_eth_payload_axis_tvalid:
             sink_pause.next = True
             yield clk.posedge
             yield clk.posedge
@@ -454,7 +454,7 @@ def bench():
         source.send(eth_frame)
         yield clk.posedge
 
-        yield input_eth_payload_tlast.posedge
+        yield s_eth_payload_axis_tlast.posedge
         yield clk.posedge
         yield clk.posedge
         assert error_header_early_termination
@@ -481,7 +481,7 @@ def bench():
         source.send(test_frame.build_eth())
         yield clk.posedge
 
-        yield input_eth_payload_tlast.posedge
+        yield s_eth_payload_axis_tlast.posedge
         yield clk.posedge
         yield clk.posedge
         assert error_invalid_header
@@ -510,7 +510,7 @@ def bench():
         source.send(eth_frame)
         yield clk.posedge
 
-        yield input_eth_payload_tlast.posedge
+        yield s_eth_payload_axis_tlast.posedge
         yield clk.posedge
         yield clk.posedge
         assert sink.empty()

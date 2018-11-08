@@ -37,12 +37,12 @@ module axis_eth_fcs_64
     /*
      * AXI input
      */
-    input  wire [63:0] input_axis_tdata,
-    input  wire [7:0]  input_axis_tkeep,
-    input  wire        input_axis_tvalid,
-    output wire        input_axis_tready,
-    input  wire        input_axis_tlast,
-    input  wire        input_axis_tuser,
+    input  wire [63:0] s_axis_tdata,
+    input  wire [7:0]  s_axis_tkeep,
+    input  wire        s_axis_tvalid,
+    output wire        s_axis_tready,
+    input  wire        s_axis_tlast,
+    input  wire        s_axis_tuser,
     
     /*
      * FCS output
@@ -64,7 +64,7 @@ wire [31:0] crc_next5;
 wire [31:0] crc_next6;
 wire [31:0] crc_next7;
 
-assign input_axis_tready = 1'b1;
+assign s_axis_tready = 1'b1;
 assign output_fcs = fcs_reg;
 assign output_fcs_valid = fcs_valid_reg;
 
@@ -78,7 +78,7 @@ lfsr #(
     .STYLE("AUTO")
 )
 eth_crc_8 (
-    .data_in(input_axis_tdata[7:0]),
+    .data_in(s_axis_tdata[7:0]),
     .state_in(crc_state),
     .data_out(),
     .state_out(crc_next0)
@@ -94,7 +94,7 @@ lfsr #(
     .STYLE("AUTO")
 )
 eth_crc_16 (
-    .data_in(input_axis_tdata[15:0]),
+    .data_in(s_axis_tdata[15:0]),
     .state_in(crc_state),
     .data_out(),
     .state_out(crc_next1)
@@ -110,7 +110,7 @@ lfsr #(
     .STYLE("AUTO")
 )
 eth_crc_24 (
-    .data_in(input_axis_tdata[23:0]),
+    .data_in(s_axis_tdata[23:0]),
     .state_in(crc_state),
     .data_out(),
     .state_out(crc_next2)
@@ -126,7 +126,7 @@ lfsr #(
     .STYLE("AUTO")
 )
 eth_crc_32 (
-    .data_in(input_axis_tdata[31:0]),
+    .data_in(s_axis_tdata[31:0]),
     .state_in(crc_state),
     .data_out(),
     .state_out(crc_next3)
@@ -142,7 +142,7 @@ lfsr #(
     .STYLE("AUTO")
 )
 eth_crc_40 (
-    .data_in(input_axis_tdata[39:0]),
+    .data_in(s_axis_tdata[39:0]),
     .state_in(crc_state),
     .data_out(),
     .state_out(crc_next4)
@@ -158,7 +158,7 @@ lfsr #(
     .STYLE("AUTO")
 )
 eth_crc_48 (
-    .data_in(input_axis_tdata[47:0]),
+    .data_in(s_axis_tdata[47:0]),
     .state_in(crc_state),
     .data_out(),
     .state_out(crc_next5)
@@ -174,7 +174,7 @@ lfsr #(
     .STYLE("AUTO")
 )
 eth_crc_56 (
-    .data_in(input_axis_tdata[55:0]),
+    .data_in(s_axis_tdata[55:0]),
     .state_in(crc_state),
     .data_out(),
     .state_out(crc_next6)
@@ -190,7 +190,7 @@ lfsr #(
     .STYLE("AUTO")
 )
 eth_crc_64 (
-    .data_in(input_axis_tdata[63:0]),
+    .data_in(s_axis_tdata[63:0]),
     .state_in(crc_state),
     .data_out(),
     .state_out(crc_next7)
@@ -203,10 +203,10 @@ always @(posedge clk) begin
         fcs_valid_reg <= 1'b0;
     end else begin
         fcs_valid_reg <= 1'b0;
-        if (input_axis_tvalid) begin
-            if (input_axis_tlast) begin
+        if (s_axis_tvalid) begin
+            if (s_axis_tlast) begin
                 crc_state <= 32'hFFFFFFFF;
-                case (input_axis_tkeep)
+                case (s_axis_tkeep)
                     8'b00000001: fcs_reg <= ~crc_next0;
                     8'b00000011: fcs_reg <= ~crc_next1;
                     8'b00000111: fcs_reg <= ~crc_next2;

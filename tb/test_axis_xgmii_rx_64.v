@@ -42,11 +42,11 @@ reg [63:0] xgmii_rxd = 64'h0707070707070707;
 reg [7:0] xgmii_rxc = 8'hff;
 
 // Outputs
-wire [63:0] output_axis_tdata;
-wire [7:0] output_axis_tkeep;
-wire output_axis_tvalid;
-wire output_axis_tlast;
-wire output_axis_tuser;
+wire [63:0] m_axis_tdata;
+wire [7:0] m_axis_tkeep;
+wire m_axis_tvalid;
+wire m_axis_tlast;
+wire m_axis_tuser;
 wire error_bad_frame;
 wire error_bad_fcs;
 
@@ -60,11 +60,11 @@ initial begin
         xgmii_rxc
     );
     $to_myhdl(
-        output_axis_tdata,
-        output_axis_tkeep,
-        output_axis_tvalid,
-        output_axis_tlast,
-        output_axis_tuser,
+        m_axis_tdata,
+        m_axis_tkeep,
+        m_axis_tvalid,
+        m_axis_tlast,
+        m_axis_tuser,
         error_bad_frame,
         error_bad_fcs
     );
@@ -80,11 +80,11 @@ UUT (
     .rst(rst),
     .xgmii_rxd(xgmii_rxd),
     .xgmii_rxc(xgmii_rxc),
-    .output_axis_tdata(output_axis_tdata),
-    .output_axis_tkeep(output_axis_tkeep),
-    .output_axis_tvalid(output_axis_tvalid),
-    .output_axis_tlast(output_axis_tlast),
-    .output_axis_tuser(output_axis_tuser),
+    .m_axis_tdata(m_axis_tdata),
+    .m_axis_tkeep(m_axis_tkeep),
+    .m_axis_tvalid(m_axis_tvalid),
+    .m_axis_tlast(m_axis_tlast),
+    .m_axis_tuser(m_axis_tuser),
     .error_bad_frame(error_bad_frame),
     .error_bad_fcs(error_bad_fcs)
 );

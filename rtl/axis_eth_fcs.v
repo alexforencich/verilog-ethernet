@@ -37,11 +37,11 @@ module axis_eth_fcs
     /*
      * AXI input
      */
-    input  wire [7:0]  input_axis_tdata,
-    input  wire        input_axis_tvalid,
-    output wire        input_axis_tready,
-    input  wire        input_axis_tlast,
-    input  wire        input_axis_tuser,
+    input  wire [7:0]  s_axis_tdata,
+    input  wire        s_axis_tvalid,
+    output wire        s_axis_tready,
+    input  wire        s_axis_tlast,
+    input  wire        s_axis_tuser,
     
     /*
      * FCS output
@@ -56,7 +56,7 @@ reg fcs_valid_reg = 1'b0;
 
 wire [31:0] crc_next;
 
-assign input_axis_tready = 1;
+assign s_axis_tready = 1;
 assign output_fcs = fcs_reg;
 assign output_fcs_valid = fcs_valid_reg;
 
@@ -70,7 +70,7 @@ lfsr #(
     .STYLE("AUTO")
 )
 eth_crc_8 (
-    .data_in(input_axis_tdata),
+    .data_in(s_axis_tdata),
     .state_in(crc_state),
     .data_out(),
     .state_out(crc_next)
@@ -83,8 +83,8 @@ always @(posedge clk) begin
         fcs_valid_reg <= 1'b0;
     end else begin
         fcs_valid_reg <= 1'b0;
-        if (input_axis_tvalid) begin
-            if (input_axis_tlast) begin
+        if (s_axis_tvalid) begin
+            if (s_axis_tlast) begin
                 crc_state <= 32'hFFFFFFFF;
                 fcs_reg <= ~crc_next;
                 fcs_valid_reg <= 1'b1;

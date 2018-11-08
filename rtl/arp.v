@@ -42,30 +42,30 @@ module arp #(
     /*
      * Ethernet frame input
      */
-    input  wire        input_eth_hdr_valid,
-    output wire        input_eth_hdr_ready,
-    input  wire [47:0] input_eth_dest_mac,
-    input  wire [47:0] input_eth_src_mac,
-    input  wire [15:0] input_eth_type,
-    input  wire [7:0]  input_eth_payload_tdata,
-    input  wire        input_eth_payload_tvalid,
-    output wire        input_eth_payload_tready,
-    input  wire        input_eth_payload_tlast,
-    input  wire        input_eth_payload_tuser,
+    input  wire        s_eth_hdr_valid,
+    output wire        s_eth_hdr_ready,
+    input  wire [47:0] s_eth_dest_mac,
+    input  wire [47:0] s_eth_src_mac,
+    input  wire [15:0] s_eth_type,
+    input  wire [7:0]  s_eth_payload_axis_tdata,
+    input  wire        s_eth_payload_axis_tvalid,
+    output wire        s_eth_payload_axis_tready,
+    input  wire        s_eth_payload_axis_tlast,
+    input  wire        s_eth_payload_axis_tuser,
 
     /*
      * Ethernet frame output
      */
-    output wire        output_eth_hdr_valid,
-    input  wire        output_eth_hdr_ready,
-    output wire [47:0] output_eth_dest_mac,
-    output wire [47:0] output_eth_src_mac,
-    output wire [15:0] output_eth_type,
-    output wire [7:0]  output_eth_payload_tdata,
-    output wire        output_eth_payload_tvalid,
-    input  wire        output_eth_payload_tready,
-    output wire        output_eth_payload_tlast,
-    output wire        output_eth_payload_tuser,
+    output wire        m_eth_hdr_valid,
+    input  wire        m_eth_hdr_ready,
+    output wire [47:0] m_eth_dest_mac,
+    output wire [47:0] m_eth_src_mac,
+    output wire [15:0] m_eth_type,
+    output wire [7:0]  m_eth_payload_axis_tdata,
+    output wire        m_eth_payload_axis_tvalid,
+    input  wire        m_eth_payload_axis_tready,
+    output wire        m_eth_payload_axis_tlast,
+    output wire        m_eth_payload_axis_tuser,
 
     /*
      * ARP requests
@@ -117,31 +117,31 @@ arp_eth_rx_inst (
     .clk(clk),
     .rst(rst),
     // Ethernet frame input
-    .input_eth_hdr_valid(input_eth_hdr_valid),
-    .input_eth_hdr_ready(input_eth_hdr_ready),
-    .input_eth_dest_mac(input_eth_dest_mac),
-    .input_eth_src_mac(input_eth_src_mac),
-    .input_eth_type(input_eth_type),
-    .input_eth_payload_tdata(input_eth_payload_tdata),
-    .input_eth_payload_tvalid(input_eth_payload_tvalid),
-    .input_eth_payload_tready(input_eth_payload_tready),
-    .input_eth_payload_tlast(input_eth_payload_tlast),
-    .input_eth_payload_tuser(input_eth_payload_tuser),
+    .s_eth_hdr_valid(s_eth_hdr_valid),
+    .s_eth_hdr_ready(s_eth_hdr_ready),
+    .s_eth_dest_mac(s_eth_dest_mac),
+    .s_eth_src_mac(s_eth_src_mac),
+    .s_eth_type(s_eth_type),
+    .s_eth_payload_axis_tdata(s_eth_payload_axis_tdata),
+    .s_eth_payload_axis_tvalid(s_eth_payload_axis_tvalid),
+    .s_eth_payload_axis_tready(s_eth_payload_axis_tready),
+    .s_eth_payload_axis_tlast(s_eth_payload_axis_tlast),
+    .s_eth_payload_axis_tuser(s_eth_payload_axis_tuser),
     // ARP frame output
-    .output_frame_valid(incoming_frame_valid),
-    .output_frame_ready(incoming_frame_ready),
-    .output_eth_dest_mac(incoming_eth_dest_mac),
-    .output_eth_src_mac(incoming_eth_src_mac),
-    .output_eth_type(incoming_eth_type),
-    .output_arp_htype(incoming_arp_htype),
-    .output_arp_ptype(incoming_arp_ptype),
-    .output_arp_hlen(incoming_arp_hlen),
-    .output_arp_plen(incoming_arp_plen),
-    .output_arp_oper(incoming_arp_oper),
-    .output_arp_sha(incoming_arp_sha),
-    .output_arp_spa(incoming_arp_spa),
-    .output_arp_tha(incoming_arp_tha),
-    .output_arp_tpa(incoming_arp_tpa),
+    .m_frame_valid(incoming_frame_valid),
+    .m_frame_ready(incoming_frame_ready),
+    .m_eth_dest_mac(incoming_eth_dest_mac),
+    .m_eth_src_mac(incoming_eth_src_mac),
+    .m_eth_type(incoming_eth_type),
+    .m_arp_htype(incoming_arp_htype),
+    .m_arp_ptype(incoming_arp_ptype),
+    .m_arp_hlen(incoming_arp_hlen),
+    .m_arp_plen(incoming_arp_plen),
+    .m_arp_oper(incoming_arp_oper),
+    .m_arp_sha(incoming_arp_sha),
+    .m_arp_spa(incoming_arp_spa),
+    .m_arp_tha(incoming_arp_tha),
+    .m_arp_tpa(incoming_arp_tpa),
     // Status signals
     .busy(),
     .error_header_early_termination(),
@@ -160,29 +160,29 @@ arp_eth_tx_inst (
     .clk(clk),
     .rst(rst),
     // ARP frame input
-    .input_frame_valid(outgoing_frame_valid_reg),
-    .input_frame_ready(outgoing_frame_ready),
-    .input_eth_dest_mac(outgoing_eth_dest_mac_reg),
-    .input_eth_src_mac(local_mac),
-    .input_eth_type(16'h0806),
-    .input_arp_htype(16'h0001),
-    .input_arp_ptype(16'h0800),
-    .input_arp_oper(outgoing_arp_oper_reg),
-    .input_arp_sha(local_mac),
-    .input_arp_spa(local_ip),
-    .input_arp_tha(outgoing_arp_tha_reg),
-    .input_arp_tpa(outgoing_arp_tpa_reg),
+    .s_frame_valid(outgoing_frame_valid_reg),
+    .s_frame_ready(outgoing_frame_ready),
+    .s_eth_dest_mac(outgoing_eth_dest_mac_reg),
+    .s_eth_src_mac(local_mac),
+    .s_eth_type(16'h0806),
+    .s_arp_htype(16'h0001),
+    .s_arp_ptype(16'h0800),
+    .s_arp_oper(outgoing_arp_oper_reg),
+    .s_arp_sha(local_mac),
+    .s_arp_spa(local_ip),
+    .s_arp_tha(outgoing_arp_tha_reg),
+    .s_arp_tpa(outgoing_arp_tpa_reg),
     // Ethernet frame output
-    .output_eth_hdr_valid(output_eth_hdr_valid),
-    .output_eth_hdr_ready(output_eth_hdr_ready),
-    .output_eth_dest_mac(output_eth_dest_mac),
-    .output_eth_src_mac(output_eth_src_mac),
-    .output_eth_type(output_eth_type),
-    .output_eth_payload_tdata(output_eth_payload_tdata),
-    .output_eth_payload_tvalid(output_eth_payload_tvalid),
-    .output_eth_payload_tready(output_eth_payload_tready),
-    .output_eth_payload_tlast(output_eth_payload_tlast),
-    .output_eth_payload_tuser(output_eth_payload_tuser),
+    .m_eth_hdr_valid(m_eth_hdr_valid),
+    .m_eth_hdr_ready(m_eth_hdr_ready),
+    .m_eth_dest_mac(m_eth_dest_mac),
+    .m_eth_src_mac(m_eth_src_mac),
+    .m_eth_type(m_eth_type),
+    .m_eth_payload_axis_tdata(m_eth_payload_axis_tdata),
+    .m_eth_payload_axis_tvalid(m_eth_payload_axis_tvalid),
+    .m_eth_payload_axis_tready(m_eth_payload_axis_tready),
+    .m_eth_payload_axis_tlast(m_eth_payload_axis_tlast),
+    .m_eth_payload_axis_tuser(m_eth_payload_axis_tuser),
     // Status signals
     .busy()
 );
@@ -244,7 +244,7 @@ assign arp_response_mac = arp_response_mac_reg;
 always @* begin
     incoming_frame_ready = 1'b0;
 
-    outgoing_frame_valid_next = outgoing_frame_valid_reg & ~outgoing_frame_ready;
+    outgoing_frame_valid_next = outgoing_frame_valid_reg && !outgoing_frame_ready;
     outgoing_eth_dest_mac_next = outgoing_eth_dest_mac_reg;
     outgoing_arp_oper_next = outgoing_arp_oper_reg;
     outgoing_arp_tha_next = outgoing_arp_tha_reg;
@@ -262,13 +262,13 @@ always @* begin
     arp_request_operation_next = arp_request_operation_reg;
     arp_request_retry_cnt_next = arp_request_retry_cnt_reg;
     arp_request_timer_next = arp_request_timer_reg;
-    arp_response_valid_next = arp_response_valid_reg & ~arp_response_ready;
+    arp_response_valid_next = arp_response_valid_reg && !arp_response_ready;
     arp_response_error_next = 1'b0;
     arp_response_mac_next = 48'd0;
 
     // manage incoming frames
     incoming_frame_ready = outgoing_frame_ready;
-    if (incoming_frame_valid & incoming_frame_ready) begin
+    if (incoming_frame_valid && incoming_frame_ready) begin
         if (incoming_eth_type == 16'h0806 && incoming_arp_htype == 16'h0001 && incoming_arp_ptype == 16'h0800) begin
             // store sender addresses in cache
             cache_write_request_valid_next = 1'b1;
@@ -304,7 +304,7 @@ always @* begin
         cache_query_request_valid_next = 1'b1;
         arp_request_timer_next = arp_request_timer_reg - 1;
         // if we got a response, it will go in the cache, so when the query succeds, we're done
-        if (cache_query_response_valid & ~cache_query_response_error) begin
+        if (cache_query_response_valid && !cache_query_response_error) begin
             arp_request_operation_next = 1'b0;
             cache_query_request_valid_next = 1'b0;
             arp_response_valid_next = 1'b1;
@@ -336,7 +336,7 @@ always @* begin
             end
         end
     end else begin
-        arp_request_ready_next = ~arp_response_valid_next;
+        arp_request_ready_next = !arp_response_valid_next;
         if (cache_query_request_valid_reg) begin
             cache_query_request_valid_next = 1'b1;
             if (cache_query_response_valid) begin
@@ -357,7 +357,7 @@ always @* begin
                     arp_response_mac_next = cache_query_response_mac;
                 end
             end
-        end else if (arp_request_valid & arp_request_ready) begin
+        end else if (arp_request_valid && arp_request_ready) begin
             if (~(arp_request_ip | subnet_mask) == 0) begin
                 // broadcast address
                 // (all bits in request IP set where subnet mask is clear)

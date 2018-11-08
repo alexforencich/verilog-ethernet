@@ -43,11 +43,11 @@ module axis_xgmii_rx_32
     /*
      * AXI output
      */
-    output wire [31:0] output_axis_tdata,
-    output wire [3:0]  output_axis_tkeep,
-    output wire        output_axis_tvalid,
-    output wire        output_axis_tlast,
-    output wire        output_axis_tuser,
+    output wire [31:0] m_axis_tdata,
+    output wire [3:0]  m_axis_tkeep,
+    output wire        m_axis_tvalid,
+    output wire        m_axis_tlast,
+    output wire        m_axis_tuser,
 
     /*
      * Status
@@ -78,11 +78,11 @@ reg [3:0] xgmii_rxc_d0 = 4'd0;
 reg [3:0] xgmii_rxc_d1 = 4'd0;
 reg [3:0] xgmii_rxc_d2 = 4'd0;
 
-reg [31:0] output_axis_tdata_reg = 32'd0, output_axis_tdata_next;
-reg [3:0] output_axis_tkeep_reg = 4'd0, output_axis_tkeep_next;
-reg output_axis_tvalid_reg = 1'b0, output_axis_tvalid_next;
-reg output_axis_tlast_reg = 1'b0, output_axis_tlast_next;
-reg output_axis_tuser_reg = 1'b0, output_axis_tuser_next;
+reg [31:0] m_axis_tdata_reg = 32'd0, m_axis_tdata_next;
+reg [3:0] m_axis_tkeep_reg = 4'd0, m_axis_tkeep_next;
+reg m_axis_tvalid_reg = 1'b0, m_axis_tvalid_next;
+reg m_axis_tlast_reg = 1'b0, m_axis_tlast_next;
+reg m_axis_tuser_reg = 1'b0, m_axis_tuser_next;
 
 reg error_bad_frame_reg = 1'b0, error_bad_frame_next;
 reg error_bad_fcs_reg = 1'b0, error_bad_fcs_next;
@@ -104,11 +104,11 @@ reg crc_valid1_save = 1'b0;
 reg crc_valid2_save = 1'b0;
 reg crc_valid3_save = 1'b0;
 
-assign output_axis_tdata = output_axis_tdata_reg;
-assign output_axis_tkeep = output_axis_tkeep_reg;
-assign output_axis_tvalid = output_axis_tvalid_reg;
-assign output_axis_tlast = output_axis_tlast_reg;
-assign output_axis_tuser = output_axis_tuser_reg;
+assign m_axis_tdata = m_axis_tdata_reg;
+assign m_axis_tkeep = m_axis_tkeep_reg;
+assign m_axis_tvalid = m_axis_tvalid_reg;
+assign m_axis_tlast = m_axis_tlast_reg;
+assign m_axis_tuser = m_axis_tuser_reg;
 
 assign error_bad_frame = error_bad_frame_reg;
 assign error_bad_fcs = error_bad_fcs_reg;
@@ -244,11 +244,11 @@ always @* begin
 
     last_cycle_tkeep_next = last_cycle_tkeep_reg;
 
-    output_axis_tdata_next = 32'd0;
-    output_axis_tkeep_next = 4'd0;
-    output_axis_tvalid_next = 1'b0;
-    output_axis_tlast_next = 1'b0;
-    output_axis_tuser_next = 1'b0;
+    m_axis_tdata_next = 32'd0;
+    m_axis_tkeep_next = 4'd0;
+    m_axis_tvalid_next = 1'b0;
+    m_axis_tlast_next = 1'b0;
+    m_axis_tuser_next = 1'b0;
 
     error_bad_frame_next = 1'b0;
     error_bad_fcs_next = 1'b0;
@@ -262,11 +262,11 @@ always @* begin
                 // start condition
                 if (detect_error_masked) begin
                     // error in first data word
-                    output_axis_tdata_next = 32'd0;
-                    output_axis_tkeep_next = 4'h1;
-                    output_axis_tvalid_next = 1'b1;
-                    output_axis_tlast_next = 1'b1;
-                    output_axis_tuser_next = 1'b1;
+                    m_axis_tdata_next = 32'd0;
+                    m_axis_tkeep_next = 4'h1;
+                    m_axis_tvalid_next = 1'b1;
+                    m_axis_tlast_next = 1'b1;
+                    m_axis_tuser_next = 1'b1;
                     error_bad_frame_next = 1'b1;
                     state_next = STATE_IDLE;
                 end else begin
@@ -287,16 +287,16 @@ always @* begin
             // read payload
             update_crc = 1'b1;
 
-            output_axis_tdata_next = xgmii_rxd_d2;
-            output_axis_tkeep_next = ~xgmii_rxc_d2;
-            output_axis_tvalid_next = 1'b1;
-            output_axis_tlast_next = 1'b0;
-            output_axis_tuser_next = 1'b0;
+            m_axis_tdata_next = xgmii_rxd_d2;
+            m_axis_tkeep_next = ~xgmii_rxc_d2;
+            m_axis_tvalid_next = 1'b1;
+            m_axis_tlast_next = 1'b0;
+            m_axis_tuser_next = 1'b0;
 
             if (control_masked) begin
                 // control or error characters in packet
-                output_axis_tlast_next = 1'b1;
-                output_axis_tuser_next = 1'b1;
+                m_axis_tlast_next = 1'b1;
+                m_axis_tuser_next = 1'b1;
                 error_bad_frame_next = 1'b1;
                 reset_crc = 1'b1;
                 state_next = STATE_IDLE;
@@ -304,12 +304,12 @@ always @* begin
                 if (detect_term[0]) begin
                     // end this cycle
                     reset_crc = 1'b1;
-                    output_axis_tkeep_next = 4'b1111;
-                    output_axis_tlast_next = 1'b1;
-                    if (detect_term[0] & crc_valid3_save) begin
+                    m_axis_tkeep_next = 4'b1111;
+                    m_axis_tlast_next = 1'b1;
+                    if (detect_term[0] && crc_valid3_save) begin
                         // CRC valid
                     end else begin
-                        output_axis_tuser_next = 1'b1;
+                        m_axis_tuser_next = 1'b1;
                         error_bad_frame_next = 1'b1;
                         error_bad_fcs_next = 1'b1;
                     end
@@ -325,20 +325,20 @@ always @* begin
         end
         STATE_LAST: begin
             // last cycle of packet
-            output_axis_tdata_next = xgmii_rxd_d2;
-            output_axis_tkeep_next = last_cycle_tkeep_reg;
-            output_axis_tvalid_next = 1'b1;
-            output_axis_tlast_next = 1'b1;
-            output_axis_tuser_next = 1'b0;
+            m_axis_tdata_next = xgmii_rxd_d2;
+            m_axis_tkeep_next = last_cycle_tkeep_reg;
+            m_axis_tvalid_next = 1'b1;
+            m_axis_tlast_next = 1'b1;
+            m_axis_tuser_next = 1'b0;
 
             reset_crc = 1'b1;
 
-            if ((detect_term_save[1] & crc_valid0_save) ||
-                (detect_term_save[2] & crc_valid1_save) ||
-                (detect_term_save[3] & crc_valid2_save)) begin
+            if ((detect_term_save[1] && crc_valid0_save) ||
+                (detect_term_save[2] && crc_valid1_save) ||
+                (detect_term_save[3] && crc_valid2_save)) begin
                 // CRC valid
             end else begin
-                output_axis_tuser_next = 1'b1;
+                m_axis_tuser_next = 1'b1;
                 error_bad_frame_next = 1'b1;
                 error_bad_fcs_next = 1'b1;
             end
@@ -357,7 +357,7 @@ always @(posedge clk) begin
     if (rst) begin
         state_reg <= STATE_IDLE;
 
-        output_axis_tvalid_reg <= 1'b0;
+        m_axis_tvalid_reg <= 1'b0;
 
         error_bad_frame_reg <= 1'b0;
         error_bad_fcs_reg <= 1'b0;
@@ -373,7 +373,7 @@ always @(posedge clk) begin
     end else begin
         state_reg <= state_next;
 
-        output_axis_tvalid_reg <= output_axis_tvalid_next;
+        m_axis_tvalid_reg <= m_axis_tvalid_next;
 
         error_bad_frame_reg <= error_bad_frame_next;
         error_bad_fcs_reg <= error_bad_fcs_next;
@@ -398,10 +398,10 @@ always @(posedge clk) begin
         end
     end
 
-    output_axis_tdata_reg <= output_axis_tdata_next;
-    output_axis_tkeep_reg <= output_axis_tkeep_next;
-    output_axis_tlast_reg <= output_axis_tlast_next;
-    output_axis_tuser_reg <= output_axis_tuser_next;
+    m_axis_tdata_reg <= m_axis_tdata_next;
+    m_axis_tkeep_reg <= m_axis_tkeep_next;
+    m_axis_tlast_reg <= m_axis_tlast_next;
+    m_axis_tuser_reg <= m_axis_tuser_next;
 
     last_cycle_tkeep_reg <= last_cycle_tkeep_next;
 

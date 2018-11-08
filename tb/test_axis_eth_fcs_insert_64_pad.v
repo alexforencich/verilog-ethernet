@@ -40,20 +40,20 @@ reg clk = 0;
 reg rst = 0;
 reg [7:0] current_test = 0;
 
-reg [63:0] input_axis_tdata = 0;
-reg [7:0] input_axis_tkeep = 0;
-reg input_axis_tvalid = 0;
-reg input_axis_tlast = 0;
-reg input_axis_tuser = 0;
-reg output_axis_tready = 0;
+reg [63:0] s_axis_tdata = 0;
+reg [7:0] s_axis_tkeep = 0;
+reg s_axis_tvalid = 0;
+reg s_axis_tlast = 0;
+reg s_axis_tuser = 0;
+reg m_axis_tready = 0;
 
 // Outputs
-wire input_axis_tready;
-wire [63:0] output_axis_tdata;
-wire [7:0] output_axis_tkeep;
-wire output_axis_tvalid;
-wire output_axis_tlast;
-wire output_axis_tuser;
+wire s_axis_tready;
+wire [63:0] m_axis_tdata;
+wire [7:0] m_axis_tkeep;
+wire m_axis_tvalid;
+wire m_axis_tlast;
+wire m_axis_tuser;
 wire busy;
 
 initial begin
@@ -62,20 +62,20 @@ initial begin
         clk,
         rst,
         current_test,
-        input_axis_tdata,
-        input_axis_tkeep,
-        input_axis_tvalid,
-        input_axis_tlast,
-        input_axis_tuser,
-        output_axis_tready
+        s_axis_tdata,
+        s_axis_tkeep,
+        s_axis_tvalid,
+        s_axis_tlast,
+        s_axis_tuser,
+        m_axis_tready
     );
     $to_myhdl(
-        input_axis_tready,
-        output_axis_tdata,
-        output_axis_tkeep,
-        output_axis_tvalid,
-        output_axis_tlast,
-        output_axis_tuser,
+        s_axis_tready,
+        m_axis_tdata,
+        m_axis_tkeep,
+        m_axis_tvalid,
+        m_axis_tlast,
+        m_axis_tuser,
         busy
     );
 
@@ -91,18 +91,18 @@ axis_eth_fcs_insert_64 #(
 UUT (
     .clk(clk),
     .rst(rst),
-    .input_axis_tdata(input_axis_tdata),
-    .input_axis_tkeep(input_axis_tkeep),
-    .input_axis_tvalid(input_axis_tvalid),
-    .input_axis_tready(input_axis_tready),
-    .input_axis_tlast(input_axis_tlast),
-    .input_axis_tuser(input_axis_tuser),
-    .output_axis_tdata(output_axis_tdata),
-    .output_axis_tkeep(output_axis_tkeep),
-    .output_axis_tvalid(output_axis_tvalid),
-    .output_axis_tready(output_axis_tready),
-    .output_axis_tlast(output_axis_tlast),
-    .output_axis_tuser(output_axis_tuser),
+    .s_axis_tdata(s_axis_tdata),
+    .s_axis_tkeep(s_axis_tkeep),
+    .s_axis_tvalid(s_axis_tvalid),
+    .s_axis_tready(s_axis_tready),
+    .s_axis_tlast(s_axis_tlast),
+    .s_axis_tuser(s_axis_tuser),
+    .m_axis_tdata(m_axis_tdata),
+    .m_axis_tkeep(m_axis_tkeep),
+    .m_axis_tvalid(m_axis_tvalid),
+    .m_axis_tready(m_axis_tready),
+    .m_axis_tlast(m_axis_tlast),
+    .m_axis_tuser(m_axis_tuser),
     .busy(busy)
 );
 

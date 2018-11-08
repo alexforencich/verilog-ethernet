@@ -38,13 +38,13 @@ reg clk = 0;
 reg rst = 0;
 reg [7:0] current_test = 0;
 
-reg [7:0] input_axis_tdata = 0;
-reg input_axis_tvalid = 0;
-reg input_axis_tlast = 0;
-reg input_axis_tuser = 0;
+reg [7:0] s_axis_tdata = 0;
+reg s_axis_tvalid = 0;
+reg s_axis_tlast = 0;
+reg s_axis_tuser = 0;
 
 // Outputs
-wire input_axis_tready;
+wire s_axis_tready;
 wire [31:0] output_fcs;
 wire output_fcs_valid;
 
@@ -54,13 +54,13 @@ initial begin
         clk,
         rst,
         current_test,
-        input_axis_tdata,
-        input_axis_tvalid,
-        input_axis_tlast,
-        input_axis_tuser
+        s_axis_tdata,
+        s_axis_tvalid,
+        s_axis_tlast,
+        s_axis_tuser
     );
     $to_myhdl(
-        input_axis_tready,
+        s_axis_tready,
         output_fcs,
         output_fcs_valid
     );
@@ -74,11 +74,11 @@ axis_eth_fcs
 UUT (
     .clk(clk),
     .rst(rst),
-    .input_axis_tdata(input_axis_tdata),
-    .input_axis_tvalid(input_axis_tvalid),
-    .input_axis_tready(input_axis_tready),
-    .input_axis_tlast(input_axis_tlast),
-    .input_axis_tuser(input_axis_tuser),
+    .s_axis_tdata(s_axis_tdata),
+    .s_axis_tvalid(s_axis_tvalid),
+    .s_axis_tready(s_axis_tready),
+    .s_axis_tlast(s_axis_tlast),
+    .s_axis_tuser(s_axis_tuser),
     .output_fcs(output_fcs),
     .output_fcs_valid(output_fcs_valid)
 );

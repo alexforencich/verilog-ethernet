@@ -40,16 +40,16 @@ reg clk = 0;
 reg rst = 0;
 reg [7:0] current_test = 0;
 
-reg [7:0] input_axis_tdata = 0;
-reg input_axis_tvalid = 0;
-reg input_axis_tlast = 0;
-reg input_axis_tuser = 0;
+reg [7:0] s_axis_tdata = 0;
+reg s_axis_tvalid = 0;
+reg s_axis_tlast = 0;
+reg s_axis_tuser = 0;
 reg clk_enable = 1;
 reg mii_select = 0;
 reg [7:0] ifg_delay = 0;
 
 // Outputs
-wire input_axis_tready;
+wire s_axis_tready;
 wire [7:0] gmii_txd;
 wire gmii_tx_en;
 wire gmii_tx_er;
@@ -60,16 +60,16 @@ initial begin
         clk,
         rst,
         current_test,
-        input_axis_tdata,
-        input_axis_tvalid,
-        input_axis_tlast,
-        input_axis_tuser,
+        s_axis_tdata,
+        s_axis_tvalid,
+        s_axis_tlast,
+        s_axis_tuser,
         clk_enable,
         mii_select,
         ifg_delay
     );
     $to_myhdl(
-        input_axis_tready,
+        s_axis_tready,
         gmii_txd,
         gmii_tx_en,
         gmii_tx_er
@@ -87,11 +87,11 @@ axis_gmii_tx #(
 UUT (
     .clk(clk),
     .rst(rst),
-    .input_axis_tdata(input_axis_tdata),
-    .input_axis_tvalid(input_axis_tvalid),
-    .input_axis_tready(input_axis_tready),
-    .input_axis_tlast(input_axis_tlast),
-    .input_axis_tuser(input_axis_tuser),
+    .s_axis_tdata(s_axis_tdata),
+    .s_axis_tvalid(s_axis_tvalid),
+    .s_axis_tready(s_axis_tready),
+    .s_axis_tlast(s_axis_tlast),
+    .s_axis_tuser(s_axis_tuser),
     .gmii_txd(gmii_txd),
     .gmii_tx_en(gmii_tx_en),
     .gmii_tx_er(gmii_tx_er),

@@ -57,11 +57,11 @@ def bench():
     xgmii_rxc = Signal(intbv(0xf)[4:])
 
     # Outputs
-    output_axis_tdata = Signal(intbv(0)[32:])
-    output_axis_tkeep = Signal(intbv(0)[4:])
-    output_axis_tvalid = Signal(bool(0))
-    output_axis_tlast = Signal(bool(0))
-    output_axis_tuser = Signal(bool(0))
+    m_axis_tdata = Signal(intbv(0)[32:])
+    m_axis_tkeep = Signal(intbv(0)[4:])
+    m_axis_tvalid = Signal(bool(0))
+    m_axis_tlast = Signal(bool(0))
+    m_axis_tuser = Signal(bool(0))
     error_bad_frame = Signal(bool(0))
     error_bad_fcs = Signal(bool(0))
 
@@ -81,11 +81,11 @@ def bench():
     sink_logic = sink.create_logic(
         clk,
         rst,
-        tdata=output_axis_tdata,
-        tkeep=output_axis_tkeep,
-        tvalid=output_axis_tvalid,
-        tlast=output_axis_tlast,
-        tuser=output_axis_tuser,
+        tdata=m_axis_tdata,
+        tkeep=m_axis_tkeep,
+        tvalid=m_axis_tvalid,
+        tlast=m_axis_tlast,
+        tuser=m_axis_tuser,
         name='sink'
     )
 
@@ -102,11 +102,11 @@ def bench():
         xgmii_rxd=xgmii_rxd,
         xgmii_rxc=xgmii_rxc,
 
-        output_axis_tdata=output_axis_tdata,
-        output_axis_tkeep=output_axis_tkeep,
-        output_axis_tvalid=output_axis_tvalid,
-        output_axis_tlast=output_axis_tlast,
-        output_axis_tuser=output_axis_tuser,
+        m_axis_tdata=m_axis_tdata,
+        m_axis_tkeep=m_axis_tkeep,
+        m_axis_tvalid=m_axis_tvalid,
+        m_axis_tlast=m_axis_tlast,
+        m_axis_tuser=m_axis_tuser,
 
         error_bad_frame=error_bad_frame,
         error_bad_fcs=error_bad_fcs

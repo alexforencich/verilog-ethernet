@@ -36,25 +36,25 @@ reg clk = 0;
 reg rst = 0;
 reg [7:0] current_test = 0;
 
-reg input_eth_hdr_valid = 0;
-reg [47:0] input_eth_dest_mac = 0;
-reg [47:0] input_eth_src_mac = 0;
-reg [15:0] input_eth_type = 0;
-reg [63:0] input_eth_payload_tdata = 0;
-reg [7:0] input_eth_payload_tkeep = 0;
-reg input_eth_payload_tvalid = 0;
-reg input_eth_payload_tlast = 0;
-reg input_eth_payload_tuser = 0;
-reg output_axis_tready = 0;
+reg s_eth_hdr_valid = 0;
+reg [47:0] s_eth_dest_mac = 0;
+reg [47:0] s_eth_src_mac = 0;
+reg [15:0] s_eth_type = 0;
+reg [63:0] s_eth_payload_axis_tdata = 0;
+reg [7:0] s_eth_payload_axis_tkeep = 0;
+reg s_eth_payload_axis_tvalid = 0;
+reg s_eth_payload_axis_tlast = 0;
+reg s_eth_payload_axis_tuser = 0;
+reg m_axis_tready = 0;
 
 // Outputs
-wire input_eth_payload_tready;
-wire input_eth_hdr_ready;
-wire [63:0] output_axis_tdata;
-wire [7:0] output_axis_tkeep;
-wire output_axis_tvalid;
-wire output_axis_tlast;
-wire output_axis_tuser;
+wire s_eth_payload_axis_tready;
+wire s_eth_hdr_ready;
+wire [63:0] m_axis_tdata;
+wire [7:0] m_axis_tkeep;
+wire m_axis_tvalid;
+wire m_axis_tlast;
+wire m_axis_tuser;
 wire busy;
 
 initial begin
@@ -63,25 +63,25 @@ initial begin
         clk,
         rst,
         current_test,
-        input_eth_hdr_valid,
-        input_eth_dest_mac,
-        input_eth_src_mac,
-        input_eth_type,
-        input_eth_payload_tdata,
-        input_eth_payload_tkeep,
-        input_eth_payload_tvalid,
-        input_eth_payload_tlast,
-        input_eth_payload_tuser,
-        output_axis_tready
+        s_eth_hdr_valid,
+        s_eth_dest_mac,
+        s_eth_src_mac,
+        s_eth_type,
+        s_eth_payload_axis_tdata,
+        s_eth_payload_axis_tkeep,
+        s_eth_payload_axis_tvalid,
+        s_eth_payload_axis_tlast,
+        s_eth_payload_axis_tuser,
+        m_axis_tready
     );
     $to_myhdl(
-        input_eth_hdr_ready,
-        input_eth_payload_tready,
-        output_axis_tdata,
-        output_axis_tkeep,
-        output_axis_tvalid,
-        output_axis_tlast,
-        output_axis_tuser,
+        s_eth_hdr_ready,
+        s_eth_payload_axis_tready,
+        m_axis_tdata,
+        m_axis_tkeep,
+        m_axis_tvalid,
+        m_axis_tlast,
+        m_axis_tuser,
         busy
     );
 
@@ -95,24 +95,24 @@ UUT (
     .clk(clk),
     .rst(rst),
     // Ethernet frame input
-    .input_eth_hdr_valid(input_eth_hdr_valid),
-    .input_eth_hdr_ready(input_eth_hdr_ready),
-    .input_eth_dest_mac(input_eth_dest_mac),
-    .input_eth_src_mac(input_eth_src_mac),
-    .input_eth_type(input_eth_type),
-    .input_eth_payload_tdata(input_eth_payload_tdata),
-    .input_eth_payload_tkeep(input_eth_payload_tkeep),
-    .input_eth_payload_tvalid(input_eth_payload_tvalid),
-    .input_eth_payload_tready(input_eth_payload_tready),
-    .input_eth_payload_tlast(input_eth_payload_tlast),
-    .input_eth_payload_tuser(input_eth_payload_tuser),
+    .s_eth_hdr_valid(s_eth_hdr_valid),
+    .s_eth_hdr_ready(s_eth_hdr_ready),
+    .s_eth_dest_mac(s_eth_dest_mac),
+    .s_eth_src_mac(s_eth_src_mac),
+    .s_eth_type(s_eth_type),
+    .s_eth_payload_axis_tdata(s_eth_payload_axis_tdata),
+    .s_eth_payload_axis_tkeep(s_eth_payload_axis_tkeep),
+    .s_eth_payload_axis_tvalid(s_eth_payload_axis_tvalid),
+    .s_eth_payload_axis_tready(s_eth_payload_axis_tready),
+    .s_eth_payload_axis_tlast(s_eth_payload_axis_tlast),
+    .s_eth_payload_axis_tuser(s_eth_payload_axis_tuser),
     // AXI output
-    .output_axis_tdata(output_axis_tdata),
-    .output_axis_tkeep(output_axis_tkeep),
-    .output_axis_tvalid(output_axis_tvalid),
-    .output_axis_tready(output_axis_tready),
-    .output_axis_tlast(output_axis_tlast),
-    .output_axis_tuser(output_axis_tuser),
+    .m_axis_tdata(m_axis_tdata),
+    .m_axis_tkeep(m_axis_tkeep),
+    .m_axis_tvalid(m_axis_tvalid),
+    .m_axis_tready(m_axis_tready),
+    .m_axis_tlast(m_axis_tlast),
+    .m_axis_tuser(m_axis_tuser),
     // Status signals
     .busy(busy)
 );

@@ -46,10 +46,10 @@ reg clk_enable = 1;
 reg mii_select = 0;
 
 // Outputs
-wire [7:0] output_axis_tdata;
-wire output_axis_tvalid;
-wire output_axis_tlast;
-wire output_axis_tuser;
+wire [7:0] m_axis_tdata;
+wire m_axis_tvalid;
+wire m_axis_tlast;
+wire m_axis_tuser;
 wire error_bad_frame;
 wire error_bad_fcs;
 
@@ -66,10 +66,10 @@ initial begin
         mii_select
     );
     $to_myhdl(
-        output_axis_tdata,
-        output_axis_tvalid,
-        output_axis_tlast,
-        output_axis_tuser,
+        m_axis_tdata,
+        m_axis_tvalid,
+        m_axis_tlast,
+        m_axis_tuser,
         error_bad_frame,
         error_bad_fcs
     );
@@ -86,10 +86,10 @@ UUT (
     .gmii_rxd(gmii_rxd),
     .gmii_rx_dv(gmii_rx_dv),
     .gmii_rx_er(gmii_rx_er),
-    .output_axis_tdata(output_axis_tdata),
-    .output_axis_tvalid(output_axis_tvalid),
-    .output_axis_tlast(output_axis_tlast),
-    .output_axis_tuser(output_axis_tuser),
+    .m_axis_tdata(m_axis_tdata),
+    .m_axis_tvalid(m_axis_tvalid),
+    .m_axis_tlast(m_axis_tlast),
+    .m_axis_tuser(m_axis_tuser),
     .clk_enable(clk_enable),
     .mii_select(mii_select),
     .error_bad_frame(error_bad_frame),

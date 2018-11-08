@@ -48,38 +48,38 @@ def bench():
     rst = Signal(bool(0))
     current_test = Signal(intbv(0)[8:])
 
-    input_ip_hdr_valid = Signal(bool(0))
-    input_eth_dest_mac = Signal(intbv(0)[48:])
-    input_eth_src_mac = Signal(intbv(0)[48:])
-    input_eth_type = Signal(intbv(0)[16:])
-    input_ip_dscp = Signal(intbv(0)[6:])
-    input_ip_ecn = Signal(intbv(0)[2:])
-    input_ip_length = Signal(intbv(0)[16:])
-    input_ip_identification = Signal(intbv(0)[16:])
-    input_ip_flags = Signal(intbv(0)[3:])
-    input_ip_fragment_offset = Signal(intbv(0)[13:])
-    input_ip_ttl = Signal(intbv(0)[8:])
-    input_ip_protocol = Signal(intbv(0)[8:])
-    input_ip_source_ip = Signal(intbv(0)[32:])
-    input_ip_dest_ip = Signal(intbv(0)[32:])
-    input_ip_payload_tdata = Signal(intbv(0)[8:])
-    input_ip_payload_tvalid = Signal(bool(0))
-    input_ip_payload_tlast = Signal(bool(0))
-    input_ip_payload_tuser = Signal(bool(0))
-    output_eth_payload_tready = Signal(bool(0))
-    output_eth_hdr_ready = Signal(bool(0))
+    s_ip_hdr_valid = Signal(bool(0))
+    s_eth_dest_mac = Signal(intbv(0)[48:])
+    s_eth_src_mac = Signal(intbv(0)[48:])
+    s_eth_type = Signal(intbv(0)[16:])
+    s_ip_dscp = Signal(intbv(0)[6:])
+    s_ip_ecn = Signal(intbv(0)[2:])
+    s_ip_length = Signal(intbv(0)[16:])
+    s_ip_identification = Signal(intbv(0)[16:])
+    s_ip_flags = Signal(intbv(0)[3:])
+    s_ip_fragment_offset = Signal(intbv(0)[13:])
+    s_ip_ttl = Signal(intbv(0)[8:])
+    s_ip_protocol = Signal(intbv(0)[8:])
+    s_ip_source_ip = Signal(intbv(0)[32:])
+    s_ip_dest_ip = Signal(intbv(0)[32:])
+    s_ip_payload_axis_tdata = Signal(intbv(0)[8:])
+    s_ip_payload_axis_tvalid = Signal(bool(0))
+    s_ip_payload_axis_tlast = Signal(bool(0))
+    s_ip_payload_axis_tuser = Signal(bool(0))
+    m_eth_payload_axis_tready = Signal(bool(0))
+    m_eth_hdr_ready = Signal(bool(0))
 
     # Outputs
-    input_ip_hdr_ready = Signal(bool(0))
-    input_ip_payload_tready = Signal(bool(0))
-    output_eth_hdr_valid = Signal(bool(0))
-    output_eth_dest_mac = Signal(intbv(0)[48:])
-    output_eth_src_mac = Signal(intbv(0)[48:])
-    output_eth_type = Signal(intbv(0)[16:])
-    output_eth_payload_tdata = Signal(intbv(0)[8:])
-    output_eth_payload_tvalid = Signal(bool(0))
-    output_eth_payload_tlast = Signal(bool(0))
-    output_eth_payload_tuser = Signal(bool(0))
+    s_ip_hdr_ready = Signal(bool(0))
+    s_ip_payload_axis_tready = Signal(bool(0))
+    m_eth_hdr_valid = Signal(bool(0))
+    m_eth_dest_mac = Signal(intbv(0)[48:])
+    m_eth_src_mac = Signal(intbv(0)[48:])
+    m_eth_type = Signal(intbv(0)[16:])
+    m_eth_payload_axis_tdata = Signal(intbv(0)[8:])
+    m_eth_payload_axis_tvalid = Signal(bool(0))
+    m_eth_payload_axis_tlast = Signal(bool(0))
+    m_eth_payload_axis_tuser = Signal(bool(0))
     busy = Signal(bool(0))
     error_payload_early_termination = Signal(bool(0))
 
@@ -92,26 +92,26 @@ def bench():
     source_logic = source.create_logic(
         clk,
         rst,
-        ip_hdr_ready=input_ip_hdr_ready,
-        ip_hdr_valid=input_ip_hdr_valid,
-        eth_dest_mac=input_eth_dest_mac,
-        eth_src_mac=input_eth_src_mac,
-        eth_type=input_eth_type,
-        ip_dscp=input_ip_dscp,
-        ip_ecn=input_ip_ecn,
-        ip_length=input_ip_length,
-        ip_identification=input_ip_identification,
-        ip_flags=input_ip_flags,
-        ip_fragment_offset=input_ip_fragment_offset,
-        ip_ttl=input_ip_ttl,
-        ip_protocol=input_ip_protocol,
-        ip_source_ip=input_ip_source_ip,
-        ip_dest_ip=input_ip_dest_ip,
-        ip_payload_tdata=input_ip_payload_tdata,
-        ip_payload_tvalid=input_ip_payload_tvalid,
-        ip_payload_tready=input_ip_payload_tready,
-        ip_payload_tlast=input_ip_payload_tlast,
-        ip_payload_tuser=input_ip_payload_tuser,
+        ip_hdr_ready=s_ip_hdr_ready,
+        ip_hdr_valid=s_ip_hdr_valid,
+        eth_dest_mac=s_eth_dest_mac,
+        eth_src_mac=s_eth_src_mac,
+        eth_type=s_eth_type,
+        ip_dscp=s_ip_dscp,
+        ip_ecn=s_ip_ecn,
+        ip_length=s_ip_length,
+        ip_identification=s_ip_identification,
+        ip_flags=s_ip_flags,
+        ip_fragment_offset=s_ip_fragment_offset,
+        ip_ttl=s_ip_ttl,
+        ip_protocol=s_ip_protocol,
+        ip_source_ip=s_ip_source_ip,
+        ip_dest_ip=s_ip_dest_ip,
+        ip_payload_tdata=s_ip_payload_axis_tdata,
+        ip_payload_tvalid=s_ip_payload_axis_tvalid,
+        ip_payload_tready=s_ip_payload_axis_tready,
+        ip_payload_tlast=s_ip_payload_axis_tlast,
+        ip_payload_tuser=s_ip_payload_axis_tuser,
         pause=source_pause,
         name='source'
     )
@@ -121,16 +121,16 @@ def bench():
     sink_logic = sink.create_logic(
         clk,
         rst,
-        eth_hdr_ready=output_eth_hdr_ready,
-        eth_hdr_valid=output_eth_hdr_valid,
-        eth_dest_mac=output_eth_dest_mac,
-        eth_src_mac=output_eth_src_mac,
-        eth_type=output_eth_type,
-        eth_payload_tdata=output_eth_payload_tdata,
-        eth_payload_tvalid=output_eth_payload_tvalid,
-        eth_payload_tready=output_eth_payload_tready,
-        eth_payload_tlast=output_eth_payload_tlast,
-        eth_payload_tuser=output_eth_payload_tuser,
+        eth_hdr_ready=m_eth_hdr_ready,
+        eth_hdr_valid=m_eth_hdr_valid,
+        eth_dest_mac=m_eth_dest_mac,
+        eth_src_mac=m_eth_src_mac,
+        eth_type=m_eth_type,
+        eth_payload_tdata=m_eth_payload_axis_tdata,
+        eth_payload_tvalid=m_eth_payload_axis_tvalid,
+        eth_payload_tready=m_eth_payload_axis_tready,
+        eth_payload_tlast=m_eth_payload_axis_tlast,
+        eth_payload_tuser=m_eth_payload_axis_tuser,
         pause=sink_pause,
         name='sink'
     )
@@ -145,37 +145,37 @@ def bench():
         rst=rst,
         current_test=current_test,
 
-        input_ip_hdr_valid=input_ip_hdr_valid,
-        input_ip_hdr_ready=input_ip_hdr_ready,
-        input_eth_dest_mac=input_eth_dest_mac,
-        input_eth_src_mac=input_eth_src_mac,
-        input_eth_type=input_eth_type,
-        input_ip_dscp=input_ip_dscp,
-        input_ip_ecn=input_ip_ecn,
-        input_ip_length=input_ip_length,
-        input_ip_identification=input_ip_identification,
-        input_ip_flags=input_ip_flags,
-        input_ip_fragment_offset=input_ip_fragment_offset,
-        input_ip_ttl=input_ip_ttl,
-        input_ip_protocol=input_ip_protocol,
-        input_ip_source_ip=input_ip_source_ip,
-        input_ip_dest_ip=input_ip_dest_ip,
-        input_ip_payload_tdata=input_ip_payload_tdata,
-        input_ip_payload_tvalid=input_ip_payload_tvalid,
-        input_ip_payload_tready=input_ip_payload_tready,
-        input_ip_payload_tlast=input_ip_payload_tlast,
-        input_ip_payload_tuser=input_ip_payload_tuser,
+        s_ip_hdr_valid=s_ip_hdr_valid,
+        s_ip_hdr_ready=s_ip_hdr_ready,
+        s_eth_dest_mac=s_eth_dest_mac,
+        s_eth_src_mac=s_eth_src_mac,
+        s_eth_type=s_eth_type,
+        s_ip_dscp=s_ip_dscp,
+        s_ip_ecn=s_ip_ecn,
+        s_ip_length=s_ip_length,
+        s_ip_identification=s_ip_identification,
+        s_ip_flags=s_ip_flags,
+        s_ip_fragment_offset=s_ip_fragment_offset,
+        s_ip_ttl=s_ip_ttl,
+        s_ip_protocol=s_ip_protocol,
+        s_ip_source_ip=s_ip_source_ip,
+        s_ip_dest_ip=s_ip_dest_ip,
+        s_ip_payload_axis_tdata=s_ip_payload_axis_tdata,
+        s_ip_payload_axis_tvalid=s_ip_payload_axis_tvalid,
+        s_ip_payload_axis_tready=s_ip_payload_axis_tready,
+        s_ip_payload_axis_tlast=s_ip_payload_axis_tlast,
+        s_ip_payload_axis_tuser=s_ip_payload_axis_tuser,
 
-        output_eth_hdr_valid=output_eth_hdr_valid,
-        output_eth_hdr_ready=output_eth_hdr_ready,
-        output_eth_dest_mac=output_eth_dest_mac,
-        output_eth_src_mac=output_eth_src_mac,
-        output_eth_type=output_eth_type,
-        output_eth_payload_tdata=output_eth_payload_tdata,
-        output_eth_payload_tvalid=output_eth_payload_tvalid,
-        output_eth_payload_tready=output_eth_payload_tready,
-        output_eth_payload_tlast=output_eth_payload_tlast,
-        output_eth_payload_tuser=output_eth_payload_tuser,
+        m_eth_hdr_valid=m_eth_hdr_valid,
+        m_eth_hdr_ready=m_eth_hdr_ready,
+        m_eth_dest_mac=m_eth_dest_mac,
+        m_eth_src_mac=m_eth_src_mac,
+        m_eth_type=m_eth_type,
+        m_eth_payload_axis_tdata=m_eth_payload_axis_tdata,
+        m_eth_payload_axis_tvalid=m_eth_payload_axis_tvalid,
+        m_eth_payload_axis_tready=m_eth_payload_axis_tready,
+        m_eth_payload_axis_tlast=m_eth_payload_axis_tlast,
+        m_eth_payload_axis_tuser=m_eth_payload_axis_tuser,
 
         busy=busy,
         error_payload_early_termination=error_payload_early_termination
@@ -193,11 +193,11 @@ def bench():
             error_payload_early_termination_asserted.next = 1
 
     def wait_normal():
-        while input_ip_payload_tvalid or output_eth_payload_tvalid or input_ip_hdr_valid:
+        while s_ip_payload_axis_tvalid or m_eth_payload_axis_tvalid or s_ip_hdr_valid:
             yield clk.posedge
 
     def wait_pause_source():
-        while input_ip_payload_tvalid or output_eth_payload_tvalid or input_ip_hdr_valid:
+        while s_ip_payload_axis_tvalid or m_eth_payload_axis_tvalid or s_ip_hdr_valid:
             source_pause.next = True
             yield clk.posedge
             yield clk.posedge
@@ -206,7 +206,7 @@ def bench():
             yield clk.posedge
 
     def wait_pause_sink():
-        while input_ip_payload_tvalid or output_eth_payload_tvalid or input_ip_hdr_valid:
+        while s_ip_payload_axis_tvalid or m_eth_payload_axis_tvalid or s_ip_hdr_valid:
             sink_pause.next = True
             yield clk.posedge
             yield clk.posedge

@@ -37,45 +37,45 @@ module ip_eth_rx_64
     /*
      * Ethernet frame input
      */
-    input  wire        input_eth_hdr_valid,
-    output wire        input_eth_hdr_ready,
-    input  wire [47:0] input_eth_dest_mac,
-    input  wire [47:0] input_eth_src_mac,
-    input  wire [15:0] input_eth_type,
-    input  wire [63:0] input_eth_payload_tdata,
-    input  wire [7:0]  input_eth_payload_tkeep,
-    input  wire        input_eth_payload_tvalid,
-    output wire        input_eth_payload_tready,
-    input  wire        input_eth_payload_tlast,
-    input  wire        input_eth_payload_tuser,
+    input  wire        s_eth_hdr_valid,
+    output wire        s_eth_hdr_ready,
+    input  wire [47:0] s_eth_dest_mac,
+    input  wire [47:0] s_eth_src_mac,
+    input  wire [15:0] s_eth_type,
+    input  wire [63:0] s_eth_payload_axis_tdata,
+    input  wire [7:0]  s_eth_payload_axis_tkeep,
+    input  wire        s_eth_payload_axis_tvalid,
+    output wire        s_eth_payload_axis_tready,
+    input  wire        s_eth_payload_axis_tlast,
+    input  wire        s_eth_payload_axis_tuser,
 
     /*
      * IP frame output
      */
-    output wire        output_ip_hdr_valid,
-    input  wire        output_ip_hdr_ready,
-    output wire [47:0] output_eth_dest_mac,
-    output wire [47:0] output_eth_src_mac,
-    output wire [15:0] output_eth_type,
-    output wire [3:0]  output_ip_version,
-    output wire [3:0]  output_ip_ihl,
-    output wire [5:0]  output_ip_dscp,
-    output wire [1:0]  output_ip_ecn,
-    output wire [15:0] output_ip_length,
-    output wire [15:0] output_ip_identification,
-    output wire [2:0]  output_ip_flags,
-    output wire [12:0] output_ip_fragment_offset,
-    output wire [7:0]  output_ip_ttl,
-    output wire [7:0]  output_ip_protocol,
-    output wire [15:0] output_ip_header_checksum,
-    output wire [31:0] output_ip_source_ip,
-    output wire [31:0] output_ip_dest_ip,
-    output wire [63:0] output_ip_payload_tdata,
-    output wire [7:0]  output_ip_payload_tkeep,
-    output wire        output_ip_payload_tvalid,
-    input  wire        output_ip_payload_tready,
-    output wire        output_ip_payload_tlast,
-    output wire        output_ip_payload_tuser,
+    output wire        m_ip_hdr_valid,
+    input  wire        m_ip_hdr_ready,
+    output wire [47:0] m_eth_dest_mac,
+    output wire [47:0] m_eth_src_mac,
+    output wire [15:0] m_eth_type,
+    output wire [3:0]  m_ip_version,
+    output wire [3:0]  m_ip_ihl,
+    output wire [5:0]  m_ip_dscp,
+    output wire [1:0]  m_ip_ecn,
+    output wire [15:0] m_ip_length,
+    output wire [15:0] m_ip_identification,
+    output wire [2:0]  m_ip_flags,
+    output wire [12:0] m_ip_fragment_offset,
+    output wire [7:0]  m_ip_ttl,
+    output wire [7:0]  m_ip_protocol,
+    output wire [15:0] m_ip_header_checksum,
+    output wire [31:0] m_ip_source_ip,
+    output wire [31:0] m_ip_dest_ip,
+    output wire [63:0] m_ip_payload_axis_tdata,
+    output wire [7:0]  m_ip_payload_axis_tkeep,
+    output wire        m_ip_payload_axis_tvalid,
+    input  wire        m_ip_payload_axis_tready,
+    output wire        m_ip_payload_axis_tlast,
+    output wire        m_ip_payload_axis_tuser,
 
     /*
      * Status signals
@@ -146,26 +146,26 @@ reg check_hdr_reg = 1'b0, check_hdr_next;
 reg [63:0] last_word_data_reg = 64'd0;
 reg [7:0] last_word_keep_reg = 8'd0;
 
-reg input_eth_hdr_ready_reg = 1'b0, input_eth_hdr_ready_next;
-reg input_eth_payload_tready_reg = 1'b0, input_eth_payload_tready_next;
+reg s_eth_hdr_ready_reg = 1'b0, s_eth_hdr_ready_next;
+reg s_eth_payload_axis_tready_reg = 1'b0, s_eth_payload_axis_tready_next;
 
-reg output_ip_hdr_valid_reg = 1'b0, output_ip_hdr_valid_next;
-reg [47:0] output_eth_dest_mac_reg = 48'd0;
-reg [47:0] output_eth_src_mac_reg = 48'd0;
-reg [15:0] output_eth_type_reg = 16'd0;
-reg [3:0] output_ip_version_reg = 4'd0;
-reg [3:0] output_ip_ihl_reg = 4'd0;
-reg [5:0] output_ip_dscp_reg = 6'd0;
-reg [1:0] output_ip_ecn_reg = 2'd0;
-reg [15:0] output_ip_length_reg = 16'd0;
-reg [15:0] output_ip_identification_reg = 16'd0;
-reg [2:0] output_ip_flags_reg = 3'd0;
-reg [12:0] output_ip_fragment_offset_reg = 13'd0;
-reg [7:0] output_ip_ttl_reg = 8'd0;
-reg [7:0] output_ip_protocol_reg = 8'd0;
-reg [15:0] output_ip_header_checksum_reg = 16'd0;
-reg [31:0] output_ip_source_ip_reg = 32'd0;
-reg [31:0] output_ip_dest_ip_reg = 32'd0;
+reg m_ip_hdr_valid_reg = 1'b0, m_ip_hdr_valid_next;
+reg [47:0] m_eth_dest_mac_reg = 48'd0;
+reg [47:0] m_eth_src_mac_reg = 48'd0;
+reg [15:0] m_eth_type_reg = 16'd0;
+reg [3:0] m_ip_version_reg = 4'd0;
+reg [3:0] m_ip_ihl_reg = 4'd0;
+reg [5:0] m_ip_dscp_reg = 6'd0;
+reg [1:0] m_ip_ecn_reg = 2'd0;
+reg [15:0] m_ip_length_reg = 16'd0;
+reg [15:0] m_ip_identification_reg = 16'd0;
+reg [2:0] m_ip_flags_reg = 3'd0;
+reg [12:0] m_ip_fragment_offset_reg = 13'd0;
+reg [7:0] m_ip_ttl_reg = 8'd0;
+reg [7:0] m_ip_protocol_reg = 8'd0;
+reg [15:0] m_ip_header_checksum_reg = 16'd0;
+reg [31:0] m_ip_source_ip_reg = 32'd0;
+reg [31:0] m_ip_dest_ip_reg = 32'd0;
 
 reg busy_reg = 1'b0;
 reg error_header_early_termination_reg = 1'b0, error_header_early_termination_next;
@@ -173,48 +173,48 @@ reg error_payload_early_termination_reg = 1'b0, error_payload_early_termination_
 reg error_invalid_header_reg = 1'b0, error_invalid_header_next;
 reg error_invalid_checksum_reg = 1'b0, error_invalid_checksum_next;
 
-reg [63:0] save_eth_payload_tdata_reg = 64'd0;
-reg [7:0] save_eth_payload_tkeep_reg = 8'd0;
-reg save_eth_payload_tlast_reg = 1'b0;
-reg save_eth_payload_tuser_reg = 1'b0;
+reg [63:0] save_eth_payload_axis_tdata_reg = 64'd0;
+reg [7:0] save_eth_payload_axis_tkeep_reg = 8'd0;
+reg save_eth_payload_axis_tlast_reg = 1'b0;
+reg save_eth_payload_axis_tuser_reg = 1'b0;
 
-reg [63:0] shift_eth_payload_tdata;
-reg [7:0] shift_eth_payload_tkeep;
-reg shift_eth_payload_tvalid;
-reg shift_eth_payload_tlast;
-reg shift_eth_payload_tuser;
-reg shift_eth_payload_input_tready;
+reg [63:0] shift_eth_payload_axis_tdata;
+reg [7:0] shift_eth_payload_axis_tkeep;
+reg shift_eth_payload_axis_tvalid;
+reg shift_eth_payload_axis_tlast;
+reg shift_eth_payload_axis_tuser;
+reg shift_eth_payload_s_tready;
 reg shift_eth_payload_extra_cycle;
 
 // internal datapath
-reg [63:0] output_ip_payload_tdata_int;
-reg [7:0]  output_ip_payload_tkeep_int;
-reg        output_ip_payload_tvalid_int;
-reg        output_ip_payload_tready_int_reg = 1'b0;
-reg        output_ip_payload_tlast_int;
-reg        output_ip_payload_tuser_int;
-wire       output_ip_payload_tready_int_early;
+reg [63:0] m_ip_payload_axis_tdata_int;
+reg [7:0]  m_ip_payload_axis_tkeep_int;
+reg        m_ip_payload_axis_tvalid_int;
+reg        m_ip_payload_axis_tready_int_reg = 1'b0;
+reg        m_ip_payload_axis_tlast_int;
+reg        m_ip_payload_axis_tuser_int;
+wire       m_ip_payload_axis_tready_int_early;
 
-assign input_eth_hdr_ready = input_eth_hdr_ready_reg;
-assign input_eth_payload_tready = input_eth_payload_tready_reg;
+assign s_eth_hdr_ready = s_eth_hdr_ready_reg;
+assign s_eth_payload_axis_tready = s_eth_payload_axis_tready_reg;
 
-assign output_ip_hdr_valid = output_ip_hdr_valid_reg;
-assign output_eth_dest_mac = output_eth_dest_mac_reg;
-assign output_eth_src_mac = output_eth_src_mac_reg;
-assign output_eth_type = output_eth_type_reg;
-assign output_ip_version = output_ip_version_reg;
-assign output_ip_ihl = output_ip_ihl_reg;
-assign output_ip_dscp = output_ip_dscp_reg;
-assign output_ip_ecn = output_ip_ecn_reg;
-assign output_ip_length = output_ip_length_reg;
-assign output_ip_identification = output_ip_identification_reg;
-assign output_ip_flags = output_ip_flags_reg;
-assign output_ip_fragment_offset = output_ip_fragment_offset_reg;
-assign output_ip_ttl = output_ip_ttl_reg;
-assign output_ip_protocol = output_ip_protocol_reg;
-assign output_ip_header_checksum = output_ip_header_checksum_reg;
-assign output_ip_source_ip = output_ip_source_ip_reg;
-assign output_ip_dest_ip = output_ip_dest_ip_reg;
+assign m_ip_hdr_valid = m_ip_hdr_valid_reg;
+assign m_eth_dest_mac = m_eth_dest_mac_reg;
+assign m_eth_src_mac = m_eth_src_mac_reg;
+assign m_eth_type = m_eth_type_reg;
+assign m_ip_version = m_ip_version_reg;
+assign m_ip_ihl = m_ip_ihl_reg;
+assign m_ip_dscp = m_ip_dscp_reg;
+assign m_ip_ecn = m_ip_ecn_reg;
+assign m_ip_length = m_ip_length_reg;
+assign m_ip_identification = m_ip_identification_reg;
+assign m_ip_flags = m_ip_flags_reg;
+assign m_ip_fragment_offset = m_ip_fragment_offset_reg;
+assign m_ip_ttl = m_ip_ttl_reg;
+assign m_ip_protocol = m_ip_protocol_reg;
+assign m_ip_header_checksum = m_ip_header_checksum_reg;
+assign m_ip_source_ip = m_ip_source_ip_reg;
+assign m_ip_dest_ip = m_ip_dest_ip_reg;
 
 assign busy = busy_reg;
 assign error_header_early_termination = error_header_early_termination_reg;
@@ -253,24 +253,24 @@ function [7:0] count2keep;
 endfunction
 
 always @* begin
-    shift_eth_payload_tdata[31:0] = save_eth_payload_tdata_reg[63:32];
-    shift_eth_payload_tkeep[3:0] = save_eth_payload_tkeep_reg[7:4];
-    shift_eth_payload_extra_cycle = save_eth_payload_tlast_reg & (save_eth_payload_tkeep_reg[7:4] != 0);
+    shift_eth_payload_axis_tdata[31:0] = save_eth_payload_axis_tdata_reg[63:32];
+    shift_eth_payload_axis_tkeep[3:0] = save_eth_payload_axis_tkeep_reg[7:4];
+    shift_eth_payload_extra_cycle = save_eth_payload_axis_tlast_reg && (save_eth_payload_axis_tkeep_reg[7:4] != 0);
 
     if (shift_eth_payload_extra_cycle) begin
-        shift_eth_payload_tdata[63:32] = 32'd0;
-        shift_eth_payload_tkeep[7:4] = 4'd0;
-        shift_eth_payload_tvalid = 1'b1;
-        shift_eth_payload_tlast = save_eth_payload_tlast_reg;
-        shift_eth_payload_tuser = save_eth_payload_tuser_reg;
-        shift_eth_payload_input_tready = flush_save;
+        shift_eth_payload_axis_tdata[63:32] = 32'd0;
+        shift_eth_payload_axis_tkeep[7:4] = 4'd0;
+        shift_eth_payload_axis_tvalid = 1'b1;
+        shift_eth_payload_axis_tlast = save_eth_payload_axis_tlast_reg;
+        shift_eth_payload_axis_tuser = save_eth_payload_axis_tuser_reg;
+        shift_eth_payload_s_tready = flush_save;
     end else begin
-        shift_eth_payload_tdata[63:32] = input_eth_payload_tdata[31:0];
-        shift_eth_payload_tkeep[7:4] = input_eth_payload_tkeep[3:0];
-        shift_eth_payload_tvalid = input_eth_payload_tvalid;
-        shift_eth_payload_tlast = (input_eth_payload_tlast & (input_eth_payload_tkeep[7:4] == 0));
-        shift_eth_payload_tuser = (input_eth_payload_tuser & (input_eth_payload_tkeep[7:4] == 0));
-        shift_eth_payload_input_tready = ~(input_eth_payload_tlast & input_eth_payload_tvalid & transfer_in_save);
+        shift_eth_payload_axis_tdata[63:32] = s_eth_payload_axis_tdata[31:0];
+        shift_eth_payload_axis_tkeep[7:4] = s_eth_payload_axis_tkeep[3:0];
+        shift_eth_payload_axis_tvalid = s_eth_payload_axis_tvalid;
+        shift_eth_payload_axis_tlast = (s_eth_payload_axis_tlast && (s_eth_payload_axis_tkeep[7:4] == 0));
+        shift_eth_payload_axis_tuser = (s_eth_payload_axis_tuser && (s_eth_payload_axis_tkeep[7:4] == 0));
+        shift_eth_payload_s_tready = !(s_eth_payload_axis_tlast && s_eth_payload_axis_tvalid && transfer_in_save);
     end
 end
 
@@ -280,8 +280,8 @@ always @* begin
     flush_save = 1'b0;
     transfer_in_save = 1'b0;
 
-    input_eth_hdr_ready_next = 1'b0;
-    input_eth_payload_tready_next = 1'b0;
+    s_eth_hdr_ready_next = 1'b0;
+    s_eth_payload_axis_tready_next = 1'b0;
 
     store_eth_hdr = 1'b0;
     store_hdr_word_0 = 1'b0;
@@ -296,18 +296,18 @@ always @* begin
     hdr_sum_next = hdr_sum_reg;
     check_hdr_next = check_hdr_reg;
 
-    output_ip_hdr_valid_next = output_ip_hdr_valid_reg & ~output_ip_hdr_ready;
+    m_ip_hdr_valid_next = m_ip_hdr_valid_reg && !m_ip_hdr_ready;
 
     error_header_early_termination_next = 1'b0;
     error_payload_early_termination_next = 1'b0;
     error_invalid_header_next = 1'b0;
     error_invalid_checksum_next = 1'b0;
 
-    output_ip_payload_tdata_int = 64'd0;
-    output_ip_payload_tkeep_int = 8'd0;
-    output_ip_payload_tvalid_int = 1'b0;
-    output_ip_payload_tlast_int = 1'b0;
-    output_ip_payload_tuser_int = 1'b0;
+    m_ip_payload_axis_tdata_int = 64'd0;
+    m_ip_payload_axis_tkeep_int = 8'd0;
+    m_ip_payload_axis_tvalid_int = 1'b0;
+    m_ip_payload_axis_tlast_int = 1'b0;
+    m_ip_payload_axis_tuser_int = 1'b0;
 
     case (state_reg)
         STATE_IDLE: begin
@@ -315,11 +315,11 @@ always @* begin
             frame_ptr_next = 16'd0;
             hdr_sum_next = 32'd0;
             flush_save = 1'b1;
-            input_eth_hdr_ready_next = ~output_ip_hdr_valid_reg;
+            s_eth_hdr_ready_next = !m_ip_hdr_valid_reg;
 
-            if (input_eth_hdr_ready & input_eth_hdr_valid) begin
-                input_eth_hdr_ready_next = 1'b0;
-                input_eth_payload_tready_next = 1'b1;
+            if (s_eth_hdr_ready && s_eth_hdr_valid) begin
+                s_eth_hdr_ready_next = 1'b0;
+                s_eth_payload_axis_tready_next = 1'b1;
                 store_eth_hdr = 1'b1;
                 state_next = STATE_READ_HEADER;
             end else begin
@@ -328,9 +328,9 @@ always @* begin
         end
         STATE_READ_HEADER: begin
             // read header
-            input_eth_payload_tready_next = shift_eth_payload_input_tready;
+            s_eth_payload_axis_tready_next = shift_eth_payload_s_tready;
 
-            if (input_eth_payload_tvalid) begin
+            if (s_eth_payload_axis_tvalid) begin
                 // word transfer in - store it
                 frame_ptr_next = frame_ptr_reg + 16'd8;
                 transfer_in_save = 1'b1;
@@ -339,47 +339,47 @@ always @* begin
                 case (frame_ptr_reg)
                     8'h00: begin
                         store_hdr_word_0 = 1'b1;
-                        hdr_sum_next = input_eth_payload_tdata[15:0] +
-                                       input_eth_payload_tdata[31:16] +
-                                       input_eth_payload_tdata[47:32] +
-                                       input_eth_payload_tdata[63:48];
+                        hdr_sum_next = s_eth_payload_axis_tdata[15:0] +
+                                       s_eth_payload_axis_tdata[31:16] +
+                                       s_eth_payload_axis_tdata[47:32] +
+                                       s_eth_payload_axis_tdata[63:48];
                     end
                     8'h08: begin
                         store_hdr_word_1 = 1'b1;
                         hdr_sum_next = hdr_sum_reg +
-                                       input_eth_payload_tdata[15:0] +
-                                       input_eth_payload_tdata[31:16] +
-                                       input_eth_payload_tdata[47:32] +
-                                       input_eth_payload_tdata[63:48];
+                                       s_eth_payload_axis_tdata[15:0] +
+                                       s_eth_payload_axis_tdata[31:16] +
+                                       s_eth_payload_axis_tdata[47:32] +
+                                       s_eth_payload_axis_tdata[63:48];
                     end
                     8'h10: begin
                         store_hdr_word_2 = 1'b1;
                         hdr_sum_next = hdr_sum_reg +
-                                       input_eth_payload_tdata[15:0] +
-                                       input_eth_payload_tdata[31:16];
+                                       s_eth_payload_axis_tdata[15:0] +
+                                       s_eth_payload_axis_tdata[31:16];
                         frame_ptr_next = frame_ptr_reg + 16'd4;
 
                         // check header checksum on next cycle for improved timing
                         check_hdr_next = 1'b1;
 
-                        if (output_ip_version_reg != 4'd4 || output_ip_ihl_reg != 4'd5) begin
+                        if (m_ip_version_reg != 4'd4 || m_ip_ihl_reg != 4'd5) begin
                             error_invalid_header_next = 1'b1;
-                            input_eth_payload_tready_next = shift_eth_payload_input_tready;
+                            s_eth_payload_axis_tready_next = shift_eth_payload_s_tready;
                             state_next = STATE_WAIT_LAST;
                         end else begin
-                            input_eth_payload_tready_next = output_ip_payload_tready_int_early & shift_eth_payload_input_tready;
+                            s_eth_payload_axis_tready_next = m_ip_payload_axis_tready_int_early && shift_eth_payload_s_tready;
                             state_next = STATE_READ_PAYLOAD;
                         end
                     end
                 endcase
 
-                if (shift_eth_payload_tlast) begin
+                if (shift_eth_payload_axis_tlast) begin
                     error_header_early_termination_next = 1'b1;
                     error_invalid_header_next = 1'b0;
                     error_invalid_checksum_next = 1'b0;
-                    output_ip_hdr_valid_next = 1'b0;
-                    input_eth_hdr_ready_next = ~output_ip_hdr_valid_reg;
-                    input_eth_payload_tready_next = 1'b0;
+                    m_ip_hdr_valid_next = 1'b0;
+                    s_eth_hdr_ready_next = !m_ip_hdr_valid_reg;
+                    s_eth_payload_axis_tready_next = 1'b0;
                     state_next = STATE_IDLE;
                 end
 
@@ -389,40 +389,40 @@ always @* begin
         end
         STATE_READ_PAYLOAD: begin
             // read payload
-            input_eth_payload_tready_next = output_ip_payload_tready_int_early & shift_eth_payload_input_tready;
+            s_eth_payload_axis_tready_next = m_ip_payload_axis_tready_int_early && shift_eth_payload_s_tready;
 
-            output_ip_payload_tdata_int = shift_eth_payload_tdata;
-            output_ip_payload_tkeep_int = shift_eth_payload_tkeep;
-            output_ip_payload_tvalid_int = shift_eth_payload_tvalid;
-            output_ip_payload_tlast_int = shift_eth_payload_tlast;
-            output_ip_payload_tuser_int = shift_eth_payload_tuser;
+            m_ip_payload_axis_tdata_int = shift_eth_payload_axis_tdata;
+            m_ip_payload_axis_tkeep_int = shift_eth_payload_axis_tkeep;
+            m_ip_payload_axis_tvalid_int = shift_eth_payload_axis_tvalid;
+            m_ip_payload_axis_tlast_int = shift_eth_payload_axis_tlast;
+            m_ip_payload_axis_tuser_int = shift_eth_payload_axis_tuser;
 
-            if (output_ip_payload_tready_int_reg & shift_eth_payload_tvalid) begin
+            if (m_ip_payload_axis_tready_int_reg && shift_eth_payload_axis_tvalid) begin
                 // word transfer through
-                frame_ptr_next = frame_ptr_reg+keep2count(shift_eth_payload_tkeep);
+                frame_ptr_next = frame_ptr_reg+keep2count(shift_eth_payload_axis_tkeep);
                 transfer_in_save = 1'b1;
-                if (frame_ptr_next >= output_ip_length_reg) begin
+                if (frame_ptr_next >= m_ip_length_reg) begin
                     // have entire payload
-                    frame_ptr_next = output_ip_length_reg;
-                    output_ip_payload_tkeep_int = shift_eth_payload_tkeep & count2keep(output_ip_length_reg - frame_ptr_reg);
-                    if (shift_eth_payload_tlast) begin
-                        input_eth_payload_tready_next = 1'b0;
+                    frame_ptr_next = m_ip_length_reg;
+                    m_ip_payload_axis_tkeep_int = shift_eth_payload_axis_tkeep & count2keep(m_ip_length_reg - frame_ptr_reg);
+                    if (shift_eth_payload_axis_tlast) begin
+                        s_eth_payload_axis_tready_next = 1'b0;
                         flush_save = 1'b1;
-                        input_eth_hdr_ready_next = ~output_ip_hdr_valid_reg & ~check_hdr_reg;
+                        s_eth_hdr_ready_next = !m_ip_hdr_valid_reg && !check_hdr_reg;
                         state_next = STATE_IDLE;
                     end else begin
                         store_last_word = 1'b1;
-                        output_ip_payload_tvalid_int = 1'b0;
+                        m_ip_payload_axis_tvalid_int = 1'b0;
                         state_next = STATE_READ_PAYLOAD_LAST;
                     end
                 end else begin
-                    if (shift_eth_payload_tlast) begin
+                    if (shift_eth_payload_axis_tlast) begin
                         // end of frame, but length does not match
                         error_payload_early_termination_next = 1'b1;
-                        output_ip_payload_tuser_int = 1'b1;
-                        input_eth_payload_tready_next = 1'b0;
+                        m_ip_payload_axis_tuser_int = 1'b1;
+                        s_eth_payload_axis_tready_next = 1'b0;
                         flush_save = 1'b1;
-                        input_eth_hdr_ready_next = ~output_ip_hdr_valid_reg & ~check_hdr_reg;
+                        s_eth_hdr_ready_next = !m_ip_hdr_valid_reg && !check_hdr_reg;
                         state_next = STATE_IDLE;
                     end else begin
                         state_next = STATE_READ_PAYLOAD;
@@ -441,38 +441,38 @@ always @* begin
                 if (hdr_sum_temp != 16'hffff) begin
                     // bad checksum
                     error_invalid_checksum_next = 1'b1;
-                    output_ip_payload_tvalid_int = 1'b0;
-                    if (shift_eth_payload_tlast & shift_eth_payload_tvalid) begin
+                    m_ip_payload_axis_tvalid_int = 1'b0;
+                    if (shift_eth_payload_axis_tlast && shift_eth_payload_axis_tvalid) begin
                         // only one payload cycle; return to idle now
-                        input_eth_hdr_ready_next = ~output_ip_hdr_valid_reg & ~check_hdr_reg;
+                        s_eth_hdr_ready_next = !m_ip_hdr_valid_reg && !check_hdr_reg;
                         state_next = STATE_IDLE;
                     end else begin
                         // drop payload
-                        input_eth_payload_tready_next = shift_eth_payload_input_tready;
+                        s_eth_payload_axis_tready_next = shift_eth_payload_s_tready;
                         state_next = STATE_WAIT_LAST;
                     end
                 end else begin
                     // good checksum; transfer header
-                    output_ip_hdr_valid_next = 1'b1;
+                    m_ip_hdr_valid_next = 1'b1;
                 end
             end
         end
         STATE_READ_PAYLOAD_LAST: begin
             // read and discard until end of frame
-            input_eth_payload_tready_next = output_ip_payload_tready_int_early & shift_eth_payload_input_tready;
+            s_eth_payload_axis_tready_next = m_ip_payload_axis_tready_int_early && shift_eth_payload_s_tready;
 
-            output_ip_payload_tdata_int = last_word_data_reg;
-            output_ip_payload_tkeep_int = last_word_keep_reg;
-            output_ip_payload_tvalid_int = shift_eth_payload_tvalid & shift_eth_payload_tlast;
-            output_ip_payload_tlast_int = shift_eth_payload_tlast;
-            output_ip_payload_tuser_int = shift_eth_payload_tuser;
+            m_ip_payload_axis_tdata_int = last_word_data_reg;
+            m_ip_payload_axis_tkeep_int = last_word_keep_reg;
+            m_ip_payload_axis_tvalid_int = shift_eth_payload_axis_tvalid && shift_eth_payload_axis_tlast;
+            m_ip_payload_axis_tlast_int = shift_eth_payload_axis_tlast;
+            m_ip_payload_axis_tuser_int = shift_eth_payload_axis_tuser;
 
-            if (output_ip_payload_tready_int_reg & shift_eth_payload_tvalid) begin
+            if (m_ip_payload_axis_tready_int_reg && shift_eth_payload_axis_tvalid) begin
                 transfer_in_save = 1'b1;
-                if (shift_eth_payload_tlast) begin
-                    input_eth_payload_tready_next = 1'b0;
+                if (shift_eth_payload_axis_tlast) begin
+                    s_eth_payload_axis_tready_next = 1'b0;
                     flush_save = 1'b1;
-                    input_eth_hdr_ready_next = 1'b1;
+                    s_eth_hdr_ready_next = 1'b1;
                     state_next = STATE_IDLE;
                 end else begin
                     state_next = STATE_READ_PAYLOAD_LAST;
@@ -483,14 +483,14 @@ always @* begin
         end
         STATE_WAIT_LAST: begin
             // read and discard until end of frame
-            input_eth_payload_tready_next = shift_eth_payload_input_tready;
+            s_eth_payload_axis_tready_next = shift_eth_payload_s_tready;
 
-            if (shift_eth_payload_tvalid) begin
+            if (shift_eth_payload_axis_tvalid) begin
                 transfer_in_save = 1'b1;
-                if (shift_eth_payload_tlast) begin
-                    input_eth_payload_tready_next = 1'b0;
+                if (shift_eth_payload_axis_tlast) begin
+                    s_eth_payload_axis_tready_next = 1'b0;
                     flush_save = 1'b1;
-                    input_eth_hdr_ready_next = 1'b1;
+                    s_eth_hdr_ready_next = 1'b1;
                     state_next = STATE_IDLE;
                 end else begin
                     state_next = STATE_WAIT_LAST;
@@ -508,10 +508,10 @@ always @(posedge clk) begin
         frame_ptr_reg <= 16'd0;
         hdr_sum_reg <= 16'd0;
         check_hdr_reg <= 1'b0;
-        input_eth_hdr_ready_reg <= 1'b0;
-        input_eth_payload_tready_reg <= 1'b0;
-        output_ip_hdr_valid_reg <= 1'b0;
-        save_eth_payload_tlast_reg <= 1'b0;
+        s_eth_hdr_ready_reg <= 1'b0;
+        s_eth_payload_axis_tready_reg <= 1'b0;
+        m_ip_hdr_valid_reg <= 1'b0;
+        save_eth_payload_axis_tlast_reg <= 1'b0;
         busy_reg <= 1'b0;
         error_header_early_termination_reg <= 1'b0;
         error_payload_early_termination_reg <= 1'b0;
@@ -525,10 +525,10 @@ always @(posedge clk) begin
         hdr_sum_reg <= hdr_sum_next;
         check_hdr_reg <= check_hdr_next;
 
-        input_eth_hdr_ready_reg <= input_eth_hdr_ready_next;
-        input_eth_payload_tready_reg <= input_eth_payload_tready_next;
+        s_eth_hdr_ready_reg <= s_eth_hdr_ready_next;
+        s_eth_payload_axis_tready_reg <= s_eth_payload_axis_tready_next;
 
-        output_ip_hdr_valid_reg <= output_ip_hdr_valid_next;
+        m_ip_hdr_valid_reg <= m_ip_hdr_valid_next;
 
         error_header_early_termination_reg <= error_header_early_termination_next;
         error_payload_early_termination_reg <= error_payload_early_termination_next;
@@ -539,144 +539,144 @@ always @(posedge clk) begin
 
         // datapath
         if (flush_save) begin
-            save_eth_payload_tlast_reg <= 1'b0;
+            save_eth_payload_axis_tlast_reg <= 1'b0;
         end else if (transfer_in_save) begin
-            save_eth_payload_tlast_reg <= input_eth_payload_tlast;
+            save_eth_payload_axis_tlast_reg <= s_eth_payload_axis_tlast;
         end
     end
 
     // datapath
     if (store_eth_hdr) begin
-        output_eth_dest_mac_reg <= input_eth_dest_mac;
-        output_eth_src_mac_reg <= input_eth_src_mac;
-        output_eth_type_reg <= input_eth_type;
+        m_eth_dest_mac_reg <= s_eth_dest_mac;
+        m_eth_src_mac_reg <= s_eth_src_mac;
+        m_eth_type_reg <= s_eth_type;
     end
 
     if (store_last_word) begin
-        last_word_data_reg <= output_ip_payload_tdata_int;
-        last_word_keep_reg <= output_ip_payload_tkeep_int;
+        last_word_data_reg <= m_ip_payload_axis_tdata_int;
+        last_word_keep_reg <= m_ip_payload_axis_tkeep_int;
     end
 
     if (store_hdr_word_0) begin
-        {output_ip_version_reg, output_ip_ihl_reg} <= input_eth_payload_tdata[ 7: 0];
-        {output_ip_dscp_reg, output_ip_ecn_reg} <= input_eth_payload_tdata[15: 8];
-        output_ip_length_reg[15: 8] <= input_eth_payload_tdata[23:16];
-        output_ip_length_reg[ 7: 0] <= input_eth_payload_tdata[31:24];
-        output_ip_identification_reg[15: 8] <= input_eth_payload_tdata[39:32];
-        output_ip_identification_reg[ 7: 0] <= input_eth_payload_tdata[47:40];
-        {output_ip_flags_reg, output_ip_fragment_offset_reg[12:8]} <= input_eth_payload_tdata[55:48];
-        output_ip_fragment_offset_reg[ 7:0] <= input_eth_payload_tdata[63:56];
+        {m_ip_version_reg, m_ip_ihl_reg} <= s_eth_payload_axis_tdata[ 7: 0];
+        {m_ip_dscp_reg, m_ip_ecn_reg} <= s_eth_payload_axis_tdata[15: 8];
+        m_ip_length_reg[15: 8] <= s_eth_payload_axis_tdata[23:16];
+        m_ip_length_reg[ 7: 0] <= s_eth_payload_axis_tdata[31:24];
+        m_ip_identification_reg[15: 8] <= s_eth_payload_axis_tdata[39:32];
+        m_ip_identification_reg[ 7: 0] <= s_eth_payload_axis_tdata[47:40];
+        {m_ip_flags_reg, m_ip_fragment_offset_reg[12:8]} <= s_eth_payload_axis_tdata[55:48];
+        m_ip_fragment_offset_reg[ 7:0] <= s_eth_payload_axis_tdata[63:56];
     end
 
     if (store_hdr_word_1) begin
-        output_ip_ttl_reg <= input_eth_payload_tdata[ 7: 0];
-        output_ip_protocol_reg <= input_eth_payload_tdata[15: 8];
-        output_ip_header_checksum_reg[15: 8] <= input_eth_payload_tdata[23:16];
-        output_ip_header_checksum_reg[ 7: 0] <= input_eth_payload_tdata[31:24];
-        output_ip_source_ip_reg[31:24] <= input_eth_payload_tdata[39:32];
-        output_ip_source_ip_reg[23:16] <= input_eth_payload_tdata[47:40];
-        output_ip_source_ip_reg[15: 8] <= input_eth_payload_tdata[55:48];
-        output_ip_source_ip_reg[ 7: 0] <= input_eth_payload_tdata[63:56];
+        m_ip_ttl_reg <= s_eth_payload_axis_tdata[ 7: 0];
+        m_ip_protocol_reg <= s_eth_payload_axis_tdata[15: 8];
+        m_ip_header_checksum_reg[15: 8] <= s_eth_payload_axis_tdata[23:16];
+        m_ip_header_checksum_reg[ 7: 0] <= s_eth_payload_axis_tdata[31:24];
+        m_ip_source_ip_reg[31:24] <= s_eth_payload_axis_tdata[39:32];
+        m_ip_source_ip_reg[23:16] <= s_eth_payload_axis_tdata[47:40];
+        m_ip_source_ip_reg[15: 8] <= s_eth_payload_axis_tdata[55:48];
+        m_ip_source_ip_reg[ 7: 0] <= s_eth_payload_axis_tdata[63:56];
     end
 
     if (store_hdr_word_2) begin
-        output_ip_dest_ip_reg[31:24] <= input_eth_payload_tdata[ 7: 0];
-        output_ip_dest_ip_reg[23:16] <= input_eth_payload_tdata[15: 8];
-        output_ip_dest_ip_reg[15: 8] <= input_eth_payload_tdata[23:16];
-        output_ip_dest_ip_reg[ 7: 0] <= input_eth_payload_tdata[31:24];
+        m_ip_dest_ip_reg[31:24] <= s_eth_payload_axis_tdata[ 7: 0];
+        m_ip_dest_ip_reg[23:16] <= s_eth_payload_axis_tdata[15: 8];
+        m_ip_dest_ip_reg[15: 8] <= s_eth_payload_axis_tdata[23:16];
+        m_ip_dest_ip_reg[ 7: 0] <= s_eth_payload_axis_tdata[31:24];
     end
 
     if (transfer_in_save) begin
-        save_eth_payload_tdata_reg <= input_eth_payload_tdata;
-        save_eth_payload_tkeep_reg <= input_eth_payload_tkeep;
-        save_eth_payload_tuser_reg <= input_eth_payload_tuser;
+        save_eth_payload_axis_tdata_reg <= s_eth_payload_axis_tdata;
+        save_eth_payload_axis_tkeep_reg <= s_eth_payload_axis_tkeep;
+        save_eth_payload_axis_tuser_reg <= s_eth_payload_axis_tuser;
     end
 end
 
 // output datapath logic
-reg [63:0] output_ip_payload_tdata_reg = 64'd0;
-reg [7:0]  output_ip_payload_tkeep_reg = 8'd0;
-reg        output_ip_payload_tvalid_reg = 1'b0, output_ip_payload_tvalid_next;
-reg        output_ip_payload_tlast_reg = 1'b0;
-reg        output_ip_payload_tuser_reg = 1'b0;
+reg [63:0] m_ip_payload_axis_tdata_reg = 64'd0;
+reg [7:0]  m_ip_payload_axis_tkeep_reg = 8'd0;
+reg        m_ip_payload_axis_tvalid_reg = 1'b0, m_ip_payload_axis_tvalid_next;
+reg        m_ip_payload_axis_tlast_reg = 1'b0;
+reg        m_ip_payload_axis_tuser_reg = 1'b0;
 
-reg [63:0] temp_ip_payload_tdata_reg = 64'd0;
-reg [7:0]  temp_ip_payload_tkeep_reg = 8'd0;
-reg        temp_ip_payload_tvalid_reg = 1'b0, temp_ip_payload_tvalid_next;
-reg        temp_ip_payload_tlast_reg = 1'b0;
-reg        temp_ip_payload_tuser_reg = 1'b0;
+reg [63:0] temp_m_ip_payload_axis_tdata_reg = 64'd0;
+reg [7:0]  temp_m_ip_payload_axis_tkeep_reg = 8'd0;
+reg        temp_m_ip_payload_axis_tvalid_reg = 1'b0, temp_m_ip_payload_axis_tvalid_next;
+reg        temp_m_ip_payload_axis_tlast_reg = 1'b0;
+reg        temp_m_ip_payload_axis_tuser_reg = 1'b0;
 
 // datapath control
 reg store_ip_payload_int_to_output;
 reg store_ip_payload_int_to_temp;
-reg store_ip_payload_temp_to_output;
+reg store_ip_payload_axis_temp_to_output;
 
-assign output_ip_payload_tdata = output_ip_payload_tdata_reg;
-assign output_ip_payload_tkeep = output_ip_payload_tkeep_reg;
-assign output_ip_payload_tvalid = output_ip_payload_tvalid_reg;
-assign output_ip_payload_tlast = output_ip_payload_tlast_reg;
-assign output_ip_payload_tuser = output_ip_payload_tuser_reg;
+assign m_ip_payload_axis_tdata = m_ip_payload_axis_tdata_reg;
+assign m_ip_payload_axis_tkeep = m_ip_payload_axis_tkeep_reg;
+assign m_ip_payload_axis_tvalid = m_ip_payload_axis_tvalid_reg;
+assign m_ip_payload_axis_tlast = m_ip_payload_axis_tlast_reg;
+assign m_ip_payload_axis_tuser = m_ip_payload_axis_tuser_reg;
 
 // enable ready input next cycle if output is ready or the temp reg will not be filled on the next cycle (output reg empty or no input)
-assign output_ip_payload_tready_int_early = output_ip_payload_tready | (~temp_ip_payload_tvalid_reg & (~output_ip_payload_tvalid_reg | ~output_ip_payload_tvalid_int));
+assign m_ip_payload_axis_tready_int_early = m_ip_payload_axis_tready || (!temp_m_ip_payload_axis_tvalid_reg && (!m_ip_payload_axis_tvalid_reg || !m_ip_payload_axis_tvalid_int));
 
 always @* begin
     // transfer sink ready state to source
-    output_ip_payload_tvalid_next = output_ip_payload_tvalid_reg;
-    temp_ip_payload_tvalid_next = temp_ip_payload_tvalid_reg;
+    m_ip_payload_axis_tvalid_next = m_ip_payload_axis_tvalid_reg;
+    temp_m_ip_payload_axis_tvalid_next = temp_m_ip_payload_axis_tvalid_reg;
 
     store_ip_payload_int_to_output = 1'b0;
     store_ip_payload_int_to_temp = 1'b0;
-    store_ip_payload_temp_to_output = 1'b0;
+    store_ip_payload_axis_temp_to_output = 1'b0;
     
-    if (output_ip_payload_tready_int_reg) begin
+    if (m_ip_payload_axis_tready_int_reg) begin
         // input is ready
-        if (output_ip_payload_tready | ~output_ip_payload_tvalid_reg) begin
+        if (m_ip_payload_axis_tready || !m_ip_payload_axis_tvalid_reg) begin
             // output is ready or currently not valid, transfer data to output
-            output_ip_payload_tvalid_next = output_ip_payload_tvalid_int;
+            m_ip_payload_axis_tvalid_next = m_ip_payload_axis_tvalid_int;
             store_ip_payload_int_to_output = 1'b1;
         end else begin
             // output is not ready, store input in temp
-            temp_ip_payload_tvalid_next = output_ip_payload_tvalid_int;
+            temp_m_ip_payload_axis_tvalid_next = m_ip_payload_axis_tvalid_int;
             store_ip_payload_int_to_temp = 1'b1;
         end
-    end else if (output_ip_payload_tready) begin
+    end else if (m_ip_payload_axis_tready) begin
         // input is not ready, but output is ready
-        output_ip_payload_tvalid_next = temp_ip_payload_tvalid_reg;
-        temp_ip_payload_tvalid_next = 1'b0;
-        store_ip_payload_temp_to_output = 1'b1;
+        m_ip_payload_axis_tvalid_next = temp_m_ip_payload_axis_tvalid_reg;
+        temp_m_ip_payload_axis_tvalid_next = 1'b0;
+        store_ip_payload_axis_temp_to_output = 1'b1;
     end
 end
 
 always @(posedge clk) begin
     if (rst) begin
-        output_ip_payload_tvalid_reg <= 1'b0;
-        output_ip_payload_tready_int_reg <= 1'b0;
-        temp_ip_payload_tvalid_reg <= 1'b0;
+        m_ip_payload_axis_tvalid_reg <= 1'b0;
+        m_ip_payload_axis_tready_int_reg <= 1'b0;
+        temp_m_ip_payload_axis_tvalid_reg <= 1'b0;
     end else begin
-        output_ip_payload_tvalid_reg <= output_ip_payload_tvalid_next;
-        output_ip_payload_tready_int_reg <= output_ip_payload_tready_int_early;
-        temp_ip_payload_tvalid_reg <= temp_ip_payload_tvalid_next;
+        m_ip_payload_axis_tvalid_reg <= m_ip_payload_axis_tvalid_next;
+        m_ip_payload_axis_tready_int_reg <= m_ip_payload_axis_tready_int_early;
+        temp_m_ip_payload_axis_tvalid_reg <= temp_m_ip_payload_axis_tvalid_next;
     end
 
     // datapath
     if (store_ip_payload_int_to_output) begin
-        output_ip_payload_tdata_reg <= output_ip_payload_tdata_int;
-        output_ip_payload_tkeep_reg <= output_ip_payload_tkeep_int;
-        output_ip_payload_tlast_reg <= output_ip_payload_tlast_int;
-        output_ip_payload_tuser_reg <= output_ip_payload_tuser_int;
-    end else if (store_ip_payload_temp_to_output) begin
-        output_ip_payload_tdata_reg <= temp_ip_payload_tdata_reg;
-        output_ip_payload_tkeep_reg <= temp_ip_payload_tkeep_reg;
-        output_ip_payload_tlast_reg <= temp_ip_payload_tlast_reg;
-        output_ip_payload_tuser_reg <= temp_ip_payload_tuser_reg;
+        m_ip_payload_axis_tdata_reg <= m_ip_payload_axis_tdata_int;
+        m_ip_payload_axis_tkeep_reg <= m_ip_payload_axis_tkeep_int;
+        m_ip_payload_axis_tlast_reg <= m_ip_payload_axis_tlast_int;
+        m_ip_payload_axis_tuser_reg <= m_ip_payload_axis_tuser_int;
+    end else if (store_ip_payload_axis_temp_to_output) begin
+        m_ip_payload_axis_tdata_reg <= temp_m_ip_payload_axis_tdata_reg;
+        m_ip_payload_axis_tkeep_reg <= temp_m_ip_payload_axis_tkeep_reg;
+        m_ip_payload_axis_tlast_reg <= temp_m_ip_payload_axis_tlast_reg;
+        m_ip_payload_axis_tuser_reg <= temp_m_ip_payload_axis_tuser_reg;
     end
 
     if (store_ip_payload_int_to_temp) begin
-        temp_ip_payload_tdata_reg <= output_ip_payload_tdata_int;
-        temp_ip_payload_tkeep_reg <= output_ip_payload_tkeep_int;
-        temp_ip_payload_tlast_reg <= output_ip_payload_tlast_int;
-        temp_ip_payload_tuser_reg <= output_ip_payload_tuser_int;
+        temp_m_ip_payload_axis_tdata_reg <= m_ip_payload_axis_tdata_int;
+        temp_m_ip_payload_axis_tkeep_reg <= m_ip_payload_axis_tkeep_int;
+        temp_m_ip_payload_axis_tlast_reg <= m_ip_payload_axis_tlast_int;
+        temp_m_ip_payload_axis_tuser_reg <= m_ip_payload_axis_tuser_int;
     end
 end
 

@@ -36,32 +36,32 @@ reg clk = 0;
 reg rst = 0;
 reg [7:0] current_test = 0;
 
-reg input_eth_hdr_valid = 0;
-reg [47:0] input_eth_dest_mac = 0;
-reg [47:0] input_eth_src_mac = 0;
-reg [15:0] input_eth_type = 0;
-reg [7:0] input_eth_payload_tdata = 0;
-reg input_eth_payload_tvalid = 0;
-reg input_eth_payload_tlast = 0;
-reg input_eth_payload_tuser = 0;
-reg output_frame_ready = 0;
+reg s_eth_hdr_valid = 0;
+reg [47:0] s_eth_dest_mac = 0;
+reg [47:0] s_eth_src_mac = 0;
+reg [15:0] s_eth_type = 0;
+reg [7:0] s_eth_payload_axis_tdata = 0;
+reg s_eth_payload_axis_tvalid = 0;
+reg s_eth_payload_axis_tlast = 0;
+reg s_eth_payload_axis_tuser = 0;
+reg m_frame_ready = 0;
 
 // Outputs
-wire input_eth_hdr_ready;
-wire input_eth_payload_tready;
-wire output_frame_valid;
-wire [47:0] output_eth_dest_mac;
-wire [47:0] output_eth_src_mac;
-wire [15:0] output_eth_type;
-wire [15:0] output_arp_htype;
-wire [15:0] output_arp_ptype;
-wire [7:0]  output_arp_hlen;
-wire [7:0]  output_arp_plen;
-wire [15:0] output_arp_oper;
-wire [47:0] output_arp_sha;
-wire [31:0] output_arp_spa;
-wire [47:0] output_arp_tha;
-wire [31:0] output_arp_tpa;
+wire s_eth_hdr_ready;
+wire s_eth_payload_axis_tready;
+wire m_frame_valid;
+wire [47:0] m_eth_dest_mac;
+wire [47:0] m_eth_src_mac;
+wire [15:0] m_eth_type;
+wire [15:0] m_arp_htype;
+wire [15:0] m_arp_ptype;
+wire [7:0]  m_arp_hlen;
+wire [7:0]  m_arp_plen;
+wire [15:0] m_arp_oper;
+wire [47:0] m_arp_sha;
+wire [31:0] m_arp_spa;
+wire [47:0] m_arp_tha;
+wire [31:0] m_arp_tpa;
 wire busy;
 wire error_header_early_termination;
 wire error_invalid_header;
@@ -72,32 +72,32 @@ initial begin
         clk,
         rst,
         current_test,
-        input_eth_hdr_valid,
-        input_eth_dest_mac,
-        input_eth_src_mac,
-        input_eth_type,
-        input_eth_payload_tdata,
-        input_eth_payload_tvalid,
-        input_eth_payload_tlast,
-        input_eth_payload_tuser,
-        output_frame_ready
+        s_eth_hdr_valid,
+        s_eth_dest_mac,
+        s_eth_src_mac,
+        s_eth_type,
+        s_eth_payload_axis_tdata,
+        s_eth_payload_axis_tvalid,
+        s_eth_payload_axis_tlast,
+        s_eth_payload_axis_tuser,
+        m_frame_ready
     );
     $to_myhdl(
-        input_eth_hdr_ready,
-        input_eth_payload_tready,
-        output_frame_valid,
-        output_eth_dest_mac,
-        output_eth_src_mac,
-        output_eth_type,
-        output_arp_htype,
-        output_arp_ptype,
-        output_arp_hlen,
-        output_arp_plen,
-        output_arp_oper,
-        output_arp_sha,
-        output_arp_spa,
-        output_arp_tha,
-        output_arp_tpa,
+        s_eth_hdr_ready,
+        s_eth_payload_axis_tready,
+        m_frame_valid,
+        m_eth_dest_mac,
+        m_eth_src_mac,
+        m_eth_type,
+        m_arp_htype,
+        m_arp_ptype,
+        m_arp_hlen,
+        m_arp_plen,
+        m_arp_oper,
+        m_arp_sha,
+        m_arp_spa,
+        m_arp_tha,
+        m_arp_tpa,
         busy,
         error_header_early_termination,
         error_invalid_header
@@ -113,31 +113,31 @@ UUT (
     .clk(clk),
     .rst(rst),
     // Ethernet frame input
-    .input_eth_hdr_valid(input_eth_hdr_valid),
-    .input_eth_hdr_ready(input_eth_hdr_ready),
-    .input_eth_dest_mac(input_eth_dest_mac),
-    .input_eth_src_mac(input_eth_src_mac),
-    .input_eth_type(input_eth_type),
-    .input_eth_payload_tdata(input_eth_payload_tdata),
-    .input_eth_payload_tvalid(input_eth_payload_tvalid),
-    .input_eth_payload_tready(input_eth_payload_tready),
-    .input_eth_payload_tlast(input_eth_payload_tlast),
-    .input_eth_payload_tuser(input_eth_payload_tuser),
+    .s_eth_hdr_valid(s_eth_hdr_valid),
+    .s_eth_hdr_ready(s_eth_hdr_ready),
+    .s_eth_dest_mac(s_eth_dest_mac),
+    .s_eth_src_mac(s_eth_src_mac),
+    .s_eth_type(s_eth_type),
+    .s_eth_payload_axis_tdata(s_eth_payload_axis_tdata),
+    .s_eth_payload_axis_tvalid(s_eth_payload_axis_tvalid),
+    .s_eth_payload_axis_tready(s_eth_payload_axis_tready),
+    .s_eth_payload_axis_tlast(s_eth_payload_axis_tlast),
+    .s_eth_payload_axis_tuser(s_eth_payload_axis_tuser),
     // ARP frame output
-    .output_frame_valid(output_frame_valid),
-    .output_frame_ready(output_frame_ready),
-    .output_eth_dest_mac(output_eth_dest_mac),
-    .output_eth_src_mac(output_eth_src_mac),
-    .output_eth_type(output_eth_type),
-    .output_arp_htype(output_arp_htype),
-    .output_arp_ptype(output_arp_ptype),
-    .output_arp_hlen(output_arp_hlen),
-    .output_arp_plen(output_arp_plen),
-    .output_arp_oper(output_arp_oper),
-    .output_arp_sha(output_arp_sha),
-    .output_arp_spa(output_arp_spa),
-    .output_arp_tha(output_arp_tha),
-    .output_arp_tpa(output_arp_tpa),
+    .m_frame_valid(m_frame_valid),
+    .m_frame_ready(m_frame_ready),
+    .m_eth_dest_mac(m_eth_dest_mac),
+    .m_eth_src_mac(m_eth_src_mac),
+    .m_eth_type(m_eth_type),
+    .m_arp_htype(m_arp_htype),
+    .m_arp_ptype(m_arp_ptype),
+    .m_arp_hlen(m_arp_hlen),
+    .m_arp_plen(m_arp_plen),
+    .m_arp_oper(m_arp_oper),
+    .m_arp_sha(m_arp_sha),
+    .m_arp_spa(m_arp_spa),
+    .m_arp_tha(m_arp_tha),
+    .m_arp_tpa(m_arp_tpa),
     // Status signals
     .busy(busy),
     .error_header_early_termination(error_header_early_termination),

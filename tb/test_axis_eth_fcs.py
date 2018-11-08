@@ -52,13 +52,13 @@ def bench():
     rst = Signal(bool(0))
     current_test = Signal(intbv(0)[8:])
 
-    input_axis_tdata = Signal(intbv(0)[8:])
-    input_axis_tvalid = Signal(bool(0))
-    input_axis_tlast = Signal(bool(0))
-    input_axis_tuser = Signal(bool(0))
+    s_axis_tdata = Signal(intbv(0)[8:])
+    s_axis_tvalid = Signal(bool(0))
+    s_axis_tlast = Signal(bool(0))
+    s_axis_tuser = Signal(bool(0))
 
     # Outputs
-    input_axis_tready = Signal(bool(1))
+    s_axis_tready = Signal(bool(1))
     output_fcs = Signal(intbv(0)[32:])
     output_fcs_valid = Signal(bool(0))
 
@@ -70,11 +70,11 @@ def bench():
     source_logic = source.create_logic(
         clk,
         rst,
-        tdata=input_axis_tdata,
-        tvalid=input_axis_tvalid,
-        tready=input_axis_tready,
-        tlast=input_axis_tlast,
-        tuser=input_axis_tuser,
+        tdata=s_axis_tdata,
+        tvalid=s_axis_tvalid,
+        tready=s_axis_tready,
+        tlast=s_axis_tlast,
+        tuser=s_axis_tuser,
         pause=source_pause,
         name='source'
     )
@@ -89,11 +89,11 @@ def bench():
         rst=rst,
         current_test=current_test,
 
-        input_axis_tdata=input_axis_tdata,
-        input_axis_tvalid=input_axis_tvalid,
-        input_axis_tready=input_axis_tready,
-        input_axis_tlast=input_axis_tlast,
-        input_axis_tuser=input_axis_tuser,
+        s_axis_tdata=s_axis_tdata,
+        s_axis_tvalid=s_axis_tvalid,
+        s_axis_tready=s_axis_tready,
+        s_axis_tlast=s_axis_tlast,
+        s_axis_tuser=s_axis_tuser,
 
         output_fcs=output_fcs,
         output_fcs_valid=output_fcs_valid

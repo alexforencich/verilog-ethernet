@@ -48,25 +48,25 @@ def bench():
     rst = Signal(bool(0))
     current_test = Signal(intbv(0)[8:0])
 
-    input_eth_hdr_valid = Signal(bool(0))
-    input_eth_dest_mac = Signal(intbv(0)[48:])
-    input_eth_src_mac = Signal(intbv(0)[48:])
-    input_eth_type = Signal(intbv(0)[16:])
-    input_eth_payload_tdata = Signal(intbv(0)[64:])
-    input_eth_payload_tkeep = Signal(intbv(0)[8:])
-    input_eth_payload_tvalid = Signal(bool(0))
-    input_eth_payload_tlast = Signal(bool(0))
-    input_eth_payload_tuser = Signal(bool(0))
-    output_axis_tready = Signal(bool(0))
+    s_eth_hdr_valid = Signal(bool(0))
+    s_eth_dest_mac = Signal(intbv(0)[48:])
+    s_eth_src_mac = Signal(intbv(0)[48:])
+    s_eth_type = Signal(intbv(0)[16:])
+    s_eth_payload_axis_tdata = Signal(intbv(0)[64:])
+    s_eth_payload_axis_tkeep = Signal(intbv(0)[8:])
+    s_eth_payload_axis_tvalid = Signal(bool(0))
+    s_eth_payload_axis_tlast = Signal(bool(0))
+    s_eth_payload_axis_tuser = Signal(bool(0))
+    m_axis_tready = Signal(bool(0))
 
     # Outputs
-    output_axis_tdata = Signal(intbv(0)[64:])
-    output_axis_tkeep = Signal(intbv(0)[8:])
-    output_axis_tvalid = Signal(bool(0))
-    output_axis_tlast = Signal(bool(0))
-    output_axis_tuser = Signal(bool(0))
-    input_eth_hdr_ready = Signal(bool(1))
-    input_eth_payload_tready = Signal(bool(0))
+    m_axis_tdata = Signal(intbv(0)[64:])
+    m_axis_tkeep = Signal(intbv(0)[8:])
+    m_axis_tvalid = Signal(bool(0))
+    m_axis_tlast = Signal(bool(0))
+    m_axis_tuser = Signal(bool(0))
+    s_eth_hdr_ready = Signal(bool(1))
+    s_eth_payload_axis_tready = Signal(bool(0))
     busy = Signal(bool(0))
 
     # sources and sinks
@@ -78,17 +78,17 @@ def bench():
     source_logic = source.create_logic(
         clk,
         rst,
-        eth_hdr_ready=input_eth_hdr_ready,
-        eth_hdr_valid=input_eth_hdr_valid,
-        eth_dest_mac=input_eth_dest_mac,
-        eth_src_mac=input_eth_src_mac,
-        eth_type=input_eth_type,
-        eth_payload_tdata=input_eth_payload_tdata,
-        eth_payload_tkeep=input_eth_payload_tkeep,
-        eth_payload_tvalid=input_eth_payload_tvalid,
-        eth_payload_tready=input_eth_payload_tready,
-        eth_payload_tlast=input_eth_payload_tlast,
-        eth_payload_tuser=input_eth_payload_tuser,
+        eth_hdr_ready=s_eth_hdr_ready,
+        eth_hdr_valid=s_eth_hdr_valid,
+        eth_dest_mac=s_eth_dest_mac,
+        eth_src_mac=s_eth_src_mac,
+        eth_type=s_eth_type,
+        eth_payload_tdata=s_eth_payload_axis_tdata,
+        eth_payload_tkeep=s_eth_payload_axis_tkeep,
+        eth_payload_tvalid=s_eth_payload_axis_tvalid,
+        eth_payload_tready=s_eth_payload_axis_tready,
+        eth_payload_tlast=s_eth_payload_axis_tlast,
+        eth_payload_tuser=s_eth_payload_axis_tuser,
         pause=source_pause,
         name='source'
     )
@@ -98,12 +98,12 @@ def bench():
     sink_logic = sink.create_logic(
         clk,
         rst,
-        tdata=output_axis_tdata,
-        tkeep=output_axis_tkeep,
-        tvalid=output_axis_tvalid,
-        tready=output_axis_tready,
-        tlast=output_axis_tlast,
-        tuser=output_axis_tuser,
+        tdata=m_axis_tdata,
+        tkeep=m_axis_tkeep,
+        tvalid=m_axis_tvalid,
+        tready=m_axis_tready,
+        tlast=m_axis_tlast,
+        tuser=m_axis_tuser,
         pause=sink_pause,
         name='sink'
     )
@@ -118,24 +118,24 @@ def bench():
         rst=rst,
         current_test=current_test,
 
-        input_eth_hdr_valid=input_eth_hdr_valid,
-        input_eth_hdr_ready=input_eth_hdr_ready,
-        input_eth_dest_mac=input_eth_dest_mac,
-        input_eth_src_mac=input_eth_src_mac,
-        input_eth_type=input_eth_type,
-        input_eth_payload_tdata=input_eth_payload_tdata,
-        input_eth_payload_tkeep=input_eth_payload_tkeep,
-        input_eth_payload_tvalid=input_eth_payload_tvalid,
-        input_eth_payload_tready=input_eth_payload_tready,
-        input_eth_payload_tlast=input_eth_payload_tlast,
-        input_eth_payload_tuser=input_eth_payload_tuser,
+        s_eth_hdr_valid=s_eth_hdr_valid,
+        s_eth_hdr_ready=s_eth_hdr_ready,
+        s_eth_dest_mac=s_eth_dest_mac,
+        s_eth_src_mac=s_eth_src_mac,
+        s_eth_type=s_eth_type,
+        s_eth_payload_axis_tdata=s_eth_payload_axis_tdata,
+        s_eth_payload_axis_tkeep=s_eth_payload_axis_tkeep,
+        s_eth_payload_axis_tvalid=s_eth_payload_axis_tvalid,
+        s_eth_payload_axis_tready=s_eth_payload_axis_tready,
+        s_eth_payload_axis_tlast=s_eth_payload_axis_tlast,
+        s_eth_payload_axis_tuser=s_eth_payload_axis_tuser,
 
-        output_axis_tdata=output_axis_tdata,
-        output_axis_tkeep=output_axis_tkeep,
-        output_axis_tvalid=output_axis_tvalid,
-        output_axis_tready=output_axis_tready,
-        output_axis_tlast=output_axis_tlast,
-        output_axis_tuser=output_axis_tuser,
+        m_axis_tdata=m_axis_tdata,
+        m_axis_tkeep=m_axis_tkeep,
+        m_axis_tvalid=m_axis_tvalid,
+        m_axis_tready=m_axis_tready,
+        m_axis_tlast=m_axis_tlast,
+        m_axis_tuser=m_axis_tuser,
 
         busy=busy
     )
@@ -145,11 +145,11 @@ def bench():
         clk.next = not clk
 
     def wait_normal():
-        while input_eth_payload_tvalid or output_axis_tvalid or input_eth_hdr_valid:
+        while s_eth_payload_axis_tvalid or m_axis_tvalid or s_eth_hdr_valid:
             yield clk.posedge
 
     def wait_pause_source():
-        while input_eth_payload_tvalid or output_axis_tvalid or input_eth_hdr_valid:
+        while s_eth_payload_axis_tvalid or m_axis_tvalid or s_eth_hdr_valid:
             source_pause.next = True
             yield clk.posedge
             yield clk.posedge
@@ -158,7 +158,7 @@ def bench():
             yield clk.posedge
 
     def wait_pause_sink():
-        while input_eth_payload_tvalid or output_axis_tvalid or input_eth_hdr_valid:
+        while s_eth_payload_axis_tvalid or m_axis_tvalid or s_eth_hdr_valid:
             sink_pause.next = True
             yield clk.posedge
             yield clk.posedge

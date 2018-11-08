@@ -53,18 +53,18 @@ def bench():
     rst = Signal(bool(0))
     current_test = Signal(intbv(0)[8:])
 
-    input_eth_hdr_valid = Signal(bool(0))
-    input_eth_dest_mac = Signal(intbv(0)[48:])
-    input_eth_src_mac = Signal(intbv(0)[48:])
-    input_eth_type = Signal(intbv(0)[16:])
-    input_eth_payload_tdata = Signal(intbv(0)[64:])
-    input_eth_payload_tkeep = Signal(intbv(0)[8:])
-    input_eth_payload_tvalid = Signal(bool(0))
-    input_eth_payload_tlast = Signal(bool(0))
-    input_eth_payload_tuser = Signal(bool(0))
+    s_eth_hdr_valid = Signal(bool(0))
+    s_eth_dest_mac = Signal(intbv(0)[48:])
+    s_eth_src_mac = Signal(intbv(0)[48:])
+    s_eth_type = Signal(intbv(0)[16:])
+    s_eth_payload_axis_tdata = Signal(intbv(0)[64:])
+    s_eth_payload_axis_tkeep = Signal(intbv(0)[8:])
+    s_eth_payload_axis_tvalid = Signal(bool(0))
+    s_eth_payload_axis_tlast = Signal(bool(0))
+    s_eth_payload_axis_tuser = Signal(bool(0))
 
-    output_eth_payload_tready = Signal(bool(0))
-    output_eth_hdr_ready = Signal(bool(0))
+    m_eth_payload_axis_tready = Signal(bool(0))
+    m_eth_hdr_ready = Signal(bool(0))
 
     arp_request_valid = Signal(bool(0))
     arp_request_ip = Signal(intbv(0)[32:])
@@ -77,18 +77,18 @@ def bench():
     clear_cache = Signal(bool(0))
 
     # Outputs
-    input_eth_hdr_ready = Signal(bool(0))
-    input_eth_payload_tready = Signal(bool(0))
+    s_eth_hdr_ready = Signal(bool(0))
+    s_eth_payload_axis_tready = Signal(bool(0))
 
-    output_eth_hdr_valid = Signal(bool(0))
-    output_eth_dest_mac = Signal(intbv(0)[48:])
-    output_eth_src_mac = Signal(intbv(0)[48:])
-    output_eth_type = Signal(intbv(0)[16:])
-    output_eth_payload_tdata = Signal(intbv(0)[64:])
-    output_eth_payload_tkeep = Signal(intbv(0)[8:])
-    output_eth_payload_tvalid = Signal(bool(0))
-    output_eth_payload_tlast = Signal(bool(0))
-    output_eth_payload_tuser = Signal(bool(0))
+    m_eth_hdr_valid = Signal(bool(0))
+    m_eth_dest_mac = Signal(intbv(0)[48:])
+    m_eth_src_mac = Signal(intbv(0)[48:])
+    m_eth_type = Signal(intbv(0)[16:])
+    m_eth_payload_axis_tdata = Signal(intbv(0)[64:])
+    m_eth_payload_axis_tkeep = Signal(intbv(0)[8:])
+    m_eth_payload_axis_tvalid = Signal(bool(0))
+    m_eth_payload_axis_tlast = Signal(bool(0))
+    m_eth_payload_axis_tuser = Signal(bool(0))
 
     arp_request_ready = Signal(bool(0))
     arp_response_valid = Signal(bool(0))
@@ -104,17 +104,17 @@ def bench():
     eth_source_logic = eth_source.create_logic(
         clk,
         rst,
-        eth_hdr_ready=input_eth_hdr_ready,
-        eth_hdr_valid=input_eth_hdr_valid,
-        eth_dest_mac=input_eth_dest_mac,
-        eth_src_mac=input_eth_src_mac,
-        eth_type=input_eth_type,
-        eth_payload_tdata=input_eth_payload_tdata,
-        eth_payload_tkeep=input_eth_payload_tkeep,
-        eth_payload_tvalid=input_eth_payload_tvalid,
-        eth_payload_tready=input_eth_payload_tready,
-        eth_payload_tlast=input_eth_payload_tlast,
-        eth_payload_tuser=input_eth_payload_tuser,
+        eth_hdr_ready=s_eth_hdr_ready,
+        eth_hdr_valid=s_eth_hdr_valid,
+        eth_dest_mac=s_eth_dest_mac,
+        eth_src_mac=s_eth_src_mac,
+        eth_type=s_eth_type,
+        eth_payload_tdata=s_eth_payload_axis_tdata,
+        eth_payload_tkeep=s_eth_payload_axis_tkeep,
+        eth_payload_tvalid=s_eth_payload_axis_tvalid,
+        eth_payload_tready=s_eth_payload_axis_tready,
+        eth_payload_tlast=s_eth_payload_axis_tlast,
+        eth_payload_tuser=s_eth_payload_axis_tuser,
         pause=eth_source_pause,
         name='eth_source'
     )
@@ -124,17 +124,17 @@ def bench():
     eth_sink_logic = eth_sink.create_logic(
         clk,
         rst,
-        eth_hdr_ready=output_eth_hdr_ready,
-        eth_hdr_valid=output_eth_hdr_valid,
-        eth_dest_mac=output_eth_dest_mac,
-        eth_src_mac=output_eth_src_mac,
-        eth_type=output_eth_type,
-        eth_payload_tdata=output_eth_payload_tdata,
-        eth_payload_tkeep=output_eth_payload_tkeep,
-        eth_payload_tvalid=output_eth_payload_tvalid,
-        eth_payload_tready=output_eth_payload_tready,
-        eth_payload_tlast=output_eth_payload_tlast,
-        eth_payload_tuser=output_eth_payload_tuser,
+        eth_hdr_ready=m_eth_hdr_ready,
+        eth_hdr_valid=m_eth_hdr_valid,
+        eth_dest_mac=m_eth_dest_mac,
+        eth_src_mac=m_eth_src_mac,
+        eth_type=m_eth_type,
+        eth_payload_tdata=m_eth_payload_axis_tdata,
+        eth_payload_tkeep=m_eth_payload_axis_tkeep,
+        eth_payload_tvalid=m_eth_payload_axis_tvalid,
+        eth_payload_tready=m_eth_payload_axis_tready,
+        eth_payload_tlast=m_eth_payload_axis_tlast,
+        eth_payload_tuser=m_eth_payload_axis_tuser,
         pause=eth_sink_pause,
         name='eth_sink'
     )
@@ -171,29 +171,29 @@ def bench():
         rst=rst,
         current_test=current_test,
 
-        input_eth_hdr_valid=input_eth_hdr_valid,
-        input_eth_hdr_ready=input_eth_hdr_ready,
-        input_eth_dest_mac=input_eth_dest_mac,
-        input_eth_src_mac=input_eth_src_mac,
-        input_eth_type=input_eth_type,
-        input_eth_payload_tdata=input_eth_payload_tdata,
-        input_eth_payload_tkeep=input_eth_payload_tkeep,
-        input_eth_payload_tvalid=input_eth_payload_tvalid,
-        input_eth_payload_tready=input_eth_payload_tready,
-        input_eth_payload_tlast=input_eth_payload_tlast,
-        input_eth_payload_tuser=input_eth_payload_tuser,
+        s_eth_hdr_valid=s_eth_hdr_valid,
+        s_eth_hdr_ready=s_eth_hdr_ready,
+        s_eth_dest_mac=s_eth_dest_mac,
+        s_eth_src_mac=s_eth_src_mac,
+        s_eth_type=s_eth_type,
+        s_eth_payload_axis_tdata=s_eth_payload_axis_tdata,
+        s_eth_payload_axis_tkeep=s_eth_payload_axis_tkeep,
+        s_eth_payload_axis_tvalid=s_eth_payload_axis_tvalid,
+        s_eth_payload_axis_tready=s_eth_payload_axis_tready,
+        s_eth_payload_axis_tlast=s_eth_payload_axis_tlast,
+        s_eth_payload_axis_tuser=s_eth_payload_axis_tuser,
 
-        output_eth_hdr_valid=output_eth_hdr_valid,
-        output_eth_hdr_ready=output_eth_hdr_ready,
-        output_eth_dest_mac=output_eth_dest_mac,
-        output_eth_src_mac=output_eth_src_mac,
-        output_eth_type=output_eth_type,
-        output_eth_payload_tdata=output_eth_payload_tdata,
-        output_eth_payload_tkeep=output_eth_payload_tkeep,
-        output_eth_payload_tvalid=output_eth_payload_tvalid,
-        output_eth_payload_tready=output_eth_payload_tready,
-        output_eth_payload_tlast=output_eth_payload_tlast,
-        output_eth_payload_tuser=output_eth_payload_tuser,
+        m_eth_hdr_valid=m_eth_hdr_valid,
+        m_eth_hdr_ready=m_eth_hdr_ready,
+        m_eth_dest_mac=m_eth_dest_mac,
+        m_eth_src_mac=m_eth_src_mac,
+        m_eth_type=m_eth_type,
+        m_eth_payload_axis_tdata=m_eth_payload_axis_tdata,
+        m_eth_payload_axis_tkeep=m_eth_payload_axis_tkeep,
+        m_eth_payload_axis_tvalid=m_eth_payload_axis_tvalid,
+        m_eth_payload_axis_tready=m_eth_payload_axis_tready,
+        m_eth_payload_axis_tlast=m_eth_payload_axis_tlast,
+        m_eth_payload_axis_tuser=m_eth_payload_axis_tuser,
 
         arp_request_valid=arp_request_valid,
         arp_request_ready=arp_request_ready,

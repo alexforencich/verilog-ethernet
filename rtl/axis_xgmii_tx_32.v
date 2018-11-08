@@ -42,12 +42,12 @@ module axis_xgmii_tx_32 #
     /*
      * AXI input
      */
-    input  wire [31:0] input_axis_tdata,
-    input  wire [3:0]  input_axis_tkeep,
-    input  wire        input_axis_tvalid,
-    output wire        input_axis_tready,
-    input  wire        input_axis_tlast,
-    input  wire        input_axis_tuser,
+    input  wire [31:0] s_axis_tdata,
+    input  wire [3:0]  s_axis_tkeep,
+    input  wire        s_axis_tvalid,
+    output wire        s_axis_tready,
+    input  wire        s_axis_tlast,
+    input  wire        s_axis_tuser,
 
     /*
      * XGMII output
@@ -82,10 +82,10 @@ reg [2:0] state_reg = STATE_IDLE, state_next;
 reg reset_crc;
 reg update_crc;
 
-reg [31:0] input_axis_tdata_masked;
+reg [31:0] s_axis_tdata_masked;
 
-reg [31:0] input_tdata_reg = 64'd0, input_tdata_next;
-reg [3:0]  input_tkeep_reg = 8'd0, input_tkeep_next;
+reg [31:0] s_tdata_reg = 64'd0, s_tdata_next;
+reg [3:0]  s_tkeep_reg = 8'd0, s_tkeep_next;
 
 reg [31:0] fcs_output_txd_0;
 reg [31:0] fcs_output_txd_1;
@@ -101,7 +101,7 @@ reg [15:0] frame_ptr_reg = 16'd0, frame_ptr_next;
 reg [7:0] ifg_count_reg = 8'd0, ifg_count_next;
 reg [1:0] deficit_idle_count_reg = 2'd0, deficit_idle_count_next;
 
-reg input_axis_tready_reg = 1'b0, input_axis_tready_next;
+reg s_axis_tready_reg = 1'b0, s_axis_tready_next;
 
 reg [31:0] crc_state = 32'hFFFFFFFF;
 
@@ -113,7 +113,7 @@ wire [31:0] crc_next3;
 reg [31:0] xgmii_txd_reg = 32'h07070707, xgmii_txd_next;
 reg [3:0] xgmii_txc_reg = 4'b1111, xgmii_txc_next;
 
-assign input_axis_tready = input_axis_tready_reg;
+assign s_axis_tready = s_axis_tready_reg;
 
 assign xgmii_txd = xgmii_txd_reg;
 assign xgmii_txc = xgmii_txc_reg;
@@ -128,7 +128,7 @@ lfsr #(
     .STYLE("AUTO")
 )
 eth_crc_8 (
-    .data_in(input_tdata_reg[7:0]),
+    .data_in(s_tdata_reg[7:0]),
     .state_in(crc_state),
     .data_out(),
     .state_out(crc_next0)
@@ -144,7 +144,7 @@ lfsr #(
     .STYLE("AUTO")
 )
 eth_crc_16 (
-    .data_in(input_tdata_reg[15:0]),
+    .data_in(s_tdata_reg[15:0]),
     .state_in(crc_state),
     .data_out(),
     .state_out(crc_next1)
@@ -160,7 +160,7 @@ lfsr #(
     .STYLE("AUTO")
 )
 eth_crc_24 (
-    .data_in(input_tdata_reg[23:0]),
+    .data_in(s_tdata_reg[23:0]),
     .state_in(crc_state),
     .data_out(),
     .state_out(crc_next2)
@@ -176,7 +176,7 @@ lfsr #(
     .STYLE("AUTO")
 )
 eth_crc_32 (
-    .data_in(input_tdata_reg[31:0]),
+    .data_in(s_tdata_reg[31:0]),
     .state_in(crc_state),
     .data_out(),
     .state_out(crc_next3)
@@ -209,15 +209,15 @@ integer j;
 
 always @* begin
     for (j = 0; j < 4; j = j + 1) begin
-        input_axis_tdata_masked[j*8 +: 8] = input_axis_tkeep[j] ? input_axis_tdata[j*8 +: 8] : 8'd0;
+        s_axis_tdata_masked[j*8 +: 8] = s_axis_tkeep[j] ? s_axis_tdata[j*8 +: 8] : 8'd0;
     end
 end
 
 // FCS cycle calculation
 always @* begin
-    casez (input_tkeep_reg)
+    casez (s_tkeep_reg)
         4'bzz01: begin
-            fcs_output_txd_0 = {~crc_next0[23:0], input_tdata_reg[7:0]};
+            fcs_output_txd_0 = {~crc_next0[23:0], s_tdata_reg[7:0]};
             fcs_output_txd_1 = {24'h0707fd, ~crc_next0[31:24]};
             fcs_output_txc_0 = 4'b0000;
             fcs_output_txc_1 = 4'b1110;
@@ -225,7 +225,7 @@ always @* begin
             extra_cycle = 1'b0;
         end
         4'bz011: begin
-            fcs_output_txd_0 = {~crc_next1[15:0], input_tdata_reg[15:0]};
+            fcs_output_txd_0 = {~crc_next1[15:0], s_tdata_reg[15:0]};
             fcs_output_txd_1 = {16'h07fd, ~crc_next1[31:16]};
             fcs_output_txc_0 = 4'b0000;
             fcs_output_txc_1 = 4'b1100;
@@ -233,7 +233,7 @@ always @* begin
             extra_cycle = 1'b0;
         end
         4'b0111: begin
-            fcs_output_txd_0 = {~crc_next2[7:0], input_tdata_reg[23:0]};
+            fcs_output_txd_0 = {~crc_next2[7:0], s_tdata_reg[23:0]};
             fcs_output_txd_1 = {16'hfd, ~crc_next2[31:8]};
             fcs_output_txc_0 = 4'b0000;
             fcs_output_txc_1 = 4'b1000;
@@ -241,7 +241,7 @@ always @* begin
             extra_cycle = 1'b0;
         end
         4'b1111: begin
-            fcs_output_txd_0 = input_tdata_reg;
+            fcs_output_txd_0 = s_tdata_reg;
             fcs_output_txd_1 = ~crc_next3;
             fcs_output_txc_0 = 4'b0000;
             fcs_output_txc_1 = 4'b0000;
@@ -270,10 +270,10 @@ always @* begin
     ifg_count_next = ifg_count_reg;
     deficit_idle_count_next = deficit_idle_count_reg;
 
-    input_axis_tready_next = 1'b0;
+    s_axis_tready_next = 1'b0;
 
-    input_tdata_next = input_tdata_reg;
-    input_tkeep_next = input_tkeep_reg;
+    s_tdata_next = s_tdata_reg;
+    s_tkeep_next = s_tkeep_reg;
 
     // XGMII idle
     xgmii_txd_next = 32'h07070707;
@@ -289,14 +289,14 @@ always @* begin
             xgmii_txd_next = 32'h07070707;
             xgmii_txc_next = 4'b1111;
 
-            input_tdata_next = input_axis_tdata_masked;
-            input_tkeep_next = input_axis_tkeep;
+            s_tdata_next = s_axis_tdata_masked;
+            s_tkeep_next = s_axis_tkeep;
 
-            if (input_axis_tvalid) begin
+            if (s_axis_tvalid) begin
                 // XGMII start and preamble
                 xgmii_txd_next = 32'h555555fb;
                 xgmii_txc_next = 4'b0001;
-                input_axis_tready_next = 1'b1;
+                s_axis_tready_next = 1'b1;
                 state_next = STATE_PREAMBLE;
             end else begin
                 ifg_count_next = 8'd0;
@@ -307,48 +307,48 @@ always @* begin
         STATE_PREAMBLE: begin
             // send preamble
 
-            input_tdata_next = input_axis_tdata_masked;
-            input_tkeep_next = input_axis_tkeep;
+            s_tdata_next = s_axis_tdata_masked;
+            s_tkeep_next = s_axis_tkeep;
 
             xgmii_txd_next = 32'hd5555555;
             xgmii_txc_next = 4'b0000;
-            input_axis_tready_next = 1'b1;
+            s_axis_tready_next = 1'b1;
             state_next = STATE_PAYLOAD;
         end
         STATE_PAYLOAD: begin
             // transfer payload
             update_crc = 1'b1;
-            input_axis_tready_next = 1'b1;
+            s_axis_tready_next = 1'b1;
 
             frame_ptr_next = frame_ptr_reg + 16'd4;
 
-            xgmii_txd_next = input_tdata_reg;
+            xgmii_txd_next = s_tdata_reg;
             xgmii_txc_next = 4'b0000;
 
-            input_tdata_next = input_axis_tdata_masked;
-            input_tkeep_next = input_axis_tkeep;
+            s_tdata_next = s_axis_tdata_masked;
+            s_tkeep_next = s_axis_tkeep;
 
-            if (input_axis_tvalid) begin
-                if (input_axis_tlast) begin
-                    frame_ptr_next = frame_ptr_reg + keep2count(input_axis_tkeep);
-                    input_axis_tready_next = 1'b0;
-                    if (input_axis_tuser) begin
+            if (s_axis_tvalid) begin
+                if (s_axis_tlast) begin
+                    frame_ptr_next = frame_ptr_reg + keep2count(s_axis_tkeep);
+                    s_axis_tready_next = 1'b0;
+                    if (s_axis_tuser) begin
                         xgmii_txd_next = 32'h07fdfefe;
                         xgmii_txc_next = 4'b1111;
                         frame_ptr_next = 16'd0;
                         ifg_count_next = 8'd10;
                         state_next = STATE_IFG;
                     end else begin
-                        input_axis_tready_next = 1'b0;
+                        s_axis_tready_next = 1'b0;
 
-                        if (ENABLE_PADDING && (frame_ptr_reg < MIN_FL_NOCRC_MS || (frame_ptr_reg == MIN_FL_NOCRC_MS && keep2count(input_axis_tkeep) < MIN_FL_NOCRC_LS))) begin
-                            input_tkeep_next = 4'hf;
+                        if (ENABLE_PADDING && (frame_ptr_reg < MIN_FL_NOCRC_MS || (frame_ptr_reg == MIN_FL_NOCRC_MS && keep2count(s_axis_tkeep) < MIN_FL_NOCRC_LS))) begin
+                            s_tkeep_next = 4'hf;
                             frame_ptr_next = frame_ptr_reg + 16'd4;
 
                             if (frame_ptr_reg < (MIN_FL_NOCRC_LS > 0 ? MIN_FL_NOCRC_MS : MIN_FL_NOCRC_MS-4)) begin
                                 state_next = STATE_PAD;
                             end else begin
-                                input_tkeep_next = 4'hf >> ((4-MIN_FL_NOCRC_LS) % 4);
+                                s_tkeep_next = 4'hf >> ((4-MIN_FL_NOCRC_LS) % 4);
 
                                 state_next = STATE_FCS_1;
                             end
@@ -370,13 +370,13 @@ always @* begin
         end
         STATE_PAD: begin
             // pad frame to MIN_FRAME_LENGTH
-            input_axis_tready_next = 1'b0;
+            s_axis_tready_next = 1'b0;
 
-            xgmii_txd_next = input_tdata_reg;
+            xgmii_txd_next = s_tdata_reg;
             xgmii_txc_next = 4'b0000;
 
-            input_tdata_next = 32'd0;
-            input_tkeep_next = 4'hf;
+            s_tdata_next = 32'd0;
+            s_tkeep_next = 4'hf;
 
             update_crc = 1'b1;
             frame_ptr_next = frame_ptr_reg + 16'd4;
@@ -384,14 +384,14 @@ always @* begin
             if (frame_ptr_reg < (MIN_FL_NOCRC_LS > 0 ? MIN_FL_NOCRC_MS : MIN_FL_NOCRC_MS-4)) begin
                 state_next = STATE_PAD;
             end else begin
-                input_tkeep_next = 4'hf >> ((4-MIN_FL_NOCRC_LS) % 4);
+                s_tkeep_next = 4'hf >> ((4-MIN_FL_NOCRC_LS) % 4);
 
                 state_next = STATE_FCS_1;
             end
         end
         STATE_FCS_1: begin
             // last cycle
-            input_axis_tready_next = 1'b0;
+            s_axis_tready_next = 1'b0;
 
             xgmii_txd_next = fcs_output_txd_0;
             xgmii_txc_next = fcs_output_txc_0;
@@ -403,7 +403,7 @@ always @* begin
         end
         STATE_FCS_2: begin
             // last cycle
-            input_axis_tready_next = 1'b0;
+            s_axis_tready_next = 1'b0;
 
             xgmii_txd_next = fcs_output_txd_1;
             xgmii_txc_next = fcs_output_txc_1;
@@ -418,7 +418,7 @@ always @* begin
         end
         STATE_FCS_3: begin
             // last cycle
-            input_axis_tready_next = 1'b0;
+            s_axis_tready_next = 1'b0;
 
             xgmii_txd_next = 32'h070707fd;
             xgmii_txc_next = 4'b1111;
@@ -432,7 +432,7 @@ always @* begin
                 end else begin
                     deficit_idle_count_next = ifg_count_next;
                     ifg_count_next = 8'd0;
-                    input_axis_tready_next = 1'b1;
+                    s_axis_tready_next = 1'b1;
                     state_next = STATE_IDLE;
                 end
             end else begin
@@ -479,8 +479,8 @@ always @* begin
 
             reset_crc = 1'b1;
 
-            if (input_axis_tvalid) begin
-                if (input_axis_tlast) begin
+            if (s_axis_tvalid) begin
+                if (s_axis_tlast) begin
                     if (ENABLE_DIC) begin
                         if (ifg_count_next > 8'd3) begin
                             state_next = STATE_IFG;
@@ -515,7 +515,7 @@ always @(posedge clk) begin
         ifg_count_reg <= 8'd0;
         deficit_idle_count_reg <= 2'd0;
 
-        input_axis_tready_reg <= 1'b0;
+        s_axis_tready_reg <= 1'b0;
 
         xgmii_txd_reg <= 32'h07070707;
         xgmii_txc_reg <= 4'b1111;
@@ -529,7 +529,7 @@ always @(posedge clk) begin
         ifg_count_reg <= ifg_count_next;
         deficit_idle_count_reg <= deficit_idle_count_next;
 
-        input_axis_tready_reg <= input_axis_tready_next;
+        s_axis_tready_reg <= s_axis_tready_next;
 
         xgmii_txd_reg <= xgmii_txd_next;
         xgmii_txc_reg <= xgmii_txc_next;
@@ -542,8 +542,8 @@ always @(posedge clk) begin
         end
     end
 
-    input_tdata_reg <= input_tdata_next;
-    input_tkeep_reg <= input_tkeep_next;
+    s_tdata_reg <= s_tdata_next;
+    s_tkeep_reg <= s_tkeep_next;
 end
 
 endmodule
