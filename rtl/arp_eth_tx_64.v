@@ -194,14 +194,14 @@ always @* begin
                 state_next = STATE_WRITE_HEADER;
                 case (frame_ptr_reg)
                     8'h00: begin
-                        m_eth_payload_axis_tdata_int[ 7: 0] = s_arp_htype[15: 8];
-                        m_eth_payload_axis_tdata_int[15: 8] = s_arp_htype[ 7: 0];
-                        m_eth_payload_axis_tdata_int[23:16] = s_arp_ptype[15: 8];
-                        m_eth_payload_axis_tdata_int[31:24] = s_arp_ptype[ 7: 0];
+                        m_eth_payload_axis_tdata_int[ 7: 0] = arp_htype_reg[15: 8];
+                        m_eth_payload_axis_tdata_int[15: 8] = arp_htype_reg[ 7: 0];
+                        m_eth_payload_axis_tdata_int[23:16] = arp_ptype_reg[15: 8];
+                        m_eth_payload_axis_tdata_int[31:24] = arp_ptype_reg[ 7: 0];
                         m_eth_payload_axis_tdata_int[39:32] = 8'd6; // hlen
                         m_eth_payload_axis_tdata_int[47:40] = 8'd4; // plen
-                        m_eth_payload_axis_tdata_int[55:48] = s_arp_oper[15: 8];
-                        m_eth_payload_axis_tdata_int[63:56] = s_arp_oper[ 7: 0];
+                        m_eth_payload_axis_tdata_int[55:48] = arp_oper_reg[15: 8];
+                        m_eth_payload_axis_tdata_int[63:56] = arp_oper_reg[ 7: 0];
                         m_eth_payload_axis_tkeep_int = 8'hff;
                     end
                     8'h08: begin

@@ -182,6 +182,7 @@ always @* begin
                 m_eth_payload_axis_tvalid_int = 1'b1;
                 state_next = STATE_WRITE_HEADER;
                 case (frame_ptr_reg)
+                    8'h00: m_eth_payload_axis_tdata_int = arp_htype_reg[15: 8];
                     8'h01: m_eth_payload_axis_tdata_int = arp_htype_reg[ 7: 0];
                     8'h02: m_eth_payload_axis_tdata_int = arp_ptype_reg[15: 8];
                     8'h03: m_eth_payload_axis_tdata_int = arp_ptype_reg[ 7: 0];

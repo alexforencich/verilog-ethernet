@@ -261,7 +261,7 @@ always @* begin
                 m_ip_payload_axis_tvalid_int = 1'b1;
                 state_next = STATE_WRITE_HEADER;
                 case (frame_ptr_reg)
-                    8'h00: m_ip_payload_axis_tdata_int = s_udp_source_port[15: 8];
+                    8'h00: m_ip_payload_axis_tdata_int = udp_source_port_reg[15: 8];
                     8'h01: m_ip_payload_axis_tdata_int = udp_source_port_reg[ 7: 0];
                     8'h02: m_ip_payload_axis_tdata_int = udp_dest_port_reg[15: 8];
                     8'h03: m_ip_payload_axis_tdata_int = udp_dest_port_reg[ 7: 0];

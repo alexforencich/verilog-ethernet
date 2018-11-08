@@ -307,14 +307,14 @@ always @* begin
                 state_next = STATE_WRITE_HEADER;
                 case (frame_ptr_reg)
                     8'h00: begin
-                        m_ip_payload_axis_tdata_int[ 7: 0] = s_udp_source_port[15: 8];
-                        m_ip_payload_axis_tdata_int[15: 8] = s_udp_source_port[ 7: 0];
-                        m_ip_payload_axis_tdata_int[23:16] = s_udp_dest_port[15: 8];
-                        m_ip_payload_axis_tdata_int[31:24] = s_udp_dest_port[ 7: 0];
-                        m_ip_payload_axis_tdata_int[39:32] = s_udp_length[15: 8];
-                        m_ip_payload_axis_tdata_int[47:40] = s_udp_length[ 7: 0];
-                        m_ip_payload_axis_tdata_int[55:48] = s_udp_checksum[15: 8];
-                        m_ip_payload_axis_tdata_int[63:56] = s_udp_checksum[ 7: 0];
+                        m_ip_payload_axis_tdata_int[ 7: 0] = udp_source_port_reg[15: 8];
+                        m_ip_payload_axis_tdata_int[15: 8] = udp_source_port_reg[ 7: 0];
+                        m_ip_payload_axis_tdata_int[23:16] = udp_dest_port_reg[15: 8];
+                        m_ip_payload_axis_tdata_int[31:24] = udp_dest_port_reg[ 7: 0];
+                        m_ip_payload_axis_tdata_int[39:32] = udp_length_reg[15: 8];
+                        m_ip_payload_axis_tdata_int[47:40] = udp_length_reg[ 7: 0];
+                        m_ip_payload_axis_tdata_int[55:48] = udp_checksum_reg[15: 8];
+                        m_ip_payload_axis_tdata_int[63:56] = udp_checksum_reg[ 7: 0];
                         m_ip_payload_axis_tkeep_int = 8'hff;
                         s_udp_payload_axis_tready_next = m_ip_payload_axis_tready_int_early;
                         state_next = STATE_WRITE_PAYLOAD;

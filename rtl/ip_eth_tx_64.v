@@ -319,13 +319,13 @@ always @* begin
                 case (frame_ptr_reg)
                     8'h00: begin
                         m_eth_payload_axis_tdata_int[ 7: 0] = {4'd4, 4'd5}; // ip_version, ip_ihl
-                        m_eth_payload_axis_tdata_int[15: 8] = {s_ip_dscp, s_ip_ecn};
-                        m_eth_payload_axis_tdata_int[23:16] = s_ip_length[15: 8];
-                        m_eth_payload_axis_tdata_int[31:24] = s_ip_length[ 7: 0];
-                        m_eth_payload_axis_tdata_int[39:32] = s_ip_identification[15: 8];
-                        m_eth_payload_axis_tdata_int[47:40] = s_ip_identification[ 7: 0];
-                        m_eth_payload_axis_tdata_int[55:48] = {s_ip_flags, s_ip_fragment_offset[12: 8]};
-                        m_eth_payload_axis_tdata_int[63:56] = s_ip_fragment_offset[ 7: 0];
+                        m_eth_payload_axis_tdata_int[15: 8] = {ip_dscp_reg, ip_ecn_reg};
+                        m_eth_payload_axis_tdata_int[23:16] = ip_length_reg[15: 8];
+                        m_eth_payload_axis_tdata_int[31:24] = ip_length_reg[ 7: 0];
+                        m_eth_payload_axis_tdata_int[39:32] = ip_identification_reg[15: 8];
+                        m_eth_payload_axis_tdata_int[47:40] = ip_identification_reg[ 7: 0];
+                        m_eth_payload_axis_tdata_int[55:48] = {ip_flags_reg, ip_fragment_offset_reg[12: 8]};
+                        m_eth_payload_axis_tdata_int[63:56] = ip_fragment_offset_reg[ 7: 0];
                         m_eth_payload_axis_tkeep_int = 8'hff;
                     end
                     8'h08: begin

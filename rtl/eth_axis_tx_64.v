@@ -211,14 +211,14 @@ always @* begin
                 state_next = STATE_WRITE_HEADER;
                 case (frame_ptr_reg)
                     5'd00: begin
-                        m_axis_tdata_int[ 7: 0] = s_eth_dest_mac[47:40];
-                        m_axis_tdata_int[15: 8] = s_eth_dest_mac[39:32];
-                        m_axis_tdata_int[23:16] = s_eth_dest_mac[31:24];
-                        m_axis_tdata_int[31:24] = s_eth_dest_mac[23:16];
-                        m_axis_tdata_int[39:32] = s_eth_dest_mac[15: 8];
-                        m_axis_tdata_int[47:40] = s_eth_dest_mac[ 7: 0];
-                        m_axis_tdata_int[55:48] = s_eth_src_mac[47:40];
-                        m_axis_tdata_int[63:56] = s_eth_src_mac[39:32];
+                        m_axis_tdata_int[ 7: 0] = eth_dest_mac_reg[47:40];
+                        m_axis_tdata_int[15: 8] = eth_dest_mac_reg[39:32];
+                        m_axis_tdata_int[23:16] = eth_dest_mac_reg[31:24];
+                        m_axis_tdata_int[31:24] = eth_dest_mac_reg[23:16];
+                        m_axis_tdata_int[39:32] = eth_dest_mac_reg[15: 8];
+                        m_axis_tdata_int[47:40] = eth_dest_mac_reg[ 7: 0];
+                        m_axis_tdata_int[55:48] = eth_src_mac_reg[47:40];
+                        m_axis_tdata_int[63:56] = eth_src_mac_reg[39:32];
                         m_axis_tkeep_int = 8'hff;
                         s_eth_payload_axis_tready_next = m_axis_tready_int_early && shift_eth_payload_s_tready;
                         state_next = STATE_WRITE_HEADER_LAST;
