@@ -270,8 +270,8 @@ always @* begin
 
             if (xgmii_rxc_d2[0] && xgmii_rxd_d2[7:0] == XGMII_START) begin
                 // start condition
-                if (detect_error_masked) begin
-                    // error in first data word
+                if (control_masked) begin
+                    // control or error characters in first data word
                     m_axis_tdata_next = 32'd0;
                     m_axis_tkeep_next = 4'h1;
                     m_axis_tvalid_next = 1'b1;
