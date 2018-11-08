@@ -283,7 +283,7 @@ always @* begin
         STATE_IDLE: begin
             // idle state - wait for header
             frame_ptr_next = 16'd0;
-            s_ip_hdr_ready_next = !m_udp_hdr_valid_reg;
+            s_ip_hdr_ready_next = !m_udp_hdr_valid_next;
 
             if (s_ip_hdr_ready && s_ip_hdr_valid) begin
                 s_ip_hdr_ready_next = 1'b0;
@@ -315,7 +315,7 @@ always @* begin
                 if (s_ip_payload_axis_tlast) begin
                     error_header_early_termination_next = 1'b1;
                     m_udp_hdr_valid_next = 1'b0;
-                    s_ip_hdr_ready_next = !m_udp_hdr_valid_reg;
+                    s_ip_hdr_ready_next = !m_udp_hdr_valid_next;
                     s_ip_payload_axis_tready_next = 1'b0;
                     state_next = STATE_IDLE;
                 end
@@ -343,7 +343,7 @@ always @* begin
                     m_udp_payload_axis_tkeep_int = s_ip_payload_axis_tkeep & count2keep(m_udp_length_reg - frame_ptr_reg);
                     if (s_ip_payload_axis_tlast) begin
                         s_ip_payload_axis_tready_next = 1'b0;
-                        s_ip_hdr_ready_next = !m_udp_hdr_valid_reg;
+                        s_ip_hdr_ready_next = !m_udp_hdr_valid_next;
                         state_next = STATE_IDLE;
                     end else begin
                         store_last_word = 1'b1;
@@ -356,7 +356,7 @@ always @* begin
                         error_payload_early_termination_next = 1'b1;
                         m_udp_payload_axis_tuser_int = 1'b1;
                         s_ip_payload_axis_tready_next = 1'b0;
-                        s_ip_hdr_ready_next = !m_udp_hdr_valid_reg;
+                        s_ip_hdr_ready_next = !m_udp_hdr_valid_next;
                         state_next = STATE_IDLE;
                     end else begin
                         state_next = STATE_READ_PAYLOAD;
@@ -378,7 +378,7 @@ always @* begin
 
             if (s_ip_payload_axis_tready && s_ip_payload_axis_tvalid) begin
                 if (s_ip_payload_axis_tlast) begin
-                    s_ip_hdr_ready_next = !m_udp_hdr_valid_reg;
+                    s_ip_hdr_ready_next = !m_udp_hdr_valid_next;
                     s_ip_payload_axis_tready_next = 1'b0;
                     state_next = STATE_IDLE;
                 end else begin
@@ -394,7 +394,7 @@ always @* begin
 
             if (s_ip_payload_axis_tready && s_ip_payload_axis_tvalid) begin
                 if (s_ip_payload_axis_tlast) begin
-                    s_ip_hdr_ready_next = !m_udp_hdr_valid_reg;
+                    s_ip_hdr_ready_next = !m_udp_hdr_valid_next;
                     s_ip_payload_axis_tready_next = 1'b0;
                     state_next = STATE_IDLE;
                 end else begin

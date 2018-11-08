@@ -180,7 +180,7 @@ always @* begin
         STATE_IDLE: begin
             // idle state - wait for data
             frame_ptr_next = 8'd0;
-            s_eth_hdr_ready_next = !m_frame_valid_reg;
+            s_eth_hdr_ready_next = !m_frame_valid_next;
 
             if (s_eth_hdr_ready && s_eth_hdr_valid) begin
                 s_eth_hdr_ready_next = 1'b0;
@@ -216,7 +216,7 @@ always @* begin
                     end else begin
                         m_frame_valid_next = !s_eth_payload_axis_tuser;
                     end
-                    s_eth_hdr_ready_next = !m_frame_valid_reg;
+                    s_eth_hdr_ready_next = !m_frame_valid_next;
                     s_eth_payload_axis_tready_next = 1'b0;
                     state_next = STATE_IDLE;
                 end
@@ -237,7 +237,7 @@ always @* begin
                         // otherwise, transfer tuser
                         m_frame_valid_next = !s_eth_payload_axis_tuser;
                     end
-                    s_eth_hdr_ready_next = !m_frame_valid_reg;
+                    s_eth_hdr_ready_next = !m_frame_valid_next;
                     s_eth_payload_axis_tready_next = 1'b0;
                     state_next = STATE_IDLE;
                 end else begin

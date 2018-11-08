@@ -277,7 +277,7 @@ always @* begin
             // idle state - wait for data
             frame_ptr_next = 16'd0;
             flush_save = 1'b1;
-            s_ip_hdr_ready_next = !m_eth_hdr_valid_reg;
+            s_ip_hdr_ready_next = !m_eth_hdr_valid_next;
 
             if (s_ip_hdr_ready && s_ip_hdr_valid) begin
                 store_ip_hdr = 1'b1;
@@ -374,7 +374,7 @@ always @* begin
                     frame_ptr_next = ip_length_reg;
                     m_eth_payload_axis_tkeep_int = count2keep(ip_length_reg - frame_ptr_reg);
                     if (shift_ip_payload_axis_tlast) begin
-                        s_ip_hdr_ready_next = !m_eth_hdr_valid_reg;
+                        s_ip_hdr_ready_next = !m_eth_hdr_valid_next;
                         s_ip_payload_axis_tready_next = 1'b0;
                         state_next = STATE_IDLE;
                     end else begin
@@ -419,7 +419,7 @@ always @* begin
                     if (shift_ip_payload_axis_tlast) begin
                         s_ip_payload_axis_tready_next = 1'b0;
                         flush_save = 1'b1;
-                        s_ip_hdr_ready_next = !m_eth_hdr_valid_reg;
+                        s_ip_hdr_ready_next = !m_eth_hdr_valid_next;
                         state_next = STATE_IDLE;
                     end else begin
                         store_last_word = 1'b1;
@@ -433,7 +433,7 @@ always @* begin
                         m_eth_payload_axis_tuser_int = 1'b1;
                         s_ip_payload_axis_tready_next = 1'b0;
                         flush_save = 1'b1;
-                        s_ip_hdr_ready_next = !m_eth_hdr_valid_reg;
+                        s_ip_hdr_ready_next = !m_eth_hdr_valid_next;
                         state_next = STATE_IDLE;
                     end else begin
                         state_next = STATE_WRITE_PAYLOAD;
@@ -456,7 +456,7 @@ always @* begin
             if (m_eth_payload_axis_tready_int_reg && shift_ip_payload_axis_tvalid) begin
                 transfer_in_save = 1'b1;
                 if (shift_ip_payload_axis_tlast) begin
-                    s_ip_hdr_ready_next = !m_eth_hdr_valid_reg;
+                    s_ip_hdr_ready_next = !m_eth_hdr_valid_next;
                     s_ip_payload_axis_tready_next = 1'b0;
                     state_next = STATE_IDLE;
                 end else begin
@@ -473,7 +473,7 @@ always @* begin
             if (shift_ip_payload_axis_tvalid) begin
                 transfer_in_save = 1'b1;
                 if (shift_ip_payload_axis_tlast) begin
-                    s_ip_hdr_ready_next = !m_eth_hdr_valid_reg;
+                    s_ip_hdr_ready_next = !m_eth_hdr_valid_next;
                     s_ip_payload_axis_tready_next = 1'b0;
                     state_next = STATE_IDLE;
                 end else begin

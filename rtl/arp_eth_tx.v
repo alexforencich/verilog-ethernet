@@ -158,7 +158,7 @@ always @* begin
         STATE_IDLE: begin
             // idle state - wait for data
             frame_ptr_next = 8'd0;
-            s_frame_ready_next = !m_eth_hdr_valid_reg;
+            s_frame_ready_next = !m_eth_hdr_valid_next;
 
             if (s_frame_ready && s_frame_valid) begin
                 store_frame = 1'b1;
@@ -212,7 +212,7 @@ always @* begin
                     8'h1B: begin
                         m_eth_payload_axis_tdata_int = arp_tpa_reg[ 7: 0];
                         m_eth_payload_axis_tlast_int = 1'b1;
-                        s_frame_ready_next = !m_eth_hdr_valid_reg;
+                        s_frame_ready_next = !m_eth_hdr_valid_next;
                         state_next = STATE_IDLE;
                     end
                 endcase

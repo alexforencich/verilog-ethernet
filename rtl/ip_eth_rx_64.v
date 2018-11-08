@@ -315,7 +315,7 @@ always @* begin
             frame_ptr_next = 16'd0;
             hdr_sum_next = 32'd0;
             flush_save = 1'b1;
-            s_eth_hdr_ready_next = !m_ip_hdr_valid_reg;
+            s_eth_hdr_ready_next = !m_ip_hdr_valid_next;
 
             if (s_eth_hdr_ready && s_eth_hdr_valid) begin
                 s_eth_hdr_ready_next = 1'b0;
@@ -378,7 +378,7 @@ always @* begin
                     error_invalid_header_next = 1'b0;
                     error_invalid_checksum_next = 1'b0;
                     m_ip_hdr_valid_next = 1'b0;
-                    s_eth_hdr_ready_next = !m_ip_hdr_valid_reg;
+                    s_eth_hdr_ready_next = !m_ip_hdr_valid_next;
                     s_eth_payload_axis_tready_next = 1'b0;
                     state_next = STATE_IDLE;
                 end
@@ -472,7 +472,7 @@ always @* begin
                 if (shift_eth_payload_axis_tlast) begin
                     s_eth_payload_axis_tready_next = 1'b0;
                     flush_save = 1'b1;
-                    s_eth_hdr_ready_next = 1'b1;
+                    s_eth_hdr_ready_next = !m_ip_hdr_valid_next;
                     state_next = STATE_IDLE;
                 end else begin
                     state_next = STATE_READ_PAYLOAD_LAST;
@@ -490,7 +490,7 @@ always @* begin
                 if (shift_eth_payload_axis_tlast) begin
                     s_eth_payload_axis_tready_next = 1'b0;
                     flush_save = 1'b1;
-                    s_eth_hdr_ready_next = 1'b1;
+                    s_eth_hdr_ready_next = !m_ip_hdr_valid_next;
                     state_next = STATE_IDLE;
                 end else begin
                     state_next = STATE_WAIT_LAST;
