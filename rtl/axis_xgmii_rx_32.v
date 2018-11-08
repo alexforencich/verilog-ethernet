@@ -56,6 +56,16 @@ module axis_xgmii_rx_32
     output wire        error_bad_fcs
 );
 
+localparam [7:0]
+    ETH_PRE = 8'h55,
+    ETH_SFD = 8'hD5;
+
+localparam [7:0]
+    XGMII_IDLE = 8'h07,
+    XGMII_START = 8'hfb,
+    XGMII_TERM = 8'hfd,
+    XGMII_ERROR = 8'hfe;
+
 localparam [2:0]
     STATE_IDLE = 3'd0,
     STATE_PREAMBLE = 3'd1,
@@ -190,9 +200,9 @@ integer i;
 
 always @* begin
     for (i = 0; i < 4; i = i + 1) begin
-        detect_start[i] = xgmii_rxc_d0[i] && (xgmii_rxd_d0[i*8 +: 8] == 8'hfb);
-        detect_term[i] = xgmii_rxc_d0[i] && (xgmii_rxd_d0[i*8 +: 8] == 8'hfd);
-        detect_error[i] = xgmii_rxc_d0[i] && (xgmii_rxd_d0[i*8 +: 8] == 8'hfe);
+        detect_start[i] = xgmii_rxc_d0[i] && (xgmii_rxd_d0[i*8 +: 8] == XGMII_START);
+        detect_term[i] = xgmii_rxc_d0[i] && (xgmii_rxd_d0[i*8 +: 8] == XGMII_TERM);
+        detect_error[i] = xgmii_rxc_d0[i] && (xgmii_rxd_d0[i*8 +: 8] == XGMII_ERROR);
     end
 end
 
@@ -258,7 +268,7 @@ always @* begin
             // idle state - wait for packet
             reset_crc = 1'b1;
 
-            if (xgmii_rxc_d2[0] && xgmii_rxd_d2[7:0] == 8'hfb) begin
+            if (xgmii_rxc_d2[0] && xgmii_rxd_d2[7:0] == XGMII_START) begin
                 // start condition
                 if (detect_error_masked) begin
                     // error in first data word
@@ -343,7 +353,7 @@ always @* begin
                 error_bad_fcs_next = 1'b1;
             end
 
-            if (xgmii_rxc_d1[0] && xgmii_rxd_d1[7:0] == 8'hfb) begin
+            if (xgmii_rxc_d1[0] && xgmii_rxd_d1[7:0] == XGMII_START) begin
                 // start condition
                 state_next = STATE_PAYLOAD;
             end else begin

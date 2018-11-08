@@ -66,6 +66,10 @@ module axis_gmii_tx #
     input  wire [7:0]  ifg_delay
 );
 
+localparam [7:0]
+    ETH_PRE = 8'h55,
+    ETH_SFD = 8'hD5;
+
 localparam [2:0]
     STATE_IDLE = 3'd0,
     STATE_PREAMBLE = 3'd1,
@@ -162,7 +166,7 @@ always @* begin
                 if (s_axis_tvalid) begin
                     mii_odd_next = 1'b1;
                     frame_ptr_next = 16'd1;
-                    gmii_txd_next = 8'h55; // Preamble
+                    gmii_txd_next = ETH_PRE;
                     gmii_tx_en_next = 1'b1;
                     state_next = STATE_PREAMBLE;
                 end else begin
@@ -176,7 +180,7 @@ always @* begin
                 mii_odd_next = 1'b1;
                 frame_ptr_next = frame_ptr_reg + 16'd1;
 
-                gmii_txd_next = 8'h55; // Preamble
+                gmii_txd_next = ETH_PRE;
                 gmii_tx_en_next = 1'b1;
 
                 if (frame_ptr_reg == 16'd6) begin
@@ -190,7 +194,7 @@ always @* begin
                         s_axis_tready_next = 1'b1;
                         s_tdata_next = s_axis_tdata;
                     end
-                    gmii_txd_next = 8'hD5; // SFD
+                    gmii_txd_next = ETH_SFD;
                     state_next = STATE_PAYLOAD;
                 end else begin
                     state_next = STATE_PREAMBLE;

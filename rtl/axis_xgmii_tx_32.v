@@ -65,6 +65,16 @@ localparam MIN_FL_NOCRC = MIN_FRAME_LENGTH-4;
 localparam MIN_FL_NOCRC_MS = MIN_FL_NOCRC & 16'hfffc;
 localparam MIN_FL_NOCRC_LS = MIN_FL_NOCRC & 16'h0003;
 
+localparam [7:0]
+    ETH_PRE = 8'h55,
+    ETH_SFD = 8'hD5;
+
+localparam [7:0]
+    XGMII_IDLE = 8'h07,
+    XGMII_START = 8'hfb,
+    XGMII_TERM = 8'hfd,
+    XGMII_ERROR = 8'hfe;
+
 localparam [3:0]
     STATE_IDLE = 4'd0,
     STATE_PREAMBLE = 4'd1,
@@ -110,7 +120,7 @@ wire [31:0] crc_next1;
 wire [31:0] crc_next2;
 wire [31:0] crc_next3;
 
-reg [31:0] xgmii_txd_reg = 32'h07070707, xgmii_txd_next;
+reg [31:0] xgmii_txd_reg = {4{XGMII_IDLE}}, xgmii_txd_next;
 reg [3:0] xgmii_txc_reg = 4'b1111, xgmii_txc_next;
 
 assign s_axis_tready = s_axis_tready_reg;
@@ -218,7 +228,7 @@ always @* begin
     casez (s_tkeep_reg)
         4'bzz01: begin
             fcs_output_txd_0 = {~crc_next0[23:0], s_tdata_reg[7:0]};
-            fcs_output_txd_1 = {24'h0707fd, ~crc_next0[31:24]};
+            fcs_output_txd_1 = {{2{XGMII_IDLE}}, XGMII_TERM, ~crc_next0[31:24]};
             fcs_output_txc_0 = 4'b0000;
             fcs_output_txc_1 = 4'b1110;
             ifg_offset = 8'd3;
@@ -226,7 +236,7 @@ always @* begin
         end
         4'bz011: begin
             fcs_output_txd_0 = {~crc_next1[15:0], s_tdata_reg[15:0]};
-            fcs_output_txd_1 = {16'h07fd, ~crc_next1[31:16]};
+            fcs_output_txd_1 = {XGMII_IDLE, XGMII_TERM, ~crc_next1[31:16]};
             fcs_output_txc_0 = 4'b0000;
             fcs_output_txc_1 = 4'b1100;
             ifg_offset = 8'd2;
@@ -234,7 +244,7 @@ always @* begin
         end
         4'b0111: begin
             fcs_output_txd_0 = {~crc_next2[7:0], s_tdata_reg[23:0]};
-            fcs_output_txd_1 = {16'hfd, ~crc_next2[31:8]};
+            fcs_output_txd_1 = {XGMII_TERM, ~crc_next2[31:8]};
             fcs_output_txc_0 = 4'b0000;
             fcs_output_txc_1 = 4'b1000;
             ifg_offset = 8'd1;
@@ -276,7 +286,7 @@ always @* begin
     s_tkeep_next = s_tkeep_reg;
 
     // XGMII idle
-    xgmii_txd_next = 32'h07070707;
+    xgmii_txd_next = {4{XGMII_IDLE}};
     xgmii_txc_next = 4'b1111;
 
     case (state_reg)
@@ -286,7 +296,7 @@ always @* begin
             reset_crc = 1'b1;
 
             // XGMII idle
-            xgmii_txd_next = 32'h07070707;
+            xgmii_txd_next = {4{XGMII_IDLE}};
             xgmii_txc_next = 4'b1111;
 
             s_tdata_next = s_axis_tdata_masked;
@@ -294,7 +304,7 @@ always @* begin
 
             if (s_axis_tvalid) begin
                 // XGMII start and preamble
-                xgmii_txd_next = 32'h555555fb;
+                xgmii_txd_next = {{3{ETH_PRE}}, XGMII_START};
                 xgmii_txc_next = 4'b0001;
                 s_axis_tready_next = 1'b1;
                 state_next = STATE_PREAMBLE;
@@ -310,7 +320,7 @@ always @* begin
             s_tdata_next = s_axis_tdata_masked;
             s_tkeep_next = s_axis_tkeep;
 
-            xgmii_txd_next = 32'hd5555555;
+            xgmii_txd_next = {ETH_SFD, {3{ETH_PRE}}};
             xgmii_txc_next = 4'b0000;
             s_axis_tready_next = 1'b1;
             state_next = STATE_PAYLOAD;
@@ -333,7 +343,7 @@ always @* begin
                     frame_ptr_next = frame_ptr_reg + keep2count(s_axis_tkeep);
                     s_axis_tready_next = 1'b0;
                     if (s_axis_tuser) begin
-                        xgmii_txd_next = 32'h07fdfefe;
+                        xgmii_txd_next = {XGMII_TERM, {3{XGMII_ERROR}}};
                         xgmii_txc_next = 4'b1111;
                         frame_ptr_next = 16'd0;
                         ifg_count_next = 8'd10;
@@ -361,7 +371,7 @@ always @* begin
                 end
             end else begin
                 // tvalid deassert, fail frame
-                xgmii_txd_next = 32'h07fdfefe;
+                xgmii_txd_next = {XGMII_TERM, {3{XGMII_ERROR}}};
                 xgmii_txc_next = 4'b1111;
                 frame_ptr_next = 16'd0;
                 ifg_count_next = 8'd10;
@@ -420,7 +430,7 @@ always @* begin
             // last cycle
             s_axis_tready_next = 1'b0;
 
-            xgmii_txd_next = 32'h070707fd;
+            xgmii_txd_next = {{3{XGMII_IDLE}}, XGMII_TERM};
             xgmii_txc_next = 4'b1111;
 
             reset_crc = 1'b1;
@@ -517,7 +527,7 @@ always @(posedge clk) begin
 
         s_axis_tready_reg <= 1'b0;
 
-        xgmii_txd_reg <= 32'h07070707;
+        xgmii_txd_reg <= {4{XGMII_IDLE}};
         xgmii_txc_reg <= 4'b1111;
 
         crc_state <= 32'hFFFFFFFF;

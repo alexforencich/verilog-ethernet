@@ -56,6 +56,16 @@ module axis_xgmii_rx_64
     output wire        error_bad_fcs
 );
 
+localparam [7:0]
+    ETH_PRE = 8'h55,
+    ETH_SFD = 8'hD5;
+
+localparam [7:0]
+    XGMII_IDLE = 8'h07,
+    XGMII_START = 8'hfb,
+    XGMII_TERM = 8'hfd,
+    XGMII_ERROR = 8'hfe;
+
 localparam [2:0]
     STATE_IDLE = 3'd0,
     STATE_PAYLOAD = 3'd1,
@@ -207,9 +217,9 @@ integer i;
 
 always @* begin
     for (i = 0; i < 8; i = i + 1) begin
-        detect_start[i] = xgmii_rxc_d0[i] && (xgmii_rxd_d0[i*8 +: 8] == 8'hfb);
-        detect_term[i] = xgmii_rxc_d0[i] && (xgmii_rxd_d0[i*8 +: 8] == 8'hfd);
-        detect_error[i] = xgmii_rxc_d0[i] && (xgmii_rxd_d0[i*8 +: 8] == 8'hfe);
+        detect_start[i] = xgmii_rxc_d0[i] && (xgmii_rxd_d0[i*8 +: 8] == XGMII_START);
+        detect_term[i] = xgmii_rxc_d0[i] && (xgmii_rxd_d0[i*8 +: 8] == XGMII_TERM);
+        detect_error[i] = xgmii_rxc_d0[i] && (xgmii_rxd_d0[i*8 +: 8] == XGMII_ERROR);
     end
 end
 
@@ -295,7 +305,7 @@ always @* begin
             // idle state - wait for packet
             reset_crc = 1'b1;
 
-            if (xgmii_rxc_d1[0] && xgmii_rxd_d1[7:0] == 8'hfb) begin
+            if (xgmii_rxc_d1[0] && xgmii_rxd_d1[7:0] == XGMII_START) begin
                 // start condition
                 if (detect_error_masked) begin
                     // error in first data word
@@ -379,7 +389,7 @@ always @* begin
                 error_bad_fcs_next = 1'b1;
             end
 
-            if (xgmii_rxc_d1[0] && xgmii_rxd_d1[7:0] == 8'hfb) begin
+            if (xgmii_rxc_d1[0] && xgmii_rxd_d1[7:0] == XGMII_START) begin
                 // start condition
                 state_next = STATE_PAYLOAD;
             end else begin
@@ -414,10 +424,10 @@ always @(posedge clk) begin
         error_bad_frame_reg <= error_bad_frame_next;
         error_bad_fcs_reg <= error_bad_fcs_next;
 
-        if (xgmii_rxc[0] && xgmii_rxd[7:0] == 8'hfb) begin
+        if (xgmii_rxc[0] && xgmii_rxd[7:0] == XGMII_START) begin
             lanes_swapped <= 1'b0;
             xgmii_rxc_d0 <= xgmii_rxc;
-        end else if (xgmii_rxc[4] && xgmii_rxd[39:32] == 8'hfb) begin
+        end else if (xgmii_rxc[4] && xgmii_rxd[39:32] == XGMII_START) begin
             lanes_swapped <= 1'b1;
             xgmii_rxc_d0 <= {xgmii_rxc[3:0], swap_rxc};
         end else if (lanes_swapped) begin
@@ -456,9 +466,9 @@ always @(posedge clk) begin
     swap_rxd <= xgmii_rxd[63:32];
     swap_rxc <= xgmii_rxc[7:4];
 
-    if (xgmii_rxc[0] && xgmii_rxd[7:0] == 8'hfb) begin
+    if (xgmii_rxc[0] && xgmii_rxd[7:0] == XGMII_START) begin
         xgmii_rxd_d0 <= xgmii_rxd;
-    end else if (xgmii_rxc[4] && xgmii_rxd[39:32] == 8'hfb) begin
+    end else if (xgmii_rxc[4] && xgmii_rxd[39:32] == XGMII_START) begin
         xgmii_rxd_d0 <= {xgmii_rxd[31:0], swap_rxd};
     end else if (lanes_swapped) begin
         xgmii_rxd_d0 <= {xgmii_rxd[31:0], swap_rxd};

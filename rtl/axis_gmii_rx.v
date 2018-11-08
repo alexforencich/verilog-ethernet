@@ -62,6 +62,10 @@ module axis_gmii_rx
     output wire        error_bad_fcs
 );
 
+localparam [7:0]
+    ETH_PRE = 8'h55,
+    ETH_SFD = 8'hD5;
+
 localparam [2:0]
     STATE_IDLE = 3'd0,
     STATE_PAYLOAD = 3'd1,
@@ -155,7 +159,7 @@ always @* begin
                 // idle state - wait for packet
                 reset_crc = 1'b1;
 
-                if (gmii_rx_dv_d4 && !gmii_rx_er_d4 && gmii_rxd_d4 == 8'hD5) begin
+                if (gmii_rx_dv_d4 && !gmii_rx_er_d4 && gmii_rxd_d4 == ETH_SFD) begin
                     state_next = STATE_PAYLOAD;
                 end else begin
                     state_next = STATE_IDLE;
@@ -248,7 +252,7 @@ always @(posedge clk) begin
 
                 if (mii_locked) begin
                     mii_locked <= gmii_rx_dv;
-                end else if (gmii_rx_dv && {gmii_rxd[3:0], gmii_rxd_d0[7:4]} == 8'hD5) begin
+                end else if (gmii_rx_dv && {gmii_rxd[3:0], gmii_rxd_d0[7:4]} == ETH_SFD) begin
                     mii_locked <= 1'b1;
                     mii_odd <= 1'b1;
                 end
