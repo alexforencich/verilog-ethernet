@@ -56,7 +56,6 @@ reg uart_cts = 0;
 
 // Outputs
 wire [7:0] led;
-wire phy_tx_clk;
 wire [7:0] phy_gmii_txd;
 wire phy_gmii_tx_en;
 wire phy_gmii_tx_er;

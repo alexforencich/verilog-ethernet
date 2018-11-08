@@ -259,12 +259,12 @@ wire eth_rx_hdr_ready;
 wire [47:0] eth_rx_dest_mac;
 wire [47:0] eth_rx_src_mac;
 wire [15:0] eth_rx_type;
-wire [63:0] eth_rx_payload_tdata;
-wire [7:0] eth_rx_payload_tkeep;
-wire eth_rx_payload_tvalid;
-wire eth_rx_payload_tready;
-wire eth_rx_payload_tlast;
-wire eth_rx_payload_tuser;
+wire [63:0] eth_rx_payload_axis_tdata;
+wire [7:0] eth_rx_payload_axis_tkeep;
+wire eth_rx_payload_axis_tvalid;
+wire eth_rx_payload_axis_tready;
+wire eth_rx_payload_axis_tlast;
+wire eth_rx_payload_axis_tuser;
 
 eth_mac_10g_fifo #(
     .ENABLE_PADDING(1),
@@ -314,24 +314,24 @@ eth_axis_rx_inst (
     .clk(clk),
     .rst(rst),
     // AXI input
-    .input_axis_tdata(eth_rx_axis_tdata),
-    .input_axis_tkeep(eth_rx_axis_tkeep),
-    .input_axis_tvalid(eth_rx_axis_tvalid),
-    .input_axis_tready(eth_rx_axis_tready),
-    .input_axis_tlast(eth_rx_axis_tlast),
-    .input_axis_tuser(eth_rx_axis_tuser),
+    .s_axis_tdata(eth_rx_axis_tdata),
+    .s_axis_tkeep(eth_rx_axis_tkeep),
+    .s_axis_tvalid(eth_rx_axis_tvalid),
+    .s_axis_tready(eth_rx_axis_tready),
+    .s_axis_tlast(eth_rx_axis_tlast),
+    .s_axis_tuser(eth_rx_axis_tuser),
     // Ethernet frame output
-    .output_eth_hdr_valid(eth_rx_hdr_valid),
-    .output_eth_hdr_ready(eth_rx_hdr_ready),
-    .output_eth_dest_mac(eth_rx_dest_mac),
-    .output_eth_src_mac(eth_rx_src_mac),
-    .output_eth_type(eth_rx_type),
-    .output_eth_payload_tdata(eth_rx_payload_tdata),
-    .output_eth_payload_tkeep(eth_rx_payload_tkeep),
-    .output_eth_payload_tvalid(eth_rx_payload_tvalid),
-    .output_eth_payload_tready(eth_rx_payload_tready),
-    .output_eth_payload_tlast(eth_rx_payload_tlast),
-    .output_eth_payload_tuser(eth_rx_payload_tuser),
+    .m_eth_hdr_valid(eth_rx_hdr_valid),
+    .m_eth_hdr_ready(eth_rx_hdr_ready),
+    .m_eth_dest_mac(eth_rx_dest_mac),
+    .m_eth_src_mac(eth_rx_src_mac),
+    .m_eth_type(eth_rx_type),
+    .m_eth_payload_axis_tdata(eth_rx_payload_axis_tdata),
+    .m_eth_payload_axis_tkeep(eth_rx_payload_axis_tkeep),
+    .m_eth_payload_axis_tvalid(eth_rx_payload_axis_tvalid),
+    .m_eth_payload_axis_tready(eth_rx_payload_axis_tready),
+    .m_eth_payload_axis_tlast(eth_rx_payload_axis_tlast),
+    .m_eth_payload_axis_tuser(eth_rx_payload_axis_tuser),
     // Status signals
     .busy(),
     .error_header_early_termination()
@@ -347,16 +347,16 @@ localparam [2:0]
 reg [2:0] state_reg = STATE_IDLE;
 
 reg eth_rx_hdr_ready_reg = 0;
-reg eth_rx_payload_tready_reg = 0;
+reg eth_rx_payload_axis_tready_reg = 0;
 
 assign eth_rx_hdr_ready = eth_rx_hdr_ready_reg;
-assign eth_rx_payload_tready = eth_rx_payload_tready_reg;
+assign eth_rx_payload_axis_tready = eth_rx_payload_axis_tready_reg;
 
 always @(posedge clk) begin
     if (rst) begin
         state_reg <= STATE_IDLE;
         eth_rx_hdr_ready_reg <= 0;
-        eth_rx_payload_tready_reg <= 0;
+        eth_rx_payload_axis_tready_reg <= 0;
         select_reg_0 <= 0;
         select_reg_1 <= 1;
         select_reg_2 <= 2;
@@ -377,77 +377,77 @@ always @(posedge clk) begin
         case (state_reg)
             STATE_IDLE: begin
                 eth_rx_hdr_ready_reg <= 1;
-                eth_rx_payload_tready_reg <= 0;
-                if (eth_rx_hdr_ready & eth_rx_hdr_valid) begin
+                eth_rx_payload_axis_tready_reg <= 0;
+                if (eth_rx_hdr_ready && eth_rx_hdr_valid) begin
                     if (eth_rx_type == 16'h8099) begin
                         state_reg <= STATE_WORD_0;
                         eth_rx_hdr_ready_reg <= 0;
-                        eth_rx_payload_tready_reg <= 1;
+                        eth_rx_payload_axis_tready_reg <= 1;
                     end else begin
                         state_reg <= STATE_WAIT;
                         eth_rx_hdr_ready_reg <= 0;
-                        eth_rx_payload_tready_reg <= 1;
+                        eth_rx_payload_axis_tready_reg <= 1;
                     end
                 end
             end
             STATE_WORD_0: begin
                 eth_rx_hdr_ready_reg <= 0;
-                eth_rx_payload_tready_reg <= 1;
-                if (eth_rx_payload_tready & eth_rx_payload_tvalid) begin
-                    if (eth_rx_payload_tlast) begin
+                eth_rx_payload_axis_tready_reg <= 1;
+                if (eth_rx_payload_axis_tready && eth_rx_payload_axis_tvalid) begin
+                    if (eth_rx_payload_axis_tlast) begin
                         state_reg <= STATE_IDLE;
                         eth_rx_hdr_ready_reg <= 1;
-                        eth_rx_payload_tready_reg <= 0;
+                        eth_rx_payload_axis_tready_reg <= 0;
                     end else begin
-                        select_reg_0 <= eth_rx_payload_tdata[7:0];
-                        select_reg_1 <= eth_rx_payload_tdata[15:8];
-                        select_reg_2 <= eth_rx_payload_tdata[23:16];
-                        select_reg_3 <= eth_rx_payload_tdata[31:24];
-                        select_reg_4 <= eth_rx_payload_tdata[39:32];
-                        select_reg_5 <= eth_rx_payload_tdata[47:40];
-                        select_reg_6 <= eth_rx_payload_tdata[55:48];
-                        select_reg_7 <= eth_rx_payload_tdata[63:56];
+                        select_reg_0 <= eth_rx_payload_axis_tdata[7:0];
+                        select_reg_1 <= eth_rx_payload_axis_tdata[15:8];
+                        select_reg_2 <= eth_rx_payload_axis_tdata[23:16];
+                        select_reg_3 <= eth_rx_payload_axis_tdata[31:24];
+                        select_reg_4 <= eth_rx_payload_axis_tdata[39:32];
+                        select_reg_5 <= eth_rx_payload_axis_tdata[47:40];
+                        select_reg_6 <= eth_rx_payload_axis_tdata[55:48];
+                        select_reg_7 <= eth_rx_payload_axis_tdata[63:56];
                         state_reg <= STATE_WORD_1;
                         eth_rx_hdr_ready_reg <= 0;
-                        eth_rx_payload_tready_reg <= 1;
+                        eth_rx_payload_axis_tready_reg <= 1;
                     end
                 end
             end
             STATE_WORD_1: begin
                 eth_rx_hdr_ready_reg <= 0;
-                eth_rx_payload_tready_reg <= 1;
-                if (eth_rx_payload_tready & eth_rx_payload_tvalid) begin
-                    if (eth_rx_payload_tlast) begin
+                eth_rx_payload_axis_tready_reg <= 1;
+                if (eth_rx_payload_axis_tready && eth_rx_payload_axis_tvalid) begin
+                    if (eth_rx_payload_axis_tlast) begin
                         state_reg <= STATE_IDLE;
                         eth_rx_hdr_ready_reg <= 1;
-                        eth_rx_payload_tready_reg <= 0;
+                        eth_rx_payload_axis_tready_reg <= 0;
                     end else begin
-                        select_reg_8 <= eth_rx_payload_tdata[7:0];
-                        select_reg_9 <= eth_rx_payload_tdata[15:8];
-                        select_reg_10 <= eth_rx_payload_tdata[23:16];
-                        select_reg_11 <= eth_rx_payload_tdata[31:24];
-                        select_reg_12 <= eth_rx_payload_tdata[39:32];
-                        select_reg_13 <= eth_rx_payload_tdata[47:40];
-                        select_reg_14 <= eth_rx_payload_tdata[55:48];
-                        select_reg_15 <= eth_rx_payload_tdata[63:56];
+                        select_reg_8 <= eth_rx_payload_axis_tdata[7:0];
+                        select_reg_9 <= eth_rx_payload_axis_tdata[15:8];
+                        select_reg_10 <= eth_rx_payload_axis_tdata[23:16];
+                        select_reg_11 <= eth_rx_payload_axis_tdata[31:24];
+                        select_reg_12 <= eth_rx_payload_axis_tdata[39:32];
+                        select_reg_13 <= eth_rx_payload_axis_tdata[47:40];
+                        select_reg_14 <= eth_rx_payload_axis_tdata[55:48];
+                        select_reg_15 <= eth_rx_payload_axis_tdata[63:56];
                         state_reg <= STATE_WAIT;
                         eth_rx_hdr_ready_reg <= 0;
-                        eth_rx_payload_tready_reg <= 1;
+                        eth_rx_payload_axis_tready_reg <= 1;
                     end
                 end
             end
             STATE_WAIT: begin
                 eth_rx_hdr_ready_reg <= 0;
-                eth_rx_payload_tready_reg <= 1;
-                if (eth_rx_payload_tready & eth_rx_payload_tvalid) begin
-                    if (eth_rx_payload_tlast) begin
+                eth_rx_payload_axis_tready_reg <= 1;
+                if (eth_rx_payload_axis_tready && eth_rx_payload_axis_tvalid) begin
+                    if (eth_rx_payload_axis_tlast) begin
                         state_reg <= STATE_IDLE;
                         eth_rx_hdr_ready_reg <= 1;
-                        eth_rx_payload_tready_reg <= 0;
+                        eth_rx_payload_axis_tready_reg <= 0;
                     end else begin
                         state_reg <= STATE_WAIT;
                         eth_rx_hdr_ready_reg <= 0;
-                        eth_rx_payload_tready_reg <= 1;
+                        eth_rx_payload_axis_tready_reg <= 1;
                     end
                 end
             end
