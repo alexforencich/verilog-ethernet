@@ -141,7 +141,7 @@ module fpga_core #
     input  wire       uart_rxd,
     output wire       uart_txd,
     output wire       uart_rts,
-    input wire        uart_cts
+    input  wire       uart_cts
 );
 
 // AXI between MAC and Ethernet modules
