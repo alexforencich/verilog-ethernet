@@ -193,17 +193,18 @@ class XGMIISource(object):
                             ifg_cnt = 0
 
                         assert len(dl) > 0
-                        assert dl.pop(0) == 0x55
-                        cl.pop(0)
+                        assert dl[0] == 0x55
+                        dl[0] = 0xfb
+                        cl[0] = 1
 
-                        k = 1
-                        d = 0xfb
-                        c = 1
+                        k = 0
+                        d = 0
+                        c = 0
 
                         if ifg_cnt > 0:
-                            k = 5
-                            d = 0xfb07070707
-                            c = 0x1f
+                            k = 4
+                            d = 0x07070707
+                            c = 0xf
 
                         for i in range(k,bw):
                             if len(dl) > 0:
