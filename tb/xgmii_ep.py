@@ -122,6 +122,7 @@ class XGMIISource(object):
                 rst,
                 txd,
                 txc,
+                enable=True,
                 name=None
             ):
 
@@ -154,7 +155,7 @@ class XGMIISource(object):
                     ifg_cnt = 0
                     deficit_idle_cnt = 0
                     nt = False
-                else:
+                elif enable:
                     if ifg_cnt > bw-1:
                         ifg_cnt -= bw
                         txd.next = 0x0707070707070707 if bw == 8 else 0x07070707
@@ -258,6 +259,7 @@ class XGMIISink(object):
                 rst,
                 rxd,
                 rxc,
+                enable=True,
                 name=None
             ):
 
@@ -282,7 +284,7 @@ class XGMIISink(object):
                     frame = None
                     d = []
                     c = []
-                else:
+                elif enable:
                     if frame is None:
                         if rxc & 1 and rxd & 0xff == 0xfb:
                             # start in lane 0
