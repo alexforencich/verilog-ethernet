@@ -123,6 +123,7 @@ class XGMIISource(object):
                 txd,
                 txc,
                 enable=True,
+                ifg=12,
                 name=None
             ):
 
@@ -168,7 +169,7 @@ class XGMIISource(object):
                                 d |= dl.pop(0) << (8*i)
                                 c |= cl.pop(0) << i
                                 if not dl:
-                                    ifg_cnt = 12 - (bw-i) + deficit_idle_cnt
+                                    ifg_cnt = max(ifg, 12) - (bw-i) + deficit_idle_cnt
                             else:
                                 d |= 0x07 << (8*i)
                                 c |= 1 << i
