@@ -186,12 +186,6 @@ class XGMIISource(object):
                         if name is not None:
                             print("[%s] Sending frame %s" % (name, repr(frame)))
 
-                        if ifg_cnt >= 4:
-                            deficit_idle_cnt = ifg_cnt - 4
-                        else:
-                            deficit_idle_cnt = ifg_cnt
-                            ifg_cnt = 0
-
                         assert len(dl) > 0
                         assert dl[0] == 0x55
                         dl[0] = 0xfb
@@ -201,10 +195,14 @@ class XGMIISource(object):
                         d = 0
                         c = 0
 
-                        if ifg_cnt > 0:
+                        if bw == 8 and ifg_cnt >= 4:
+                            ifg_cnt = max(ifg_cnt-4, 0)
                             k = 4
                             d = 0x07070707
                             c = 0xf
+
+                        deficit_idle_cnt = ifg_cnt
+                        ifg_cnt = 0
 
                         for i in range(k,bw):
                             if len(dl) > 0:
