@@ -131,6 +131,7 @@ class XGMIISource(object):
         self.has_logic = True
 
         assert len(txd) in [32, 64]
+        assert len(txd) == len(txc)*8
 
         bw = int(len(txd)/8)
 
@@ -255,6 +256,7 @@ class XGMIISink(object):
         self.has_logic = True
 
         assert len(rxd) in [32, 64]
+        assert len(rxd) == len(rxc)*8
 
         bw = int(len(rxd)/8)
 
