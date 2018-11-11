@@ -141,7 +141,6 @@ class XGMIISource(object):
             cl = []
             ifg_cnt = 0
             deficit_idle_cnt = 0
-            nt = False
 
             while True:
                 yield clk.posedge, rst.posedge
@@ -154,28 +153,23 @@ class XGMIISource(object):
                     cl = []
                     ifg_cnt = 0
                     deficit_idle_cnt = 0
-                    nt = False
                 elif enable:
                     if ifg_cnt > bw-1:
                         ifg_cnt -= bw
                         txd.next = 0x0707070707070707 if bw == 8 else 0x07070707
                         txc.next = 0xff if bw == 8 else 0xf
-                    elif len(dl) > 0 or nt:
+                    elif dl:
                         d = 0
                         c = 0
 
                         for i in range(bw):
-                            if len(dl) > 0:
+                            if dl:
                                 d |= dl.pop(0) << (8*i)
                                 c |= cl.pop(0) << i
-                                nt = True
-                            else:
-                                if nt:
-                                    d |= 0xfd << (8*i)
-                                    nt = False
+                                if not dl:
                                     ifg_cnt = 12 - (bw-i) + deficit_idle_cnt
-                                else:
-                                    d |= 0x07 << (8*i)
+                            else:
+                                d |= 0x07 << (8*i)
                                 c |= 1 << i
 
                         txd.next = d
@@ -190,6 +184,8 @@ class XGMIISource(object):
                         assert dl[0] == 0x55
                         dl[0] = 0xfb
                         cl[0] = 1
+                        dl.append(0xfd)
+                        cl.append(1)
 
                         k = 0
                         d = 0
@@ -205,17 +201,9 @@ class XGMIISource(object):
                         ifg_cnt = 0
 
                         for i in range(k,bw):
-                            if len(dl) > 0:
+                            if dl:
                                 d |= dl.pop(0) << (8*i)
                                 c |= cl.pop(0) << i
-                                nt = True
-                            else:
-                                if nt:
-                                    d |= 0xfd << (8*i)
-                                    nt = False
-                                else:
-                                    d |= 0x07 << (8*i)
-                                c |= 1 << i
 
                         txd.next = d
                         txc.next = c
