@@ -297,8 +297,12 @@ class XGMIISink(object):
                                 c.append((int(rxc) >> i) & 1)
                     else:
                         for i in range(bw):
-                            if (rxc >> i) & 1 and (rxd >> (8*i)) & 0xff == 0xfd:
-                                # terminate
+                            if (rxc >> i) & 1:
+                                # got a control character; terminate frame reception
+                                if (rxd >> (8*i)) & 0xff != 0xfd:
+                                    # store control character if it's not a termination
+                                    d.append((int(rxd) >> (8*i)) & 0xff)
+                                    c.append((int(rxc) >> i) & 1)
                                 frame.parse(d, c)
                                 self.queue.append(frame)
                                 self.sync.next = not self.sync
