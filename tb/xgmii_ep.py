@@ -189,23 +189,26 @@ class XGMIISource(object):
                         dl.append(0xfd)
                         cl.append(1)
 
-                        k = 0
-                        d = 0
-                        c = 0
-
                         if bw == 8 and ifg_cnt >= 4:
                             ifg_cnt = max(ifg_cnt-4, 0)
-                            k = 4
-                            d = 0x07070707
-                            c = 0xf
+                            dl = [0x07]*4+dl
+                            cl = [1]*4+cl
 
                         deficit_idle_cnt = ifg_cnt
                         ifg_cnt = 0
 
-                        for i in range(k,bw):
+                        d = 0
+                        c = 0
+
+                        for i in range(0,bw):
                             if dl:
                                 d |= dl.pop(0) << (8*i)
                                 c |= cl.pop(0) << i
+                                if not dl:
+                                    ifg_cnt = max(ifg, 12) - (bw-i) + deficit_idle_cnt
+                            else:
+                                d |= 0x07 << (8*i)
+                                c |= 1 << i
 
                         txd.next = d
                         txc.next = c
