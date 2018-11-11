@@ -24,6 +24,23 @@ THE SOFTWARE.
 
 from myhdl import *
 
+ETH_PRE = 0x55
+ETH_SFD = 0xD5
+
+XGMII_IDLE   = 0x07
+XGMII_LPI    = 0x06
+XGMII_START  = 0xfb
+XGMII_TERM   = 0xfd
+XGMII_ERROR  = 0xfe
+XGMII_SEQ_OS = 0x9c
+XGMII_RES0   = 0x1c
+XGMII_RES1   = 0x3c
+XGMII_RES2   = 0x7c
+XGMII_RES3   = 0xbc
+XGMII_RES4   = 0xdc
+XGMII_RES5   = 0xf7
+XGMII_SIG_OS = 0x5c
+
 class XGMIIFrame(object):
     def __init__(self, data=b'', error=None, ctrl=None):
         self.data = b''
@@ -68,7 +85,7 @@ class XGMIIFrame(object):
 
         for i in range(len(f)):
             if error[i]:
-                f[i] = 0xfe
+                f[i] = XGMII_ERROR
                 ctrl[i] = 1
 
         i = 0
@@ -89,7 +106,7 @@ class XGMIIFrame(object):
         self.error = [0]*len(self.data)
 
         for i in range(len(self.data)):
-            if c[i] and d[i] == 0xfe:
+            if c[i] and d[i] == XGMII_ERROR:
                 self.error[i] = 1
 
     def __eq__(self, other):
@@ -171,7 +188,7 @@ class XGMIISource(object):
                                 if not dl:
                                     ifg_cnt = max(ifg, 12) - (bw-i) + deficit_idle_cnt
                             else:
-                                d |= 0x07 << (8*i)
+                                d |= XGMII_IDLE << (8*i)
                                 c |= 1 << i
 
                         txd.next = d
@@ -183,15 +200,15 @@ class XGMIISource(object):
                             print("[%s] Sending frame %s" % (name, repr(frame)))
 
                         assert len(dl) > 0
-                        assert dl[0] == 0x55
-                        dl[0] = 0xfb
+                        assert dl[0] == ETH_PRE
+                        dl[0] = XGMII_START
                         cl[0] = 1
-                        dl.append(0xfd)
+                        dl.append(XGMII_TERM)
                         cl.append(1)
 
                         if bw == 8 and ifg_cnt >= 4:
                             ifg_cnt = max(ifg_cnt-4, 0)
-                            dl = [0x07]*4+dl
+                            dl = [XGMII_IDLE]*4+dl
                             cl = [1]*4+cl
 
                         deficit_idle_cnt = ifg_cnt
@@ -207,7 +224,7 @@ class XGMIISource(object):
                                 if not dl:
                                     ifg_cnt = max(ifg, 12) - (bw-i) + deficit_idle_cnt
                             else:
-                                d |= 0x07 << (8*i)
+                                d |= XGMII_IDLE << (8*i)
                                 c |= 1 << i
 
                         txd.next = d
@@ -279,27 +296,27 @@ class XGMIISink(object):
                     c = []
                 elif enable:
                     if frame is None:
-                        if rxc & 1 and rxd & 0xff == 0xfb:
+                        if rxc & 1 and rxd & 0xff == XGMII_START:
                             # start in lane 0
                             frame = XGMIIFrame()
-                            d = [0x55]
+                            d = [ETH_PRE]
                             c = [0]
                             for i in range(1,bw):
                                 d.append((int(rxd) >> (8*i)) & 0xff)
                                 c.append((int(rxc) >> i) & 1)
-                        elif bw == 8 and (rxc >> 4) & 1 and (rxd >> 32) & 0xff == 0xfb:
+                        elif bw == 8 and (rxc >> 4) & 1 and (rxd >> 32) & 0xff == XGMII_START:
                             # start in lane 4
                             frame = XGMIIFrame()
-                            d = [0x55]
+                            d = [ETH_PRE]
                             c = [0]
-                            for i in range(5,8):
+                            for i in range(5,bw):
                                 d.append((int(rxd) >> (8*i)) & 0xff)
                                 c.append((int(rxc) >> i) & 1)
                     else:
                         for i in range(bw):
                             if (rxc >> i) & 1:
                                 # got a control character; terminate frame reception
-                                if (rxd >> (8*i)) & 0xff != 0xfd:
+                                if (rxd >> (8*i)) & 0xff != XGMII_TERM:
                                     # store control character if it's not a termination
                                     d.append((int(rxd) >> (8*i)) & 0xff)
                                     c.append((int(rxc) >> i) & 1)
