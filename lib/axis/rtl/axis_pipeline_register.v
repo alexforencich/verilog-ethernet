@@ -100,10 +100,10 @@ assign m_axis_tid = axis_tid[LENGTH];
 assign m_axis_tdest = axis_tdest[LENGTH];
 assign m_axis_tuser = axis_tuser[LENGTH];
 
-integer i;
-
 generate
-    for (i = 0; i < LENGTH; i = i + 1) begin : reg
+    genvar i;
+
+    for (i = 0; i < LENGTH; i = i + 1) begin : pipe_reg
         axis_register #(
             .DATA_WIDTH(DATA_WIDTH),
             .KEEP_ENABLE(KEEP_ENABLE),
