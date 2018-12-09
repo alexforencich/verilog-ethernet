@@ -120,7 +120,7 @@ always @* begin
         end
     end
 
-    if (~frame_reg && enable && (s_axis_tvalid & (1 << select))) begin
+    if (!frame_reg && enable && (s_axis_tvalid & (1 << select))) begin
         // start of frame, grab select value
         frame_next = 1'b1;
         select_next = select;
