@@ -466,6 +466,38 @@ def bench():
 
         yield delay(100)
 
+        yield s_clk.posedge
+        print("test 10: backpressure test")
+        current_test.next = 10
+
+        test_frame = axis_ep.AXIStreamFrame(
+            b'\xDA\xD1\xD2\xD3\xD4\xD5' +
+            b'\x5A\x51\x52\x53\x54\x55' +
+            b'\x80\x00' +
+            bytearray(range(256)),
+            id=10,
+            dest=1
+        )
+
+        sink_pause.next = 1
+        source.send(test_frame)
+        source.send(test_frame)
+        yield delay(5000)
+        yield s_clk.posedge
+        sink_pause.next = 0
+
+        yield sink.wait()
+        rx_frame = sink.recv()
+
+        assert rx_frame == test_frame
+
+        yield sink.wait()
+        rx_frame = sink.recv()
+
+        assert rx_frame == test_frame
+
+        yield delay(100)
+
         raise StopSimulation
 
     return instances()

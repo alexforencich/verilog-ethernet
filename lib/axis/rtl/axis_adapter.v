@@ -85,12 +85,12 @@ parameter EXPAND_BUS = M_KEEP_WIDTH_INT > S_KEEP_WIDTH_INT;
 // total data and keep widths
 parameter DATA_WIDTH = EXPAND_BUS ? M_DATA_WIDTH : S_DATA_WIDTH;
 parameter KEEP_WIDTH = EXPAND_BUS ? M_KEEP_WIDTH_INT : S_KEEP_WIDTH_INT;
-// required number of cycles to match widths
-parameter CYCLE_COUNT = EXPAND_BUS ? (M_KEEP_WIDTH_INT / S_KEEP_WIDTH_INT) : (S_KEEP_WIDTH_INT / M_KEEP_WIDTH_INT);
-parameter CYCLE_COUNT_WIDTH = CYCLE_COUNT == 1 ? 1 : $clog2(CYCLE_COUNT);
-// data width and keep width per cycle
-parameter CYCLE_DATA_WIDTH = DATA_WIDTH / CYCLE_COUNT;
-parameter CYCLE_KEEP_WIDTH = KEEP_WIDTH / CYCLE_COUNT;
+// required number of segments in wider bus
+parameter SEGMENT_COUNT = EXPAND_BUS ? (M_KEEP_WIDTH_INT / S_KEEP_WIDTH_INT) : (S_KEEP_WIDTH_INT / M_KEEP_WIDTH_INT);
+parameter SEGMENT_COUNT_WIDTH = SEGMENT_COUNT == 1 ? 1 : $clog2(SEGMENT_COUNT);
+// data width and keep width per segment
+parameter SEGMENT_DATA_WIDTH = DATA_WIDTH / SEGMENT_COUNT;
+parameter SEGMENT_KEEP_WIDTH = KEEP_WIDTH / SEGMENT_COUNT;
 
 // bus width assertions
 initial begin
@@ -118,9 +118,9 @@ localparam [2:0]
 
 reg [2:0] state_reg = STATE_IDLE, state_next;
 
-reg [CYCLE_COUNT_WIDTH-1:0] cycle_count_reg = 0, cycle_count_next;
+reg [SEGMENT_COUNT_WIDTH-1:0] segment_count_reg = 0, segment_count_next;
 
-reg last_cycle;
+reg last_segment;
 
 reg [DATA_WIDTH-1:0] temp_tdata_reg = {DATA_WIDTH{1'b0}}, temp_tdata_next;
 reg [KEEP_WIDTH-1:0] temp_tkeep_reg = {KEEP_WIDTH{1'b0}}, temp_tkeep_next;
@@ -147,9 +147,9 @@ assign s_axis_tready = s_axis_tready_reg;
 always @* begin
     state_next = STATE_IDLE;
 
-    cycle_count_next = cycle_count_reg;
+    segment_count_next = segment_count_reg;
 
-    last_cycle = 0;
+    last_segment = 0;
 
     temp_tdata_next = temp_tdata_reg;
     temp_tkeep_next = temp_tkeep_reg;
@@ -177,7 +177,7 @@ always @* begin
     case (state_reg)
         STATE_IDLE: begin
             // idle state - no data in registers
-            if (CYCLE_COUNT == 1) begin
+            if (SEGMENT_COUNT == 1) begin
                 // output and input same width - just act like a register
 
                 // accept data next cycle if output register ready next cycle
@@ -210,11 +210,11 @@ always @* begin
                     temp_tdest_next = s_axis_tdest;
                     temp_tuser_next = s_axis_tuser;
 
-                    // first input cycle complete
-                    cycle_count_next = 1;
+                    // first input segment complete
+                    segment_count_next = 1;
 
                     if (s_axis_tlast) begin
-                        // got last signal on first cycle, so output it
+                        // got last signal on first segment, so output it
                         s_axis_tready_next = 1'b0;
                         state_next = STATE_TRANSFER_OUT;
                     end else begin
@@ -233,20 +233,20 @@ always @* begin
 
                 if (s_axis_tready && s_axis_tvalid) begin
                     // word transfer in - store it in data register
-                    cycle_count_next = 0;
+                    segment_count_next = 0;
 
-                    // is this the last cycle?
-                    if (CYCLE_COUNT == 1) begin
-                        // last cycle by counter value
-                        last_cycle = 1'b1;
-                    end else if (S_KEEP_ENABLE && s_axis_tkeep[CYCLE_KEEP_WIDTH-1:0] != {CYCLE_KEEP_WIDTH{1'b1}}) begin
-                        // last cycle by tkeep fall in current cycle
-                        last_cycle = 1'b1;
-                    end else if (S_KEEP_ENABLE && s_axis_tkeep[(CYCLE_KEEP_WIDTH*2)-1:CYCLE_KEEP_WIDTH] == {CYCLE_KEEP_WIDTH{1'b0}}) begin
-                        // last cycle by tkeep fall at end of current cycle
-                        last_cycle = 1'b1;
+                    // is this the last segment?
+                    if (SEGMENT_COUNT == 1) begin
+                        // last segment by counter value
+                        last_segment = 1'b1;
+                    end else if (S_KEEP_ENABLE && s_axis_tkeep[SEGMENT_KEEP_WIDTH-1:0] != {SEGMENT_KEEP_WIDTH{1'b1}}) begin
+                        // last segment by tkeep fall in current segment
+                        last_segment = 1'b1;
+                    end else if (S_KEEP_ENABLE && s_axis_tkeep[(SEGMENT_KEEP_WIDTH*2)-1:SEGMENT_KEEP_WIDTH] == {SEGMENT_KEEP_WIDTH{1'b0}}) begin
+                        // last segment by tkeep fall at end of current segment
+                        last_segment = 1'b1;
                     end else begin
-                        last_cycle = 1'b0;
+                        last_segment = 1'b0;
                     end
 
                     // pass complete input word, zero-extended to temp register
@@ -258,20 +258,20 @@ always @* begin
                     temp_tuser_next = s_axis_tuser;
 
                     // short-circuit and get first word out the door
-                    m_axis_tdata_int  = s_axis_tdata[CYCLE_DATA_WIDTH-1:0];
-                    m_axis_tkeep_int  = s_axis_tkeep[CYCLE_KEEP_WIDTH-1:0];
+                    m_axis_tdata_int  = s_axis_tdata[SEGMENT_DATA_WIDTH-1:0];
+                    m_axis_tkeep_int  = s_axis_tkeep[SEGMENT_KEEP_WIDTH-1:0];
                     m_axis_tvalid_int = 1'b1;
-                    m_axis_tlast_int  = s_axis_tlast & last_cycle;
+                    m_axis_tlast_int  = s_axis_tlast & last_segment;
                     m_axis_tid_int    = s_axis_tid;
                     m_axis_tdest_int  = s_axis_tdest;
                     m_axis_tuser_int  = s_axis_tuser;
 
                     if (m_axis_tready_int_reg) begin
                         // if output register is ready for first word, then move on to the next one
-                        cycle_count_next = 1;
+                        segment_count_next = 1;
                     end
 
-                    if (!last_cycle || !m_axis_tready_int_reg) begin
+                    if (!last_segment || !m_axis_tready_int_reg) begin
                         // continue outputting words
                         s_axis_tready_next = 1'b0;
                         state_next = STATE_TRANSFER_OUT;
@@ -293,16 +293,16 @@ always @* begin
             if (s_axis_tready && s_axis_tvalid) begin
                 // word transfer in - store in data register
 
-                temp_tdata_next[cycle_count_reg*CYCLE_DATA_WIDTH +: CYCLE_DATA_WIDTH] = s_axis_tdata;
-                temp_tkeep_next[cycle_count_reg*CYCLE_KEEP_WIDTH +: CYCLE_KEEP_WIDTH] = S_KEEP_ENABLE ? s_axis_tkeep : 1'b1;
+                temp_tdata_next[segment_count_reg*SEGMENT_DATA_WIDTH +: SEGMENT_DATA_WIDTH] = s_axis_tdata;
+                temp_tkeep_next[segment_count_reg*SEGMENT_KEEP_WIDTH +: SEGMENT_KEEP_WIDTH] = S_KEEP_ENABLE ? s_axis_tkeep : 1'b1;
                 temp_tlast_next = s_axis_tlast;
                 temp_tid_next   = s_axis_tid;
                 temp_tdest_next = s_axis_tdest;
                 temp_tuser_next = s_axis_tuser;
 
-                cycle_count_next = cycle_count_reg + 1;
+                segment_count_next = segment_count_reg + 1;
 
-                if ((cycle_count_reg == CYCLE_COUNT-1) || s_axis_tlast) begin
+                if ((segment_count_reg == SEGMENT_COUNT-1) || s_axis_tlast) begin
                     // terminated by counter or tlast signal, output complete word
                     // read input word next cycle if output will be ready
                     s_axis_tready_next = m_axis_tready_int_early;
@@ -348,11 +348,11 @@ always @* begin
                         temp_tdest_next = s_axis_tdest;
                         temp_tuser_next = s_axis_tuser;
 
-                        // first input cycle complete
-                        cycle_count_next = 1;
+                        // first input segment complete
+                        segment_count_next = 1;
 
                         if (s_axis_tlast) begin
-                            // got last signal on first cycle, so output it
+                            // got last signal on first segment, so output it
                             s_axis_tready_next = 1'b0;
                             state_next = STATE_TRANSFER_OUT;
                         end else begin
@@ -373,25 +373,25 @@ always @* begin
                 // do not accept new data
                 s_axis_tready_next = 1'b0;
 
-                // is this the last cycle?
-                if (cycle_count_reg == CYCLE_COUNT-1) begin
-                    // last cycle by counter value
-                    last_cycle = 1'b1;
-                end else if (temp_tkeep_reg[cycle_count_reg*CYCLE_KEEP_WIDTH +: CYCLE_KEEP_WIDTH] != {CYCLE_KEEP_WIDTH{1'b1}}) begin
-                    // last cycle by tkeep fall in current cycle
-                    last_cycle = 1'b1;
-                end else if (temp_tkeep_reg[(cycle_count_reg+1)*CYCLE_KEEP_WIDTH +: CYCLE_KEEP_WIDTH] == {CYCLE_KEEP_WIDTH{1'b0}}) begin
-                    // last cycle by tkeep fall at end of current cycle
-                    last_cycle = 1'b1;
+                // is this the last segment?
+                if (segment_count_reg == SEGMENT_COUNT-1) begin
+                    // last segment by counter value
+                    last_segment = 1'b1;
+                end else if (temp_tkeep_reg[segment_count_reg*SEGMENT_KEEP_WIDTH +: SEGMENT_KEEP_WIDTH] != {SEGMENT_KEEP_WIDTH{1'b1}}) begin
+                    // last segment by tkeep fall in current segment
+                    last_segment = 1'b1;
+                end else if (temp_tkeep_reg[(segment_count_reg+1)*SEGMENT_KEEP_WIDTH +: SEGMENT_KEEP_WIDTH] == {SEGMENT_KEEP_WIDTH{1'b0}}) begin
+                    // last segment by tkeep fall at end of current segment
+                    last_segment = 1'b1;
                 end else begin
-                    last_cycle = 1'b0;
+                    last_segment = 1'b0;
                 end
 
                 // output current part of stored word (output narrower)
-                m_axis_tdata_int  = temp_tdata_reg[cycle_count_reg*CYCLE_DATA_WIDTH +: CYCLE_DATA_WIDTH];
-                m_axis_tkeep_int  = temp_tkeep_reg[cycle_count_reg*CYCLE_KEEP_WIDTH +: CYCLE_KEEP_WIDTH];
+                m_axis_tdata_int  = temp_tdata_reg[segment_count_reg*SEGMENT_DATA_WIDTH +: SEGMENT_DATA_WIDTH];
+                m_axis_tkeep_int  = temp_tkeep_reg[segment_count_reg*SEGMENT_KEEP_WIDTH +: SEGMENT_KEEP_WIDTH];
                 m_axis_tvalid_int = 1'b1;
-                m_axis_tlast_int  = temp_tlast_reg && last_cycle;
+                m_axis_tlast_int  = temp_tlast_reg && last_segment;
                 m_axis_tid_int    = temp_tid_reg;
                 m_axis_tdest_int  = temp_tdest_reg;
                 m_axis_tuser_int  = temp_tuser_reg;
@@ -399,9 +399,9 @@ always @* begin
                 if (m_axis_tready_int_reg) begin
                     // word transfer out
 
-                    cycle_count_next = cycle_count_reg + 1;
+                    segment_count_next = segment_count_reg + 1;
 
-                    if (last_cycle) begin
+                    if (last_segment) begin
                         // terminated by counter or tlast signal
 
                         s_axis_tready_next = 1'b1;
@@ -428,7 +428,7 @@ always @(posedge clk) begin
         s_axis_tready_reg <= s_axis_tready_next;
     end
 
-    cycle_count_reg <= cycle_count_next;
+    segment_count_reg <= segment_count_next;
 
     temp_tdata_reg <= temp_tdata_next;
     temp_tkeep_reg <= temp_tkeep_next;

@@ -132,11 +132,13 @@ reg m_axis_tvalid_reg = 1'b0, m_axis_tvalid_next;
 // full when first MSB different but rest same
 wire full = ((wr_ptr_reg[ADDR_WIDTH] != rd_ptr_reg[ADDR_WIDTH]) &&
              (wr_ptr_reg[ADDR_WIDTH-1:0] == rd_ptr_reg[ADDR_WIDTH-1:0]));
+wire full_cur = ((wr_ptr_cur_reg[ADDR_WIDTH] != rd_ptr_reg[ADDR_WIDTH]) &&
+                 (wr_ptr_cur_reg[ADDR_WIDTH-1:0] == rd_ptr_reg[ADDR_WIDTH-1:0]));
 // empty when pointers match exactly
 wire empty = wr_ptr_reg == rd_ptr_reg;
 // overflow within packet
-wire full_cur = ((wr_ptr_reg[ADDR_WIDTH] != wr_ptr_cur_reg[ADDR_WIDTH]) &&
-                 (wr_ptr_reg[ADDR_WIDTH-1:0] == wr_ptr_cur_reg[ADDR_WIDTH-1:0]));
+wire full_wr = ((wr_ptr_reg[ADDR_WIDTH] != wr_ptr_cur_reg[ADDR_WIDTH]) &&
+                (wr_ptr_reg[ADDR_WIDTH-1:0] == wr_ptr_cur_reg[ADDR_WIDTH-1:0]));
 
 // control signals
 reg write;
@@ -148,7 +150,7 @@ reg overflow_reg = 1'b0, overflow_next;
 reg bad_frame_reg = 1'b0, bad_frame_next;
 reg good_frame_reg = 1'b0, good_frame_next;
 
-assign s_axis_tready = (!full || DROP_WHEN_FULL);
+assign s_axis_tready = FRAME_FIFO ? (!full_cur || full_wr || DROP_WHEN_FULL) : !full;
 
 generate
     assign s_axis[DATA_WIDTH-1:0] = s_axis_tdata;
@@ -184,38 +186,35 @@ always @* begin
     wr_ptr_next = wr_ptr_reg;
     wr_ptr_cur_next = wr_ptr_cur_reg;
 
-    if (s_axis_tvalid) begin
-        // input data valid
-        if (!full || DROP_WHEN_FULL) begin
-            // not full, perform write
-            if (!FRAME_FIFO) begin
-                // normal FIFO mode
-                write = 1'b1;
-                wr_ptr_next = wr_ptr_reg + 1;
-            end else if (full || full_cur || drop_frame_reg) begin
-                // full, packet overflow, or currently dropping frame
-                // drop frame
-                drop_frame_next = 1'b1;
-                if (s_axis_tlast) begin
-                    // end of frame, reset write pointer
+    if (s_axis_tready && s_axis_tvalid) begin
+        // transfer in
+        if (!FRAME_FIFO) begin
+            // normal FIFO mode
+            write = 1'b1;
+            wr_ptr_next = wr_ptr_reg + 1;
+        end else if (full_cur || full_wr || drop_frame_reg) begin
+            // full, packet overflow, or currently dropping frame
+            // drop frame
+            drop_frame_next = 1'b1;
+            if (s_axis_tlast) begin
+                // end of frame, reset write pointer
+                wr_ptr_cur_next = wr_ptr_reg;
+                drop_frame_next = 1'b0;
+                overflow_next = 1'b1;
+            end
+        end else begin
+            write = 1'b1;
+            wr_ptr_cur_next = wr_ptr_cur_reg + 1;
+            if (s_axis_tlast) begin
+                // end of frame
+                if (DROP_BAD_FRAME && (USER_BAD_FRAME_MASK & s_axis_tuser == USER_BAD_FRAME_VALUE)) begin
+                    // bad packet, reset write pointer
                     wr_ptr_cur_next = wr_ptr_reg;
-                    drop_frame_next = 1'b0;
-                    overflow_next = 1'b1;
-                end
-            end else begin
-                write = 1'b1;
-                wr_ptr_cur_next = wr_ptr_cur_reg + 1;
-                if (s_axis_tlast) begin
-                    // end of frame
-                    if (DROP_BAD_FRAME && (USER_BAD_FRAME_MASK & s_axis_tuser == USER_BAD_FRAME_VALUE)) begin
-                        // bad packet, reset write pointer
-                        wr_ptr_cur_next = wr_ptr_reg;
-                        bad_frame_next = 1'b1;
-                    end else begin
-                        // good packet, update write pointer
-                        wr_ptr_next = wr_ptr_cur_reg + 1;
-                        good_frame_next = 1'b1;
-                    end
+                    bad_frame_next = 1'b1;
+                end else begin
+                    // good packet, update write pointer
+                    wr_ptr_next = wr_ptr_cur_reg + 1;
+                    good_frame_next = 1'b1;
                 end
             end
         end

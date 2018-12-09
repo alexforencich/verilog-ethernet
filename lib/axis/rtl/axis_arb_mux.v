@@ -123,14 +123,8 @@ arb_inst (
     .grant_encoded(grant_encoded)
 );
 
-generate
-    genvar n;
-
-    for (n = 0; n < S_COUNT; n = n + 1) begin
-        assign request[n] = s_axis_tvalid[n] && !grant[n];
-        assign acknowledge[n] = grant[n] && s_axis_tvalid[n] && s_axis_tready[n] && s_axis_tlast[n];
-    end
-endgenerate
+assign request = s_axis_tvalid & ~grant;
+assign acknowledge = grant & s_axis_tvalid & s_axis_tready & s_axis_tlast;
 
 always @* begin
     // pass through selected packet data
