@@ -212,7 +212,7 @@ always @* begin
     end else if (m_axis_tready & m_axis_tvalid) begin
         // input is not ready, but output is ready
         m_axis_tvalid_next = temp_m_axis_tvalid_reg;
-        temp_m_axis_tvalid_next = 1'b0;
+        temp_m_axis_tvalid_next = {M_COUNT{1'b0}};
         store_axis_temp_to_output = 1'b1;
     end
 end
@@ -221,7 +221,7 @@ always @(posedge clk) begin
     if (rst) begin
         m_axis_tvalid_reg <= {M_COUNT{1'b0}};
         m_axis_tready_int_reg <= 1'b0;
-        temp_m_axis_tvalid_reg <= 1'b0;
+        temp_m_axis_tvalid_reg <= {M_COUNT{1'b0}};
     end else begin
         m_axis_tvalid_reg <= m_axis_tvalid_next;
         m_axis_tready_int_reg <= m_axis_tready_int_early;
