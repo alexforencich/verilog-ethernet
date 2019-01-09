@@ -6,8 +6,7 @@ This example design targets the Exablaze ExaNIC X10 FPGA board.
 
 The design by default listens to UDP port 1234 at IP address 192.168.1.128 and
 will echo back any packets received.  The design will also respond correctly
-to ARP requests.  The design also enables the gigabit Ethernet interface for
-testing with a QSFP loopback adapter.  
+to ARP requests.  
 
 FPGA: xcku035-fbva676-2-c
 PHY: 10G BASE-R PHY IP core and internal GTH transceiver
