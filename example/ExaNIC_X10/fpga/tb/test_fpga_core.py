@@ -29,7 +29,6 @@ import os
 import eth_ep
 import arp_ep
 import udp_ep
-import gmii_ep
 import xgmii_ep
 
 module = 'fpga_core'
