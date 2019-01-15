@@ -351,9 +351,9 @@ always @(posedge gt_txusrclk, posedge gt_tx_reset) begin
     end
 end
 
-genvar n;
-
 generate
+
+genvar n;
 
 for (n = 0; n < 8; n = n + 1) begin
 
@@ -561,7 +561,7 @@ qsfp_0_pcs_pma_0 (
     // GTY interface
     .tx_core_clk_0(clk_156mhz_int),
     .rx_core_clk_0(clk_156mhz_int),
-    .rx_serdes_clk_0(gt_rxusrclk[0]),
+    .rx_serdes_clk_0(gt_rxusrclk[4]),
     .rx_serdes_reset_0(qsfp_0_serdes_reset_0),
     .rxgearboxslip_in_0(qsfp_0_gt_rxgearboxslip_0),
     .rxdatavalid_out_0(qsfp_0_gt_rxdatavalid_0),
@@ -624,7 +624,7 @@ qsfp_0_pcs_pma_1 (
     // GTY interface
     .tx_core_clk_0(clk_156mhz_int),
     .rx_core_clk_0(clk_156mhz_int),
-    .rx_serdes_clk_0(gt_rxusrclk[1]),
+    .rx_serdes_clk_0(gt_rxusrclk[5]),
     .rx_serdes_reset_0(qsfp_0_serdes_reset_1),
     .rxgearboxslip_in_0(qsfp_0_gt_rxgearboxslip_1),
     .rxdatavalid_out_0(qsfp_0_gt_rxdatavalid_1),
@@ -687,7 +687,7 @@ qsfp_0_pcs_pma_2 (
     // GTY interface
     .tx_core_clk_0(clk_156mhz_int),
     .rx_core_clk_0(clk_156mhz_int),
-    .rx_serdes_clk_0(gt_rxusrclk[2]),
+    .rx_serdes_clk_0(gt_rxusrclk[6]),
     .rx_serdes_reset_0(qsfp_0_serdes_reset_2),
     .rxgearboxslip_in_0(qsfp_0_gt_rxgearboxslip_2),
     .rxdatavalid_out_0(qsfp_0_gt_rxdatavalid_2),
@@ -750,7 +750,7 @@ qsfp_0_pcs_pma_3 (
     // GTY interface
     .tx_core_clk_0(clk_156mhz_int),
     .rx_core_clk_0(clk_156mhz_int),
-    .rx_serdes_clk_0(gt_rxusrclk[3]),
+    .rx_serdes_clk_0(gt_rxusrclk[7]),
     .rx_serdes_reset_0(qsfp_0_serdes_reset_3),
     .rxgearboxslip_in_0(qsfp_0_gt_rxgearboxslip_3),
     .rxdatavalid_out_0(qsfp_0_gt_rxdatavalid_3),
@@ -813,7 +813,7 @@ qsfp_1_pcs_pma_0 (
     // GTY interface
     .tx_core_clk_0(clk_156mhz_int),
     .rx_core_clk_0(clk_156mhz_int),
-    .rx_serdes_clk_0(gt_rxusrclk[4]),
+    .rx_serdes_clk_0(gt_rxusrclk[0]),
     .rx_serdes_reset_0(qsfp_1_serdes_reset_0),
     .rxgearboxslip_in_0(qsfp_1_gt_rxgearboxslip_0),
     .rxdatavalid_out_0(qsfp_1_gt_rxdatavalid_0),
@@ -876,7 +876,7 @@ qsfp_1_pcs_pma_1 (
     // GTY interface
     .tx_core_clk_0(clk_156mhz_int),
     .rx_core_clk_0(clk_156mhz_int),
-    .rx_serdes_clk_0(gt_rxusrclk[5]),
+    .rx_serdes_clk_0(gt_rxusrclk[1]),
     .rx_serdes_reset_0(qsfp_1_serdes_reset_1),
     .rxgearboxslip_in_0(qsfp_1_gt_rxgearboxslip_1),
     .rxdatavalid_out_0(qsfp_1_gt_rxdatavalid_1),
@@ -939,7 +939,7 @@ qsfp_1_pcs_pma_2 (
     // GTY interface
     .tx_core_clk_0(clk_156mhz_int),
     .rx_core_clk_0(clk_156mhz_int),
-    .rx_serdes_clk_0(gt_rxusrclk[6]),
+    .rx_serdes_clk_0(gt_rxusrclk[2]),
     .rx_serdes_reset_0(qsfp_1_serdes_reset_2),
     .rxgearboxslip_in_0(qsfp_1_gt_rxgearboxslip_2),
     .rxdatavalid_out_0(qsfp_1_gt_rxdatavalid_2),
@@ -1002,7 +1002,7 @@ qsfp_1_pcs_pma_3 (
     // GTY interface
     .tx_core_clk_0(clk_156mhz_int),
     .rx_core_clk_0(clk_156mhz_int),
-    .rx_serdes_clk_0(gt_rxusrclk[7]),
+    .rx_serdes_clk_0(gt_rxusrclk[3]),
     .rx_serdes_reset_0(qsfp_1_serdes_reset_3),
     .rxgearboxslip_in_0(qsfp_1_gt_rxgearboxslip_3),
     .rxdatavalid_out_0(qsfp_1_gt_rxdatavalid_3),
