@@ -85,6 +85,7 @@ reg [3:0] swap_rxc = 4'd0;
 
 reg [63:0] xgmii_rxd_d0 = 32'd0;
 reg [63:0] xgmii_rxd_d1 = 32'd0;
+reg [63:0] xgmii_rxd_crc = 32'd0;
 
 reg [7:0] xgmii_rxc_d0 = 8'd0;
 reg [7:0] xgmii_rxc_d1 = 8'd0;
@@ -136,7 +137,7 @@ lfsr #(
     .STYLE("AUTO")
 )
 eth_crc_8 (
-    .data_in(xgmii_rxd_d0[7:0]),
+    .data_in(xgmii_rxd_crc[7:0]),
     .state_in(last_cycle ? crc_state3 : crc_state),
     .data_out(),
     .state_out(crc_next0)
@@ -152,7 +153,7 @@ lfsr #(
     .STYLE("AUTO")
 )
 eth_crc_16 (
-    .data_in(xgmii_rxd_d0[15:0]),
+    .data_in(xgmii_rxd_crc[15:0]),
     .state_in(last_cycle ? crc_state3 : crc_state),
     .data_out(),
     .state_out(crc_next1)
@@ -168,7 +169,7 @@ lfsr #(
     .STYLE("AUTO")
 )
 eth_crc_24 (
-    .data_in(xgmii_rxd_d0[23:0]),
+    .data_in(xgmii_rxd_crc[23:0]),
     .state_in(last_cycle ? crc_state3 : crc_state),
     .data_out(),
     .state_out(crc_next2)
@@ -184,7 +185,7 @@ lfsr #(
     .STYLE("AUTO")
 )
 eth_crc_32 (
-    .data_in(xgmii_rxd_d0[31:0]),
+    .data_in(xgmii_rxd_crc[31:0]),
     .state_in(last_cycle ? crc_state3 : crc_state),
     .data_out(),
     .state_out(crc_next3)
@@ -391,7 +392,20 @@ always @* begin
 
             if (xgmii_rxc_d1[0] && xgmii_rxd_d1[7:0] == XGMII_START) begin
                 // start condition
-                state_next = STATE_PAYLOAD;
+                if (control_masked) begin
+                    // control or error characters in first data word
+                    m_axis_tdata_next = 64'd0;
+                    m_axis_tkeep_next = 8'h01;
+                    m_axis_tvalid_next = 1'b1;
+                    m_axis_tlast_next = 1'b1;
+                    m_axis_tuser_next = 1'b1;
+                    error_bad_frame_next = 1'b1;
+                    state_next = STATE_IDLE;
+                end else begin
+                    reset_crc = 1'b0;
+                    update_crc = 1'b1;
+                    state_next = STATE_PAYLOAD;
+                end
             end else begin
                 state_next = STATE_IDLE;
             end
@@ -436,10 +450,6 @@ always @(posedge clk) begin
             xgmii_rxc_d0 <= xgmii_rxc;
         end
 
-        if (state_next == STATE_LAST) begin
-            xgmii_rxc_d0[3:0] <= xgmii_rxc_d0[7:4];
-        end
-
         xgmii_rxc_d1 <= xgmii_rxc_d0;
 
         // datapath
@@ -468,16 +478,20 @@ always @(posedge clk) begin
 
     if (xgmii_rxc[0] && xgmii_rxd[7:0] == XGMII_START) begin
         xgmii_rxd_d0 <= xgmii_rxd;
+        xgmii_rxd_crc <= xgmii_rxd;
     end else if (xgmii_rxc[4] && xgmii_rxd[39:32] == XGMII_START) begin
         xgmii_rxd_d0 <= {xgmii_rxd[31:0], swap_rxd};
+        xgmii_rxd_crc <= {xgmii_rxd[31:0], swap_rxd};
     end else if (lanes_swapped) begin
         xgmii_rxd_d0 <= {xgmii_rxd[31:0], swap_rxd};
+        xgmii_rxd_crc <= {xgmii_rxd[31:0], swap_rxd};
     end else begin
         xgmii_rxd_d0 <= xgmii_rxd;
+        xgmii_rxd_crc <= xgmii_rxd;
     end
 
     if (state_next == STATE_LAST) begin
-        xgmii_rxd_d0[31:0] <= xgmii_rxd_d0[63:32];
+        xgmii_rxd_crc[31:0] <= xgmii_rxd_crc[63:32];
     end
 
     xgmii_rxd_d1 <= xgmii_rxd_d0;
