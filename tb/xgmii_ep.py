@@ -121,9 +121,11 @@ class XGMIIFrame(object):
 
 
 class XGMIISource(object):
-    def __init__(self):
+    def __init__(self, ifg=12, enable_dic=True):
         self.has_logic = False
         self.queue = []
+        self.ifg = ifg
+        self.enable_dic = enable_dic
 
     def send(self, frame):
         self.queue.append(XGMIIFrame(frame))
@@ -140,7 +142,6 @@ class XGMIISource(object):
                 txd,
                 txc,
                 enable=True,
-                ifg=12,
                 name=None
             ):
 
@@ -173,7 +174,7 @@ class XGMIISource(object):
                     ifg_cnt = 0
                     deficit_idle_cnt = 0
                 elif enable:
-                    if ifg_cnt > bw-1:
+                    if (ifg_cnt > bw-1 and self.enable_dic) or ifg_cnt > 0:
                         ifg_cnt -= bw
                         txd.next = 0x0707070707070707 if bw == 8 else 0x07070707
                         txc.next = 0xff if bw == 8 else 0xf
@@ -186,7 +187,7 @@ class XGMIISource(object):
                                 d |= dl.pop(0) << (8*i)
                                 c |= cl.pop(0) << i
                                 if not dl:
-                                    ifg_cnt = max(ifg, 12) - (bw-i) + deficit_idle_cnt
+                                    ifg_cnt = self.ifg - (bw-i) + deficit_idle_cnt
                             else:
                                 d |= XGMII_IDLE << (8*i)
                                 c |= 1 << i
@@ -222,7 +223,7 @@ class XGMIISource(object):
                                 d |= dl.pop(0) << (8*i)
                                 c |= cl.pop(0) << i
                                 if not dl:
-                                    ifg_cnt = max(ifg, 12) - (bw-i) + deficit_idle_cnt
+                                    ifg_cnt = self.ifg - (bw-i) + deficit_idle_cnt
                             else:
                                 d |= XGMII_IDLE << (8*i)
                                 c |= 1 << i
