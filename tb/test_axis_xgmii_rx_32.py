@@ -351,6 +351,39 @@ def bench():
 
             yield delay(100)
 
+        for payload_len in list(range(46,54)):
+            yield clk.posedge
+            print("test 6: test stream with zero IFG, length %d" % payload_len)
+            current_test.next = 6
+
+            source.ifg = 0
+
+            for i in range(10):
+                test_frame = eth_ep.EthFrame()
+                test_frame.eth_dest_mac = 0xDAD1D2D3D4D5
+                test_frame.eth_src_mac = 0x5A5152535455
+                test_frame.eth_type = 0x8000
+                test_frame.payload = bytearray(range(payload_len))
+                test_frame.update_fcs()
+
+                axis_frame = test_frame.build_axis_fcs()
+
+                source.send(b'\x55\x55\x55\x55\x55\x55\x55\xD5'+bytearray(axis_frame))
+
+            for i in range(10):
+                yield sink.wait()
+                rx_frame = sink.recv()
+
+                eth_frame = eth_ep.EthFrame()
+                eth_frame.parse_axis(rx_frame)
+                eth_frame.update_fcs()
+
+                assert eth_frame == test_frame
+
+            source.ifg = 12
+
+            yield delay(100)
+
         raise StopSimulation
 
     return instances()
