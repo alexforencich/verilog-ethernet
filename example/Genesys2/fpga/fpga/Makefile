@@ -50,5 +50,5 @@ XDC_FILES += eth.xdc
 include ../common/vivado.mk
 
 program: $(FPGA_TOP).bit
-	djtgcfg prog -d NexysVideo --index 0 --file $(FPGA_TOP).bit
+	djtgcfg prog -d Genesys2 --index 0 --file $(FPGA_TOP).bit
 

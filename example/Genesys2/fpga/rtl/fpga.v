@@ -82,22 +82,101 @@ wire mmcm_rst = ~reset_n;
 wire mmcm_locked;
 wire mmcm_clkfb;
 
+wire clk90_mmcm_out;
 wire clk90_int;
 
+wire clk_200_mmcm_out;
 wire clk_200_int;
 
-  clk_wiz_0 wizard1
-   (
-    // Clock out ports
-    .clk_int(clk_int),     // output clk_int
-    .clk90_int(clk90_int),     // output clk90_int
-    .clk_200(clk_200_int),     // output clk_200
-    // Status and control signals
-    .reset(mmcm_rst), // input reset
-    .locked(mmcm_locked),       // output locked
-   // Clock in ports
-    .clk_in1_p(sysclk_p),    // input clk_in1_p
-    .clk_in1_n(sysclk_n));    // input clk_in1_n
+IBUFDS #(
+      .DIFF_TERM("FALSE"),       // Differential Termination
+      .IBUF_LOW_PWR("TRUE"),     // Low power="TRUE", Highest performance="FALSE" 
+      .IOSTANDARD("LVDS")        // Specify the input I/O standard
+   ) 
+clk_ibufg_inst(
+    .I(sysclk_p),
+    .IB(sysclk_n),
+    .O(clk_ibufg)
+);
+
+// MMCM instance
+// 100 MHz in, 125 MHz out
+// PFD range: 10 MHz to 550 MHz
+// VCO range: 600 MHz to 1200 MHz
+// M = 10, D = 1 sets Fvco = 1000 MHz (in range)
+// Divide by 8 to get output frequency of 125 MHz
+// Need two 125 MHz outputs with 90 degree offset
+// Also need 200 MHz out for IODELAY
+// 1000 / 5 = 200 MHz
+MMCME2_BASE #(
+    .BANDWIDTH("OPTIMIZED"),
+    .CLKOUT0_DIVIDE_F(8),
+    .CLKOUT0_DUTY_CYCLE(0.5),
+    .CLKOUT0_PHASE(0),
+    .CLKOUT1_DIVIDE(8),
+    .CLKOUT1_DUTY_CYCLE(0.5),
+    .CLKOUT1_PHASE(90),
+    .CLKOUT2_DIVIDE(5),
+    .CLKOUT2_DUTY_CYCLE(0.5),
+    .CLKOUT2_PHASE(0),
+    .CLKOUT3_DIVIDE(1),
+    .CLKOUT3_DUTY_CYCLE(0.5),
+    .CLKOUT3_PHASE(0),
+    .CLKOUT4_DIVIDE(1),
+    .CLKOUT4_DUTY_CYCLE(0.5),
+    .CLKOUT4_PHASE(0),
+    .CLKOUT5_DIVIDE(1),
+    .CLKOUT5_DUTY_CYCLE(0.5),
+    .CLKOUT5_PHASE(0),
+    .CLKOUT6_DIVIDE(1),
+    .CLKOUT6_DUTY_CYCLE(0.5),
+    .CLKOUT6_PHASE(0),
+    .CLKFBOUT_MULT_F(5),
+    .CLKFBOUT_PHASE(0),
+    .DIVCLK_DIVIDE(1),
+    .REF_JITTER1(0.010),
+    .CLKIN1_PERIOD(5.0),
+    .STARTUP_WAIT("FALSE"),
+    .CLKOUT4_CASCADE("FALSE")
+)
+clk_mmcm_inst (
+    .CLKIN1(clk_ibufg),
+    .CLKFBIN(mmcm_clkfb),
+    .RST(mmcm_rst),
+    .PWRDWN(1'b0),
+    .CLKOUT0(clk_mmcm_out),
+    .CLKOUT0B(),
+    .CLKOUT1(clk90_mmcm_out),
+    .CLKOUT1B(),
+    .CLKOUT2(clk_200_mmcm_out),
+    .CLKOUT2B(),
+    .CLKOUT3(),
+    .CLKOUT3B(),
+    .CLKOUT4(),
+    .CLKOUT5(),
+    .CLKOUT6(),
+    .CLKFBOUT(mmcm_clkfb),
+    .CLKFBOUTB(),
+    .LOCKED(mmcm_locked)
+);
+
+BUFG
+clk_bufg_inst (
+    .I(clk_mmcm_out),
+    .O(clk_int)
+);
+
+BUFG
+clk90_bufg_inst (
+    .I(clk90_mmcm_out),
+    .O(clk90_int)
+);
+
+BUFG
+clk_200_bufg_inst (
+    .I(clk_200_mmcm_out),
+    .O(clk_200_int)
+);
 
 sync_reset #(
     .N(4)
