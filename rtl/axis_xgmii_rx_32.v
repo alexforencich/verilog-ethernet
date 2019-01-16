@@ -353,12 +353,7 @@ always @* begin
                 error_bad_fcs_next = 1'b1;
             end
 
-            if (xgmii_rxc_d1[0] && xgmii_rxd_d1[7:0] == XGMII_START) begin
-                // start condition
-                state_next = STATE_PAYLOAD;
-            end else begin
-                state_next = STATE_IDLE;
-            end
+            state_next = STATE_IDLE;
         end
     endcase
 end
