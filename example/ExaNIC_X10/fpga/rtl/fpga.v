@@ -178,20 +178,20 @@ assign sfp_2_tx_disable = 1'b0;
 assign sfp_1_rs = 1'b1;
 assign sfp_2_rs = 1'b1;
 
-wire        sfp_1_tx_clk_int = clk_156mhz_int;
-wire        sfp_1_tx_rst_int = rst_156mhz_int;
+wire        sfp_1_tx_clk_int;
+wire        sfp_1_tx_rst_int;
 wire [63:0] sfp_1_txd_int;
 wire [7:0]  sfp_1_txc_int;
-wire        sfp_1_rx_clk_int = clk_156mhz_int;
-wire        sfp_1_rx_rst_int = rst_156mhz_int;
+wire        sfp_1_rx_clk_int;
+wire        sfp_1_rx_rst_int;
 wire [63:0] sfp_1_rxd_int;
 wire [7:0]  sfp_1_rxc_int;
-wire        sfp_2_tx_clk_int = clk_156mhz_int;
-wire        sfp_2_tx_rst_int = rst_156mhz_int;
+wire        sfp_2_tx_clk_int;
+wire        sfp_2_tx_rst_int;
 wire [63:0] sfp_2_txd_int;
 wire [7:0]  sfp_2_txc_int;
-wire        sfp_2_rx_clk_int = clk_156mhz_int;
-wire        sfp_2_rx_rst_int = rst_156mhz_int;
+wire        sfp_2_rx_clk_int;
+wire        sfp_2_rx_rst_int;
 wire [63:0] sfp_2_rxd_int;
 wire [7:0]  sfp_2_rxc_int;
 
@@ -383,130 +383,74 @@ sfp_gth_inst (
     .txprgdivresetdone_out(gt_txprgdivresetdone)
 );
 
-wire sfp_1_serdes_reset;
+assign sfp_1_tx_clk_int = clk_156mhz_int;
+assign sfp_1_tx_rst_int = rst_156mhz_int;
+
+assign sfp_1_rx_clk_int = gt_rxusrclk2[0];
 
 sync_reset #(
     .N(4)
 )
-sfp_1_pcs_pma_rx_serdes_reset_sync_inst (
-    .clk(gt_rxusrclk[0]),
+sfp_1_rx_rst_reset_sync_inst (
+    .clk(sfp_1_rx_clk_int),
     .rst(~gt_reset_rx_done),
-    .sync_reset_out(sfp_1_serdes_reset)
+    .sync_reset_out(sfp_1_rx_rst_int)
 );
 
-ten_gig_eth_pcs_pma_0
-sfp_pcs_pma_1 (
-    .rx_reset_0(rst_156mhz_int),
-    .rx_mii_d_0(sfp_1_rxd_int),
-    .rx_mii_c_0(sfp_1_rxc_int),
-
-    .ctl_rx_test_pattern_0(1'b0),
-    .ctl_rx_test_pattern_enable_0(1'b0),
-    .ctl_rx_data_pattern_select_0(1'b0),
-    .ctl_rx_prbs31_test_pattern_enable_0(1'b0),
-
-    .stat_rx_block_lock_0(sfp_1_rx_block_lock),
-    .stat_rx_framing_err_valid_0(),
-    .stat_rx_framing_err_0(),
-    .stat_rx_hi_ber_0(),
-    .stat_rx_valid_ctrl_code_0(),
-    .stat_rx_bad_code_0(),
-    .stat_rx_bad_code_valid_0(),
-    .stat_rx_error_valid_0(),
-    .stat_rx_error_0(),
-    .stat_rx_fifo_error_0(),
-    .stat_rx_local_fault_0(),
-    .stat_rx_status_0(),
-
-    .tx_reset_0(rst_156mhz_int),
-    .tx_mii_d_0(sfp_1_txd_int),
-    .tx_mii_c_0(sfp_1_txc_int),
-
-    .ctl_tx_test_pattern_0(1'b0),
-    .ctl_tx_test_pattern_enable_0(1'b0),
-    .ctl_tx_test_pattern_select_0(1'b0),
-    .ctl_tx_data_pattern_select_0(1'b0),
-    .ctl_tx_test_pattern_seed_a_0(58'd0),
-    .ctl_tx_test_pattern_seed_b_0(58'd0),
-    .ctl_tx_prbs31_test_pattern_enable_0(1'b0),
-
-    .stat_tx_local_fault_0(),
-
-    // GTH interface
-    .tx_core_clk_0(clk_156mhz_int),
-    .rx_core_clk_0(clk_156mhz_int),
-    .rx_serdes_clk_0(gt_rxusrclk2[0]),
-    .rx_serdes_reset_0(sfp_1_serdes_reset),
-    .rxgearboxslip_in_0(sfp_1_gt_rxgearboxslip),
-    .rxdatavalid_out_0(sfp_1_gt_rxdatavalid),
-    .rxheader_out_0(sfp_1_gt_rxheader),
-    .rxheadervalid_out_0(sfp_1_gt_rxheadervalid),
-    .rx_serdes_data_out_0(sfp_1_gt_rxdata),
-    .tx_serdes_data_in_0(sfp_1_gt_txdata),
-    .txheader_in_0(sfp_1_gt_txheader)
+eth_phy_10g #(
+    .BIT_REVERSE(1)
+)
+sfp_1_phy_inst (
+    .tx_clk(sfp_1_tx_clk_int),
+    .tx_rst(sfp_1_tx_rst_int),
+    .rx_clk(sfp_1_rx_clk_int),
+    .rx_rst(sfp_1_rx_rst_int),
+    .xgmii_txd(sfp_1_txd_int),
+    .xgmii_txc(sfp_1_txc_int),
+    .xgmii_rxd(sfp_1_rxd_int),
+    .xgmii_rxc(sfp_1_rxc_int),
+    .serdes_tx_data(sfp_1_gt_txdata),
+    .serdes_tx_hdr(sfp_1_gt_txheader),
+    .serdes_rx_data(sfp_1_gt_rxdata),
+    .serdes_rx_hdr(sfp_1_gt_rxheader),
+    .serdes_rx_bitslip(sfp_1_gt_rxgearboxslip),
+    .rx_block_lock(sfp_1_rx_block_lock),
+    .rx_high_ber()
 );
 
-wire sfp_2_serdes_reset;
+assign sfp_2_tx_clk_int = clk_156mhz_int;
+assign sfp_2_tx_rst_int = rst_156mhz_int;
+
+assign sfp_2_rx_clk_int = gt_rxusrclk2[1];
 
 sync_reset #(
     .N(4)
 )
-sfp_2_pcs_pma_rx_serdes_reset_sync_inst (
-    .clk(gt_rxusrclk[1]),
+sfp_2_rx_rst_reset_sync_inst (
+    .clk(sfp_2_rx_clk_int),
     .rst(~gt_reset_rx_done),
-    .sync_reset_out(sfp_2_serdes_reset)
+    .sync_reset_out(sfp_2_rx_rst_int)
 );
 
-ten_gig_eth_pcs_pma_0
-sfp_pcs_pma_2 (
-    .rx_reset_0(rst_156mhz_int),
-    .rx_mii_d_0(sfp_2_rxd_int),
-    .rx_mii_c_0(sfp_2_rxc_int),
-
-    .ctl_rx_test_pattern_0(1'b0),
-    .ctl_rx_test_pattern_enable_0(1'b0),
-    .ctl_rx_data_pattern_select_0(1'b0),
-    .ctl_rx_prbs31_test_pattern_enable_0(1'b0),
-
-    .stat_rx_block_lock_0(sfp_2_rx_block_lock),
-    .stat_rx_framing_err_valid_0(),
-    .stat_rx_framing_err_0(),
-    .stat_rx_hi_ber_0(),
-    .stat_rx_valid_ctrl_code_0(),
-    .stat_rx_bad_code_0(),
-    .stat_rx_bad_code_valid_0(),
-    .stat_rx_error_valid_0(),
-    .stat_rx_error_0(),
-    .stat_rx_fifo_error_0(),
-    .stat_rx_local_fault_0(),
-    .stat_rx_status_0(),
-
-    .tx_reset_0(rst_156mhz_int),
-    .tx_mii_d_0(sfp_2_txd_int),
-    .tx_mii_c_0(sfp_2_txc_int),
-
-    .ctl_tx_test_pattern_0(1'b0),
-    .ctl_tx_test_pattern_enable_0(1'b0),
-    .ctl_tx_test_pattern_select_0(1'b0),
-    .ctl_tx_data_pattern_select_0(1'b0),
-    .ctl_tx_test_pattern_seed_a_0(58'd0),
-    .ctl_tx_test_pattern_seed_b_0(58'd0),
-    .ctl_tx_prbs31_test_pattern_enable_0(1'b0),
-
-    .stat_tx_local_fault_0(),
-
-    // GTH interface
-    .tx_core_clk_0(clk_156mhz_int),
-    .rx_core_clk_0(clk_156mhz_int),
-    .rx_serdes_clk_0(gt_rxusrclk2[1]),
-    .rx_serdes_reset_0(sfp_2_serdes_reset),
-    .rxgearboxslip_in_0(sfp_2_gt_rxgearboxslip),
-    .rxdatavalid_out_0(sfp_2_gt_rxdatavalid),
-    .rxheader_out_0(sfp_2_gt_rxheader),
-    .rxheadervalid_out_0(sfp_2_gt_rxheadervalid),
-    .rx_serdes_data_out_0(sfp_2_gt_rxdata),
-    .tx_serdes_data_in_0(sfp_2_gt_txdata),
-    .txheader_in_0(sfp_2_gt_txheader)
+eth_phy_10g #(
+    .BIT_REVERSE(1)
+)
+sfp_2_phy_inst (
+    .tx_clk(sfp_2_tx_clk_int),
+    .tx_rst(sfp_2_tx_rst_int),
+    .rx_clk(sfp_2_rx_clk_int),
+    .rx_rst(sfp_2_rx_rst_int),
+    .xgmii_txd(sfp_2_txd_int),
+    .xgmii_txc(sfp_2_txc_int),
+    .xgmii_rxd(sfp_2_rxd_int),
+    .xgmii_rxc(sfp_2_rxc_int),
+    .serdes_tx_data(sfp_2_gt_txdata),
+    .serdes_tx_hdr(sfp_2_gt_txheader),
+    .serdes_rx_data(sfp_2_gt_rxdata),
+    .serdes_rx_hdr(sfp_2_gt_rxheader),
+    .serdes_rx_bitslip(sfp_2_gt_rxgearboxslip),
+    .rx_block_lock(sfp_2_rx_block_lock),
+    .rx_high_ber()
 );
 
 assign sfp_1_led[0] = sfp_1_rx_block_lock;
