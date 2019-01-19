@@ -9,12 +9,16 @@ GitHub repository: https://github.com/alexforencich/verilog-ethernet
 Collection of Ethernet-related components for both gigabit and 10G packet
 processing (8 bit and 64 bit datapaths).  Includes modules for handling
 Ethernet frames as well as IP, UDP, and ARP and the components for
-constructing a complete UDP/IP stack.  Includes full MyHDL testbench with
+constructing a complete UDP/IP stack.  Includes MAC modules for gigabit and
+10G and a 10G PCS/PMA PHY module.  Also includes full MyHDL testbench with
 intelligent bus cosimulation endpoints.
 
 For IP and ARP support only, use ip_complete (1G) or ip_complete_64 (10G).
 
 For UDP, IP, and ARP support, use udp_complete (1G) or udp_complete_64 (10G).
+
+Top level gigabit and 10G MAC modules are eth_mac_*, with various interfaces
+and with/without FIFOs.  Top level 10G PCS/PMA PHY module is eth_phy_10g.
 
 ## Documentation
 
@@ -156,7 +160,27 @@ bits.
 Ethernet frame muliplexer with parametrizable data width and port count.
 Supports priority and round-robin arbitration.
 
-### gmii_phy_if
+### eth_phy_10g module
+
+10G Ethernet PCS/PMA PHY.
+
+### eth_phy_10g_rx module
+
+10G Ethernet PCS/PMA PHY receive-side logic.
+
+### eth_phy_10g_rx_ber_mon module
+
+10G Ethernet PCS/PMA PHY BER monitor.
+
+### eth_phy_10g_rx_frame_sync module
+
+10G Ethernet PCS/PMA PHY frame synchronizer.
+
+### eth_phy_10g_tx module
+
+10G Ethernet PCS/PMA PHY transmit-side logic.
+
+### gmii_phy_if module
 
 GMII/MII PHY interface and clocking logic.
 
@@ -217,7 +241,7 @@ Supports priority and round-robin arbitration.
 
 Fully parametrizable combinatorial parallel LFSR/CRC module.
 
-### rgmii_phy_if
+### rgmii_phy_if module
 
 RGMII PHY interface and clocking logic.
 
@@ -285,12 +309,20 @@ UDP frame transmitter with 64 bit datapath for 10G Ethernet.
 UDP frame muliplexer with parametrizable data width and port count.
 Supports priority and round-robin arbitration.
 
-### xgmii_deinterleave.v
+### xgmii_baser_dec_64 module
+
+XGMII 10GBASE-R decoder for 10G PCS/PMA PHY.
+
+### xgmii_baser_enc_64 module
+
+XGMII 10GBASE-R encoder for 10G PCS/PMA PHY.
+
+### xgmii_deinterleave module
 
 XGMII de-interleaver for interfacing with PHY cores that interleave the
 control and data lines.
 
-### xgmii_interleave.v
+### xgmii_interleave module
 
 XGMII interleaver for interfacing with PHY cores that interleave the control
 and data lines.
@@ -376,6 +408,10 @@ and data lines.
     rtl/udp_ip_tx.v                 : UDP frame transmitter
     rtl/udp_ip_tx_64.v              : UDP frame transmitter (64 bit)
     rtl/udp_mux.v                   : UDP frame multiplexer
+    rtl/xgmii_baser_dec_64.v        : XGMII 10GBASE-R decoder
+    rtl/xgmii_baser_enc_64.v        : XGMII 10GBASE-R encoder
+    rtl/xgmii_deinterleave.v        : XGMII data/control de-interleaver
+    rtl/xgmii_interleave.v          : XGMII data/control interleaver
 
 ### AXI Stream Interface Example
 
@@ -468,6 +504,7 @@ individual test scripts can be run with python directly.
 
     tb/arp_ep.py         : MyHDL ARP frame endpoints
     tb/axis_ep.py        : MyHDL AXI Stream endpoints
+    tb/baser_serdes.py   : MyHDL 10GBASE-R SERDES endpoints
     tb/eth_ep.py         : MyHDL Ethernet frame endpoints
     tb/gmii_ep.py        : MyHDL GMII endpoints
     tb/ip_ep.py          : MyHDL IP frame endpoints
