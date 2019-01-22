@@ -128,7 +128,7 @@ descrambler_inst (
 always @(posedge clk) begin
     scrambler_state_reg <= scrambler_state;
 
-    encoded_rx_data_reg <= descrambled_rx_data;
+    encoded_rx_data_reg <= SCRAMBLER_DISABLE ? serdes_rx_data_int : descrambled_rx_data;
     encoded_rx_hdr_reg <= serdes_rx_hdr_int;
 end
 
@@ -140,8 +140,8 @@ xgmii_baser_dec_64 #(
 xgmii_baser_dec_inst (
     .clk(clk),
     .rst(rst),
-    .encoded_rx_data(SCRAMBLER_DISABLE ? serdes_rx_data_int : encoded_rx_data_reg),
-    .encoded_rx_hdr(SCRAMBLER_DISABLE ? serdes_rx_hdr_int : encoded_rx_hdr_reg),
+    .encoded_rx_data(encoded_rx_data_reg),
+    .encoded_rx_hdr(encoded_rx_hdr_reg),
     .xgmii_rxd(xgmii_rxd),
     .xgmii_rxc(xgmii_rxc),
     .rx_bad_block()
