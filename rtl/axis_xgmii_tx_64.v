@@ -280,21 +280,6 @@ function [3:0] keep2count;
     endcase
 endfunction
 
-function [7:0] count2keep;
-    input [3:0] k;
-    case (k)
-        4'd0: count2keep = 8'b00000000;
-        4'd1: count2keep = 8'b00000001;
-        4'd2: count2keep = 8'b00000011;
-        4'd3: count2keep = 8'b00000111;
-        4'd4: count2keep = 8'b00001111;
-        4'd5: count2keep = 8'b00011111;
-        4'd6: count2keep = 8'b00111111;
-        4'd7: count2keep = 8'b01111111;
-        4'd8: count2keep = 8'b11111111;
-    endcase
-endfunction
-
 // Mask input data
 integer j;
 

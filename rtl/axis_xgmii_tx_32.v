@@ -203,17 +203,6 @@ function [2:0] keep2count;
     endcase
 endfunction
 
-function [3:0] count2keep;
-    input [2:0] k;
-    case (k)
-        3'd0: count2keep = 4'b0000;
-        3'd1: count2keep = 4'b0001;
-        3'd2: count2keep = 4'b0011;
-        3'd3: count2keep = 4'b0111;
-        3'd4: count2keep = 4'b1111;
-    endcase
-endfunction
-
 // Mask input data
 integer j;
 
