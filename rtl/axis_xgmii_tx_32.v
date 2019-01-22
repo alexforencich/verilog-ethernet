@@ -248,10 +248,10 @@ always @* begin
             extra_cycle = 1'b1;
         end
         default: begin
-            fcs_output_txd_0 = 32'd0;
-            fcs_output_txd_1 = 32'd0;
-            fcs_output_txc_0 = 4'd0;
-            fcs_output_txc_1 = 4'd0;
+            fcs_output_txd_0 = {4{XGMII_ERROR}};
+            fcs_output_txd_1 = {4{XGMII_ERROR}};
+            fcs_output_txc_0 = 4'b1111;
+            fcs_output_txc_1 = 4'b1111;
             ifg_offset = 8'd0;
             extra_cycle = 1'b0;
         end
