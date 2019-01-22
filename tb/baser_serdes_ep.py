@@ -286,32 +286,32 @@ class BaseRSerdesSource(object):
                                 elif ci[1] and di[1] == XGMII_TERM and not ci[0]:
                                     # terminate in lane 1
                                     d = BLOCK_TYPE_TERM_1 | (ctrl & 0xffffffffffc000) << 8 | di[0] << 8
-                                elif ci[2] and di[2] == XGMII_TERM and not any(ci[0:1]):
+                                elif ci[2] and di[2] == XGMII_TERM and not any(ci[0:2]):
                                     # terminate in lane 2
                                     d = BLOCK_TYPE_TERM_2 | (ctrl & 0xffffffffe00000) << 8
                                     for i in range(2):
                                         d |= di[i] << ((i+1)*8)
-                                elif ci[3] and di[3] == XGMII_TERM and not any(ci[0:2]):
+                                elif ci[3] and di[3] == XGMII_TERM and not any(ci[0:3]):
                                     # terminate in lane 3
                                     d = BLOCK_TYPE_TERM_3 | (ctrl & 0xfffffff0000000) << 8
                                     for i in range(3):
                                         d |= di[i] << ((i+1)*8)
-                                elif ci[4] and di[4] == XGMII_TERM and not any(ci[0:3]):
+                                elif ci[4] and di[4] == XGMII_TERM and not any(ci[0:4]):
                                     # terminate in lane 4
                                     d = BLOCK_TYPE_TERM_4 | (ctrl & 0xfffff800000000) << 8
                                     for i in range(4):
                                         d |= di[i] << ((i+1)*8)
-                                elif ci[5] and di[5] == XGMII_TERM and not any(ci[0:4]):
+                                elif ci[5] and di[5] == XGMII_TERM and not any(ci[0:5]):
                                     # terminate in lane 5
                                     d = BLOCK_TYPE_TERM_5 | (ctrl & 0xfffc0000000000) << 8
                                     for i in range(5):
                                         d |= di[i] << ((i+1)*8)
-                                elif ci[6] and di[6] == XGMII_TERM and not any(ci[0:5]):
+                                elif ci[6] and di[6] == XGMII_TERM and not any(ci[0:6]):
                                     # terminate in lane 6
                                     d = BLOCK_TYPE_TERM_6 | (ctrl & 0xfe000000000000) << 8
                                     for i in range(6):
                                         d |= di[i] << ((i+1)*8)
-                                elif ci[7] and di[7] == XGMII_TERM and not any(ci[0:6]):
+                                elif ci[7] and di[7] == XGMII_TERM and not any(ci[0:7]):
                                     # terminate in lane 7
                                     d = BLOCK_TYPE_TERM_7
                                     for i in range(7):
