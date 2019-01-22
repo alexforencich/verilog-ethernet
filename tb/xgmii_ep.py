@@ -174,7 +174,7 @@ class XGMIISource(object):
                     ifg_cnt = 0
                     deficit_idle_cnt = 0
                 elif enable:
-                    if (ifg_cnt > bw-1 and self.enable_dic) or ifg_cnt > 0:
+                    if ifg_cnt > bw-1 or (not self.enable_dic and ifg_cnt > 0):
                         ifg_cnt = max(ifg_cnt - bw, 0)
                         txd.next = 0x0707070707070707 if bw == 8 else 0x07070707
                         txc.next = 0xff if bw == 8 else 0xf
@@ -212,7 +212,7 @@ class XGMIISource(object):
                             dl = [XGMII_IDLE]*4+dl
                             cl = [1]*4+cl
 
-                        deficit_idle_cnt = ifg_cnt
+                        deficit_idle_cnt = max(ifg_cnt, 0)
                         ifg_cnt = 0
 
                         d = 0

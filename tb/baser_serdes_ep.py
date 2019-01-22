@@ -144,7 +144,7 @@ class BaseRSerdesSource(object):
                     data = 0x000000000000001e
                     header = 0b01
 
-                    if (ifg_cnt > bw-1 and self.enable_dic) or ifg_cnt > 0:
+                    if ifg_cnt > bw-1 or (not self.enable_dic and ifg_cnt > 0):
                         ifg_cnt = max(ifg_cnt - bw, 0)
                     elif ccl:
                         header, data = ccl.pop(0)
@@ -172,7 +172,7 @@ class BaseRSerdesSource(object):
                             dl = [XGMII_IDLE]*4+dl
                             cl = [1]*4+cl
 
-                        deficit_idle_cnt = ifg_cnt
+                        deficit_idle_cnt = max(ifg_cnt, 0)
                         ifg_cnt = 0
 
                         # pad length to multiple of 8 by adding idles
