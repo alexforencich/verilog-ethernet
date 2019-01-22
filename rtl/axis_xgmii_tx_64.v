@@ -648,24 +648,14 @@ always @(posedge clk) begin
 
         s_axis_tready_reg <= s_axis_tready_next;
 
-        if (lanes_swapped) begin
-            if (unswap_lanes) begin
-                lanes_swapped <= 1'b0;
-                xgmii_txd_reg <= xgmii_txd_next;
-                xgmii_txc_reg <= xgmii_txc_next;
-            end else begin
-                xgmii_txd_reg <= {xgmii_txd_next[31:0], swap_txd};
-                xgmii_txc_reg <= {xgmii_txc_next[3:0], swap_txc};
-            end
+        if (swap_lanes || (lanes_swapped && !unswap_lanes)) begin
+            lanes_swapped <= 1'b1;
+            xgmii_txd_reg <= {xgmii_txd_next[31:0], swap_txd};
+            xgmii_txc_reg <= {xgmii_txc_next[3:0], swap_txc};
         end else begin
-            if (swap_lanes) begin
-                lanes_swapped <= 1'b1;
-                xgmii_txd_reg <= {xgmii_txd_next[31:0], swap_txd};
-                xgmii_txc_reg <= {xgmii_txc_next[3:0], swap_txc};
-            end else begin
-                xgmii_txd_reg <= xgmii_txd_next;
-                xgmii_txc_reg <= xgmii_txc_next;
-            end
+            lanes_swapped <= 1'b0;
+            xgmii_txd_reg <= xgmii_txd_next;
+            xgmii_txc_reg <= xgmii_txc_next;
         end
 
         // datapath
