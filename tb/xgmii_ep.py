@@ -126,6 +126,7 @@ class XGMIISource(object):
         self.queue = []
         self.ifg = ifg
         self.enable_dic = enable_dic
+        self.force_offset_start = False
 
     def send(self, frame):
         self.queue.append(XGMIIFrame(frame))
@@ -207,7 +208,7 @@ class XGMIISource(object):
                         dl.append(XGMII_TERM)
                         cl.append(1)
 
-                        if bw == 8 and ifg_cnt >= 4:
+                        if (bw == 8 and ifg_cnt >= 4) or self.force_offset_start:
                             ifg_cnt = max(ifg_cnt-4, 0)
                             dl = [XGMII_IDLE]*4+dl
                             cl = [1]*4+cl
