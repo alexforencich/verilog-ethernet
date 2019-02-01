@@ -10,15 +10,16 @@ Collection of Ethernet-related components for both gigabit and 10G packet
 processing (8 bit and 64 bit datapaths).  Includes modules for handling
 Ethernet frames as well as IP, UDP, and ARP and the components for
 constructing a complete UDP/IP stack.  Includes MAC modules for gigabit and
-10G and a 10G PCS/PMA PHY module.  Also includes full MyHDL testbench with
-intelligent bus cosimulation endpoints.
+10G, a 10G PCS/PMA PHY module, and a 10G combination MAC/PCS/PMA module.  Also
+includes full MyHDL testbench with intelligent bus cosimulation endpoints.
 
 For IP and ARP support only, use ip_complete (1G) or ip_complete_64 (10G).
 
 For UDP, IP, and ARP support, use udp_complete (1G) or udp_complete_64 (10G).
 
 Top level gigabit and 10G MAC modules are eth_mac_*, with various interfaces
-and with/without FIFOs.  Top level 10G PCS/PMA PHY module is eth_phy_10g.
+and with/without FIFOs.  Top level 10G PCS/PMA PHY module is eth_phy_10g.  Top
+level 10G MAC/PCS/PMA combination module is eth_mac_phy_10g.
 
 ## Documentation
 
@@ -154,6 +155,22 @@ bits.
 
 10G Ethernet MAC with XGMII interface and FIFOs.  Datapath selectable between
 32 and 64 bits.
+
+### eth_mac_phy_10g module
+
+10G Ethernet MAC/PHY combination module with SERDES interface.
+
+### eth_mac_phy_10g_fifo module
+
+10G Ethernet MAC/PHY combination module with SERDES interface and FIFOs.
+
+### eth_mac_phy_10g_rx module
+
+10G Ethernet MAC/PHY combination module with SERDES interface, RX path.
+
+### eth_mac_phy_10g_tx module
+
+10G Ethernet MAC/PHY combination module with SERDES interface, TX path.
 
 ### eth_mux module
 
@@ -370,6 +387,10 @@ and data lines.
     rtl/eth_mac_1g_rgmii_fifo.v     : Tri-mode Ethernet RGMII MAC with FIFO
     rtl/eth_mac_10g.v               : 10G Etherent XGMII MAC
     rtl/eth_mac_10g_fifo.v          : 10G Etherent XGMII MAC with FIFO
+    rtl/eth_mac_phy_10g.v           : 10G Etherent XGMII MAC/PHY
+    rtl/eth_mac_phy_10g_fifo.v      : 10G Etherent XGMII MAC/PHY with FIFO
+    rtl/eth_mac_phy_10g_rx.v        : 10G Etherent XGMII MAC/PHY RX with FIFO
+    rtl/eth_mac_phy_10g_tx.v        : 10G Etherent XGMII MAC/PHY TX with FIFO
     rtl/eth_mux.v                   : Ethernet frame multiplexer
     rtl/gmii_phy_if.v               : GMII PHY interface
     rtl/iddr.v                      : Generic DDR input register
