@@ -52,6 +52,8 @@ module axis_xgmii_rx_64
     /*
      * Status
      */
+    output wire        start_packet_0,
+    output wire        start_packet_4,
     output wire        error_bad_frame,
     output wire        error_bad_fcs
 );
@@ -96,6 +98,8 @@ reg m_axis_tvalid_reg = 1'b0, m_axis_tvalid_next;
 reg m_axis_tlast_reg = 1'b0, m_axis_tlast_next;
 reg m_axis_tuser_reg = 1'b0, m_axis_tuser_next;
 
+reg start_packet_0_reg = 1'b0;
+reg start_packet_4_reg = 1'b0;
 reg error_bad_frame_reg = 1'b0, error_bad_frame_next;
 reg error_bad_fcs_reg = 1'b0, error_bad_fcs_next;
 
@@ -122,6 +126,8 @@ assign m_axis_tvalid = m_axis_tvalid_reg;
 assign m_axis_tlast = m_axis_tlast_reg;
 assign m_axis_tuser = m_axis_tuser_reg;
 
+assign start_packet_0 = start_packet_0_reg;
+assign start_packet_4 = start_packet_4_reg;
 assign error_bad_frame = error_bad_frame_reg;
 assign error_bad_fcs = error_bad_fcs_reg;
 
@@ -419,6 +425,8 @@ always @(posedge clk) begin
 
         m_axis_tvalid_reg <= 1'b0;
 
+        start_packet_0_reg <= 1'b0;
+        start_packet_4_reg <= 1'b0;
         error_bad_frame_reg <= 1'b0;
         error_bad_fcs_reg <= 1'b0;
 
@@ -435,14 +443,18 @@ always @(posedge clk) begin
 
         m_axis_tvalid_reg <= m_axis_tvalid_next;
 
+        start_packet_0_reg <= 1'b0;
+        start_packet_4_reg <= 1'b0;
         error_bad_frame_reg <= error_bad_frame_next;
         error_bad_fcs_reg <= error_bad_fcs_next;
 
         if (xgmii_rxc[0] && xgmii_rxd[7:0] == XGMII_START) begin
             lanes_swapped <= 1'b0;
+            start_packet_0_reg <= 1'b1;
             xgmii_rxc_d0 <= xgmii_rxc;
         end else if (xgmii_rxc[4] && xgmii_rxd[39:32] == XGMII_START) begin
             lanes_swapped <= 1'b1;
+            start_packet_4_reg <= 1'b1;
             xgmii_rxc_d0 <= {xgmii_rxc[3:0], swap_rxc};
         end else if (lanes_swapped) begin
             xgmii_rxc_d0 <= {xgmii_rxc[3:0], swap_rxc};

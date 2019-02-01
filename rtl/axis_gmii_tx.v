@@ -63,7 +63,12 @@ module axis_gmii_tx #
     /*
      * Configuration
      */
-    input  wire [7:0]  ifg_delay
+    input  wire [7:0]  ifg_delay,
+
+    /*
+     * Status
+     */
+    output wire        start_packet
 );
 
 localparam [7:0]
@@ -99,6 +104,8 @@ reg gmii_tx_er_reg = 1'b0, gmii_tx_er_next;
 
 reg s_axis_tready_reg = 1'b0, s_axis_tready_next;
 
+reg start_packet_reg = 1'b0, start_packet_next;
+
 reg [31:0] crc_state = 32'hFFFFFFFF;
 wire [31:0] crc_next;
 
@@ -107,6 +114,8 @@ assign s_axis_tready = s_axis_tready_reg;
 assign gmii_txd = gmii_txd_reg;
 assign gmii_tx_en = gmii_tx_en_reg;
 assign gmii_tx_er = gmii_tx_er_reg;
+
+assign start_packet = start_packet_reg;
 
 lfsr #(
     .LFSR_WIDTH(32),
@@ -142,6 +151,8 @@ always @* begin
     gmii_txd_next = 8'd0;
     gmii_tx_en_next = 1'b0;
     gmii_tx_er_next = 1'b0;
+
+    start_packet_next = 1'b0;
 
     if (!clk_enable) begin
         // clock disabled - hold state and outputs
@@ -195,6 +206,7 @@ always @* begin
                         s_tdata_next = s_axis_tdata;
                     end
                     gmii_txd_next = ETH_SFD;
+                    start_packet_next = 1'b1;
                     state_next = STATE_PAYLOAD;
                 end else begin
                     state_next = STATE_PREAMBLE;
@@ -351,6 +363,8 @@ always @(posedge clk) begin
         gmii_tx_en_reg <= 1'b0;
         gmii_tx_er_reg <= 1'b0;
 
+        start_packet_reg <= 1'b0;
+
         crc_state <= 32'hFFFFFFFF;
     end else begin
         state_reg <= state_next;
@@ -361,6 +375,8 @@ always @(posedge clk) begin
 
         gmii_tx_en_reg <= gmii_tx_en_next;
         gmii_tx_er_reg <= gmii_tx_er_next;
+
+        start_packet_reg <= start_packet_next;
 
         // datapath
         if (reset_crc) begin

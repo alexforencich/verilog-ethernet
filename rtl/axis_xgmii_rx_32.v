@@ -52,6 +52,7 @@ module axis_xgmii_rx_32
     /*
      * Status
      */
+    output wire        start_packet,
     output wire        error_bad_frame,
     output wire        error_bad_fcs
 );
@@ -94,6 +95,7 @@ reg m_axis_tvalid_reg = 1'b0, m_axis_tvalid_next;
 reg m_axis_tlast_reg = 1'b0, m_axis_tlast_next;
 reg m_axis_tuser_reg = 1'b0, m_axis_tuser_next;
 
+reg start_packet_reg = 1'b0, start_packet_next;
 reg error_bad_frame_reg = 1'b0, error_bad_frame_next;
 reg error_bad_fcs_reg = 1'b0, error_bad_fcs_next;
 
@@ -120,6 +122,7 @@ assign m_axis_tvalid = m_axis_tvalid_reg;
 assign m_axis_tlast = m_axis_tlast_reg;
 assign m_axis_tuser = m_axis_tuser_reg;
 
+assign start_packet = start_packet_reg;
 assign error_bad_frame = error_bad_frame_reg;
 assign error_bad_fcs = error_bad_fcs_reg;
 
@@ -260,6 +263,7 @@ always @* begin
     m_axis_tlast_next = 1'b0;
     m_axis_tuser_next = 1'b0;
 
+    start_packet_next = 1'b0;
     error_bad_frame_next = 1'b0;
     error_bad_fcs_next = 1'b0;
 
@@ -291,6 +295,7 @@ always @* begin
         STATE_PREAMBLE: begin
             // drop preamble
             update_crc = 1'b1;
+            start_packet_next = 1'b1;
             state_next = STATE_PAYLOAD;
         end
         STATE_PAYLOAD: begin
@@ -364,6 +369,7 @@ always @(posedge clk) begin
 
         m_axis_tvalid_reg <= 1'b0;
 
+        start_packet_reg <= 1'b0;
         error_bad_frame_reg <= 1'b0;
         error_bad_fcs_reg <= 1'b0;
 
@@ -380,6 +386,7 @@ always @(posedge clk) begin
 
         m_axis_tvalid_reg <= m_axis_tvalid_next;
 
+        start_packet_reg <= start_packet_next;
         error_bad_frame_reg <= error_bad_frame_next;
         error_bad_fcs_reg <= error_bad_fcs_next;
 

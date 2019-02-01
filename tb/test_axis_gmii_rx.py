@@ -64,6 +64,7 @@ def bench():
     m_axis_tvalid = Signal(bool(0))
     m_axis_tlast = Signal(bool(0))
     m_axis_tuser = Signal(bool(0))
+    start_packet = Signal(bool(0))
     error_bad_frame = Signal(bool(0))
     error_bad_fcs = Signal(bool(0))
 
@@ -115,6 +116,7 @@ def bench():
         clk_enable=clk_enable,
         mii_select=mii_select,
 
+        start_packet=start_packet,
         error_bad_frame=error_bad_frame,
         error_bad_fcs=error_bad_fcs
     )

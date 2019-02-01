@@ -82,6 +82,8 @@ def bench():
     gmii_txd = Signal(intbv(0)[8:])
     gmii_tx_en = Signal(bool(0))
     gmii_tx_er = Signal(bool(0))
+    tx_start_packet = Signal(bool(0))
+    rx_start_packet = Signal(bool(0))
     rx_error_bad_frame = Signal(bool(0))
     rx_error_bad_fcs = Signal(bool(0))
 
@@ -180,6 +182,8 @@ def bench():
         rx_mii_select=rx_mii_select,
         tx_mii_select=tx_mii_select,
 
+        tx_start_packet=tx_start_packet,
+        rx_start_packet=rx_start_packet,
         rx_error_bad_frame=rx_error_bad_frame,
         rx_error_bad_fcs=rx_error_bad_fcs,
 

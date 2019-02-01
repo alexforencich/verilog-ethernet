@@ -74,6 +74,10 @@ module eth_mac_10g #
     /*
      * Status
      */
+    output wire                  tx_start_packet_0,
+    output wire                  tx_start_packet_4,
+    output wire                  rx_start_packet_0,
+    output wire                  rx_start_packet_4,
     output wire                  rx_error_bad_frame,
     output wire                  rx_error_bad_fcs,
 
@@ -111,6 +115,8 @@ axis_xgmii_rx_inst (
     .m_axis_tvalid(rx_axis_tvalid),
     .m_axis_tlast(rx_axis_tlast),
     .m_axis_tuser(rx_axis_tuser),
+    .start_packet_0(rx_start_packet_0),
+    .start_packet_4(rx_start_packet_4),
     .error_bad_frame(rx_error_bad_frame),
     .error_bad_fcs(rx_error_bad_fcs)
 );
@@ -131,7 +137,9 @@ axis_xgmii_tx_inst (
     .s_axis_tuser(tx_axis_tuser),
     .xgmii_txd(xgmii_txd),
     .xgmii_txc(xgmii_txc),
-    .ifg_delay(ifg_delay)
+    .ifg_delay(ifg_delay),
+    .start_packet_0(tx_start_packet_0),
+    .start_packet_4(tx_start_packet_4)
 );
 
 end else begin
@@ -147,9 +155,12 @@ axis_xgmii_rx_inst (
     .m_axis_tvalid(rx_axis_tvalid),
     .m_axis_tlast(rx_axis_tlast),
     .m_axis_tuser(rx_axis_tuser),
+    .start_packet(rx_start_packet_0),
     .error_bad_frame(rx_error_bad_frame),
     .error_bad_fcs(rx_error_bad_fcs)
 );
+
+assign tx_start_packet_4 = 1'b0;
 
 axis_xgmii_tx_32 #(
     .ENABLE_PADDING(ENABLE_PADDING),
@@ -167,8 +178,11 @@ axis_xgmii_tx_inst (
     .s_axis_tuser(tx_axis_tuser),
     .xgmii_txd(xgmii_txd),
     .xgmii_txc(xgmii_txc),
-    .ifg_delay(ifg_delay)
+    .ifg_delay(ifg_delay),
+    .start_packet(tx_start_packet_0)
 );
+
+assign rx_start_packet_4 = 1'b0;
 
 end
 

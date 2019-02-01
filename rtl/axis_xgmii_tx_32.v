@@ -58,7 +58,12 @@ module axis_xgmii_tx_32 #
     /*
      * Configuration
      */
-    input  wire [7:0]  ifg_delay
+    input  wire [7:0]  ifg_delay,
+
+    /*
+     * Status
+     */
+    output wire        start_packet
 );
 
 localparam MIN_FL_NOCRC = MIN_FRAME_LENGTH-4;
@@ -123,10 +128,14 @@ wire [31:0] crc_next3;
 reg [31:0] xgmii_txd_reg = {4{XGMII_IDLE}}, xgmii_txd_next;
 reg [3:0] xgmii_txc_reg = 4'b1111, xgmii_txc_next;
 
+reg start_packet_reg = 1'b0, start_packet_next;
+
 assign s_axis_tready = s_axis_tready_reg;
 
 assign xgmii_txd = xgmii_txd_reg;
 assign xgmii_txc = xgmii_txc_reg;
+
+assign start_packet = start_packet_reg;
 
 lfsr #(
     .LFSR_WIDTH(32),
@@ -278,6 +287,8 @@ always @* begin
     xgmii_txd_next = {4{XGMII_IDLE}};
     xgmii_txc_next = 4'b1111;
 
+    start_packet_next = 1'b0;
+
     case (state_reg)
         STATE_IDLE: begin
             // idle state - wait for data
@@ -312,6 +323,7 @@ always @* begin
             xgmii_txd_next = {ETH_SFD, {3{ETH_PRE}}};
             xgmii_txc_next = 4'b0000;
             s_axis_tready_next = 1'b1;
+            start_packet_next = 1'b1;
             state_next = STATE_PAYLOAD;
         end
         STATE_PAYLOAD: begin
@@ -519,6 +531,8 @@ always @(posedge clk) begin
         xgmii_txd_reg <= {4{XGMII_IDLE}};
         xgmii_txc_reg <= 4'b1111;
 
+        start_packet_reg <= 1'b0;
+
         crc_state <= 32'hFFFFFFFF;
     end else begin
         state_reg <= state_next;
@@ -532,6 +546,8 @@ always @(posedge clk) begin
 
         xgmii_txd_reg <= xgmii_txd_next;
         xgmii_txc_reg <= xgmii_txc_next;
+
+        start_packet_reg <= start_packet_next;
 
         // datapath
         if (reset_crc) begin

@@ -53,6 +53,7 @@ wire s_axis_tready;
 wire [7:0] gmii_txd;
 wire gmii_tx_en;
 wire gmii_tx_er;
+wire start_packet;
 
 initial begin
     // myhdl integration
@@ -72,7 +73,8 @@ initial begin
         s_axis_tready,
         gmii_txd,
         gmii_tx_en,
-        gmii_tx_er
+        gmii_tx_er,
+        start_packet
     );
 
     // dump file
@@ -97,7 +99,8 @@ UUT (
     .gmii_tx_er(gmii_tx_er),
     .clk_enable(clk_enable),
     .mii_select(mii_select),
-    .ifg_delay(ifg_delay)
+    .ifg_delay(ifg_delay),
+    .start_packet(start_packet)
 );
 
 endmodule

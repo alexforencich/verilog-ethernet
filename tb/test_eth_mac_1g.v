@@ -66,6 +66,8 @@ wire rx_axis_tuser;
 wire [7:0] gmii_txd;
 wire gmii_tx_en;
 wire gmii_tx_er;
+wire tx_start_packet;
+wire rx_start_packet;
 wire rx_error_bad_frame;
 wire rx_error_bad_fcs;
 
@@ -101,6 +103,8 @@ initial begin
         gmii_txd,
         gmii_tx_en,
         gmii_tx_er,
+        tx_start_packet,
+        rx_start_packet,
         rx_error_bad_frame,
         rx_error_bad_fcs
     );
@@ -138,6 +142,8 @@ UUT (
     .tx_clk_enable(tx_clk_enable),
     .rx_mii_select(rx_mii_select),
     .tx_mii_select(tx_mii_select),
+    .tx_start_packet(tx_start_packet),
+    .rx_start_packet(rx_start_packet),
     .rx_error_bad_frame(rx_error_bad_frame),
     .rx_error_bad_fcs(rx_error_bad_fcs),
     .ifg_delay(ifg_delay)

@@ -67,6 +67,7 @@ def bench():
     gmii_txd = Signal(intbv(0)[8:])
     gmii_tx_en = Signal(bool(0))
     gmii_tx_er = Signal(bool(0))
+    start_packet = Signal(bool(0))
 
     # sources and sinks
     source_pause = Signal(bool(0))
@@ -121,7 +122,9 @@ def bench():
         clk_enable=clk_enable,
         mii_select=mii_select,
 
-        ifg_delay=ifg_delay
+        ifg_delay=ifg_delay,
+
+        start_packet=start_packet
     )
 
     @always(delay(4))

@@ -51,6 +51,7 @@ reg [7:0] ifg_delay = 0;
 wire s_axis_tready;
 wire [31:0] xgmii_txd;
 wire [3:0] xgmii_txc;
+wire start_packet;
 
 initial begin
     // myhdl integration
@@ -68,7 +69,8 @@ initial begin
     $to_myhdl(
         s_axis_tready,
         xgmii_txd,
-        xgmii_txc
+        xgmii_txc,
+        start_packet
     );
 
     // dump file
@@ -91,7 +93,8 @@ UUT (
     .s_axis_tuser(s_axis_tuser),
     .xgmii_txd(xgmii_txd),
     .xgmii_txc(xgmii_txc),
-    .ifg_delay(ifg_delay)
+    .ifg_delay(ifg_delay),
+    .start_packet(start_packet)
 );
 
 endmodule

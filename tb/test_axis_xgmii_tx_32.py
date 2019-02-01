@@ -65,6 +65,7 @@ def bench():
     s_axis_tready = Signal(bool(0))
     xgmii_txd = Signal(intbv(0x07070707)[32:])
     xgmii_txc = Signal(intbv(0xf)[4:])
+    start_packet = Signal(bool(0))
 
     # sources and sinks
     source_pause = Signal(bool(0))
@@ -114,7 +115,9 @@ def bench():
         xgmii_txd=xgmii_txd,
         xgmii_txc=xgmii_txc,
 
-        ifg_delay=ifg_delay
+        ifg_delay=ifg_delay,
+
+        start_packet=start_packet
     )
 
     @always(delay(4))

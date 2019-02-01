@@ -47,6 +47,7 @@ wire [3:0] m_axis_tkeep;
 wire m_axis_tvalid;
 wire m_axis_tlast;
 wire m_axis_tuser;
+wire start_packet;
 wire error_bad_frame;
 wire error_bad_fcs;
 
@@ -65,6 +66,7 @@ initial begin
         m_axis_tvalid,
         m_axis_tlast,
         m_axis_tuser,
+        start_packet,
         error_bad_frame,
         error_bad_fcs
     );
@@ -85,6 +87,7 @@ UUT (
     .m_axis_tvalid(m_axis_tvalid),
     .m_axis_tlast(m_axis_tlast),
     .m_axis_tuser(m_axis_tuser),
+    .start_packet(start_packet),
     .error_bad_frame(error_bad_frame),
     .error_bad_fcs(error_bad_fcs)
 );

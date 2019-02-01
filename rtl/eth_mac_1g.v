@@ -78,6 +78,8 @@ module eth_mac_1g #
     /*
      * Status
      */
+    output wire        tx_start_packet,
+    output wire        rx_start_packet,
     output wire        rx_error_bad_frame,
     output wire        rx_error_bad_fcs,
 
@@ -100,6 +102,7 @@ axis_gmii_rx_inst (
     .m_axis_tuser(rx_axis_tuser),
     .clk_enable(rx_clk_enable),
     .mii_select(rx_mii_select),
+    .start_packet(rx_start_packet),
     .error_bad_frame(rx_error_bad_frame),
     .error_bad_fcs(rx_error_bad_fcs)
 );
@@ -121,7 +124,8 @@ axis_gmii_tx_inst (
     .gmii_tx_er(gmii_tx_er),
     .clk_enable(tx_clk_enable),
     .mii_select(tx_mii_select),
-    .ifg_delay(ifg_delay)
+    .ifg_delay(ifg_delay),
+    .start_packet(tx_start_packet)
 );
 
 endmodule
