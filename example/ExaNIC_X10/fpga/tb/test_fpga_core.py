@@ -81,15 +81,6 @@ def bench():
     rst = Signal(bool(0))
     current_test = Signal(intbv(0)[8:])
 
-    sfp_1_txd = Signal(intbv(0)[64:])
-    sfp_1_txc = Signal(intbv(0)[8:])
-    sfp_2_txd = Signal(intbv(0)[64:])
-    sfp_2_txc = Signal(intbv(0)[8:])
-
-    # Outputs
-    sfp_1_led = Signal(intbv(0)[2:])
-    sfp_2_led = Signal(intbv(0)[2:])
-    sma_led = Signal(intbv(0)[2:])
     sfp_1_tx_clk = Signal(bool(0))
     sfp_1_tx_rst = Signal(bool(0))
     sfp_1_rx_clk = Signal(bool(0))
@@ -103,18 +94,27 @@ def bench():
     sfp_2_rxd = Signal(intbv(0)[64:])
     sfp_2_rxc = Signal(intbv(0)[8:])
 
+    # Outputs
+    sfp_1_led = Signal(intbv(0)[2:])
+    sfp_2_led = Signal(intbv(0)[2:])
+    sma_led = Signal(intbv(0)[2:])
+    sfp_1_txd = Signal(intbv(0)[64:])
+    sfp_1_txc = Signal(intbv(0)[8:])
+    sfp_2_txd = Signal(intbv(0)[64:])
+    sfp_2_txc = Signal(intbv(0)[8:])
+
     # sources and sinks
     sfp_1_source = xgmii_ep.XGMIISource()
-    sfp_1_source_logic = sfp_1_source.create_logic(sfp_1_tx_clk, sfp_1_tx_rst, txd=sfp_1_rxd, txc=sfp_1_rxc, name='sfp_1_source')
+    sfp_1_source_logic = sfp_1_source.create_logic(sfp_1_rx_clk, sfp_1_rx_rst, txd=sfp_1_rxd, txc=sfp_1_rxc, name='sfp_1_source')
 
     sfp_1_sink = xgmii_ep.XGMIISink()
-    sfp_1_sink_logic = sfp_1_sink.create_logic(sfp_1_rx_clk, sfp_1_rx_rst, rxd=sfp_1_txd, rxc=sfp_1_txc, name='sfp_1_sink')
+    sfp_1_sink_logic = sfp_1_sink.create_logic(sfp_1_tx_clk, sfp_1_tx_rst, rxd=sfp_1_txd, rxc=sfp_1_txc, name='sfp_1_sink')
 
     sfp_2_source = xgmii_ep.XGMIISource()
-    sfp_2_source_logic = sfp_2_source.create_logic(sfp_2_tx_clk, sfp_2_tx_rst, txd=sfp_2_rxd, txc=sfp_2_rxc, name='sfp_2_source')
+    sfp_2_source_logic = sfp_2_source.create_logic(sfp_2_rx_clk, sfp_2_rx_rst, txd=sfp_2_rxd, txc=sfp_2_rxc, name='sfp_2_source')
 
     sfp_2_sink = xgmii_ep.XGMIISink()
-    sfp_2_sink_logic = sfp_2_sink.create_logic(sfp_2_rx_clk, sfp_2_rx_rst, rxd=sfp_2_txd, rxc=sfp_2_txc, name='sfp_2_sink')
+    sfp_2_sink_logic = sfp_2_sink.create_logic(sfp_2_tx_clk, sfp_2_tx_rst, rxd=sfp_2_txd, rxc=sfp_2_txc, name='sfp_2_sink')
 
     # DUT
     if os.system(build_cmd):

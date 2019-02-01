@@ -46,7 +46,7 @@ module fpga_core
     output wire [1:0] sma_led,
 
     /*
-     * Ethernet: QSFP28
+     * Ethernet: SFP+
      */
     input  wire        sfp_1_tx_clk,
     input  wire        sfp_1_tx_rst,
