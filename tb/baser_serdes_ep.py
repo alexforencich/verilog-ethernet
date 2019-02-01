@@ -118,6 +118,7 @@ class BaseRSerdesSource(object):
                 tx_header,
                 enable=True,
                 scramble=True,
+                reverse=False,
                 name=None
             ):
 
@@ -345,6 +346,11 @@ class BaseRSerdesSource(object):
                                 scrambler_state = (scrambler_state & 0x1ffffffffffffff) << 1
                         data = b
 
+                    if reverse:
+                        # bit reverse
+                        data = sum(1 << (63-i) for i in range(64) if (data >> i) & 1)
+                        header = sum(1 << (1-i) for i in range(2) if (header >> i) & 1)
+
                     tx_data.next = data
                     tx_header.next = header
 
@@ -382,6 +388,7 @@ class BaseRSerdesSink(object):
                 rx_header,
                 enable=True,
                 scramble=True,
+                reverse=False,
                 name=None
             ):
 
@@ -407,6 +414,11 @@ class BaseRSerdesSink(object):
                 if enable:
                     data = int(rx_data)
                     header = int(rx_header)
+
+                    if reverse:
+                        # bit reverse
+                        data = sum(1 << (63-i) for i in range(64) if (data >> i) & 1)
+                        header = sum(1 << (1-i) for i in range(2) if (header >> i) & 1)
 
                     if scramble:
                         # 64b66b descrambler
