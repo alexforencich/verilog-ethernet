@@ -4,6 +4,7 @@
 # General configuration
 set_property CFGBVS GND [current_design]
 set_property CONFIG_VOLTAGE 1.8 [current_design]
+set_property BITSTREAM.GENERAL.COMPRESS true [current_design]
 
 # System clocks
 # 300 MHz
