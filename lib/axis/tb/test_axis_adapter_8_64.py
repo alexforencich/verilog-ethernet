@@ -157,12 +157,14 @@ def bench():
 
     def wait_pause_source():
         while s_axis_tvalid or m_axis_tvalid:
-            source_pause.next = True
-            yield clk.posedge
             yield clk.posedge
             yield clk.posedge
             source_pause.next = False
             yield clk.posedge
+            source_pause.next = True
+            yield clk.posedge
+
+        source_pause.next = False
 
     def wait_pause_sink():
         while s_axis_tvalid or m_axis_tvalid:

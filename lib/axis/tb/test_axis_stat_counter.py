@@ -528,6 +528,13 @@ def bench():
 
         while monitor_axis_tvalid:
             yield clk.posedge
+            yield clk.posedge
+            source_pause.next = False
+            yield clk.posedge
+            source_pause.next = True
+            yield clk.posedge
+
+        source_pause.next = False
 
         while m_axis_tvalid:
             yield clk.posedge
@@ -589,6 +596,11 @@ def bench():
         yield clk.posedge
 
         while monitor_axis_tvalid:
+            monitor_sink_pause.next = True
+            yield clk.posedge
+            yield clk.posedge
+            yield clk.posedge
+            monitor_sink_pause.next = False
             yield clk.posedge
 
         while m_axis_tvalid:

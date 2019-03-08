@@ -322,7 +322,7 @@ def bench():
         yield delay(100)
 
         yield clk.posedge
-        print("test 5: alterate pause source")
+        print("test 5: alternate pause source")
         current_test.next = 5
 
         select.next = 1
@@ -349,13 +349,15 @@ def bench():
         yield clk.posedge
 
         while s_axis_tvalid:
-            source_pause.next = True
             yield clk.posedge
-            yield clk.posedge
+            select.next = 2
             yield clk.posedge
             source_pause.next = False
             yield clk.posedge
-            select.next = 2
+            source_pause.next = True
+            yield clk.posedge
+
+        source_pause.next = False
 
         yield sink_list[1].wait()
         rx_frame = sink_list[1].recv()
@@ -370,7 +372,7 @@ def bench():
         yield delay(100)
 
         yield clk.posedge
-        print("test 6: alterate pause sink")
+        print("test 6: alternate pause sink")
         current_test.next = 6
 
         select.next = 1
@@ -397,17 +399,13 @@ def bench():
         yield clk.posedge
 
         while s_axis_tvalid:
-            sink_pause_list[0].next = True
-            sink_pause_list[1].next = True
-            sink_pause_list[2].next = True
-            sink_pause_list[3].next = True
+            for k in range(M_COUNT):
+                sink_pause_list[k].next = True
             yield clk.posedge
             yield clk.posedge
             yield clk.posedge
-            sink_pause_list[0].next = False
-            sink_pause_list[1].next = False
-            sink_pause_list[2].next = False
-            sink_pause_list[3].next = False
+            for k in range(M_COUNT):
+                sink_pause_list[k].next = False
             yield clk.posedge
             select.next = 2
 

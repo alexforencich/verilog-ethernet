@@ -302,7 +302,7 @@ def bench():
         yield delay(100)
 
         yield clk.posedge
-        print("test 5: alterate pause source")
+        print("test 5: alternate pause source")
         current_test.next = 5
 
         test_frame1 = axis_ep.AXIStreamFrame(
@@ -327,14 +327,17 @@ def bench():
         yield clk.posedge
 
         while s_axis_tvalid:
-            for k in range(S_COUNT):
-                source_pause_list[k].next = True
-            yield clk.posedge
             yield clk.posedge
             yield clk.posedge
             for k in range(S_COUNT):
                 source_pause_list[k].next = False
             yield clk.posedge
+            for k in range(S_COUNT):
+                source_pause_list[k].next = True
+            yield clk.posedge
+
+        for k in range(S_COUNT):
+            source_pause_list[k].next = False
 
         yield sink.wait()
         rx_frame = sink.recv()
@@ -349,7 +352,7 @@ def bench():
         yield delay(100)
 
         yield clk.posedge
-        print("test 6: alterate pause sink")
+        print("test 6: alternate pause sink")
         current_test.next = 6
 
         test_frame1 = axis_ep.AXIStreamFrame(

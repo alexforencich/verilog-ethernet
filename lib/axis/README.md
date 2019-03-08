@@ -40,6 +40,11 @@ Configurable word-based or frame-based asynchronous FIFO with parametrizable
 data width, depth, type, and bad frame detection.  Supports power of two
 depths only.
 
+### axis_broadcast module
+
+AXI stream broadcaster.  Duplicates one input stream across multiple output
+streams.
+
 ### axis_cobs_decode
 
 Consistent Overhead Byte Stuffing (COBS) decoder.  Fixed 8 bit width.
@@ -186,6 +191,7 @@ Parametrizable priority encoder.
     axis_adapter.v                     : Parametrizable bus width adapter
     axis_arb_mux.v                     : Parametrizable arbitrated multiplexer
     axis_async_fifo.v                  : Parametrizable asynchronous FIFO
+    axis_broadcast.v                   : AXI stream broadcaster
     axis_cobs_decode.v                 : COBS decoder
     axis_cobs_encode.v                 : COBS encoder
     axis_crosspoint.v                  : Parametrizable crosspoint switch

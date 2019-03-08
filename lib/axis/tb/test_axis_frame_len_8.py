@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 
-Copyright (c) 2014-2018 Alex Forencich
+Copyright (c) 2019 Alex Forencich
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -28,8 +28,8 @@ import os
 
 import axis_ep
 
-module = 'axis_srl_register'
-testbench = 'test_%s' % module
+module = 'axis_frame_len'
+testbench = 'test_%s_8' % module
 
 srcs = []
 
@@ -46,37 +46,22 @@ def bench():
     DATA_WIDTH = 8
     KEEP_ENABLE = (DATA_WIDTH>8)
     KEEP_WIDTH = (DATA_WIDTH/8)
-    LAST_ENABLE = 1
-    ID_ENABLE = 1
-    ID_WIDTH = 8
-    DEST_ENABLE = 1
-    DEST_WIDTH = 8
-    USER_ENABLE = 1
-    USER_WIDTH = 1
+    LEN_WIDTH = 16
 
     # Inputs
     clk = Signal(bool(0))
     rst = Signal(bool(0))
     current_test = Signal(intbv(0)[8:])
 
-    s_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
-    s_axis_tkeep = Signal(intbv(1)[KEEP_WIDTH:])
-    s_axis_tvalid = Signal(bool(0))
-    s_axis_tlast = Signal(bool(0))
-    s_axis_tid = Signal(intbv(0)[ID_WIDTH:])
-    s_axis_tdest = Signal(intbv(0)[DEST_WIDTH:])
-    s_axis_tuser = Signal(intbv(0)[USER_WIDTH:])
-    m_axis_tready = Signal(bool(0))
+    monitor_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
+    monitor_axis_tkeep = Signal(intbv(1)[KEEP_WIDTH:])
+    monitor_axis_tvalid = Signal(bool(0))
+    monitor_axis_tready = Signal(bool(0))
+    monitor_axis_tlast = Signal(bool(0))
 
     # Outputs
-    s_axis_tready = Signal(bool(1))
-    m_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
-    m_axis_tkeep = Signal(intbv(1)[KEEP_WIDTH:])
-    m_axis_tvalid = Signal(bool(0))
-    m_axis_tlast = Signal(bool(0))
-    m_axis_tid = Signal(intbv(0)[ID_WIDTH:])
-    m_axis_tdest = Signal(intbv(0)[DEST_WIDTH:])
-    m_axis_tuser = Signal(intbv(0)[USER_WIDTH:])
+    frame_len = Signal(intbv(0)[LEN_WIDTH:])
+    frame_len_valid = Signal(bool(0))
 
     # sources and sinks
     source_pause = Signal(bool(0))
@@ -87,14 +72,11 @@ def bench():
     source_logic = source.create_logic(
         clk,
         rst,
-        tdata=s_axis_tdata,
-        tkeep=s_axis_tkeep,
-        tvalid=s_axis_tvalid,
-        tready=s_axis_tready,
-        tlast=s_axis_tlast,
-        tid=s_axis_tid,
-        tdest=s_axis_tdest,
-        tuser=s_axis_tuser,
+        tdata=monitor_axis_tdata,
+        tkeep=monitor_axis_tkeep,
+        tvalid=monitor_axis_tvalid,
+        tready=monitor_axis_tready,
+        tlast=monitor_axis_tlast,
         pause=source_pause,
         name='source'
     )
@@ -104,16 +86,23 @@ def bench():
     sink_logic = sink.create_logic(
         clk,
         rst,
-        tdata=m_axis_tdata,
-        tkeep=m_axis_tkeep,
-        tvalid=m_axis_tvalid,
-        tready=m_axis_tready,
-        tlast=m_axis_tlast,
-        tid=m_axis_tid,
-        tdest=m_axis_tdest,
-        tuser=m_axis_tuser,
+        tdata=monitor_axis_tdata,
+        tkeep=monitor_axis_tkeep,
+        tvalid=monitor_axis_tvalid,
+        tready=monitor_axis_tready,
+        tlast=monitor_axis_tlast,
         pause=sink_pause,
         name='sink'
+    )
+
+    frame_len_sink = axis_ep.AXIStreamSink()
+
+    frame_len_sink_logic = frame_len_sink.create_logic(
+        clk,
+        rst,
+        tdata=frame_len,
+        tvalid=frame_len_valid,
+        name='frame_len_sink'
     )
 
     # DUT
@@ -126,23 +115,13 @@ def bench():
         rst=rst,
         current_test=current_test,
 
-        s_axis_tdata=s_axis_tdata,
-        s_axis_tkeep=s_axis_tkeep,
-        s_axis_tvalid=s_axis_tvalid,
-        s_axis_tready=s_axis_tready,
-        s_axis_tlast=s_axis_tlast,
-        s_axis_tid=s_axis_tid,
-        s_axis_tdest=s_axis_tdest,
-        s_axis_tuser=s_axis_tuser,
+        monitor_axis_tkeep=monitor_axis_tkeep,
+        monitor_axis_tvalid=monitor_axis_tvalid,
+        monitor_axis_tready=monitor_axis_tready,
+        monitor_axis_tlast=monitor_axis_tlast,
 
-        m_axis_tdata=m_axis_tdata,
-        m_axis_tkeep=m_axis_tkeep,
-        m_axis_tvalid=m_axis_tvalid,
-        m_axis_tready=m_axis_tready,
-        m_axis_tlast=m_axis_tlast,
-        m_axis_tid=m_axis_tid,
-        m_axis_tdest=m_axis_tdest,
-        m_axis_tuser=m_axis_tuser
+        frame_len=frame_len,
+        frame_len_valid=frame_len_valid
     )
 
     @always(delay(4))
@@ -161,8 +140,6 @@ def bench():
         yield clk.posedge
 
         yield clk.posedge
-
-        yield clk.posedge
         print("test 1: test packet")
         current_test.next = 1
 
@@ -170,51 +147,61 @@ def bench():
             b'\xDA\xD1\xD2\xD3\xD4\xD5' +
             b'\x5A\x51\x52\x53\x54\x55' +
             b'\x80\x00' +
-            b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10',
-            id=1,
-            dest=1
+            b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10'
         )
 
         source.send(test_frame)
+        yield clk.posedge
+
+        while monitor_axis_tvalid:
+            yield clk.posedge
 
         yield sink.wait()
-        rx_frame = sink.recv()
+        f = sink.recv()
 
-        assert rx_frame == test_frame
+        yield frame_len_sink.wait()
+        l = frame_len_sink.recv()
+
+        assert len(f.data) == l.data[0]
 
         yield delay(100)
 
         yield clk.posedge
-        print("test 2: longer packet")
-        current_test.next = 2
+        print("test 4: longer packet")
+        current_test.next = 4
 
         test_frame = axis_ep.AXIStreamFrame(
             b'\xDA\xD1\xD2\xD3\xD4\xD5' +
             b'\x5A\x51\x52\x53\x54\x55' +
             b'\x80\x00' +
-            bytearray(range(256)),
-            id=2,
-            dest=1
+            bytearray(range(256))
         )
 
         source.send(test_frame)
+        yield clk.posedge
+
+        while monitor_axis_tvalid:
+            yield clk.posedge
 
         yield sink.wait()
-        rx_frame = sink.recv()
+        f = sink.recv()
 
-        assert rx_frame == test_frame
+        yield frame_len_sink.wait()
+        l = frame_len_sink.recv()
+
+        assert len(f.data) == l.data[0]
+
+        yield delay(100)
 
         yield clk.posedge
-        print("test 3: test packet with pauses")
-        current_test.next = 3
+        print("test 5: test packet with pauses")
+        current_test.next = 5
 
         test_frame = axis_ep.AXIStreamFrame(
             b'\xDA\xD1\xD2\xD3\xD4\xD5' +
             b'\x5A\x51\x52\x53\x54\x55' +
             b'\x80\x00' +
-            b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10',
-            id=3,
-            dest=1
+            bytearray(range(256))
         )
 
         source.send(test_frame)
@@ -234,122 +221,132 @@ def bench():
         yield clk.posedge
         sink_pause.next = False
 
-        yield sink.wait()
-        rx_frame = sink.recv()
+        while monitor_axis_tvalid:
+            yield clk.posedge
 
-        assert rx_frame == test_frame
+        yield sink.wait()
+        f = sink.recv()
+
+        yield frame_len_sink.wait()
+        l = frame_len_sink.recv()
+
+        assert len(f.data) == l.data[0]
 
         yield delay(100)
 
         yield clk.posedge
-        print("test 4: back-to-back packets")
-        current_test.next = 4
-
-        test_frame1 = axis_ep.AXIStreamFrame(
-            b'\xDA\xD1\xD2\xD3\xD4\xD5' +
-            b'\x5A\x51\x52\x53\x54\x55' +
-            b'\x80\x00' +
-            b'\x01\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10',
-            id=4,
-            dest=1
-        )
-        test_frame2 = axis_ep.AXIStreamFrame(
-            b'\xDA\xD1\xD2\xD3\xD4\xD5' +
-            b'\x5A\x51\x52\x53\x54\x55' +
-            b'\x80\x00' +
-            b'\x02\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10',
-            id=4,
-            dest=2
-        )
-
-        source.send(test_frame1)
-        source.send(test_frame2)
-
-        yield sink.wait()
-        rx_frame = sink.recv()
-
-        assert rx_frame == test_frame1
-
-        yield sink.wait()
-        rx_frame = sink.recv()
-
-        assert rx_frame == test_frame2
-
-        yield delay(100)
-
-        yield clk.posedge
-        print("test 5: alternate pause source")
-        current_test.next = 5
-
-        test_frame1 = axis_ep.AXIStreamFrame(
-            b'\xDA\xD1\xD2\xD3\xD4\xD5' +
-            b'\x5A\x51\x52\x53\x54\x55' +
-            b'\x80\x00' +
-            b'\x01\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10',
-            id=5,
-            dest=1
-        )
-        test_frame2 = axis_ep.AXIStreamFrame(
-            b'\xDA\xD1\xD2\xD3\xD4\xD5' +
-            b'\x5A\x51\x52\x53\x54\x55' +
-            b'\x80\x00' +
-            b'\x02\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10',
-            id=5,
-            dest=2
-        )
-
-        source.send(test_frame1)
-        source.send(test_frame2)
-        yield clk.posedge
-
-        while s_axis_tvalid or m_axis_tvalid:
-            yield clk.posedge
-            yield clk.posedge
-            source_pause.next = False
-            yield clk.posedge
-            source_pause.next = True
-            yield clk.posedge
-
-        source_pause.next = False
-
-        yield sink.wait()
-        rx_frame = sink.recv()
-
-        assert rx_frame == test_frame1
-
-        yield sink.wait()
-        rx_frame = sink.recv()
-
-        assert rx_frame == test_frame2
-
-        yield delay(100)
-
-        yield clk.posedge
-        print("test 6: alternate pause sink")
+        print("test 6: back-to-back packets")
         current_test.next = 6
 
         test_frame1 = axis_ep.AXIStreamFrame(
             b'\xDA\xD1\xD2\xD3\xD4\xD5' +
             b'\x5A\x51\x52\x53\x54\x55' +
             b'\x80\x00' +
-            b'\x01\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10',
-            id=6,
-            dest=1
+            b'\x01\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10'
         )
         test_frame2 = axis_ep.AXIStreamFrame(
             b'\xDA\xD1\xD2\xD3\xD4\xD5' +
             b'\x5A\x51\x52\x53\x54\x55' +
             b'\x80\x00' +
-            b'\x02\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10',
-            id=6,
-            dest=2
+            b'\x02\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10'
         )
 
         source.send(test_frame1)
         source.send(test_frame2)
         yield clk.posedge
 
-        while s_axis_tvalid or m_axis_tvalid:
+        while monitor_axis_tvalid:
+            yield clk.posedge
+
+        yield sink.wait()
+        f = sink.recv()
+
+        yield frame_len_sink.wait()
+        l = frame_len_sink.recv()
+
+        assert len(f.data) == l.data[0]
+
+        yield sink.wait()
+        f = sink.recv()
+
+        yield frame_len_sink.wait()
+        l = frame_len_sink.recv()
+
+        assert len(f.data) == l.data[0]
+
+        yield delay(100)
+
+        yield clk.posedge
+        print("test 7: alternate pause source")
+        current_test.next = 7
+
+        test_frame1 = axis_ep.AXIStreamFrame(
+            b'\xDA\xD1\xD2\xD3\xD4\xD5' +
+            b'\x5A\x51\x52\x53\x54\x55' +
+            b'\x80\x00' +
+            b'\x01\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10'
+        )
+        test_frame2 = axis_ep.AXIStreamFrame(
+            b'\xDA\xD1\xD2\xD3\xD4\xD5' +
+            b'\x5A\x51\x52\x53\x54\x55' +
+            b'\x80\x00' +
+            b'\x02\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10'
+        )
+
+        source.send(test_frame1)
+        source.send(test_frame2)
+        yield clk.posedge
+
+        while monitor_axis_tvalid:
+            yield clk.posedge
+            yield clk.posedge
+            source_pause.next = False
+            yield clk.posedge
+            source_pause.next = True
+            yield clk.posedge
+        
+        source_pause.next = False
+
+        yield sink.wait()
+        f = sink.recv()
+
+        yield frame_len_sink.wait()
+        l = frame_len_sink.recv()
+
+        assert len(f.data) == l.data[0]
+
+        yield sink.wait()
+        f = sink.recv()
+
+        yield frame_len_sink.wait()
+        l = frame_len_sink.recv()
+
+        assert len(f.data) == l.data[0]
+
+        yield delay(100)
+
+        yield clk.posedge
+        print("test 8: alternate pause sink")
+        current_test.next = 8
+
+        test_frame1 = axis_ep.AXIStreamFrame(
+            b'\xDA\xD1\xD2\xD3\xD4\xD5' +
+            b'\x5A\x51\x52\x53\x54\x55' +
+            b'\x80\x00' +
+            b'\x01\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10'
+        )
+        test_frame2 = axis_ep.AXIStreamFrame(
+            b'\xDA\xD1\xD2\xD3\xD4\xD5' +
+            b'\x5A\x51\x52\x53\x54\x55' +
+            b'\x80\x00' +
+            b'\x02\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10'
+        )
+
+        source.send(test_frame1)
+        source.send(test_frame2)
+        yield clk.posedge
+
+        while monitor_axis_tvalid:
             sink_pause.next = True
             yield clk.posedge
             yield clk.posedge
@@ -358,38 +355,53 @@ def bench():
             yield clk.posedge
 
         yield sink.wait()
-        rx_frame = sink.recv()
+        f = sink.recv()
 
-        assert rx_frame == test_frame1
+        yield frame_len_sink.wait()
+        l = frame_len_sink.recv()
+
+        assert len(f.data) == l.data[0]
 
         yield sink.wait()
-        rx_frame = sink.recv()
+        f = sink.recv()
 
-        assert rx_frame == test_frame2
+        yield frame_len_sink.wait()
+        l = frame_len_sink.recv()
+
+        assert len(f.data) == l.data[0]
 
         yield delay(100)
 
         yield clk.posedge
-        print("test 7: tuser assert")
-        current_test.next = 7
+        print("test 9: various length packets")
+        current_test.next = 9
 
-        test_frame = axis_ep.AXIStreamFrame(
-            b'\xDA\xD1\xD2\xD3\xD4\xD5' +
-            b'\x5A\x51\x52\x53\x54\x55' +
-            b'\x80\x00' +
-            b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10',
-            id=7,
-            dest=1,
-            last_cycle_user=1
-        )
+        lens = [32, 48, 96, 128, 256]
+        test_frame = []
 
-        source.send(test_frame)
+        for i in lens:
+            test_frame.append(axis_ep.AXIStreamFrame(
+                b'\xDA\xD1\xD2\xD3\xD4\xD5' +
+                b'\x5A\x51\x52\x53\x54\x55' +
+                b'\x80\x00' +
+                bytearray(range(i)))
+            )
 
-        yield sink.wait()
-        rx_frame = sink.recv()
+        for f in test_frame:
+            source.send(f)
+        yield clk.posedge
 
-        assert rx_frame == test_frame
-        assert rx_frame.last_cycle_user
+        while monitor_axis_tvalid:
+            yield clk.posedge
+
+        for i in lens:
+            yield sink.wait()
+            f = sink.recv()
+
+            yield frame_len_sink.wait()
+            l = frame_len_sink.recv()
+
+            assert len(f.data) == l.data[0]
 
         yield delay(100)
 

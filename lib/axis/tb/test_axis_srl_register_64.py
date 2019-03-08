@@ -303,12 +303,14 @@ def bench():
         yield clk.posedge
 
         while s_axis_tvalid or m_axis_tvalid:
-            source_pause.next = True
-            yield clk.posedge
             yield clk.posedge
             yield clk.posedge
             source_pause.next = False
             yield clk.posedge
+            source_pause.next = True
+            yield clk.posedge
+
+        source_pause.next = False
 
         yield sink.wait()
         rx_frame = sink.recv()
