@@ -292,18 +292,17 @@ def bench():
         yield clk.posedge
 
         while s_axis_tvalid or m_axis_tvalid:
-            source_pause_list[0].next = True
-            source_pause_list[1].next = True
-            source_pause_list[2].next = True
-            source_pause_list[3].next = True
             yield clk.posedge
             yield clk.posedge
+            for k in range(S_COUNT):
+                source_pause_list[k].next = False
             yield clk.posedge
-            source_pause_list[0].next = False
-            source_pause_list[1].next = False
-            source_pause_list[2].next = False
-            source_pause_list[3].next = False
+            for k in range(S_COUNT):
+                source_pause_list[k].next = True
             yield clk.posedge
+
+        for k in range(S_COUNT):
+            source_pause_list[k].next = False
 
         yield sink.wait()
         rx_frame = sink.recv()

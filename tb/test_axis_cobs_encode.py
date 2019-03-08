@@ -78,7 +78,6 @@ def cobs_decode(block):
     block = bytearray(block)
     dec = bytearray()
 
-    it = iter(bytearray(block))
     code = 0
 
     i = 0
@@ -203,12 +202,14 @@ def bench():
             i = max(0, i-1)
             if s_axis_tvalid or m_axis_tvalid or not source.empty():
                 i = 2
-            source_pause.next = True
-            yield clk.posedge
             yield clk.posedge
             yield clk.posedge
             source_pause.next = False
             yield clk.posedge
+            source_pause.next = True
+            yield clk.posedge
+
+        source_pause.next = False
 
     def wait_pause_sink():
         i = 2

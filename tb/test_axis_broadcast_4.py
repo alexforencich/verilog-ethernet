@@ -252,16 +252,12 @@ def bench():
 
         yield delay(64)
         yield clk.posedge
-        sink_pause_list[0].next = True
-        sink_pause_list[1].next = True
-        sink_pause_list[2].next = True
-        sink_pause_list[3].next = True
+        for k in range(M_COUNT):
+            sink_pause_list[k].next = True
         yield delay(32)
         yield clk.posedge
-        sink_pause_list[0].next = False
-        sink_pause_list[1].next = False
-        sink_pause_list[2].next = False
-        sink_pause_list[3].next = False
+        for k in range(M_COUNT):
+            sink_pause_list[k].next = False
 
         for sink in sink_list:
             yield sink.wait()
@@ -382,17 +378,13 @@ def bench():
         yield clk.posedge
 
         while s_axis_tvalid or m_axis_tvalid:
-            sink_pause_list[0].next = True
-            sink_pause_list[1].next = True
-            sink_pause_list[2].next = True
-            sink_pause_list[3].next = True
+            for k in range(M_COUNT):
+                sink_pause_list[k].next = True
             yield clk.posedge
             yield clk.posedge
             yield clk.posedge
-            sink_pause_list[0].next = False
-            sink_pause_list[1].next = False
-            sink_pause_list[2].next = False
-            sink_pause_list[3].next = False
+            for k in range(M_COUNT):
+                sink_pause_list[k].next = False
             yield clk.posedge
 
         for sink in sink_list:
