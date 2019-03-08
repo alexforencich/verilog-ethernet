@@ -47,7 +47,11 @@ parameter W1 = 2**$clog2(WIDTH);
 parameter W2 = W1/2;
 
 generate
-    if (WIDTH == 2) begin
+    if (WIDTH == 1) begin
+        // one input
+        assign output_valid = input_unencoded;
+        assign output_encoded = 0;
+    end else if (WIDTH == 2) begin
         // two inputs - just an OR gate
         assign output_valid = |input_unencoded;
         if (LSB_PRIORITY == "LOW") begin
