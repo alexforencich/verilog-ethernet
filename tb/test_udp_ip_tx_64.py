@@ -262,12 +262,14 @@ def bench():
 
     def wait_pause_source():
         while s_udp_payload_axis_tvalid or m_ip_payload_axis_tvalid or s_udp_hdr_valid:
-            source_pause.next = True
-            yield clk.posedge
             yield clk.posedge
             yield clk.posedge
             source_pause.next = False
             yield clk.posedge
+            source_pause.next = True
+            yield clk.posedge
+
+        source_pause.next = False
 
     def wait_pause_sink():
         while s_udp_payload_axis_tvalid or m_ip_payload_axis_tvalid or s_udp_hdr_valid:

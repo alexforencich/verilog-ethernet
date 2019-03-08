@@ -695,17 +695,13 @@ def bench():
         yield clk.posedge
 
         while s_udp_payload_axis_tvalid or s_udp_hdr_valid:
-            sink_pause_list[0].next = True
-            sink_pause_list[1].next = True
-            sink_pause_list[2].next = True
-            sink_pause_list[3].next = True
+            for k in range(M_COUNT):
+                sink_pause_list[k].next = False
             yield clk.posedge
             yield clk.posedge
             yield clk.posedge
-            sink_pause_list[0].next = False
-            sink_pause_list[1].next = False
-            sink_pause_list[2].next = False
-            sink_pause_list[3].next = False
+            for k in range(M_COUNT):
+                sink_pause_list[k].next = False
             yield clk.posedge
             select.next = 2
 
