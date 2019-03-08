@@ -99,8 +99,6 @@ wire                  m_axis_tready_int_early;
 
 assign s_axis_tready = s_axis_tready_reg && enable;
 
-integer i;
-
 always @* begin
     select_next = select_reg;
     select_ctl = select_reg;
