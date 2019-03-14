@@ -282,13 +282,13 @@ always @(posedge clk) begin
 end
 
 // output datapath logic
-reg [64:0] m_eth_payload_axis_tdata_reg = 64'd0;
+reg [63:0] m_eth_payload_axis_tdata_reg = 64'd0;
 reg [7:0]  m_eth_payload_axis_tkeep_reg = 8'd0;
 reg        m_eth_payload_axis_tvalid_reg = 1'b0, m_eth_payload_axis_tvalid_next;
 reg        m_eth_payload_axis_tlast_reg = 1'b0;
 reg        m_eth_payload_axis_tuser_reg = 1'b0;
 
-reg [64:0] temp_m_eth_payload_axis_tdata_reg = 64'd0;
+reg [63:0] temp_m_eth_payload_axis_tdata_reg = 64'd0;
 reg [7:0]  temp_m_eth_payload_axis_tkeep_reg = 8'd0;
 reg        temp_m_eth_payload_axis_tvalid_reg = 1'b0, temp_m_eth_payload_axis_tvalid_next;
 reg        temp_m_eth_payload_axis_tlast_reg = 1'b0;
