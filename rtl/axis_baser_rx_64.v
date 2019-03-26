@@ -435,7 +435,7 @@ always @(posedge clk) begin
             lanes_swapped <= 1'b0;
             start_packet_0_reg <= 1'b1;
             input_type_d0 <= INPUT_TYPE_START_0;
-        end else if (encoded_rx_hdr == SYNC_CTRL && encoded_rx_data[7:0] == BLOCK_TYPE_START_4)begin
+        end else if (encoded_rx_hdr == SYNC_CTRL && (encoded_rx_data[7:0] == BLOCK_TYPE_START_4 || encoded_rx_data[7:0] == BLOCK_TYPE_OS_START)) begin
             lanes_swapped <= 1'b1;
             start_packet_4_reg <= 1'b1;
             delay_type_valid <= 1'b1;
@@ -524,7 +524,7 @@ always @(posedge clk) begin
     if (encoded_rx_hdr == SYNC_CTRL && encoded_rx_data[7:0] == BLOCK_TYPE_START_0) begin
         input_data_d0 <= encoded_rx_data;
         input_data_crc <= encoded_rx_data;
-    end else if (encoded_rx_hdr == SYNC_CTRL && encoded_rx_data[7:0] == BLOCK_TYPE_START_4)begin
+    end else if (encoded_rx_hdr == SYNC_CTRL && (encoded_rx_data[7:0] == BLOCK_TYPE_START_4 || encoded_rx_data[7:0] == BLOCK_TYPE_OS_START)) begin
         input_data_d0 <= {encoded_rx_data[31:0], swap_data};
         input_data_crc <= {encoded_rx_data[31:0], swap_data};
     end else if (lanes_swapped) begin
