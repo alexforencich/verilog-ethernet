@@ -664,8 +664,10 @@ always @* begin
         end
         STATE_WAIT_END: begin
             // wait for end of frame
-            if (ifg_count_reg > 8'd8) begin
-                ifg_count_next = ifg_count_reg - 8'd8;
+            s_axis_tready_next = 1'b1;
+
+            if (ifg_count_reg > 8'd4) begin
+                ifg_count_next = ifg_count_reg - 8'd4;
             end else begin
                 ifg_count_next = 8'd0;
             end
@@ -674,6 +676,8 @@ always @* begin
 
             if (s_axis_tvalid) begin
                 if (s_axis_tlast) begin
+                    s_axis_tready_next = 1'b0;
+
                     if (ENABLE_DIC) begin
                         if (ifg_count_next > 8'd7) begin
                             state_next = STATE_IFG;
