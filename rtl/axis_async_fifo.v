@@ -367,10 +367,13 @@ always @(posedge m_clk) begin
     if (m_rst_sync3_reg) begin
         overflow_sync2_reg <= 1'b0;
         overflow_sync3_reg <= 1'b0;
+        overflow_sync4_reg <= 1'b0;
         bad_frame_sync2_reg <= 1'b0;
         bad_frame_sync3_reg <= 1'b0;
+        bad_frame_sync4_reg <= 1'b0;
         good_frame_sync2_reg <= 1'b0;
         good_frame_sync3_reg <= 1'b0;
+        good_frame_sync4_reg <= 1'b0;
     end else begin
         overflow_sync2_reg <= overflow_sync1_reg;
         overflow_sync3_reg <= overflow_sync2_reg;
