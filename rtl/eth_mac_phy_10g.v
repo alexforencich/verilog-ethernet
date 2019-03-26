@@ -82,6 +82,7 @@ module eth_mac_phy_10g #
      */
     output wire                  tx_start_packet_0,
     output wire                  tx_start_packet_4,
+    output wire                  tx_error_underflow,
     output wire                  rx_start_packet_0,
     output wire                  rx_start_packet_4,
     output wire                  rx_error_bad_frame,
@@ -148,7 +149,8 @@ eth_mac_phy_10g_tx_inst (
     .serdes_tx_hdr(serdes_tx_hdr),
     .ifg_delay(ifg_delay),
     .tx_start_packet_0(tx_start_packet_0),
-    .tx_start_packet_4(tx_start_packet_4)
+    .tx_start_packet_4(tx_start_packet_4),
+    .tx_error_underflow(tx_error_underflow)
 );
 
 endmodule

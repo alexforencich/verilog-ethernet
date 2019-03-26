@@ -54,6 +54,7 @@ wire [7:0] gmii_txd;
 wire gmii_tx_en;
 wire gmii_tx_er;
 wire start_packet;
+wire error_underflow;
 
 initial begin
     // myhdl integration
@@ -74,7 +75,8 @@ initial begin
         gmii_txd,
         gmii_tx_en,
         gmii_tx_er,
-        start_packet
+        start_packet,
+        error_underflow
     );
 
     // dump file
@@ -100,7 +102,8 @@ UUT (
     .clk_enable(clk_enable),
     .mii_select(mii_select),
     .ifg_delay(ifg_delay),
-    .start_packet(start_packet)
+    .start_packet(start_packet),
+    .error_underflow(error_underflow)
 );
 
 endmodule

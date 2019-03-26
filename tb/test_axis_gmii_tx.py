@@ -68,6 +68,7 @@ def bench():
     gmii_tx_en = Signal(bool(0))
     gmii_tx_er = Signal(bool(0))
     start_packet = Signal(bool(0))
+    error_underflow = Signal(bool(0))
 
     # sources and sinks
     source_pause = Signal(bool(0))
@@ -124,7 +125,8 @@ def bench():
 
         ifg_delay=ifg_delay,
 
-        start_packet=start_packet
+        start_packet=start_packet,
+        error_underflow=error_underflow
     )
 
     @always(delay(4))

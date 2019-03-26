@@ -67,7 +67,8 @@ module axis_baser_tx_64 #
      * Status
      */
     output wire                  start_packet_0,
-    output wire                  start_packet_4
+    output wire                  start_packet_4,
+    output wire                  error_underflow
 );
 
 // bus width assertions
@@ -211,6 +212,7 @@ reg [3:0] output_type_reg = OUTPUT_TYPE_IDLE, output_type_next;
 
 reg start_packet_0_reg = 1'b0, start_packet_0_next;
 reg start_packet_4_reg = 1'b0, start_packet_4_next;
+reg error_underflow_reg = 1'b0, error_underflow_next;
 
 assign s_axis_tready = s_axis_tready_reg;
 
@@ -219,6 +221,7 @@ assign encoded_tx_hdr = encoded_tx_hdr_reg;
 
 assign start_packet_0 = start_packet_0_reg;
 assign start_packet_4 = start_packet_4_reg;
+assign error_underflow = error_underflow_reg;
 
 lfsr #(
     .LFSR_WIDTH(32),
@@ -474,6 +477,7 @@ always @* begin
 
     start_packet_0_next = 1'b0;
     start_packet_4_next = 1'b0;
+    error_underflow_next = 1'b0;
 
     case (state_reg)
         STATE_IDLE: begin
@@ -554,10 +558,11 @@ always @* begin
                     state_next = STATE_PAYLOAD;
                 end
             end else begin
-                // tvalid deassert, fail framec
+                // tvalid deassert, fail frame
                 output_type_next = OUTPUT_TYPE_ERROR;
                 frame_ptr_next = 16'd0;
                 ifg_count_next = 8'd8;
+                error_underflow_next = 1'b1;
                 state_next = STATE_WAIT_END;
             end
         end
@@ -728,6 +733,7 @@ always @(posedge clk) begin
 
         start_packet_0_reg <= 1'b0;
         start_packet_4_reg <= 1'b0;
+        error_underflow_reg <= 1'b0;
 
         crc_state <= 32'hFFFFFFFF;
 
@@ -747,6 +753,7 @@ always @(posedge clk) begin
 
         start_packet_0_reg <= start_packet_0_next;
         start_packet_4_reg <= start_packet_4_next;
+        error_underflow_reg <= error_underflow_next;
 
         delay_type_valid <= 1'b0;
 

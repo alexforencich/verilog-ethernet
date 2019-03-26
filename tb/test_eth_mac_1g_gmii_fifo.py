@@ -94,6 +94,7 @@ def bench():
     gmii_txd = Signal(intbv(0)[8:])
     gmii_tx_en = Signal(bool(0))
     gmii_tx_er = Signal(bool(0))
+    tx_error_underflow = Signal(bool(0))
     tx_fifo_overflow = Signal(bool(0))
     tx_fifo_bad_frame = Signal(bool(0))
     tx_fifo_good_frame = Signal(bool(0))
@@ -200,6 +201,7 @@ def bench():
         gmii_tx_en=gmii_tx_en,
         gmii_tx_er=gmii_tx_er,
 
+        tx_error_underflow=tx_error_underflow,
         tx_fifo_overflow=tx_fifo_overflow,
         tx_fifo_bad_frame=tx_fifo_bad_frame,
         tx_fifo_good_frame=tx_fifo_good_frame,

@@ -93,6 +93,7 @@ module eth_mac_1g_rgmii_fifo #
     /*
      * Status
      */
+    output wire        tx_error_underflow,
     output wire        tx_fifo_overflow,
     output wire        tx_fifo_bad_frame,
     output wire        tx_fifo_good_frame,
@@ -126,6 +127,35 @@ wire        rx_fifo_axis_tlast;
 wire        rx_fifo_axis_tuser;
 
 // synchronize MAC status signals into logic clock domain
+wire tx_error_underflow_int;
+
+reg tx_sync_reg_1 = 1'b0;
+reg tx_sync_reg_2 = 1'b0;
+reg tx_sync_reg_3 = 1'b0;
+reg tx_sync_reg_4 = 1'b0;
+
+assign tx_error_underflow = tx_sync_reg_3 ^ tx_sync_reg_4;
+
+always @(posedge tx_clk or posedge tx_rst) begin
+    if (tx_rst) begin
+        tx_sync_reg_1 <= 1'b0;
+    end else begin
+        tx_sync_reg_1 <= tx_sync_reg_1 ^ {tx_error_underflow_int};
+    end
+end
+
+always @(posedge logic_clk or posedge logic_rst) begin
+    if (logic_rst) begin
+        tx_sync_reg_2 <= 1'b0;
+        tx_sync_reg_3 <= 1'b0;
+        tx_sync_reg_4 <= 1'b0;
+    end else begin
+        tx_sync_reg_2 <= tx_sync_reg_1;
+        tx_sync_reg_3 <= tx_sync_reg_2;
+        tx_sync_reg_4 <= tx_sync_reg_3;
+    end
+end
+
 wire rx_error_bad_frame_int;
 wire rx_error_bad_fcs_int;
 

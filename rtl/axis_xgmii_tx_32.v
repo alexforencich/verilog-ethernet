@@ -63,7 +63,8 @@ module axis_xgmii_tx_32 #
     /*
      * Status
      */
-    output wire        start_packet
+    output wire        start_packet,
+    output wire        error_underflow
 );
 
 localparam MIN_FL_NOCRC = MIN_FRAME_LENGTH-4;
@@ -129,6 +130,7 @@ reg [31:0] xgmii_txd_reg = {4{XGMII_IDLE}}, xgmii_txd_next;
 reg [3:0] xgmii_txc_reg = 4'b1111, xgmii_txc_next;
 
 reg start_packet_reg = 1'b0, start_packet_next;
+reg error_underflow_reg = 1'b0, error_underflow_next;
 
 assign s_axis_tready = s_axis_tready_reg;
 
@@ -136,6 +138,7 @@ assign xgmii_txd = xgmii_txd_reg;
 assign xgmii_txc = xgmii_txc_reg;
 
 assign start_packet = start_packet_reg;
+assign error_underflow = error_underflow_reg;
 
 lfsr #(
     .LFSR_WIDTH(32),
@@ -288,6 +291,7 @@ always @* begin
     xgmii_txc_next = 4'b1111;
 
     start_packet_next = 1'b0;
+    error_underflow_next = 1'b0;
 
     case (state_reg)
         STATE_IDLE: begin
@@ -376,6 +380,7 @@ always @* begin
                 xgmii_txc_next = 4'b1111;
                 frame_ptr_next = 16'd0;
                 ifg_count_next = 8'd10;
+                error_underflow_next = 1'b1;
                 state_next = STATE_WAIT_END;
             end
         end
@@ -536,6 +541,7 @@ always @(posedge clk) begin
         xgmii_txc_reg <= 4'b1111;
 
         start_packet_reg <= 1'b0;
+        error_underflow_reg <= 1'b0;
 
         crc_state <= 32'hFFFFFFFF;
     end else begin
@@ -552,6 +558,7 @@ always @(posedge clk) begin
         xgmii_txc_reg <= xgmii_txc_next;
 
         start_packet_reg <= start_packet_next;
+        error_underflow_reg <= error_underflow_next;
 
         // datapath
         if (reset_crc) begin

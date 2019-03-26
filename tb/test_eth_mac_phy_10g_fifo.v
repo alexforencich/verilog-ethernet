@@ -83,6 +83,7 @@ wire rx_axis_tuser;
 wire [DATA_WIDTH-1:0] serdes_tx_data;
 wire [HDR_WIDTH-1:0] serdes_tx_hdr;
 wire serdes_rx_bitslip;
+wire tx_error_underflow;
 wire tx_fifo_overflow;
 wire tx_fifo_bad_frame;
 wire tx_fifo_good_frame;
@@ -126,6 +127,7 @@ initial begin
         serdes_tx_data,
         serdes_tx_hdr,
         serdes_rx_bitslip,
+        tx_error_underflow,
         tx_fifo_overflow,
         tx_fifo_bad_frame,
         tx_fifo_good_frame,
@@ -188,6 +190,7 @@ UUT (
     .serdes_rx_data(serdes_rx_data),
     .serdes_rx_hdr(serdes_rx_hdr),
     .serdes_rx_bitslip(serdes_rx_bitslip),
+    .tx_error_underflow(tx_error_underflow),
     .tx_fifo_overflow(tx_fifo_overflow),
     .tx_fifo_bad_frame(tx_fifo_bad_frame),
     .tx_fifo_good_frame(tx_fifo_good_frame),

@@ -98,6 +98,7 @@ def bench():
     serdes_rx_bitslip = Signal(bool(0))
     tx_start_packet_0 = Signal(bool(0))
     tx_start_packet_4 = Signal(bool(0))
+    tx_error_underflow = Signal(bool(0))
     rx_start_packet_0 = Signal(bool(0))
     rx_start_packet_4 = Signal(bool(0))
     rx_error_bad_frame = Signal(bool(0))
@@ -185,6 +186,7 @@ def bench():
         serdes_rx_bitslip=serdes_rx_bitslip,
         tx_start_packet_0=tx_start_packet_0,
         tx_start_packet_4=tx_start_packet_4,
+        tx_error_underflow=tx_error_underflow,
         rx_start_packet_0=rx_start_packet_0,
         rx_start_packet_4=rx_start_packet_4,
         rx_error_bad_frame=rx_error_bad_frame,

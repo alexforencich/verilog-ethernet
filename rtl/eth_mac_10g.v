@@ -76,6 +76,7 @@ module eth_mac_10g #
      */
     output wire                  tx_start_packet_0,
     output wire                  tx_start_packet_4,
+    output wire                  tx_error_underflow,
     output wire                  rx_start_packet_0,
     output wire                  rx_start_packet_4,
     output wire                  rx_error_bad_frame,
@@ -139,7 +140,8 @@ axis_xgmii_tx_inst (
     .xgmii_txc(xgmii_txc),
     .ifg_delay(ifg_delay),
     .start_packet_0(tx_start_packet_0),
-    .start_packet_4(tx_start_packet_4)
+    .start_packet_4(tx_start_packet_4),
+    .error_underflow(tx_error_underflow)
 );
 
 end else begin

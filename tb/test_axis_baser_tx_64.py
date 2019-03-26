@@ -71,6 +71,7 @@ def bench():
     encoded_tx_hdr = Signal(intbv(1)[HDR_WIDTH:])
     start_packet_0 = Signal(bool(0))
     start_packet_4 = Signal(bool(0))
+    error_underflow = Signal(bool(0))
 
     # sources and sinks
     source_pause = Signal(bool(0))
@@ -120,6 +121,7 @@ def bench():
         ifg_delay=ifg_delay,
         start_packet_0=start_packet_0,
         start_packet_4=start_packet_4,
+        error_underflow=error_underflow
     )
 
     @always(delay(4))

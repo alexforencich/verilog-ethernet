@@ -70,7 +70,8 @@ module eth_mac_phy_10g_tx #
      * Status
      */
     output wire                  tx_start_packet_0,
-    output wire                  tx_start_packet_4
+    output wire                  tx_start_packet_4,
+    output wire                  tx_error_underflow
 );
 
 // bus width assertions
@@ -115,7 +116,8 @@ axis_baser_tx_inst (
     .encoded_tx_hdr(encoded_tx_hdr),
     .ifg_delay(ifg_delay),
     .start_packet_0(tx_start_packet_0),
-    .start_packet_4(tx_start_packet_4)
+    .start_packet_4(tx_start_packet_4),
+    .error_underflow(tx_error_underflow)
 );
 
 reg [57:0] tx_scrambler_state_reg = {58{1'b1}};

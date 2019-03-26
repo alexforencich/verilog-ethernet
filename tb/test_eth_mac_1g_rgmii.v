@@ -69,6 +69,7 @@ wire rx_axis_tuser;
 wire rgmii_tx_clk;
 wire [3:0] rgmii_txd;
 wire rgmii_tx_ctl;
+wire tx_error_underflow;
 wire rx_error_bad_frame;
 wire rx_error_bad_fcs;
 wire [1:0] speed;
@@ -104,6 +105,7 @@ initial begin
         rgmii_tx_clk,
         rgmii_txd,
         rgmii_tx_ctl,
+        tx_error_underflow,
         rx_error_bad_frame,
         rx_error_bad_fcs,
         speed
@@ -145,6 +147,7 @@ UUT (
     .rgmii_tx_clk(rgmii_tx_clk),
     .rgmii_txd(rgmii_txd),
     .rgmii_tx_ctl(rgmii_tx_ctl),
+    .tx_error_underflow(tx_error_underflow),
     .rx_error_bad_frame(rx_error_bad_frame),
     .rx_error_bad_fcs(rx_error_bad_fcs),
     .speed(speed),

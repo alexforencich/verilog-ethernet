@@ -68,6 +68,7 @@ wire [DATA_WIDTH-1:0] xgmii_txd;
 wire [CTRL_WIDTH-1:0] xgmii_txc;
 wire tx_start_packet_0;
 wire tx_start_packet_4;
+wire tx_error_underflow;
 wire rx_start_packet_0;
 wire rx_start_packet_4;
 wire rx_error_bad_frame;
@@ -103,6 +104,7 @@ initial begin
         xgmii_txc,
         tx_start_packet_0,
         tx_start_packet_4,
+        tx_error_underflow,
         rx_start_packet_0,
         rx_start_packet_4,
         rx_error_bad_frame,
@@ -144,6 +146,7 @@ UUT (
     .xgmii_txc(xgmii_txc),
     .tx_start_packet_0(tx_start_packet_0),
     .tx_start_packet_4(tx_start_packet_4),
+    .tx_error_underflow(tx_error_underflow),
     .rx_start_packet_0(rx_start_packet_0),
     .rx_start_packet_4(rx_start_packet_4),
     .rx_error_bad_frame(rx_error_bad_frame),

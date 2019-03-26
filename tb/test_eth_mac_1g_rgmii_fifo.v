@@ -70,6 +70,7 @@ wire rx_axis_tuser;
 wire rgmii_tx_clk;
 wire [3:0] rgmii_txd;
 wire rgmii_tx_ctl;
+wire tx_error_underflow;
 wire tx_fifo_overflow;
 wire tx_fifo_bad_frame;
 wire tx_fifo_good_frame;
@@ -110,6 +111,7 @@ initial begin
         rgmii_tx_clk,
         rgmii_txd,
         rgmii_tx_ctl,
+        tx_error_underflow,
         tx_fifo_overflow,
         tx_fifo_bad_frame,
         tx_fifo_good_frame,
@@ -158,6 +160,7 @@ UUT (
     .rgmii_tx_clk(rgmii_tx_clk),
     .rgmii_txd(rgmii_txd),
     .rgmii_tx_ctl(rgmii_tx_ctl),
+    .tx_error_underflow(tx_error_underflow),
     .tx_fifo_overflow(tx_fifo_overflow),
     .tx_fifo_bad_frame(tx_fifo_bad_frame),
     .tx_fifo_good_frame(tx_fifo_good_frame),

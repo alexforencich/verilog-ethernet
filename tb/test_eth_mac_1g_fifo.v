@@ -71,6 +71,7 @@ wire rx_axis_tuser;
 wire [7:0] gmii_txd;
 wire gmii_tx_en;
 wire gmii_tx_er;
+wire tx_error_underflow;
 wire tx_fifo_overflow;
 wire tx_fifo_bad_frame;
 wire tx_fifo_good_frame;
@@ -115,6 +116,7 @@ initial begin
         gmii_txd,
         gmii_tx_en,
         gmii_tx_er,
+        tx_error_underflow,
         tx_fifo_overflow,
         tx_fifo_bad_frame,
         tx_fifo_good_frame,
@@ -163,6 +165,7 @@ UUT (
     .tx_clk_enable(tx_clk_enable),
     .rx_mii_select(rx_mii_select),
     .tx_mii_select(tx_mii_select),
+    .tx_error_underflow(tx_error_underflow),
     .tx_fifo_overflow(tx_fifo_overflow),
     .tx_fifo_bad_frame(tx_fifo_bad_frame),
     .tx_fifo_good_frame(tx_fifo_good_frame),

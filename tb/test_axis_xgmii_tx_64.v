@@ -53,6 +53,7 @@ wire [63:0] xgmii_txd;
 wire [7:0] xgmii_txc;
 wire start_packet_0;
 wire start_packet_4;
+wire error_underflow;
 
 initial begin
     // myhdl integration
@@ -72,7 +73,8 @@ initial begin
         xgmii_txd,
         xgmii_txc,
         start_packet_0,
-        start_packet_4
+        start_packet_4,
+        error_underflow
     );
 
     // dump file
@@ -97,7 +99,8 @@ UUT (
     .xgmii_txc(xgmii_txc),
     .ifg_delay(ifg_delay),
     .start_packet_0(start_packet_0),
-    .start_packet_4(start_packet_4)
+    .start_packet_4(start_packet_4),
+    .error_underflow(error_underflow)
 );
 
 endmodule

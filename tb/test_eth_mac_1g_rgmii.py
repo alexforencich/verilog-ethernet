@@ -91,6 +91,7 @@ def bench():
     rgmii_tx_clk = Signal(bool(0))
     rgmii_txd = Signal(intbv(0)[4:])
     rgmii_tx_ctl = Signal(bool(0))
+    tx_error_underflow = Signal(bool(0))
     rx_error_bad_frame = Signal(bool(0))
     rx_error_bad_fcs = Signal(bool(0))
     speed = Signal(intbv(0)[2:])
@@ -186,6 +187,7 @@ def bench():
         rgmii_txd=rgmii_txd,
         rgmii_tx_ctl=rgmii_tx_ctl,
 
+        tx_error_underflow=tx_error_underflow,
         rx_error_bad_frame=rx_error_bad_frame,
         rx_error_bad_fcs=rx_error_bad_fcs,
         speed=speed,

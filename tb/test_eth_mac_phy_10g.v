@@ -74,6 +74,7 @@ wire [HDR_WIDTH-1:0] serdes_tx_hdr;
 wire serdes_rx_bitslip;
 wire tx_start_packet_0;
 wire tx_start_packet_4;
+wire tx_error_underflow;
 wire rx_start_packet_0;
 wire rx_start_packet_4;
 wire rx_error_bad_frame;
@@ -112,6 +113,7 @@ initial begin
         serdes_rx_bitslip,
         tx_start_packet_0,
         tx_start_packet_4,
+        tx_error_underflow,
         rx_start_packet_0,
         rx_start_packet_4,
         rx_error_bad_frame,
@@ -161,6 +163,7 @@ UUT (
     .serdes_rx_bitslip(serdes_rx_bitslip),
     .tx_start_packet_0(tx_start_packet_0),
     .tx_start_packet_4(tx_start_packet_4),
+    .tx_error_underflow(tx_error_underflow),
     .rx_start_packet_0(rx_start_packet_0),
     .rx_start_packet_4(rx_start_packet_4),
     .rx_error_bad_frame(rx_error_bad_frame),

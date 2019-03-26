@@ -84,6 +84,7 @@ def bench():
     xgmii_txc = Signal(intbv(0xff)[CTRL_WIDTH:])
     tx_start_packet_0 = Signal(bool(0))
     tx_start_packet_4 = Signal(bool(0))
+    tx_error_underflow = Signal(bool(0))
     rx_start_packet_0 = Signal(bool(0))
     rx_start_packet_4 = Signal(bool(0))
     rx_error_bad_frame = Signal(bool(0))
@@ -176,6 +177,7 @@ def bench():
 
         tx_start_packet_0=tx_start_packet_0,
         tx_start_packet_4=tx_start_packet_4,
+        tx_error_underflow=tx_error_underflow,
         rx_start_packet_0=rx_start_packet_0,
         rx_start_packet_4=rx_start_packet_4,
         rx_error_bad_frame=rx_error_bad_frame,

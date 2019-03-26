@@ -70,6 +70,7 @@ wire gmii_tx_clk;
 wire [7:0] gmii_txd;
 wire gmii_tx_en;
 wire gmii_tx_er;
+wire tx_error_underflow;
 wire rx_error_bad_frame;
 wire rx_error_bad_fcs;
 wire [1:0] speed;
@@ -107,6 +108,7 @@ initial begin
         gmii_txd,
         gmii_tx_en,
         gmii_tx_er,
+        tx_error_underflow,
         rx_error_bad_frame,
         rx_error_bad_fcs,
         speed
@@ -149,6 +151,7 @@ UUT (
     .gmii_txd(gmii_txd),
     .gmii_tx_en(gmii_tx_en),
     .gmii_tx_er(gmii_tx_er),
+    .tx_error_underflow(tx_error_underflow),
     .rx_error_bad_frame(rx_error_bad_frame),
     .rx_error_bad_fcs(rx_error_bad_fcs),
     .speed(speed),

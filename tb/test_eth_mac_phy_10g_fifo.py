@@ -109,6 +109,7 @@ def bench():
     serdes_tx_data = Signal(intbv(0)[DATA_WIDTH:])
     serdes_tx_hdr = Signal(intbv(1)[HDR_WIDTH:])
     serdes_rx_bitslip = Signal(bool(0))
+    tx_error_underflow = Signal(bool(0))
     tx_fifo_overflow = Signal(bool(0))
     tx_fifo_bad_frame = Signal(bool(0))
     tx_fifo_good_frame = Signal(bool(0))
@@ -202,6 +203,7 @@ def bench():
         serdes_rx_data=serdes_rx_data,
         serdes_rx_hdr=serdes_rx_hdr,
         serdes_rx_bitslip=serdes_rx_bitslip,
+        tx_error_underflow=tx_error_underflow,
         tx_fifo_overflow=tx_fifo_overflow,
         tx_fifo_bad_frame=tx_fifo_bad_frame,
         tx_fifo_good_frame=tx_fifo_good_frame,

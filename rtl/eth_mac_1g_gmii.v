@@ -86,6 +86,7 @@ module eth_mac_1g_gmii #
     /*
      * Status
      */
+    output wire        tx_error_underflow,
     output wire        rx_error_bad_frame,
     output wire        rx_error_bad_fcs,
     output wire [1:0]  speed,
@@ -244,6 +245,7 @@ eth_mac_1g_inst (
     .tx_clk_enable(1'b1),
     .rx_mii_select(rx_mii_select_3),
     .tx_mii_select(tx_mii_select_3),
+    .tx_error_underflow(tx_error_underflow),
     .rx_error_bad_frame(rx_error_bad_frame),
     .rx_error_bad_fcs(rx_error_bad_fcs),
     .ifg_delay(ifg_delay)

@@ -92,6 +92,7 @@ def bench():
     rgmii_tx_clk = Signal(bool(0))
     rgmii_txd = Signal(intbv(0)[4:])
     rgmii_tx_ctl = Signal(bool(0))
+    tx_error_underflow = Signal(bool(0))
     tx_fifo_overflow = Signal(bool(0))
     tx_fifo_bad_frame = Signal(bool(0))
     tx_fifo_good_frame = Signal(bool(0))
@@ -194,6 +195,7 @@ def bench():
         rgmii_txd=rgmii_txd,
         rgmii_tx_ctl=rgmii_tx_ctl,
 
+        tx_error_underflow=tx_error_underflow,
         tx_fifo_overflow=tx_fifo_overflow,
         tx_fifo_bad_frame=tx_fifo_bad_frame,
         tx_fifo_good_frame=tx_fifo_good_frame,

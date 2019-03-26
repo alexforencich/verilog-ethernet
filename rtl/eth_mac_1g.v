@@ -79,6 +79,7 @@ module eth_mac_1g #
      * Status
      */
     output wire        tx_start_packet,
+    output wire        tx_error_underflow,
     output wire        rx_start_packet,
     output wire        rx_error_bad_frame,
     output wire        rx_error_bad_fcs,
@@ -125,7 +126,8 @@ axis_gmii_tx_inst (
     .clk_enable(tx_clk_enable),
     .mii_select(tx_mii_select),
     .ifg_delay(ifg_delay),
-    .start_packet(tx_start_packet)
+    .start_packet(tx_start_packet),
+    .error_underflow(tx_error_underflow)
 );
 
 endmodule

@@ -89,6 +89,7 @@ def bench():
     rx_axis_tuser = Signal(bool(0))
     xgmii_txd = Signal(intbv(0x0707070707070707)[DATA_WIDTH:])
     xgmii_txc = Signal(intbv(0xff)[CTRL_WIDTH:])
+    tx_error_underflow = Signal(bool(0))
     tx_fifo_overflow = Signal(bool(0))
     tx_fifo_bad_frame = Signal(bool(0))
     tx_fifo_good_frame = Signal(bool(0))
@@ -189,6 +190,7 @@ def bench():
         xgmii_txd=xgmii_txd,
         xgmii_txc=xgmii_txc,
 
+        tx_error_underflow=tx_error_underflow,
         tx_fifo_overflow=tx_fifo_overflow,
         tx_fifo_bad_frame=tx_fifo_bad_frame,
         tx_fifo_good_frame=tx_fifo_good_frame,
