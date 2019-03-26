@@ -668,6 +668,27 @@ def bench():
 
         yield delay(100)
 
+        yield s_clk.posedge
+        print("test 12: many small packets")
+        current_test.next = 12
+
+        test_frame = axis_ep.AXIStreamFrame(
+            b'\xAA',
+            id=12,
+            dest=1
+        )
+
+        for k in range(64):
+            source.send(test_frame)
+
+        for k in range(64):
+            yield sink.wait()
+            rx_frame = sink.recv()
+
+            assert rx_frame == test_frame
+
+        yield delay(100)
+
         raise StopSimulation
 
     return instances()
