@@ -35,8 +35,10 @@ foreach fifo_inst [get_cells -hier -filter {(ORIG_REF_NAME == axis_async_fifo ||
     # reset synchronization
     set reset_ffs [get_cells -hier -regexp ".*/(s|m)_rst_sync\[123\]_reg_reg" -filter "PARENT == $fifo_inst"]
 
-    set_property ASYNC_REG TRUE $reset_ffs
-    set_false_path -to [get_pins -of_objects $reset_ffs -filter {IS_PRESET || IS_RESET}]
+    if {[llength $reset_ffs]} {
+        set_property ASYNC_REG TRUE $reset_ffs
+        set_false_path -to [get_pins -of_objects $reset_ffs -filter {IS_PRESET || IS_RESET}]
+    }
 
     if {[llength [get_cells $fifo_inst/s_rst_sync2_reg_reg]]} {
         set_false_path -to [get_pins $fifo_inst/s_rst_sync2_reg_reg/D]
