@@ -125,12 +125,12 @@ wire                  rx_fifo_axis_tuser;
 // synchronize MAC status signals into logic clock domain
 wire tx_error_underflow_int;
 
-reg tx_sync_reg_1 = 1'b0;
-reg tx_sync_reg_2 = 1'b0;
-reg tx_sync_reg_3 = 1'b0;
-reg tx_sync_reg_4 = 1'b0;
+reg [0:0] tx_sync_reg_1 = 1'b0;
+reg [0:0] tx_sync_reg_2 = 1'b0;
+reg [0:0] tx_sync_reg_3 = 1'b0;
+reg [0:0] tx_sync_reg_4 = 1'b0;
 
-assign tx_error_underflow = tx_sync_reg_3 ^ tx_sync_reg_4;
+assign tx_error_underflow = tx_sync_reg_3[0] ^ tx_sync_reg_4[0];
 
 always @(posedge tx_clk or posedge tx_rst) begin
     if (tx_rst) begin
