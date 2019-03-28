@@ -231,6 +231,7 @@ eth_mac_1g_gmii_inst (
     .gmii_txd(gmii_txd),
     .gmii_tx_en(gmii_tx_en),
     .gmii_tx_er(gmii_tx_er),
+    .tx_error_underflow(tx_error_underflow_int),
     .rx_error_bad_frame(rx_error_bad_frame_int),
     .rx_error_bad_fcs(rx_error_bad_fcs_int),
     .speed(speed_int),

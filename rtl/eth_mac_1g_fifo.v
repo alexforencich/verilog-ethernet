@@ -205,6 +205,7 @@ eth_mac_1g_inst (
     .tx_clk_enable(tx_clk_enable),
     .rx_mii_select(rx_mii_select),
     .tx_mii_select(tx_mii_select),
+    .tx_error_underflow(tx_error_underflow_int),
     .rx_error_bad_frame(rx_error_bad_frame_int),
     .rx_error_bad_fcs(rx_error_bad_fcs_int),
     .ifg_delay(ifg_delay)

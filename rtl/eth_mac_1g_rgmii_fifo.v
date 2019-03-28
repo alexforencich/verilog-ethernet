@@ -230,6 +230,7 @@ eth_mac_1g_rgmii_inst (
     .rgmii_tx_clk(rgmii_tx_clk),
     .rgmii_txd(rgmii_txd),
     .rgmii_tx_ctl(rgmii_tx_ctl),
+    .tx_error_underflow(tx_error_underflow_int),
     .rx_error_bad_frame(rx_error_bad_frame_int),
     .rx_error_bad_fcs(rx_error_bad_fcs_int),
     .speed(speed_int),
