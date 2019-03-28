@@ -106,26 +106,20 @@ wire        mac_gmii_tx_en;
 wire        mac_gmii_tx_er;
 
 reg [1:0] speed_reg = 2'b10;
-wire mii_select;
+reg mii_select_reg = 1'b0;
 
-reg tx_mii_select_1 = 1'b0;
-reg tx_mii_select_2 = 1'b0;
-reg tx_mii_select_3 = 1'b0;
+(* srl_style = "register" *)
+reg [1:0] tx_mii_select_sync = 2'd0;
 
 always @(posedge tx_clk) begin
-    tx_mii_select_1 <= mii_select;
-    tx_mii_select_2 <= tx_mii_select_1;
-    tx_mii_select_3 <= tx_mii_select_2;
+    tx_mii_select_sync <= {tx_mii_select_sync[0], mii_select_reg};
 end
 
-reg rx_mii_select_1 = 1'b0;
-reg rx_mii_select_2 = 1'b0;
-reg rx_mii_select_3 = 1'b0;
+(* srl_style = "register" *)
+reg [1:0] rx_mii_select_sync = 2'd0;
 
 always @(posedge rx_clk) begin
-    rx_mii_select_1 <= mii_select;
-    rx_mii_select_2 <= rx_mii_select_1;
-    rx_mii_select_3 <= rx_mii_select_2;
+    rx_mii_select_sync <= {rx_mii_select_sync[0], mii_select_reg};
 end
 
 // PHY speed detection
@@ -135,14 +129,11 @@ always @(posedge rx_clk) begin
     rx_prescale <= rx_prescale + 3'd1;
 end
 
-reg rx_prescale_sync_1 = 1'b0;
-reg rx_prescale_sync_2 = 1'b0;
-reg rx_prescale_sync_3 = 1'b0;
+(* srl_style = "register" *)
+reg [2:0] rx_prescale_sync = 3'd0;
 
 always @(posedge gtx_clk) begin
-    rx_prescale_sync_1 <= rx_prescale[2];
-    rx_prescale_sync_2 <= rx_prescale_sync_1;
-    rx_prescale_sync_3 <= rx_prescale_sync_2;
+    rx_prescale_sync <= {rx_prescale_sync[1:0], rx_prescale[2]};
 end
 
 reg [6:0] rx_speed_count_1 = 0;
@@ -153,10 +144,11 @@ always @(posedge gtx_clk) begin
         rx_speed_count_1 <= 0;
         rx_speed_count_2 <= 0;
         speed_reg <= 2'b10;
+        mii_select_reg <= 1'b0;
     end else begin
         rx_speed_count_1 <= rx_speed_count_1 + 1;
         
-        if (rx_prescale_sync_2 ^ rx_prescale_sync_3) begin
+        if (rx_prescale_sync[1] ^ rx_prescale_sync[2]) begin
             rx_speed_count_2 <= rx_speed_count_2 + 1;
         end
 
@@ -165,6 +157,7 @@ always @(posedge gtx_clk) begin
             rx_speed_count_1 <= 0;
             rx_speed_count_2 <= 0;
             speed_reg <= 2'b00;
+            mii_select_reg <= 1'b1;
         end
 
         if (&rx_speed_count_2) begin
@@ -174,16 +167,17 @@ always @(posedge gtx_clk) begin
             if (rx_speed_count_1[6:5]) begin
                 // large reference count - 100M
                 speed_reg <= 2'b01;
+                mii_select_reg <= 1'b1;
             end else begin
                 // small reference count - 1000M
                 speed_reg <= 2'b10;
+                mii_select_reg <= 1'b0;
             end
         end
     end
 end
 
 assign speed = speed_reg;
-assign mii_select = speed != 2'b10;
 
 rgmii_phy_if #(
     .TARGET(TARGET),
@@ -244,8 +238,8 @@ eth_mac_1g_inst (
     .gmii_tx_er(mac_gmii_tx_er),
     .rx_clk_enable(1'b1),
     .tx_clk_enable(mac_gmii_tx_clk_en),
-    .rx_mii_select(rx_mii_select_3),
-    .tx_mii_select(tx_mii_select_3),
+    .rx_mii_select(rx_mii_select_sync[1]),
+    .tx_mii_select(tx_mii_select_sync[1]),
     .tx_error_underflow(tx_error_underflow),
     .rx_error_bad_frame(rx_error_bad_frame),
     .rx_error_bad_fcs(rx_error_bad_fcs),
