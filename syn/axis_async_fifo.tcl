@@ -38,11 +38,15 @@ foreach fifo_inst [get_cells -hier -filter {(ORIG_REF_NAME == axis_async_fifo ||
     set_property ASYNC_REG TRUE $reset_ffs
     set_false_path -to [get_pins -of_objects $reset_ffs -filter {IS_PRESET || IS_RESET}]
 
-    set_false_path -to [get_pins $fifo_inst/s_rst_sync2_reg_reg/D]
-    set_max_delay  -from [get_cells $fifo_inst/s_rst_sync2_reg_reg] -to [get_cells $fifo_inst/s_rst_sync3_reg_reg] $min_clk_period
+    if {[llength [get_cells $fifo_inst/s_rst_sync2_reg_reg]]} {
+        set_false_path -to [get_pins $fifo_inst/s_rst_sync2_reg_reg/D]
+        set_max_delay  -from [get_cells $fifo_inst/s_rst_sync2_reg_reg] -to [get_cells $fifo_inst/s_rst_sync3_reg_reg] $min_clk_period
+    }
 
-    set_false_path -to [get_pins $fifo_inst/m_rst_sync2_reg_reg/D]
-    set_max_delay  -from [get_cells $fifo_inst/m_rst_sync2_reg_reg] -to [get_cells $fifo_inst/m_rst_sync3_reg_reg] $min_clk_period
+    if {[llength [get_cells $fifo_inst/m_rst_sync2_reg_reg]]} {
+        set_false_path -to [get_pins $fifo_inst/m_rst_sync2_reg_reg/D]
+        set_max_delay  -from [get_cells $fifo_inst/m_rst_sync2_reg_reg] -to [get_cells $fifo_inst/m_rst_sync3_reg_reg] $min_clk_period
+    }
 
     # pointer synchronization
     set_property ASYNC_REG TRUE [get_cells -hier -regexp ".*/(wr|rd)_ptr_gray_sync\[12\]_reg_reg\\\[\\d+\\\]" -filter "PARENT == $fifo_inst"]
