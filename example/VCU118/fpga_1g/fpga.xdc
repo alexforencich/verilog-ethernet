@@ -11,29 +11,24 @@ set_property BITSTREAM.GENERAL.COMPRESS true [current_design]
 #set_property -dict {LOC G31  IOSTANDARD DIFF_SSTL12} [get_ports clk_300mhz_p]
 #set_property -dict {LOC F31  IOSTANDARD DIFF_SSTL12} [get_ports clk_300mhz_n]
 #create_clock -period 3.333 -name clk_300mhz [get_ports clk_300mhz_p]
-#set_clock_groups -asynchronous -group [get_clocks clk_300mhz -include_generated_clocks]
 
 # 250 MHz
 #set_property -dict {LOC E12  IOSTANDARD DIFF_SSTL12} [get_ports clk_250mhz_1_p]
 #set_property -dict {LOC D12  IOSTANDARD DIFF_SSTL12} [get_ports clk_250mhz_1_n]
 #create_clock -period 4 -name clk_250mhz_1 [get_ports clk_250mhz_1_p]
-#set_clock_groups -asynchronous -group [get_clocks clk_250mhz_1 -include_generated_clocks]
 
 #set_property -dict {LOC AW26 IOSTANDARD DIFF_SSTL12} [get_ports clk_250mhz_2_p]
 #set_property -dict {LOC AW27 IOSTANDARD DIFF_SSTL12} [get_ports clk_250mhz_2_n]
 #create_clock -period 4 -name clk_250mhz_2 [get_ports clk_250mhz_2_p]
-#set_clock_groups -asynchronous -group [get_clocks clk_250mhz_2 -include_generated_clocks]
 
 # 125 MHz
 set_property -dict {LOC AY24 IOSTANDARD LVDS} [get_ports clk_125mhz_p]
 set_property -dict {LOC AY23 IOSTANDARD LVDS} [get_ports clk_125mhz_n]
 create_clock -period 8.000 -name clk_125mhz [get_ports clk_125mhz_p]
-set_clock_groups -asynchronous -group [get_clocks clk_125mhz -include_generated_clocks]
 
 # 90 MHz
 #set_property -dict {LOC AL20 IOSTANDARD LVCMOS18} [get_ports clk_90mhz]
 #create_clock -period 11.111 -name clk_90mhz [get_ports clk_90mhz]
-#set_clock_groups -asynchronous -group [get_clocks clk_90mhz -include_generated_clocks]
 
 # LEDs
 set_property -dict {LOC AT32 IOSTANDARD LVCMOS12 SLEW SLOW DRIVE 8} [get_ports {led[0]}]
@@ -80,8 +75,7 @@ set_property -dict {LOC AR23 IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 8} [get_ports p
 set_property -dict {LOC AV23 IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 8} [get_ports phy_mdc]
 
 # 625 MHz ref clock from SGMII PHY
-create_clock -period 1.600 -name phy_sgmii_clk [get_ports phy_sgmii_clk_p]
-set_clock_groups -asynchronous -group [get_clocks phy_sgmii_clk -include_generated_clocks]
+#create_clock -period 1.600 -name phy_sgmii_clk [get_ports phy_sgmii_clk_p]
 
 # QSFP28 Interfaces
 #set_property -dict {LOC V7  } [get_ports qsfp1_tx1_p] ;# MGTYTXN0_231 GTYE3_CHANNEL_X1Y48 / GTYE3_COMMON_X1Y12
@@ -114,7 +108,6 @@ set_clock_groups -asynchronous -group [get_clocks phy_sgmii_clk -include_generat
 
 # 156.25 MHz MGT reference clock
 #create_clock -period 6.400 -name qsfp1_mgt_refclk_0 [get_ports qsfp1_mgt_refclk_0_p]
-#set_clock_groups -asynchronous -group [get_clocks qsfp1_mgt_refclk_0 -include_generated_clocks]
 
 #set_property -dict {LOC L5  } [get_ports qsfp2_tx1_p] ;# MGTYTXN0_232 GTYE3_CHANNEL_X1Y52 / GTYE3_COMMON_X1Y13
 #set_property -dict {LOC L4  } [get_ports qsfp2_tx1_n] ;# MGTYTXP0_232 GTYE3_CHANNEL_X1Y52 / GTYE3_COMMON_X1Y13
@@ -146,7 +139,6 @@ set_clock_groups -asynchronous -group [get_clocks phy_sgmii_clk -include_generat
 
 # 156.25 MHz MGT reference clock
 #create_clock -period 6.400 -name qsfp2_mgt_refclk_0 [get_ports qsfp2_mgt_refclk_0_p]
-#set_clock_groups -asynchronous -group [get_clocks qsfp2_mgt_refclk_0 -include_generated_clocks]
 
 # I2C interface
 #set_property -dict {LOC AM24 IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 8} [get_ports i2c_scl]

@@ -14,7 +14,6 @@ set_property CONFIG_MODE BPI16                    [current_design]
 set_property -dict {LOC D18  IOSTANDARD LVDS} [get_ports clk_100mhz_p]
 set_property -dict {LOC C18  IOSTANDARD LVDS} [get_ports clk_100mhz_n]
 create_clock -period 10 -name clk_100mhz [get_ports clk_100mhz_p]
-set_clock_groups -asynchronous -group [get_clocks clk_100mhz -include_generated_clocks]
 
 # LEDs
 set_property -dict {LOC A25 IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 12} [get_ports {sfp_1_led[0]}]
@@ -61,7 +60,6 @@ set_property -dict {LOC D25  IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 12} [get_ports 
 
 # 161.1328125 MHz MGT reference clock
 create_clock -period 6.206 -name sfp_mgt_refclk [get_ports sfp_mgt_refclk_p]
-set_clock_groups -asynchronous -group [get_clocks sfp_mgt_refclk -include_generated_clocks]
 
 # I2C interface
 #set_property -dict {LOC B26 IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 12 PULLUP true} [get_ports eeprom_i2c_scl]
@@ -106,7 +104,6 @@ set_clock_groups -asynchronous -group [get_clocks sfp_mgt_refclk -include_genera
 
 # 100 MHz MGT reference clock
 #create_clock -period 10 -name pcie_mgt_refclk [get_ports pcie_mgt_refclk_p]
-#set_clock_groups -asynchronous -group [get_clocks pcie_mgt_refclk -include_generated_clocks]
 
 # Flash
 #set_property -dict {LOC AE10 IOSTANDARD LVCMOS18 DRIVE 16} [get_ports {flash_dq[0]}]

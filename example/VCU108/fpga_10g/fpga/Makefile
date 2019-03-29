@@ -48,8 +48,9 @@ SYN_FILES += lib/eth/lib/axis/rtl/axis_async_fifo.v
 
 # XDC files
 XDC_FILES = fpga.xdc
-XDC_FILES += clock.xdc
 XDC_FILES += eth.xdc
+XDC_FILES += lib/eth/syn/eth_mac_fifo.tcl
+XDC_FILES += lib/eth/lib/axis/syn/axis_async_fifo.tcl
 
 # IP
 XCI_FILES = ip/gig_ethernet_pcs_pma_0.xci

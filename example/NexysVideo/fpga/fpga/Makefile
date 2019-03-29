@@ -46,6 +46,10 @@ SYN_FILES += lib/eth/lib/axis/rtl/axis_async_fifo.v
 # XDC files
 XDC_FILES = fpga.xdc
 XDC_FILES += eth.xdc
+XDC_FILES += lib/eth/syn/rgmii_phy_if.tcl
+XDC_FILES += lib/eth/syn/eth_mac_1g_rgmii.tcl
+XDC_FILES += lib/eth/syn/eth_mac_fifo.tcl
+XDC_FILES += lib/eth/lib/axis/syn/axis_async_fifo.tcl
 
 include ../common/vivado.mk
 

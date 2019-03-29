@@ -16,7 +16,6 @@ set_property BITSTREAM.CONFIG.OVERTEMPSHUTDOWN Enable  [current_design]
 set_property -dict {LOC AP26 IOSTANDARD LVDS DIFF_TERM_ADV TERM_100} [get_ports clk_300mhz_p]
 set_property -dict {LOC AP27 IOSTANDARD LVDS DIFF_TERM_ADV TERM_100} [get_ports clk_300mhz_n]
 create_clock -period 3.333 -name clk_300mhz [get_ports clk_300mhz_p]
-set_clock_groups -asynchronous -group [get_clocks clk_300mhz -include_generated_clocks]
 
 # LEDs
 set_property -dict {LOC AT27 IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 12} [get_ports {user_led_g[0]}]
@@ -59,7 +58,6 @@ set_property -dict {LOC D31  IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 12} [get_ports 
 
 # 161.1328125 MHz MGT reference clock
 create_clock -period 6.206 -name qsfp_0_mgt_refclk [get_ports qsfp_0_mgt_refclk_p]
-set_clock_groups -asynchronous -group [get_clocks qsfp_0_mgt_refclk -include_generated_clocks]
 
 set_property -dict {LOC R38  } [get_ports qsfp_1_rx_0_p] ;# MGTYRXN0_127 GTYE3_CHANNEL_X0Y12 / GTYE3_COMMON_X0Y3
 #set_property -dict {LOC R39  } [get_ports qsfp_1_rx_0_n] ;# MGTYRXP0_127 GTYE3_CHANNEL_X0Y12 / GTYE3_COMMON_X0Y3
@@ -84,7 +82,6 @@ set_property -dict {LOC D30  IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 12} [get_ports 
 
 # 161.1328125 MHz MGT reference clock
 create_clock -period 6.206 -name qsfp_1_mgt_refclk [get_ports qsfp_1_mgt_refclk_p]
-set_clock_groups -asynchronous -group [get_clocks qsfp_1_mgt_refclk -include_generated_clocks]
 
 set_property -dict {LOC B29  IOSTANDARD LVCMOS18 PULLUP true} [get_ports qsfp_reset_l]
 set_property -dict {LOC C29  IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 12} [get_ports qsfp_int_l]
@@ -165,9 +162,7 @@ set_property -dict {LOC C29  IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 12} [get_ports 
 
 # 100 MHz MGT reference clock
 #create_clock -period 10 -name pcie_mgt_refclk_1 [get_ports pcie_refclk_1_p]
-#set_clock_groups -asynchronous -group [get_clocks pcie_mgt_refclk_1 -include_generated_clocks]
 #create_clock -period 10 -name pcie_mgt_refclk_2 [get_ports pcie_refclk_2_p]
-#set_clock_groups -asynchronous -group [get_clocks pcie_mgt_refclk_2 -include_generated_clocks]
 
 # QSPI flash
 #set_property -dict {LOC AB10 IOSTANDARD LVCMOS18 DRIVE 16} [get_ports {qspi_clk}]
