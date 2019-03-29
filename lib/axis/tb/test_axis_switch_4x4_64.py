@@ -27,7 +27,6 @@ from myhdl import *
 import os
 
 import axis_ep
-import math
 
 module = 'axis_switch'
 testbench = 'test_%s_4x4_64' % module
@@ -54,7 +53,7 @@ def bench():
     KEEP_WIDTH = (DATA_WIDTH/8)
     ID_ENABLE = 1
     ID_WIDTH = 8
-    DEST_WIDTH = math.ceil(math.log(M_COUNT+1, 2))
+    DEST_WIDTH = (M_COUNT+1).bit_length()
     USER_ENABLE = 1
     USER_WIDTH = 1
     M_BASE = [0, 1, 2, 3]
