@@ -218,11 +218,11 @@ wire [3:0] sw_int;
 debounce_switch #(
     .WIDTH(9),
     .N(4),
-    .RATE(125000)
+    .RATE(156000)
 )
 debounce_switch_inst (
-    .clk(clk_125mhz_int),
-    .rst(rst_125mhz_int),
+    .clk(clk_156mhz_int),
+    .rst(rst_156mhz_int),
     .in({btnu,
         btnl,
         btnd,
@@ -245,7 +245,7 @@ sync_signal #(
     .N(2)
 )
 sync_signal_inst (
-    .clk(clk_125mhz_int),
+    .clk(clk_156mhz_int),
     .in({uart_rxd, uart_cts}),
     .out({uart_rxd_int, uart_cts_int})
 );
