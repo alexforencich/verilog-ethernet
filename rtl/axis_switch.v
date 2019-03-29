@@ -41,8 +41,8 @@ module axis_switch #
     parameter DEST_WIDTH = $clog2(S_COUNT),
     parameter USER_ENABLE = 1,
     parameter USER_WIDTH = 1,
-    parameter M_BASE = {32'd3, 32'd2, 32'd1, 32'd0},
-    parameter M_TOP = {32'd3, 32'd2, 32'd1, 32'd0},
+    parameter M_BASE = {2'd3, 2'd2, 2'd1, 2'd0},
+    parameter M_TOP = {2'd3, 2'd2, 2'd1, 2'd0},
     parameter M_CONNECT = {M_COUNT{{S_COUNT{1'b1}}}},
     parameter S_REG_TYPE = 0,
     parameter M_REG_TYPE = 2,
@@ -93,14 +93,14 @@ initial begin
     end
 
     for (i = 0; i < M_COUNT; i = i + 1) begin
-        if (M_BASE[i*32 +: 32] < 0 || M_BASE[i*32 +: 32] > 2**DEST_WIDTH-1 || M_TOP[i*32 +: 32] < 0 || M_TOP[i*32 +: 32] > 2**DEST_WIDTH-1) begin
+        if (M_BASE[i*DEST_WIDTH +: DEST_WIDTH] < 0 || M_BASE[i*DEST_WIDTH +: DEST_WIDTH] > 2**DEST_WIDTH-1 || M_TOP[i*DEST_WIDTH +: DEST_WIDTH] < 0 || M_TOP[i*DEST_WIDTH +: DEST_WIDTH] > 2**DEST_WIDTH-1) begin
             $error("Error: value out of range");
             $finish;
         end
     end
 
     for (i = 0; i < M_COUNT; i = i + 1) begin
-        if (M_BASE[i*32 +: 32] > M_TOP[i*32 +: 32]) begin
+        if (M_BASE[i*DEST_WIDTH +: DEST_WIDTH] > M_TOP[i*DEST_WIDTH +: DEST_WIDTH]) begin
             $error("Error: invalid range");
             $finish;
         end
@@ -108,9 +108,9 @@ initial begin
 
     for (i = 0; i < M_COUNT; i = i + 1) begin
         for (j = i+1; j < M_COUNT; j = j + 1) begin
-            if (M_BASE[i*32 +: 32] <= M_TOP[j*32 +: 32] && M_BASE[j*32 +: 32] <= M_TOP[i*32 +: 32]) begin
-                $display("%d: %08x-%08x", i, M_BASE[i*32 +: 32], M_TOP[i*32 +: 32]);
-                $display("%d: %08x-%08x", j, M_BASE[j*32 +: 32], M_TOP[j*32 +: 32]);
+            if (M_BASE[i*DEST_WIDTH +: DEST_WIDTH] <= M_TOP[j*DEST_WIDTH +: DEST_WIDTH] && M_BASE[j*DEST_WIDTH +: DEST_WIDTH] <= M_TOP[i*DEST_WIDTH +: DEST_WIDTH]) begin
+                $display("%d: %08x-%08x", i, M_BASE[i*DEST_WIDTH +: DEST_WIDTH], M_TOP[i*DEST_WIDTH +: DEST_WIDTH]);
+                $display("%d: %08x-%08x", j, M_BASE[j*DEST_WIDTH +: DEST_WIDTH], M_TOP[j*DEST_WIDTH +: DEST_WIDTH]);
                 $error("Error: ranges overlap");
                 $finish;
             end
@@ -153,7 +153,7 @@ generate
                 select_valid_next = 1'b0;
                 drop_next = 1'b1;
                 for (k = 0; k < M_COUNT; k = k + 1) begin
-                    if (int_s_axis_tdest[m*DEST_WIDTH +: DEST_WIDTH] >= M_BASE[k*32 +: 32] && int_s_axis_tdest[m*DEST_WIDTH +: DEST_WIDTH] <= M_TOP[k*32 +: 32] && (M_CONNECT & (1 << (m+k*S_COUNT)))) begin
+                    if (int_s_axis_tdest[m*DEST_WIDTH +: DEST_WIDTH] >= M_BASE[k*DEST_WIDTH +: DEST_WIDTH] && int_s_axis_tdest[m*DEST_WIDTH +: DEST_WIDTH] <= M_TOP[k*DEST_WIDTH +: DEST_WIDTH] && (M_CONNECT & (1 << (m+k*S_COUNT)))) begin
                         select_next = k;
                         select_valid_next = 1'b1;
                         drop_next = 1'b0;
