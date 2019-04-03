@@ -288,7 +288,7 @@ always @* begin
                     outgoing_arp_tha_next = incoming_arp_sha;
                     outgoing_arp_tpa_next = incoming_arp_spa;
                 end
-            end else if (incoming_arp_oper == ARP_OPER_INARP_REPLY) begin
+            end else if (incoming_arp_oper == ARP_OPER_INARP_REQUEST) begin
                 // INARP request
                 if (incoming_arp_tha == local_mac) begin
                     // send reply frame to valid incoming request
