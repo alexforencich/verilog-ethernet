@@ -156,6 +156,14 @@ bits.
 10G Ethernet MAC with XGMII interface and FIFOs.  Datapath selectable between
 32 and 64 bits.
 
+### eth_mac_mii module
+
+Ethernet MAC with MII interface.
+
+### eth_mac_mii_fifo module
+
+Ethernet MAC with MII interface and FIFOs.
+
 ### eth_mac_phy_10g module
 
 10G Ethernet MAC/PHY combination module with SERDES interface.
@@ -257,6 +265,10 @@ Supports priority and round-robin arbitration.
 ### lfsr module
 
 Fully parametrizable combinatorial parallel LFSR/CRC module.
+
+### mii_phy_if module
+
+MII PHY interface and clocking logic.
 
 ### rgmii_phy_if module
 
@@ -379,18 +391,20 @@ and data lines.
     rtl/eth_axis_tx.v               : Ethernet frame transmitter
     rtl/eth_axis_tx_64.v            : Ethernet frame transmitter (64 bit)
     rtl/eth_demux.v                 : Ethernet frame demultiplexer
-    rtl/eth_mac_1g.v                : Gigabit Etherent GMII MAC
-    rtl/eth_mac_1g_fifo.v           : Gigabit Etherent GMII MAC with FIFO
+    rtl/eth_mac_1g.v                : Gigabit Ethernet GMII MAC
+    rtl/eth_mac_1g_fifo.v           : Gigabit Ethernet GMII MAC with FIFO
     rtl/eth_mac_1g_gmii.v           : Tri-mode Ethernet GMII/MII MAC
     rtl/eth_mac_1g_gmii_fifo.v      : Tri-mode Ethernet GMII/MII MAC with FIFO
     rtl/eth_mac_1g_rgmii.v          : Tri-mode Ethernet RGMII MAC
     rtl/eth_mac_1g_rgmii_fifo.v     : Tri-mode Ethernet RGMII MAC with FIFO
-    rtl/eth_mac_10g.v               : 10G Etherent XGMII MAC
-    rtl/eth_mac_10g_fifo.v          : 10G Etherent XGMII MAC with FIFO
-    rtl/eth_mac_phy_10g.v           : 10G Etherent XGMII MAC/PHY
-    rtl/eth_mac_phy_10g_fifo.v      : 10G Etherent XGMII MAC/PHY with FIFO
-    rtl/eth_mac_phy_10g_rx.v        : 10G Etherent XGMII MAC/PHY RX with FIFO
-    rtl/eth_mac_phy_10g_tx.v        : 10G Etherent XGMII MAC/PHY TX with FIFO
+    rtl/eth_mac_10g.v               : 10G Ethernet XGMII MAC
+    rtl/eth_mac_10g_fifo.v          : 10G Ethernet XGMII MAC with FIFO
+    rtl/eth_mac_mii.v               : Ethernet MII MAC
+    rtl/eth_mac_mii_fifo.v          : Ethernet MII MAC with FIFO
+    rtl/eth_mac_phy_10g.v           : 10G Ethernet XGMII MAC/PHY
+    rtl/eth_mac_phy_10g_fifo.v      : 10G Ethernet XGMII MAC/PHY with FIFO
+    rtl/eth_mac_phy_10g_rx.v        : 10G Ethernet XGMII MAC/PHY RX with FIFO
+    rtl/eth_mac_phy_10g_tx.v        : 10G Ethernet XGMII MAC/PHY TX with FIFO
     rtl/eth_mux.v                   : Ethernet frame multiplexer
     rtl/gmii_phy_if.v               : GMII PHY interface
     rtl/iddr.v                      : Generic DDR input register
@@ -407,6 +421,7 @@ and data lines.
     rtl/ip_mux.v                    : IP frame multiplexer
     rtl/lfsr.v                      : Generic LFSR/CRC module
     rtl/oddr.v                      : Generic DDR output register
+    rtl/mii_phy_if.v                : MII PHY interface
     rtl/rgmii_phy_if.v              : RGMII PHY interface
     rtl/ssio_ddr_in.v               : Generic source synchronous IO DDR input module
     rtl/ssio_ddr_in_diff.v          : Generic source synchronous IO DDR differential input module
@@ -529,6 +544,7 @@ individual test scripts can be run with python directly.
     tb/eth_ep.py         : MyHDL Ethernet frame endpoints
     tb/gmii_ep.py        : MyHDL GMII endpoints
     tb/ip_ep.py          : MyHDL IP frame endpoints
+    tb/mii_ep.py         : MyHDL MII endpoints
     tb/rgmii_ep.py       : MyHDL RGMII endpoints
     tb/udp_ep.py         : MyHDL UDP frame endpoints
     tb/xgmii_ep.py       : MyHDL XGMII endpoints
