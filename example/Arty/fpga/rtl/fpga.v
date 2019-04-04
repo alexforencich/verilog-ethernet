@@ -192,7 +192,7 @@ wire [3:0] sw_int;
 debounce_switch #(
     .WIDTH(8),
     .N(4),
-    .RATE(25000)
+    .RATE(125000)
 )
 debounce_switch_inst (
     .clk(clk_int),
@@ -245,7 +245,7 @@ core_inst (
     .led6(led6),
     .led7(led7),
     /*
-     * Ethernet: 1000BASE-T RGMII
+     * Ethernet: 100BASE-T MII
      */
     .phy_rx_clk(phy_rx_clk),
     .phy_rxd(phy_rxd),
