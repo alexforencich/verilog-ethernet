@@ -83,6 +83,7 @@ def bench():
     serdes_tx_data = Signal(intbv(0)[DATA_WIDTH:])
     serdes_tx_hdr = Signal(intbv(0)[HDR_WIDTH:])
     serdes_rx_bitslip = Signal(bool(0))
+    rx_bad_block = Signal(bool(0))
     rx_block_lock = Signal(bool(0))
     rx_high_ber = Signal(bool(0))
 
@@ -147,6 +148,7 @@ def bench():
         serdes_rx_data=serdes_rx_data,
         serdes_rx_hdr=serdes_rx_hdr,
         serdes_rx_bitslip=serdes_rx_bitslip,
+        rx_bad_block=rx_bad_block,
         rx_block_lock=rx_block_lock,
         rx_high_ber=rx_high_ber
     )

@@ -115,6 +115,7 @@ def bench():
     tx_fifo_good_frame = Signal(bool(0))
     rx_error_bad_frame = Signal(bool(0))
     rx_error_bad_fcs = Signal(bool(0))
+    rx_bad_block = Signal(bool(0))
     rx_block_lock = Signal(bool(0))
     rx_high_ber = Signal(bool(0))
     rx_fifo_overflow = Signal(bool(0))
@@ -209,6 +210,7 @@ def bench():
         tx_fifo_good_frame=tx_fifo_good_frame,
         rx_error_bad_frame=rx_error_bad_frame,
         rx_error_bad_fcs=rx_error_bad_fcs,
+        rx_bad_block=rx_bad_block,
         rx_block_lock=rx_block_lock,
         rx_high_ber=rx_high_ber,
         rx_fifo_overflow=rx_fifo_overflow,

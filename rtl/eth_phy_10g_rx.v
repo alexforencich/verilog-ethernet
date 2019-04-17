@@ -59,6 +59,7 @@ module eth_phy_10g_rx #
     /*
      * Status
      */
+    output wire                  rx_bad_block,
     output wire                  rx_block_lock,
     output wire                  rx_high_ber
 );
@@ -144,7 +145,7 @@ xgmii_baser_dec_inst (
     .encoded_rx_hdr(encoded_rx_hdr_reg),
     .xgmii_rxd(xgmii_rxd),
     .xgmii_rxc(xgmii_rxc),
-    .rx_bad_block()
+    .rx_bad_block(rx_bad_block)
 );
 
 eth_phy_10g_rx_frame_sync #(

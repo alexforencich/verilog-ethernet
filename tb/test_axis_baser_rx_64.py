@@ -69,6 +69,7 @@ def bench():
     start_packet_4 = Signal(bool(0))
     error_bad_frame = Signal(bool(0))
     error_bad_fcs = Signal(bool(0))
+    rx_bad_block = Signal(bool(0))
 
     # sources and sinks
     source = baser_serdes_ep.BaseRSerdesSource()
@@ -113,7 +114,8 @@ def bench():
         start_packet_0=start_packet_0,
         start_packet_4=start_packet_4,
         error_bad_frame=error_bad_frame,
-        error_bad_fcs=error_bad_fcs
+        error_bad_fcs=error_bad_fcs,
+        rx_bad_block=rx_bad_block
     )
 
     @always(delay(4))

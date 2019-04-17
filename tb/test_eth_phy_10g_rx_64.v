@@ -51,6 +51,7 @@ reg [HDR_WIDTH-1:0] serdes_rx_hdr = 1;
 wire [DATA_WIDTH-1:0] xgmii_rxd;
 wire [CTRL_WIDTH-1:0] xgmii_rxc;
 wire serdes_rx_bitslip;
+wire rx_bad_block;
 wire rx_block_lock;
 wire rx_high_ber;
 
@@ -67,6 +68,7 @@ initial begin
         xgmii_rxd,
         xgmii_rxc,
         serdes_rx_bitslip,
+        rx_bad_block,
         rx_block_lock,
         rx_high_ber
     );
@@ -92,6 +94,7 @@ UUT (
     .serdes_rx_data(serdes_rx_data),
     .serdes_rx_hdr(serdes_rx_hdr),
     .serdes_rx_bitslip(serdes_rx_bitslip),
+    .rx_bad_block(rx_bad_block),
     .rx_block_lock(rx_block_lock),
     .rx_high_ber(rx_high_ber)
 );

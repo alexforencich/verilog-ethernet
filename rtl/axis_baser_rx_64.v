@@ -60,7 +60,8 @@ module axis_baser_rx_64 #
     output wire                  start_packet_0,
     output wire                  start_packet_4,
     output wire                  error_bad_frame,
-    output wire                  error_bad_fcs
+    output wire                  error_bad_fcs,
+    output wire                  rx_bad_block
 );
 
 // bus width assertions
@@ -176,6 +177,7 @@ reg start_packet_0_reg = 1'b0;
 reg start_packet_4_reg = 1'b0;
 reg error_bad_frame_reg = 1'b0, error_bad_frame_next;
 reg error_bad_fcs_reg = 1'b0, error_bad_fcs_next;
+reg rx_bad_block_reg = 1'b0;
 
 reg [31:0] crc_state = 32'hFFFFFFFF;
 reg [31:0] crc_state3 = 32'hFFFFFFFF;
@@ -204,6 +206,7 @@ assign start_packet_0 = start_packet_0_reg;
 assign start_packet_4 = start_packet_4_reg;
 assign error_bad_frame = error_bad_frame_reg;
 assign error_bad_fcs = error_bad_fcs_reg;
+assign rx_bad_block = rx_bad_block_reg;
 
 wire last_cycle = state_reg == STATE_LAST;
 
@@ -407,6 +410,7 @@ always @(posedge clk) begin
         start_packet_4_reg <= 1'b0;
         error_bad_frame_reg <= 1'b0;
         error_bad_fcs_reg <= 1'b0;
+        rx_bad_block_reg <= 1'b0;
 
         crc_state <= 32'hFFFFFFFF;
         crc_state3 <= 32'hFFFFFFFF;
@@ -428,6 +432,7 @@ always @(posedge clk) begin
         start_packet_4_reg <= 1'b0;
         error_bad_frame_reg <= error_bad_frame_next;
         error_bad_fcs_reg <= error_bad_fcs_next;
+        rx_bad_block_reg <= 1'b0;
 
         delay_type_valid <= 1'b0;
 
@@ -471,9 +476,13 @@ always @(posedge clk) begin
                         delay_type_valid <= 1'b1;
                         input_type_d0 <= INPUT_TYPE_DATA;
                     end
-                    default: input_type_d0 <= INPUT_TYPE_ERROR;
+                    default: begin
+                        rx_bad_block_reg <= 1'b1;
+                        input_type_d0 <= INPUT_TYPE_ERROR;
+                    end
                 endcase
             end else begin
+                rx_bad_block_reg <= 1'b1;
                 input_type_d0 <= INPUT_TYPE_ERROR;
             end
         end else begin
@@ -489,9 +498,13 @@ always @(posedge clk) begin
                     BLOCK_TYPE_TERM_5: input_type_d0 <= INPUT_TYPE_TERM_5;
                     BLOCK_TYPE_TERM_6: input_type_d0 <= INPUT_TYPE_TERM_6;
                     BLOCK_TYPE_TERM_7: input_type_d0 <= INPUT_TYPE_TERM_7;
-                    default: input_type_d0 <= INPUT_TYPE_ERROR;
+                    default: begin
+                        rx_bad_block_reg <= 1'b1;
+                        input_type_d0 <= INPUT_TYPE_ERROR;
+                    end
                 endcase
             end else begin
+                rx_bad_block_reg <= 1'b1;
                 input_type_d0 <= INPUT_TYPE_ERROR;
             end
         end

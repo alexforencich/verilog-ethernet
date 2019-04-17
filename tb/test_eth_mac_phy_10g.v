@@ -79,6 +79,7 @@ wire rx_start_packet_0;
 wire rx_start_packet_4;
 wire rx_error_bad_frame;
 wire rx_error_bad_fcs;
+wire rx_bad_block;
 wire rx_block_lock;
 wire rx_high_ber;
 
@@ -118,6 +119,7 @@ initial begin
         rx_start_packet_4,
         rx_error_bad_frame,
         rx_error_bad_fcs,
+        rx_bad_block,
         rx_block_lock,
         rx_high_ber
     );
@@ -168,6 +170,7 @@ UUT (
     .rx_start_packet_4(rx_start_packet_4),
     .rx_error_bad_frame(rx_error_bad_frame),
     .rx_error_bad_fcs(rx_error_bad_fcs),
+    .rx_bad_block(rx_bad_block),
     .rx_block_lock(rx_block_lock),
     .rx_high_ber(rx_high_ber),
     .ifg_delay(ifg_delay)

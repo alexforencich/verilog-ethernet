@@ -65,6 +65,7 @@ module eth_phy_10g #
     /*
      * Status
      */
+    output wire                  rx_bad_block,
     output wire                  rx_block_lock,
     output wire                  rx_high_ber
 );
@@ -86,6 +87,7 @@ eth_phy_10g_rx_inst (
     .serdes_rx_data(serdes_rx_data),
     .serdes_rx_hdr(serdes_rx_hdr),
     .serdes_rx_bitslip(serdes_rx_bitslip),
+    .rx_bad_block(rx_bad_block),
     .rx_block_lock(rx_block_lock),
     .rx_high_ber(rx_high_ber)
 );

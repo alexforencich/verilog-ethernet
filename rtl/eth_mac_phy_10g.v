@@ -87,6 +87,7 @@ module eth_mac_phy_10g #
     output wire                  rx_start_packet_4,
     output wire                  rx_error_bad_frame,
     output wire                  rx_error_bad_fcs,
+    output wire                  rx_bad_block,
     output wire                  rx_block_lock,
     output wire                  rx_high_ber,
 
@@ -121,6 +122,7 @@ eth_mac_phy_10g_rx_inst (
     .rx_start_packet_4(rx_start_packet_4),
     .rx_error_bad_frame(rx_error_bad_frame),
     .rx_error_bad_fcs(rx_error_bad_fcs),
+    .rx_bad_block(rx_bad_block),
     .rx_block_lock(rx_block_lock),
     .rx_high_ber(rx_high_ber)
 );

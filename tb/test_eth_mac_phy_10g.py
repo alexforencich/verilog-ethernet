@@ -103,6 +103,7 @@ def bench():
     rx_start_packet_4 = Signal(bool(0))
     rx_error_bad_frame = Signal(bool(0))
     rx_error_bad_fcs = Signal(bool(0))
+    rx_bad_block = Signal(bool(0))
     rx_block_lock = Signal(bool(0))
     rx_high_ber = Signal(bool(0))
 
@@ -191,6 +192,7 @@ def bench():
         rx_start_packet_4=rx_start_packet_4,
         rx_error_bad_frame=rx_error_bad_frame,
         rx_error_bad_fcs=rx_error_bad_fcs,
+        rx_bad_block=rx_bad_block,
         rx_block_lock=rx_block_lock,
         rx_high_ber=rx_high_ber,
         ifg_delay=ifg_delay

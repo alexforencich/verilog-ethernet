@@ -54,6 +54,7 @@ wire start_packet_0;
 wire start_packet_4;
 wire error_bad_frame;
 wire error_bad_fcs;
+wire rx_bad_block;
 
 initial begin
     // myhdl integration
@@ -73,7 +74,8 @@ initial begin
         start_packet_0,
         start_packet_4,
         error_bad_frame,
-        error_bad_fcs
+        error_bad_fcs,
+        rx_bad_block
     );
 
     // dump file
@@ -99,7 +101,8 @@ UUT (
     .start_packet_0(start_packet_0),
     .start_packet_4(start_packet_4),
     .error_bad_frame(error_bad_frame),
-    .error_bad_fcs(error_bad_fcs)
+    .error_bad_fcs(error_bad_fcs),
+    .rx_bad_block(rx_bad_block)
 );
 
 endmodule

@@ -89,6 +89,7 @@ wire tx_fifo_bad_frame;
 wire tx_fifo_good_frame;
 wire rx_error_bad_frame;
 wire rx_error_bad_fcs;
+wire rx_bad_block;
 wire rx_block_lock;
 wire rx_high_ber;
 wire rx_fifo_overflow;
@@ -133,6 +134,7 @@ initial begin
         tx_fifo_good_frame,
         rx_error_bad_frame,
         rx_error_bad_fcs,
+        rx_bad_block,
         rx_block_lock,
         rx_high_ber,
         rx_fifo_overflow,
@@ -196,6 +198,7 @@ UUT (
     .tx_fifo_good_frame(tx_fifo_good_frame),
     .rx_error_bad_frame(rx_error_bad_frame),
     .rx_error_bad_fcs(rx_error_bad_fcs),
+    .rx_bad_block(rx_bad_block),
     .rx_block_lock(rx_block_lock),
     .rx_high_ber(rx_high_ber),
     .rx_fifo_overflow(rx_fifo_overflow),
