@@ -80,7 +80,7 @@ wire clk_200mhz_bufg;
 wire clk_200mhz_mmcm_out;
 
 // Internal 125 MHz clock
-wire clk_200mhz_int;
+wire clk_int;
 wire rst_int;   
 
 wire mmcm_rst = reset;
