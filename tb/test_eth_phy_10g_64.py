@@ -38,9 +38,11 @@ srcs = []
 
 srcs.append("../rtl/%s.v" % module)
 srcs.append("../rtl/eth_phy_10g_rx.v")
+srcs.append("../rtl/eth_phy_10g_rx_if.v")
 srcs.append("../rtl/eth_phy_10g_rx_ber_mon.v")
 srcs.append("../rtl/eth_phy_10g_rx_frame_sync.v")
 srcs.append("../rtl/eth_phy_10g_tx.v")
+srcs.append("../rtl/eth_phy_10g_tx_if.v")
 srcs.append("../rtl/xgmii_baser_dec_64.v")
 srcs.append("../rtl/xgmii_baser_enc_64.v")
 srcs.append("../rtl/lfsr.v")

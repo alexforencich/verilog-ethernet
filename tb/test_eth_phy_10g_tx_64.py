@@ -37,6 +37,7 @@ testbench = 'test_%s_64' % module
 srcs = []
 
 srcs.append("../rtl/%s.v" % module)
+srcs.append("../rtl/eth_phy_10g_tx_if.v")
 srcs.append("../rtl/xgmii_baser_enc_64.v")
 srcs.append("../rtl/lfsr.v")
 srcs.append("%s.v" % testbench)

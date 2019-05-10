@@ -120,51 +120,19 @@ axis_baser_tx_inst (
     .error_underflow(tx_error_underflow)
 );
 
-reg [57:0] tx_scrambler_state_reg = {58{1'b1}};
-wire [57:0] tx_scrambler_state;
-wire [DATA_WIDTH-1:0] scrambled_data;
-
-reg [DATA_WIDTH-1:0] serdes_tx_data_reg = {DATA_WIDTH{1'b0}};
-reg [HDR_WIDTH-1:0] serdes_tx_hdr_reg = {HDR_WIDTH{1'b0}};
-
-generate
-    genvar n;
-
-    if (BIT_REVERSE) begin
-        for (n = 0; n < DATA_WIDTH; n = n + 1) begin
-            assign serdes_tx_data[n] = serdes_tx_data_reg[DATA_WIDTH-n-1];
-        end
-
-        for (n = 0; n < HDR_WIDTH; n = n + 1) begin
-            assign serdes_tx_hdr[n] = serdes_tx_hdr_reg[HDR_WIDTH-n-1];
-        end
-    end else begin
-        assign serdes_tx_data = serdes_tx_data_reg;
-        assign serdes_tx_hdr = serdes_tx_hdr_reg;
-    end
-endgenerate
-
-lfsr #(
-    .LFSR_WIDTH(58),
-    .LFSR_POLY(58'h8000000001),
-    .LFSR_CONFIG("FIBONACCI"),
-    .LFSR_FEED_FORWARD(0),
-    .REVERSE(1),
+eth_phy_10g_tx_if #(
     .DATA_WIDTH(DATA_WIDTH),
-    .STYLE("AUTO")
+    .HDR_WIDTH(HDR_WIDTH),
+    .BIT_REVERSE(BIT_REVERSE),
+    .SCRAMBLER_DISABLE(SCRAMBLER_DISABLE)
 )
-scrambler_inst (
-    .data_in(encoded_tx_data),
-    .state_in(tx_scrambler_state_reg),
-    .data_out(scrambled_data),
-    .state_out(tx_scrambler_state)
+eth_phy_10g_tx_if_inst (
+    .clk(clk),
+    .rst(rst),
+    .encoded_tx_data(encoded_tx_data),
+    .encoded_tx_hdr(encoded_tx_hdr),
+    .serdes_tx_data(serdes_tx_data),
+    .serdes_tx_hdr(serdes_tx_hdr)
 );
-
-always @(posedge clk) begin
-    tx_scrambler_state_reg <= tx_scrambler_state;
-
-    serdes_tx_data_reg <= SCRAMBLER_DISABLE ? encoded_tx_data : scrambled_data;
-    serdes_tx_hdr_reg <= encoded_tx_hdr;
-end
 
 endmodule
