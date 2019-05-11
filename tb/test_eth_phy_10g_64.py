@@ -60,6 +60,7 @@ def bench():
     HDR_WIDTH = 2
     BIT_REVERSE = 0
     SCRAMBLER_DISABLE = 0
+    PRBS31_ENABLE = 1
     SLIP_COUNT_WIDTH = 3
     COUNT_125US = 1250/6.4
 
@@ -76,6 +77,8 @@ def bench():
     xgmii_txc = Signal(intbv(0)[CTRL_WIDTH:])
     serdes_rx_data = Signal(intbv(0)[DATA_WIDTH:])
     serdes_rx_hdr = Signal(intbv(1)[HDR_WIDTH:])
+    tx_prbs31_enable = Signal(bool(0))
+    rx_prbs31_enable = Signal(bool(0))
 
     serdes_rx_data_int = Signal(intbv(0)[DATA_WIDTH:])
     serdes_rx_hdr_int = Signal(intbv(1)[HDR_WIDTH:])
@@ -86,6 +89,7 @@ def bench():
     serdes_tx_data = Signal(intbv(0)[DATA_WIDTH:])
     serdes_tx_hdr = Signal(intbv(0)[HDR_WIDTH:])
     serdes_rx_bitslip = Signal(bool(0))
+    rx_error_count = Signal(intbv(0)[7:])
     rx_bad_block = Signal(bool(0))
     rx_block_lock = Signal(bool(0))
     rx_high_ber = Signal(bool(0))
@@ -151,9 +155,12 @@ def bench():
         serdes_rx_data=serdes_rx_data,
         serdes_rx_hdr=serdes_rx_hdr,
         serdes_rx_bitslip=serdes_rx_bitslip,
+        rx_error_count=rx_error_count,
         rx_bad_block=rx_bad_block,
         rx_block_lock=rx_block_lock,
-        rx_high_ber=rx_high_ber
+        rx_high_ber=rx_high_ber,
+        tx_prbs31_enable=tx_prbs31_enable,
+        rx_prbs31_enable=rx_prbs31_enable
     )
 
     @always(delay(4))

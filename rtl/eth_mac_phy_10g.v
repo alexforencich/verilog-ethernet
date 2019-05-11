@@ -40,6 +40,7 @@ module eth_mac_phy_10g #
     parameter MIN_FRAME_LENGTH = 64,
     parameter BIT_REVERSE = 0,
     parameter SCRAMBLER_DISABLE = 0,
+    parameter PRBS31_ENABLE = 0,
     parameter SLIP_COUNT_WIDTH = 3,
     parameter COUNT_125US = 125000/6.4
 )
@@ -85,6 +86,7 @@ module eth_mac_phy_10g #
     output wire                  tx_error_underflow,
     output wire                  rx_start_packet_0,
     output wire                  rx_start_packet_4,
+    output wire [6:0]            rx_error_count,
     output wire                  rx_error_bad_frame,
     output wire                  rx_error_bad_fcs,
     output wire                  rx_bad_block,
@@ -94,7 +96,9 @@ module eth_mac_phy_10g #
     /*
      * Configuration
      */
-    input  wire [7:0]            ifg_delay
+    input  wire [7:0]            ifg_delay,
+    input  wire                  tx_prbs31_enable,
+    input  wire                  rx_prbs31_enable
 );
 
 eth_mac_phy_10g_rx #(
@@ -104,6 +108,7 @@ eth_mac_phy_10g_rx #(
     .HDR_WIDTH(HDR_WIDTH),
     .BIT_REVERSE(BIT_REVERSE),
     .SCRAMBLER_DISABLE(SCRAMBLER_DISABLE),
+    .PRBS31_ENABLE(PRBS31_ENABLE),
     .SLIP_COUNT_WIDTH(SLIP_COUNT_WIDTH),
     .COUNT_125US(COUNT_125US)
 )
@@ -120,11 +125,13 @@ eth_mac_phy_10g_rx_inst (
     .serdes_rx_bitslip(serdes_rx_bitslip),
     .rx_start_packet_0(rx_start_packet_0),
     .rx_start_packet_4(rx_start_packet_4),
+    .rx_error_count(rx_error_count),
     .rx_error_bad_frame(rx_error_bad_frame),
     .rx_error_bad_fcs(rx_error_bad_fcs),
     .rx_bad_block(rx_bad_block),
     .rx_block_lock(rx_block_lock),
-    .rx_high_ber(rx_high_ber)
+    .rx_high_ber(rx_high_ber),
+    .rx_prbs31_enable(rx_prbs31_enable)
 );
 
 eth_mac_phy_10g_tx #(
@@ -136,7 +143,8 @@ eth_mac_phy_10g_tx #(
     .ENABLE_DIC(ENABLE_DIC),
     .MIN_FRAME_LENGTH(MIN_FRAME_LENGTH),
     .BIT_REVERSE(BIT_REVERSE),
-    .SCRAMBLER_DISABLE(SCRAMBLER_DISABLE)
+    .SCRAMBLER_DISABLE(SCRAMBLER_DISABLE),
+    .PRBS31_ENABLE(PRBS31_ENABLE)
 )
 eth_mac_phy_10g_tx_inst (
     .clk(tx_clk),
@@ -149,10 +157,11 @@ eth_mac_phy_10g_tx_inst (
     .s_axis_tuser(tx_axis_tuser),
     .serdes_tx_data(serdes_tx_data),
     .serdes_tx_hdr(serdes_tx_hdr),
-    .ifg_delay(ifg_delay),
     .tx_start_packet_0(tx_start_packet_0),
     .tx_start_packet_4(tx_start_packet_4),
-    .tx_error_underflow(tx_error_underflow)
+    .tx_error_underflow(tx_error_underflow),
+    .ifg_delay(ifg_delay),
+    .tx_prbs31_enable(tx_prbs31_enable)
 );
 
 endmodule

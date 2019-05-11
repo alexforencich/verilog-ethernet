@@ -36,6 +36,7 @@ module eth_phy_10g_rx #
     parameter HDR_WIDTH = 2,
     parameter BIT_REVERSE = 0,
     parameter SCRAMBLER_DISABLE = 0,
+    parameter PRBS31_ENABLE = 0,
     parameter SLIP_COUNT_WIDTH = 3,
     parameter COUNT_125US = 125000/6.4
 )
@@ -59,9 +60,15 @@ module eth_phy_10g_rx #
     /*
      * Status
      */
+    output wire [6:0]            rx_error_count,
     output wire                  rx_bad_block,
     output wire                  rx_block_lock,
-    output wire                  rx_high_ber
+    output wire                  rx_high_ber,
+
+    /*
+     * Configuration
+     */
+    input  wire                  rx_prbs31_enable
 );
 
 // bus width assertions
@@ -90,6 +97,7 @@ eth_phy_10g_rx_if #(
     .HDR_WIDTH(HDR_WIDTH),
     .BIT_REVERSE(BIT_REVERSE),
     .SCRAMBLER_DISABLE(SCRAMBLER_DISABLE),
+    .PRBS31_ENABLE(PRBS31_ENABLE),
     .SLIP_COUNT_WIDTH(SLIP_COUNT_WIDTH),
     .COUNT_125US(COUNT_125US)
 )
@@ -101,9 +109,11 @@ eth_phy_10g_rx_if_inst (
     .serdes_rx_data(serdes_rx_data),
     .serdes_rx_hdr(serdes_rx_hdr),
     .serdes_rx_bitslip(serdes_rx_bitslip),
+    .rx_error_count(rx_error_count),
     .rx_bad_block(rx_bad_block),
     .rx_block_lock(rx_block_lock),
-    .rx_high_ber(rx_high_ber)
+    .rx_high_ber(rx_high_ber),
+    .rx_prbs31_enable(rx_prbs31_enable)
 );
 
 xgmii_baser_dec_64 #(

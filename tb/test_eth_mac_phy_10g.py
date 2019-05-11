@@ -64,6 +64,7 @@ def bench():
     MIN_FRAME_LENGTH = 64
     BIT_REVERSE = 0
     SCRAMBLER_DISABLE = 0
+    PRBS31_ENABLE = 1
     SLIP_COUNT_WIDTH = 3
     COUNT_125US = 125000/6.4
 
@@ -84,6 +85,8 @@ def bench():
     serdes_rx_data = Signal(intbv(0)[DATA_WIDTH:])
     serdes_rx_hdr = Signal(intbv(1)[HDR_WIDTH:])
     ifg_delay = Signal(intbv(0)[8:])
+    tx_prbs31_enable = Signal(bool(0))
+    rx_prbs31_enable = Signal(bool(0))
 
     serdes_rx_data_int = Signal(intbv(0)[DATA_WIDTH:])
     serdes_rx_hdr_int = Signal(intbv(1)[HDR_WIDTH:])
@@ -103,6 +106,7 @@ def bench():
     tx_error_underflow = Signal(bool(0))
     rx_start_packet_0 = Signal(bool(0))
     rx_start_packet_4 = Signal(bool(0))
+    rx_error_count = Signal(intbv(0)[7:])
     rx_error_bad_frame = Signal(bool(0))
     rx_error_bad_fcs = Signal(bool(0))
     rx_bad_block = Signal(bool(0))
@@ -192,12 +196,15 @@ def bench():
         tx_error_underflow=tx_error_underflow,
         rx_start_packet_0=rx_start_packet_0,
         rx_start_packet_4=rx_start_packet_4,
+        rx_error_count=rx_error_count,
         rx_error_bad_frame=rx_error_bad_frame,
         rx_error_bad_fcs=rx_error_bad_fcs,
         rx_bad_block=rx_bad_block,
         rx_block_lock=rx_block_lock,
         rx_high_ber=rx_high_ber,
-        ifg_delay=ifg_delay
+        ifg_delay=ifg_delay,
+        tx_prbs31_enable=tx_prbs31_enable,
+        rx_prbs31_enable=rx_prbs31_enable
     )
 
     @always(delay(4))

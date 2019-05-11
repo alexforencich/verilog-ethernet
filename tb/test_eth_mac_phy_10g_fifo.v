@@ -41,6 +41,7 @@ parameter ENABLE_DIC = 1;
 parameter MIN_FRAME_LENGTH = 64;
 parameter BIT_REVERSE = 0;
 parameter SCRAMBLER_DISABLE = 0;
+parameter PRBS31_ENABLE = 1;
 parameter SLIP_COUNT_WIDTH = 3;
 parameter COUNT_125US = 125000/6.4;
 parameter TX_FIFO_ADDR_WIDTH = 12-$clog2(KEEP_WIDTH);
@@ -72,6 +73,8 @@ reg rx_axis_tready = 0;
 reg [DATA_WIDTH-1:0] serdes_rx_data = 0;
 reg [HDR_WIDTH-1:0] serdes_rx_hdr = 1;
 reg [7:0] ifg_delay = 0;
+reg tx_prbs31_enable = 0;
+reg rx_prbs31_enable = 0;
 
 // Outputs
 wire tx_axis_tready;
@@ -116,7 +119,9 @@ initial begin
         rx_axis_tready,
         serdes_rx_data,
         serdes_rx_hdr,
-        ifg_delay
+        ifg_delay,
+        tx_prbs31_enable,
+        rx_prbs31_enable
     );
     $to_myhdl(
         tx_axis_tready,
@@ -157,6 +162,7 @@ eth_mac_phy_10g_fifo #(
     .MIN_FRAME_LENGTH(MIN_FRAME_LENGTH),
     .BIT_REVERSE(BIT_REVERSE),
     .SCRAMBLER_DISABLE(SCRAMBLER_DISABLE),
+    .PRBS31_ENABLE(PRBS31_ENABLE),
     .SLIP_COUNT_WIDTH(SLIP_COUNT_WIDTH),
     .COUNT_125US(COUNT_125US),
     .TX_FIFO_ADDR_WIDTH(TX_FIFO_ADDR_WIDTH),
@@ -204,7 +210,9 @@ UUT (
     .rx_fifo_overflow(rx_fifo_overflow),
     .rx_fifo_bad_frame(rx_fifo_bad_frame),
     .rx_fifo_good_frame(rx_fifo_good_frame),
-    .ifg_delay(ifg_delay)
+    .ifg_delay(ifg_delay),
+    .tx_prbs31_enable(tx_prbs31_enable),
+    .rx_prbs31_enable(rx_prbs31_enable)
 );
 
 endmodule

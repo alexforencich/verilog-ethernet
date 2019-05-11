@@ -39,7 +39,8 @@ module eth_mac_phy_10g_tx #
     parameter ENABLE_DIC = 1,
     parameter MIN_FRAME_LENGTH = 64,
     parameter BIT_REVERSE = 0,
-    parameter SCRAMBLER_DISABLE = 0
+    parameter SCRAMBLER_DISABLE = 0,
+    parameter PRBS31_ENABLE = 0
 )
 (
     input  wire                  clk,
@@ -62,16 +63,17 @@ module eth_mac_phy_10g_tx #
     output wire [HDR_WIDTH-1:0]  serdes_tx_hdr,
 
     /*
-     * Configuration
-     */
-    input  wire [7:0]            ifg_delay,
-
-    /*
      * Status
      */
     output wire                  tx_start_packet_0,
     output wire                  tx_start_packet_4,
-    output wire                  tx_error_underflow
+    output wire                  tx_error_underflow,
+
+    /*
+     * Configuration
+     */
+    input  wire [7:0]            ifg_delay,
+    input  wire                  tx_prbs31_enable
 );
 
 // bus width assertions
@@ -114,17 +116,18 @@ axis_baser_tx_inst (
     .s_axis_tuser(s_axis_tuser),
     .encoded_tx_data(encoded_tx_data),
     .encoded_tx_hdr(encoded_tx_hdr),
-    .ifg_delay(ifg_delay),
     .start_packet_0(tx_start_packet_0),
     .start_packet_4(tx_start_packet_4),
-    .error_underflow(tx_error_underflow)
+    .error_underflow(tx_error_underflow),
+    .ifg_delay(ifg_delay)
 );
 
 eth_phy_10g_tx_if #(
     .DATA_WIDTH(DATA_WIDTH),
     .HDR_WIDTH(HDR_WIDTH),
     .BIT_REVERSE(BIT_REVERSE),
-    .SCRAMBLER_DISABLE(SCRAMBLER_DISABLE)
+    .SCRAMBLER_DISABLE(SCRAMBLER_DISABLE),
+    .PRBS31_ENABLE(PRBS31_ENABLE)
 )
 eth_phy_10g_tx_if_inst (
     .clk(clk),
@@ -132,7 +135,8 @@ eth_phy_10g_tx_if_inst (
     .encoded_tx_data(encoded_tx_data),
     .encoded_tx_hdr(encoded_tx_hdr),
     .serdes_tx_data(serdes_tx_data),
-    .serdes_tx_hdr(serdes_tx_hdr)
+    .serdes_tx_hdr(serdes_tx_hdr),
+    .tx_prbs31_enable(tx_prbs31_enable)
 );
 
 endmodule

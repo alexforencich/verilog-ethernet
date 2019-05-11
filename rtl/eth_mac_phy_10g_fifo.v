@@ -40,6 +40,7 @@ module eth_mac_phy_10g_fifo #
     parameter MIN_FRAME_LENGTH = 64,
     parameter BIT_REVERSE = 0,
     parameter SCRAMBLER_DISABLE = 0,
+    parameter PRBS31_ENABLE = 0,
     parameter SLIP_COUNT_WIDTH = 3,
     parameter COUNT_125US = 125000/6.4,
     parameter TX_FIFO_ADDR_WIDTH = 12-$clog2(KEEP_WIDTH),
@@ -107,7 +108,9 @@ module eth_mac_phy_10g_fifo #
     /*
      * Configuration
      */
-    input  wire [7:0]            ifg_delay
+    input  wire [7:0]            ifg_delay,
+    input  wire                  tx_prbs31_enable,
+    input  wire                  rx_prbs31_enable
 );
 
 wire [DATA_WIDTH-1:0] tx_fifo_axis_tdata;
@@ -197,6 +200,7 @@ eth_mac_phy_10g #(
     .MIN_FRAME_LENGTH(MIN_FRAME_LENGTH),
     .BIT_REVERSE(BIT_REVERSE),
     .SCRAMBLER_DISABLE(SCRAMBLER_DISABLE),
+    .PRBS31_ENABLE(PRBS31_ENABLE),
     .SLIP_COUNT_WIDTH(SLIP_COUNT_WIDTH),
     .COUNT_125US(COUNT_125US)
 )
@@ -227,7 +231,9 @@ eth_mac_phy_10g_inst (
     .rx_bad_block(rx_bad_block_int),
     .rx_block_lock(rx_block_lock_int),
     .rx_high_ber(rx_high_ber_int),
-    .ifg_delay(ifg_delay)
+    .ifg_delay(ifg_delay),
+    .tx_prbs31_enable(tx_prbs31_enable),
+    .rx_prbs31_enable(rx_prbs31_enable)
 );
 
 axis_async_fifo #(

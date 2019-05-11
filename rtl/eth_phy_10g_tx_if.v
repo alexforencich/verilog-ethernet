@@ -34,7 +34,8 @@ module eth_phy_10g_tx_if #
     parameter DATA_WIDTH = 64,
     parameter HDR_WIDTH = 2,
     parameter BIT_REVERSE = 0,
-    parameter SCRAMBLER_DISABLE = 0
+    parameter SCRAMBLER_DISABLE = 0,
+    parameter PRBS31_ENABLE = 0
 )
 (
     input  wire                  clk,
@@ -50,7 +51,12 @@ module eth_phy_10g_tx_if #
      * SERDES interface
      */
     output wire [DATA_WIDTH-1:0] serdes_tx_data,
-    output wire [HDR_WIDTH-1:0]  serdes_tx_hdr
+    output wire [HDR_WIDTH-1:0]  serdes_tx_hdr,
+
+    /*
+     * Configuration
+     */
+    input  wire                  tx_prbs31_enable
 );
 
 // bus width assertions
@@ -69,6 +75,10 @@ end
 reg [57:0] scrambler_state_reg = {58{1'b1}};
 wire [57:0] scrambler_state;
 wire [DATA_WIDTH-1:0] scrambled_data;
+
+reg [30:0] prbs31_state_reg = 31'h7fffffff;
+wire [30:0] prbs31_state;
+wire [DATA_WIDTH+HDR_WIDTH-1:0] prbs31_data;
 
 reg [DATA_WIDTH-1:0] serdes_tx_data_reg = {DATA_WIDTH{1'b0}};
 reg [HDR_WIDTH-1:0] serdes_tx_hdr_reg = {HDR_WIDTH{1'b0}};
@@ -106,11 +116,34 @@ scrambler_inst (
     .state_out(scrambler_state)
 );
 
+lfsr #(
+    .LFSR_WIDTH(31),
+    .LFSR_POLY(31'h10000001),
+    .LFSR_CONFIG("FIBONACCI"),
+    .LFSR_FEED_FORWARD(0),
+    .REVERSE(1),
+    .DATA_WIDTH(DATA_WIDTH+HDR_WIDTH),
+    .STYLE("AUTO")
+)
+prbs31_gen_inst (
+    .data_in({DATA_WIDTH+HDR_WIDTH{1'b0}}),
+    .state_in(prbs31_state_reg),
+    .data_out(prbs31_data),
+    .state_out(prbs31_state)
+);
+
 always @(posedge clk) begin
     scrambler_state_reg <= scrambler_state;
 
-    serdes_tx_data_reg <= SCRAMBLER_DISABLE ? encoded_tx_data : scrambled_data;
-    serdes_tx_hdr_reg <= encoded_tx_hdr;
+    if (PRBS31_ENABLE && tx_prbs31_enable) begin
+        prbs31_state_reg <= prbs31_state;
+
+        serdes_tx_data_reg <= ~prbs31_data[DATA_WIDTH+HDR_WIDTH-1:HDR_WIDTH];
+        serdes_tx_hdr_reg <= ~prbs31_data[HDR_WIDTH-1:0];
+    end else begin
+        serdes_tx_data_reg <= SCRAMBLER_DISABLE ? encoded_tx_data : scrambled_data;
+        serdes_tx_hdr_reg <= encoded_tx_hdr;
+    end
 end
 
 endmodule

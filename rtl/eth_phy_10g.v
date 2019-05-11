@@ -36,6 +36,7 @@ module eth_phy_10g #
     parameter HDR_WIDTH = 2,
     parameter BIT_REVERSE = 0,
     parameter SCRAMBLER_DISABLE = 0,
+    parameter PRBS31_ENABLE = 0,
     parameter SLIP_COUNT_WIDTH = 3,
     parameter COUNT_125US = 125000/6.4
 )
@@ -65,9 +66,16 @@ module eth_phy_10g #
     /*
      * Status
      */
+    output wire [6:0]            rx_error_count,
     output wire                  rx_bad_block,
     output wire                  rx_block_lock,
-    output wire                  rx_high_ber
+    output wire                  rx_high_ber,
+
+    /*
+     * Configuration
+     */
+    input  wire                  tx_prbs31_enable,
+    input  wire                  rx_prbs31_enable
 );
 
 eth_phy_10g_rx #(
@@ -76,6 +84,7 @@ eth_phy_10g_rx #(
     .HDR_WIDTH(HDR_WIDTH),
     .BIT_REVERSE(BIT_REVERSE),
     .SCRAMBLER_DISABLE(SCRAMBLER_DISABLE),
+    .PRBS31_ENABLE(PRBS31_ENABLE),
     .SLIP_COUNT_WIDTH(SLIP_COUNT_WIDTH),
     .COUNT_125US(COUNT_125US)
 )
@@ -87,9 +96,11 @@ eth_phy_10g_rx_inst (
     .serdes_rx_data(serdes_rx_data),
     .serdes_rx_hdr(serdes_rx_hdr),
     .serdes_rx_bitslip(serdes_rx_bitslip),
+    .rx_error_count(rx_error_count),
     .rx_bad_block(rx_bad_block),
     .rx_block_lock(rx_block_lock),
-    .rx_high_ber(rx_high_ber)
+    .rx_high_ber(rx_high_ber),
+    .rx_prbs31_enable(rx_prbs31_enable)
 );
 
 eth_phy_10g_tx #(
@@ -97,7 +108,8 @@ eth_phy_10g_tx #(
     .CTRL_WIDTH(CTRL_WIDTH),
     .HDR_WIDTH(HDR_WIDTH),
     .BIT_REVERSE(BIT_REVERSE),
-    .SCRAMBLER_DISABLE(SCRAMBLER_DISABLE)
+    .SCRAMBLER_DISABLE(SCRAMBLER_DISABLE),
+    .PRBS31_ENABLE(PRBS31_ENABLE)
 )
 eth_phy_10g_tx_inst (
     .clk(tx_clk),
@@ -105,7 +117,8 @@ eth_phy_10g_tx_inst (
     .xgmii_txd(xgmii_txd),
     .xgmii_txc(xgmii_txc),
     .serdes_tx_data(serdes_tx_data),
-    .serdes_tx_hdr(serdes_tx_hdr)
+    .serdes_tx_hdr(serdes_tx_hdr),
+    .tx_prbs31_enable(tx_prbs31_enable)
 );
 
 endmodule

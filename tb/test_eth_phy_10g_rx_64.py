@@ -48,6 +48,17 @@ src = ' '.join(srcs)
 
 build_cmd = "iverilog -o %s.vvp %s" % (testbench, src)
 
+def prbs31(width=8, state=0x7fffffff):
+    while True:
+        out = 0
+        for i in range(width):
+            if bool(state & 0x08000000) ^ bool(state & 0x40000000):
+                state = ((state & 0x3fffffff) << 1) | 1
+                out = out | 2**i
+            else:
+                state = (state & 0x3fffffff) << 1
+        yield ~out & (2**width-1)
+
 def bench():
 
     # Parameters
@@ -56,6 +67,7 @@ def bench():
     HDR_WIDTH = 2
     BIT_REVERSE = 0
     SCRAMBLER_DISABLE = 0
+    PRBS31_ENABLE = 1
     SLIP_COUNT_WIDTH = 3
     COUNT_125US = 1250/6.4
 
@@ -66,6 +78,7 @@ def bench():
 
     serdes_rx_data = Signal(intbv(0)[DATA_WIDTH:])
     serdes_rx_hdr = Signal(intbv(1)[HDR_WIDTH:])
+    rx_prbs31_enable = Signal(bool(0))
 
     serdes_rx_data_int = Signal(intbv(0)[DATA_WIDTH:])
     serdes_rx_hdr_int = Signal(intbv(1)[HDR_WIDTH:])
@@ -74,6 +87,7 @@ def bench():
     xgmii_rxd = Signal(intbv(0)[DATA_WIDTH:])
     xgmii_rxc = Signal(intbv(0)[CTRL_WIDTH:])
     serdes_rx_bitslip = Signal(bool(0))
+    rx_error_count = Signal(intbv(0)[7:])
     rx_bad_block = Signal(bool(0))
     rx_block_lock = Signal(bool(0))
     rx_high_ber = Signal(bool(0))
@@ -112,9 +126,11 @@ def bench():
         serdes_rx_data=serdes_rx_data,
         serdes_rx_hdr=serdes_rx_hdr,
         serdes_rx_bitslip=serdes_rx_bitslip,
+        rx_error_count=rx_error_count,
         rx_bad_block=rx_bad_block,
         rx_block_lock=rx_block_lock,
-        rx_high_ber=rx_high_ber
+        rx_high_ber=rx_high_ber,
+        rx_prbs31_enable=rx_prbs31_enable
     )
 
     @always(delay(4))
@@ -122,11 +138,14 @@ def bench():
         clk.next = not clk
 
     load_bit_offset = []
+    prbs_en = Signal(bool(0))
 
     @instance
     def shift_bits():
         bit_offset = 0
         last_data = 0
+
+        prbs_gen = prbs31(66)
 
         while True:
             yield clk.posedge
@@ -144,6 +163,9 @@ def bench():
             out_data = ((last_data | data << 66) >> 66-bit_offset) & 0x3ffffffffffffffff
 
             last_data = data
+
+            if prbs_en:
+                out_data = next(prbs_gen)
 
             serdes_rx_data.next = out_data >> 2
             serdes_rx_hdr.next = out_data & 3
@@ -257,6 +279,32 @@ def bench():
         yield delay(2000)
 
         assert not rx_high_ber
+
+        yield delay(100)
+
+        yield clk.posedge
+        print("test 5: PRBS31 check")
+        current_test.next = 5
+
+        rx_prbs31_enable.next = True
+
+        yield delay(100)
+
+        for k in range(20):
+            yield clk.posedge
+            assert rx_error_count > 0
+
+        prbs_en.next = True
+
+        yield delay(100)
+
+        for k in range(20):
+            yield clk.posedge
+            assert rx_error_count == 0
+
+        prbs_en.next = False
+
+        rx_prbs31_enable.next = False
 
         yield delay(100)
 

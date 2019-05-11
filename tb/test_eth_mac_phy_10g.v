@@ -41,6 +41,7 @@ parameter ENABLE_DIC = 1;
 parameter MIN_FRAME_LENGTH = 64;
 parameter BIT_REVERSE = 0;
 parameter SCRAMBLER_DISABLE = 0;
+parameter PRBS31_ENABLE = 1;
 parameter SLIP_COUNT_WIDTH = 3;
 parameter COUNT_125US = 125000/6.4;
 
@@ -61,6 +62,8 @@ reg tx_axis_tuser = 0;
 reg [DATA_WIDTH-1:0] serdes_rx_data = 0;
 reg [HDR_WIDTH-1:0] serdes_rx_hdr = 1;
 reg [7:0] ifg_delay = 0;
+reg tx_prbs31_enable = 0;
+reg rx_prbs31_enable = 0;
 
 // Outputs
 wire tx_axis_tready;
@@ -77,6 +80,7 @@ wire tx_start_packet_4;
 wire tx_error_underflow;
 wire rx_start_packet_0;
 wire rx_start_packet_4;
+wire [6:0] rx_error_count;
 wire rx_error_bad_frame;
 wire rx_error_bad_fcs;
 wire rx_bad_block;
@@ -100,7 +104,9 @@ initial begin
         tx_axis_tuser,
         serdes_rx_data,
         serdes_rx_hdr,
-        ifg_delay
+        ifg_delay,
+        tx_prbs31_enable,
+        rx_prbs31_enable
     );
     $to_myhdl(
         tx_axis_tready,
@@ -115,6 +121,7 @@ initial begin
         tx_start_packet_0,
         tx_start_packet_4,
         tx_error_underflow,
+        rx_error_count,
         rx_start_packet_0,
         rx_start_packet_4,
         rx_error_bad_frame,
@@ -139,6 +146,7 @@ eth_mac_phy_10g #(
     .MIN_FRAME_LENGTH(MIN_FRAME_LENGTH),
     .BIT_REVERSE(BIT_REVERSE),
     .SCRAMBLER_DISABLE(SCRAMBLER_DISABLE),
+    .PRBS31_ENABLE(PRBS31_ENABLE),
     .SLIP_COUNT_WIDTH(SLIP_COUNT_WIDTH),
     .COUNT_125US(COUNT_125US)
 )
@@ -168,12 +176,15 @@ UUT (
     .tx_error_underflow(tx_error_underflow),
     .rx_start_packet_0(rx_start_packet_0),
     .rx_start_packet_4(rx_start_packet_4),
+    .rx_error_count(rx_error_count),
     .rx_error_bad_frame(rx_error_bad_frame),
     .rx_error_bad_fcs(rx_error_bad_fcs),
     .rx_bad_block(rx_bad_block),
     .rx_block_lock(rx_block_lock),
     .rx_high_ber(rx_high_ber),
-    .ifg_delay(ifg_delay)
+    .ifg_delay(ifg_delay),
+    .tx_prbs31_enable(tx_prbs31_enable),
+    .rx_prbs31_enable(rx_prbs31_enable)
 );
 
 endmodule

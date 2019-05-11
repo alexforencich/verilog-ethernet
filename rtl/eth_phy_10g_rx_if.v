@@ -35,6 +35,7 @@ module eth_phy_10g_rx_if #
     parameter HDR_WIDTH = 2,
     parameter BIT_REVERSE = 0,
     parameter SCRAMBLER_DISABLE = 0,
+    parameter PRBS31_ENABLE = 0,
     parameter SLIP_COUNT_WIDTH = 3,
     parameter COUNT_125US = 125000/6.4
 )
@@ -58,9 +59,15 @@ module eth_phy_10g_rx_if #
     /*
      * Status
      */
+    output wire [6:0]            rx_error_count,
     output wire                  rx_bad_block,
     output wire                  rx_block_lock,
-    output wire                  rx_high_ber
+    output wire                  rx_high_ber,
+
+    /*
+     * Configuration
+     */
+    input  wire                  rx_prbs31_enable
 );
 
 // bus width assertions
@@ -104,6 +111,16 @@ reg [HDR_WIDTH-1:0] encoded_rx_hdr_reg = {HDR_WIDTH{1'b0}};
 reg [57:0] scrambler_state_reg = {58{1'b1}};
 wire [57:0] scrambler_state;
 
+reg [30:0] prbs31_state_reg = 31'h7fffffff;
+wire [30:0] prbs31_state;
+wire [DATA_WIDTH+HDR_WIDTH-1:0] prbs31_data;
+
+reg [6:0] rx_error_count_reg = 0;
+reg [5:0] rx_error_count_1_reg = 0;
+reg [5:0] rx_error_count_2_reg = 0;
+reg [5:0] rx_error_count_1_temp = 0;
+reg [5:0] rx_error_count_2_temp = 0;
+
 lfsr #(
     .LFSR_WIDTH(58),
     .LFSR_POLY(58'h8000000001),
@@ -120,15 +137,55 @@ descrambler_inst (
     .state_out(scrambler_state)
 );
 
+lfsr #(
+    .LFSR_WIDTH(31),
+    .LFSR_POLY(31'h10000001),
+    .LFSR_CONFIG("FIBONACCI"),
+    .LFSR_FEED_FORWARD(1),
+    .REVERSE(1),
+    .DATA_WIDTH(DATA_WIDTH+HDR_WIDTH),
+    .STYLE("AUTO")
+)
+prbs31_check_inst (
+    .data_in(~{serdes_rx_data_int, serdes_rx_hdr_int}),
+    .state_in(prbs31_state_reg),
+    .data_out(prbs31_data),
+    .state_out(prbs31_state)
+);
+
+integer i;
+
+always @* begin
+    rx_error_count_1_temp = 0;
+    rx_error_count_2_temp = 0;
+    for (i = 0; i < DATA_WIDTH; i = i + 1) begin
+        if (i & 1) begin
+            rx_error_count_1_temp = rx_error_count_1_temp + prbs31_data[i];
+        end else begin
+            rx_error_count_2_temp = rx_error_count_2_temp + prbs31_data[i];
+        end
+    end
+end
+
 always @(posedge clk) begin
     scrambler_state_reg <= scrambler_state;
 
     encoded_rx_data_reg <= SCRAMBLER_DISABLE ? serdes_rx_data_int : descrambled_rx_data;
     encoded_rx_hdr_reg <= serdes_rx_hdr_int;
+
+    if (PRBS31_ENABLE && rx_prbs31_enable) begin
+        prbs31_state_reg <= prbs31_state;
+
+        rx_error_count_1_reg <= rx_error_count_1_temp;
+        rx_error_count_2_reg <= rx_error_count_2_temp;
+        rx_error_count_reg <= rx_error_count_1_reg + rx_error_count_2_reg;
+    end
 end
 
 assign encoded_rx_data = encoded_rx_data_reg;
 assign encoded_rx_hdr = encoded_rx_hdr_reg;
+
+assign rx_error_count = rx_error_count_reg;
 
 eth_phy_10g_rx_frame_sync #(
     .HDR_WIDTH(HDR_WIDTH),

@@ -37,6 +37,7 @@ parameter CTRL_WIDTH = (DATA_WIDTH/8);
 parameter HDR_WIDTH = 2;
 parameter BIT_REVERSE = 0;
 parameter SCRAMBLER_DISABLE = 0;
+parameter PRBS31_ENABLE = 1;
 
 // Inputs
 reg clk = 0;
@@ -45,6 +46,7 @@ reg [7:0] current_test = 0;
 
 reg [DATA_WIDTH-1:0] xgmii_txd = 0;
 reg [CTRL_WIDTH-1:0] xgmii_txc = 0;
+reg tx_prbs31_enable = 0;
 
 // Outputs
 wire [DATA_WIDTH-1:0] serdes_tx_data;
@@ -57,7 +59,8 @@ initial begin
         rst,
         current_test,
         xgmii_txd,
-        xgmii_txc
+        xgmii_txc,
+        tx_prbs31_enable
     );
     $to_myhdl(
         serdes_tx_data,
@@ -74,7 +77,8 @@ eth_phy_10g_tx #(
     .CTRL_WIDTH(CTRL_WIDTH),
     .HDR_WIDTH(HDR_WIDTH),
     .BIT_REVERSE(BIT_REVERSE),
-    .SCRAMBLER_DISABLE(SCRAMBLER_DISABLE)
+    .SCRAMBLER_DISABLE(SCRAMBLER_DISABLE),
+    .PRBS31_ENABLE(PRBS31_ENABLE)
 )
 UUT (
     .clk(clk),
@@ -82,7 +86,8 @@ UUT (
     .xgmii_txd(xgmii_txd),
     .xgmii_txc(xgmii_txc),
     .serdes_tx_data(serdes_tx_data),
-    .serdes_tx_hdr(serdes_tx_hdr)
+    .serdes_tx_hdr(serdes_tx_hdr),
+    .tx_prbs31_enable(tx_prbs31_enable)
 );
 
 endmodule

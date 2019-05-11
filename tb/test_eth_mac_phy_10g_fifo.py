@@ -66,6 +66,7 @@ def bench():
     MIN_FRAME_LENGTH = 64
     BIT_REVERSE = 0
     SCRAMBLER_DISABLE = 0
+    PRBS31_ENABLE = 1
     SLIP_COUNT_WIDTH = 3
     COUNT_125US = 125000/6.4
     TX_FIFO_ADDR_WIDTH = 12-(KEEP_WIDTH-1).bit_length()
@@ -97,6 +98,8 @@ def bench():
     serdes_rx_data = Signal(intbv(0)[DATA_WIDTH:])
     serdes_rx_hdr = Signal(intbv(1)[HDR_WIDTH:])
     ifg_delay = Signal(intbv(0)[8:])
+    tx_prbs31_enable = Signal(bool(0))
+    rx_prbs31_enable = Signal(bool(0))
 
     serdes_rx_data_int = Signal(intbv(0)[DATA_WIDTH:])
     serdes_rx_hdr_int = Signal(intbv(1)[HDR_WIDTH:])
@@ -218,7 +221,9 @@ def bench():
         rx_fifo_overflow=rx_fifo_overflow,
         rx_fifo_bad_frame=rx_fifo_bad_frame,
         rx_fifo_good_frame=rx_fifo_good_frame,
-        ifg_delay=ifg_delay
+        ifg_delay=ifg_delay,
+        tx_prbs31_enable=tx_prbs31_enable,
+        rx_prbs31_enable=rx_prbs31_enable
     )
 
     @always(delay(4))

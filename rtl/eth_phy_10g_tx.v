@@ -35,7 +35,8 @@ module eth_phy_10g_tx #
     parameter CTRL_WIDTH = (DATA_WIDTH/8),
     parameter HDR_WIDTH = 2,
     parameter BIT_REVERSE = 0,
-    parameter SCRAMBLER_DISABLE = 0
+    parameter SCRAMBLER_DISABLE = 0,
+    parameter PRBS31_ENABLE = 0
 )
 (
     input  wire                  clk,
@@ -51,7 +52,12 @@ module eth_phy_10g_tx #
      * SERDES interface
      */
     output wire [DATA_WIDTH-1:0] serdes_tx_data,
-    output wire [HDR_WIDTH-1:0]  serdes_tx_hdr
+    output wire [HDR_WIDTH-1:0]  serdes_tx_hdr,
+
+    /*
+     * Configuration
+     */
+    input  wire                  tx_prbs31_enable
 );
 
 // bus width assertions
@@ -93,7 +99,8 @@ eth_phy_10g_tx_if #(
     .DATA_WIDTH(DATA_WIDTH),
     .HDR_WIDTH(HDR_WIDTH),
     .BIT_REVERSE(BIT_REVERSE),
-    .SCRAMBLER_DISABLE(SCRAMBLER_DISABLE)
+    .SCRAMBLER_DISABLE(SCRAMBLER_DISABLE),
+    .PRBS31_ENABLE(PRBS31_ENABLE)
 )
 eth_phy_10g_tx_if_inst (
     .clk(clk),
@@ -101,7 +108,8 @@ eth_phy_10g_tx_if_inst (
     .encoded_tx_data(encoded_tx_data),
     .encoded_tx_hdr(encoded_tx_hdr),
     .serdes_tx_data(serdes_tx_data),
-    .serdes_tx_hdr(serdes_tx_hdr)
+    .serdes_tx_hdr(serdes_tx_hdr),
+    .tx_prbs31_enable(tx_prbs31_enable)
 );
 
 endmodule

@@ -37,6 +37,7 @@ parameter CTRL_WIDTH = (DATA_WIDTH/8);
 parameter HDR_WIDTH = 2;
 parameter BIT_REVERSE = 0;
 parameter SCRAMBLER_DISABLE = 0;
+parameter PRBS31_ENABLE = 1;
 parameter SLIP_COUNT_WIDTH = 3;
 parameter COUNT_125US = 125000/6.4;
 
@@ -53,6 +54,8 @@ reg [DATA_WIDTH-1:0] xgmii_txd = 0;
 reg [CTRL_WIDTH-1:0] xgmii_txc = 0;
 reg [DATA_WIDTH-1:0] serdes_rx_data = 0;
 reg [HDR_WIDTH-1:0] serdes_rx_hdr = 1;
+reg tx_prbs31_enable = 0;
+reg rx_prbs31_enable = 0;
 
 // Outputs
 wire [DATA_WIDTH-1:0] xgmii_rxd;
@@ -60,6 +63,7 @@ wire [CTRL_WIDTH-1:0] xgmii_rxc;
 wire [DATA_WIDTH-1:0] serdes_tx_data;
 wire [HDR_WIDTH-1:0] serdes_tx_hdr;
 wire serdes_rx_bitslip;
+wire [6:0] rx_error_count;
 wire rx_bad_block;
 wire rx_block_lock;
 wire rx_high_ber;
@@ -77,7 +81,9 @@ initial begin
         xgmii_txd,
         xgmii_txc,
         serdes_rx_data,
-        serdes_rx_hdr
+        serdes_rx_hdr,
+        tx_prbs31_enable,
+        rx_prbs31_enable
     );
     $to_myhdl(
         xgmii_rxd,
@@ -85,6 +91,7 @@ initial begin
         serdes_tx_data,
         serdes_tx_hdr,
         serdes_rx_bitslip,
+        rx_error_count,
         rx_bad_block,
         rx_block_lock,
         rx_high_ber
@@ -101,6 +108,7 @@ eth_phy_10g #(
     .HDR_WIDTH(HDR_WIDTH),
     .BIT_REVERSE(BIT_REVERSE),
     .SCRAMBLER_DISABLE(SCRAMBLER_DISABLE),
+    .PRBS31_ENABLE(PRBS31_ENABLE),
     .SLIP_COUNT_WIDTH(SLIP_COUNT_WIDTH),
     .COUNT_125US(COUNT_125US)
 )
@@ -118,9 +126,12 @@ UUT (
     .serdes_rx_data(serdes_rx_data),
     .serdes_rx_hdr(serdes_rx_hdr),
     .serdes_rx_bitslip(serdes_rx_bitslip),
+    .rx_error_count(rx_error_count),
     .rx_bad_block(rx_bad_block),
     .rx_block_lock(rx_block_lock),
-    .rx_high_ber(rx_high_ber)
+    .rx_high_ber(rx_high_ber),
+    .tx_prbs31_enable(tx_prbs31_enable),
+    .rx_prbs31_enable(rx_prbs31_enable)
 );
 
 endmodule
