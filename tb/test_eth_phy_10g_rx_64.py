@@ -56,6 +56,7 @@ def bench():
     HDR_WIDTH = 2
     BIT_REVERSE = 0
     SCRAMBLER_DISABLE = 0
+    SLIP_COUNT_WIDTH = 3
     COUNT_125US = 1250/6.4
 
     # Inputs

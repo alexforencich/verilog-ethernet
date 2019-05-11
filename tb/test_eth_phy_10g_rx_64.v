@@ -37,6 +37,7 @@ parameter CTRL_WIDTH = (DATA_WIDTH/8);
 parameter HDR_WIDTH = 2;
 parameter BIT_REVERSE = 0;
 parameter SCRAMBLER_DISABLE = 0;
+parameter SLIP_COUNT_WIDTH = 3;
 parameter COUNT_125US = 1250/6.4;
 
 // Inputs
@@ -84,6 +85,7 @@ eth_phy_10g_rx #(
     .HDR_WIDTH(HDR_WIDTH),
     .BIT_REVERSE(BIT_REVERSE),
     .SCRAMBLER_DISABLE(SCRAMBLER_DISABLE),
+    .SLIP_COUNT_WIDTH(SLIP_COUNT_WIDTH),
     .COUNT_125US(COUNT_125US)
 )
 UUT (
