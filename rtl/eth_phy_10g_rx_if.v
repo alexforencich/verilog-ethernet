@@ -187,6 +187,9 @@ assign encoded_rx_hdr = encoded_rx_hdr_reg;
 
 assign rx_error_count = rx_error_count_reg;
 
+wire serdes_rx_bitslip_int;
+assign serdes_rx_bitslip = serdes_rx_bitslip_int && !(PRBS31_ENABLE && rx_prbs31_enable);
+
 eth_phy_10g_rx_frame_sync #(
     .HDR_WIDTH(HDR_WIDTH),
     .SLIP_COUNT_WIDTH(SLIP_COUNT_WIDTH)
@@ -195,7 +198,7 @@ eth_phy_10g_rx_frame_sync_inst (
     .clk(clk),
     .rst(rst),
     .serdes_rx_hdr(serdes_rx_hdr_int),
-    .serdes_rx_bitslip(serdes_rx_bitslip),
+    .serdes_rx_bitslip(serdes_rx_bitslip_int),
     .rx_block_lock(rx_block_lock)
 );
 
