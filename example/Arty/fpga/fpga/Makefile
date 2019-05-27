@@ -53,9 +53,35 @@ program: $(FPGA_TOP).bit
 	echo "connect_hw_server" >> program.tcl
 	echo "open_hw_target" >> program.tcl
 	echo "current_hw_device [lindex [get_hw_devices] 0]" >> program.tcl
-	echo "refresh_hw_device -update_hw_probes false [lindex [get_hw_devices] 0]" >> program.tcl
-	echo "set_property PROGRAM.FILE {$(FPGA_TOP).bit} [lindex [get_hw_devices] 0]" >> program.tcl
-	echo "program_hw_devices [lindex [get_hw_devices] 0]" >> program.tcl
+	echo "refresh_hw_device -update_hw_probes false [current_hw_device]" >> program.tcl
+	echo "set_property PROGRAM.FILE {$(FPGA_TOP).bit} [current_hw_device]" >> program.tcl
+	echo "program_hw_devices [current_hw_device]" >> program.tcl
 	echo "exit" >> program.tcl
 	vivado -mode batch -source program.tcl
+
+%.mcs: %.bit
+	echo "write_cfgmem -force -format mcs -size 16 -interface SPIx4 -loadbit {up 0x0000000 $*.bit} -checksum -file $*.mcs" > generate_mcs.tcl
+	echo "exit" >> generate_mcs.tcl
+	vivado -mode batch -source generate_mcs.tcl
+
+flash: $(FPGA_TOP).mcs
+	echo "open_hw" > flash.tcl
+	echo "connect_hw_server" >> flash.tcl
+	echo "open_hw_target" >> flash.tcl
+	echo "current_hw_device [lindex [get_hw_devices] 0]" >> flash.tcl
+	echo "refresh_hw_device -update_hw_probes false [current_hw_device]" >> flash.tcl
+	echo "create_hw_cfgmem -hw_device [current_hw_device] [lindex [get_cfgmem_parts {mt25ql128-spi-x1_x2_x4}] 0]" >> flash.tcl
+	echo "set_property PROGRAM.FILES [list "$(FPGA_TOP).mcs"] [get_property PROGRAM.HW_CFGMEM [current_hw_device]]" >> flash.tcl
+	echo "set_property PROGRAM.ERASE 1 [get_property PROGRAM.HW_CFGMEM [current_hw_device]]" >> flash.tcl
+	echo "set_property PROGRAM.CFG_PROGRAM 1 [get_property PROGRAM.HW_CFGMEM [current_hw_device]]" >> flash.tcl
+	echo "set_property PROGRAM.VERIFY 1 [get_property PROGRAM.HW_CFGMEM [current_hw_device]]" >> flash.tcl
+	echo "set_property PROGRAM.CHECKSUM 0 [get_property PROGRAM.HW_CFGMEM [current_hw_device]]" >> flash.tcl
+	echo "set_property PROGRAM.ADDRESS_RANGE {use_file} [get_property PROGRAM.HW_CFGMEM [current_hw_device]]" >> flash.tcl
+	echo "create_hw_bitstream -hw_device [current_hw_device] [get_property PROGRAM.HW_CFGMEM_BITFILE [ lindex [get_hw_devices] 0]]" >> flash.tcl
+	echo "program_hw_devices [current_hw_device]" >> flash.tcl
+	echo "refresh_hw_device [current_hw_device]" >> flash.tcl
+	echo "program_hw_cfgmem -hw_cfgmem [get_property PROGRAM.HW_CFGMEM [current_hw_device]]" >> flash.tcl
+	echo "boot_hw_device [current_hw_device]" >> flash.tcl
+	echo "exit" >> flash.tcl
+	vivado -mode batch -source flash.tcl
 
