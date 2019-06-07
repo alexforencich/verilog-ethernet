@@ -81,11 +81,9 @@ module eth_mac_phy_10g #
     /*
      * Status
      */
-    output wire                  tx_start_packet_0,
-    output wire                  tx_start_packet_4,
+    output wire [1:0]            tx_start_packet,
     output wire                  tx_error_underflow,
-    output wire                  rx_start_packet_0,
-    output wire                  rx_start_packet_4,
+    output wire [1:0]            rx_start_packet,
     output wire [6:0]            rx_error_count,
     output wire                  rx_error_bad_frame,
     output wire                  rx_error_bad_fcs,
@@ -123,8 +121,7 @@ eth_mac_phy_10g_rx_inst (
     .serdes_rx_data(serdes_rx_data),
     .serdes_rx_hdr(serdes_rx_hdr),
     .serdes_rx_bitslip(serdes_rx_bitslip),
-    .rx_start_packet_0(rx_start_packet_0),
-    .rx_start_packet_4(rx_start_packet_4),
+    .rx_start_packet(rx_start_packet),
     .rx_error_count(rx_error_count),
     .rx_error_bad_frame(rx_error_bad_frame),
     .rx_error_bad_fcs(rx_error_bad_fcs),
@@ -157,8 +154,7 @@ eth_mac_phy_10g_tx_inst (
     .s_axis_tuser(tx_axis_tuser),
     .serdes_tx_data(serdes_tx_data),
     .serdes_tx_hdr(serdes_tx_hdr),
-    .tx_start_packet_0(tx_start_packet_0),
-    .tx_start_packet_4(tx_start_packet_4),
+    .tx_start_packet(tx_start_packet),
     .tx_error_underflow(tx_error_underflow),
     .ifg_delay(ifg_delay),
     .tx_prbs31_enable(tx_prbs31_enable)

@@ -75,11 +75,9 @@ wire rx_axis_tuser;
 wire [DATA_WIDTH-1:0] serdes_tx_data;
 wire [HDR_WIDTH-1:0] serdes_tx_hdr;
 wire serdes_rx_bitslip;
-wire tx_start_packet_0;
-wire tx_start_packet_4;
+wire [1:0] tx_start_packet;
 wire tx_error_underflow;
-wire rx_start_packet_0;
-wire rx_start_packet_4;
+wire [1:0] rx_start_packet;
 wire [6:0] rx_error_count;
 wire rx_error_bad_frame;
 wire rx_error_bad_fcs;
@@ -118,12 +116,10 @@ initial begin
         serdes_tx_data,
         serdes_tx_hdr,
         serdes_rx_bitslip,
-        tx_start_packet_0,
-        tx_start_packet_4,
+        tx_start_packet,
         tx_error_underflow,
         rx_error_count,
-        rx_start_packet_0,
-        rx_start_packet_4,
+        rx_start_packet,
         rx_error_bad_frame,
         rx_error_bad_fcs,
         rx_bad_block,
@@ -171,11 +167,9 @@ UUT (
     .serdes_rx_data(serdes_rx_data),
     .serdes_rx_hdr(serdes_rx_hdr),
     .serdes_rx_bitslip(serdes_rx_bitslip),
-    .tx_start_packet_0(tx_start_packet_0),
-    .tx_start_packet_4(tx_start_packet_4),
+    .tx_start_packet(tx_start_packet),
     .tx_error_underflow(tx_error_underflow),
-    .rx_start_packet_0(rx_start_packet_0),
-    .rx_start_packet_4(rx_start_packet_4),
+    .rx_start_packet(rx_start_packet),
     .rx_error_count(rx_error_count),
     .rx_error_bad_frame(rx_error_bad_frame),
     .rx_error_bad_fcs(rx_error_bad_fcs),

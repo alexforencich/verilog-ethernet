@@ -101,11 +101,9 @@ def bench():
     serdes_tx_data = Signal(intbv(0)[DATA_WIDTH:])
     serdes_tx_hdr = Signal(intbv(1)[HDR_WIDTH:])
     serdes_rx_bitslip = Signal(bool(0))
-    tx_start_packet_0 = Signal(bool(0))
-    tx_start_packet_4 = Signal(bool(0))
+    tx_start_packet = Signal(intbv(0)[2:])
     tx_error_underflow = Signal(bool(0))
-    rx_start_packet_0 = Signal(bool(0))
-    rx_start_packet_4 = Signal(bool(0))
+    rx_start_packet = Signal(intbv(0)[2:])
     rx_error_count = Signal(intbv(0)[7:])
     rx_error_bad_frame = Signal(bool(0))
     rx_error_bad_fcs = Signal(bool(0))
@@ -191,11 +189,9 @@ def bench():
         serdes_rx_data=serdes_rx_data,
         serdes_rx_hdr=serdes_rx_hdr,
         serdes_rx_bitslip=serdes_rx_bitslip,
-        tx_start_packet_0=tx_start_packet_0,
-        tx_start_packet_4=tx_start_packet_4,
+        tx_start_packet=tx_start_packet,
         tx_error_underflow=tx_error_underflow,
-        rx_start_packet_0=rx_start_packet_0,
-        rx_start_packet_4=rx_start_packet_4,
+        rx_start_packet=rx_start_packet,
         rx_error_count=rx_error_count,
         rx_error_bad_frame=rx_error_bad_frame,
         rx_error_bad_fcs=rx_error_bad_fcs,

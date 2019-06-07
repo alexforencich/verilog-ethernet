@@ -51,8 +51,7 @@ reg [7:0] ifg_delay = 0;
 wire s_axis_tready;
 wire [63:0] xgmii_txd;
 wire [7:0] xgmii_txc;
-wire start_packet_0;
-wire start_packet_4;
+wire [1:0] start_packet;
 wire error_underflow;
 
 initial begin
@@ -72,8 +71,7 @@ initial begin
         s_axis_tready,
         xgmii_txd,
         xgmii_txc,
-        start_packet_0,
-        start_packet_4,
+        start_packet,
         error_underflow
     );
 
@@ -98,8 +96,7 @@ UUT (
     .xgmii_txd(xgmii_txd),
     .xgmii_txc(xgmii_txc),
     .ifg_delay(ifg_delay),
-    .start_packet_0(start_packet_0),
-    .start_packet_4(start_packet_4),
+    .start_packet(start_packet),
     .error_underflow(error_underflow)
 );
 

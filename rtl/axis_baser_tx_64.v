@@ -66,8 +66,7 @@ module axis_baser_tx_64 #
     /*
      * Status
      */
-    output wire                  start_packet_0,
-    output wire                  start_packet_4,
+    output wire [1:0]            start_packet,
     output wire                  error_underflow
 );
 
@@ -210,8 +209,7 @@ reg [HDR_WIDTH-1:0] encoded_tx_hdr_reg = SYNC_CTRL;
 reg [DATA_WIDTH-1:0] output_data_reg = {DATA_WIDTH{1'b0}}, output_data_next;
 reg [3:0] output_type_reg = OUTPUT_TYPE_IDLE, output_type_next;
 
-reg start_packet_0_reg = 1'b0, start_packet_0_next;
-reg start_packet_4_reg = 1'b0, start_packet_4_next;
+reg [1:0] start_packet_reg = 2'b00, start_packet_next;
 reg error_underflow_reg = 1'b0, error_underflow_next;
 
 assign s_axis_tready = s_axis_tready_reg;
@@ -219,8 +217,7 @@ assign s_axis_tready = s_axis_tready_reg;
 assign encoded_tx_data = encoded_tx_data_reg;
 assign encoded_tx_hdr = encoded_tx_hdr_reg;
 
-assign start_packet_0 = start_packet_0_reg;
-assign start_packet_4 = start_packet_4_reg;
+assign start_packet = start_packet_reg;
 assign error_underflow = error_underflow_reg;
 
 lfsr #(
@@ -475,8 +472,7 @@ always @* begin
     output_data_next = s_tdata_reg;
     output_type_next = OUTPUT_TYPE_IDLE;
 
-    start_packet_0_next = 1'b0;
-    start_packet_4_next = 1'b0;
+    start_packet_next = 2'b00;
     error_underflow_next = 1'b0;
 
     case (state_reg)
@@ -497,11 +493,11 @@ always @* begin
                 if (ifg_count_reg > 8'd0) begin
                     // need to send more idles - swap lanes
                     swap_lanes = 1'b1;
-                    start_packet_4_next = 1'b1;
+                    start_packet_next = 2'b10;
                 end else begin
                     // no more idles - unswap
                     unswap_lanes = 1'b1;
-                    start_packet_0_next = 1'b1;
+                    start_packet_next = 2'b01;
                 end
                 output_data_next = {ETH_SFD, {7{ETH_PRE}}};
                 output_type_next = OUTPUT_TYPE_START_0;
@@ -731,8 +727,7 @@ always @(posedge clk) begin
         output_data_reg <= {DATA_WIDTH{1'b0}};
         output_type_reg <= OUTPUT_TYPE_IDLE;
 
-        start_packet_0_reg <= 1'b0;
-        start_packet_4_reg <= 1'b0;
+        start_packet_reg <= 2'b00;
         error_underflow_reg <= 1'b0;
 
         crc_state <= 32'hFFFFFFFF;
@@ -751,8 +746,7 @@ always @(posedge clk) begin
 
         s_axis_tready_reg <= s_axis_tready_next;
 
-        start_packet_0_reg <= start_packet_0_next;
-        start_packet_4_reg <= start_packet_4_next;
+        start_packet_reg <= start_packet_next;
         error_underflow_reg <= error_underflow_next;
 
         delay_type_valid <= 1'b0;

@@ -64,8 +64,7 @@ module eth_mac_phy_10g_rx #
     /*
      * Status
      */
-    output wire                  rx_start_packet_0,
-    output wire                  rx_start_packet_4,
+    output wire [1:0]            rx_start_packet,
     output wire [6:0]            rx_error_count,
     output wire                  rx_error_bad_frame,
     output wire                  rx_error_bad_fcs,
@@ -139,8 +138,7 @@ axis_baser_rx_inst (
     .m_axis_tvalid(m_axis_tvalid),
     .m_axis_tlast(m_axis_tlast),
     .m_axis_tuser(m_axis_tuser),
-    .start_packet_0(rx_start_packet_0),
-    .start_packet_4(rx_start_packet_4),
+    .start_packet(rx_start_packet),
     .error_bad_frame(rx_error_bad_frame),
     .error_bad_fcs(rx_error_bad_fcs),
     .rx_bad_block(rx_bad_block)

@@ -66,11 +66,9 @@ wire rx_axis_tlast;
 wire rx_axis_tuser;
 wire [DATA_WIDTH-1:0] xgmii_txd;
 wire [CTRL_WIDTH-1:0] xgmii_txc;
-wire tx_start_packet_0;
-wire tx_start_packet_4;
+wire [1:0] tx_start_packet;
 wire tx_error_underflow;
-wire rx_start_packet_0;
-wire rx_start_packet_4;
+wire [1:0] rx_start_packet;
 wire rx_error_bad_frame;
 wire rx_error_bad_fcs;
 
@@ -102,11 +100,9 @@ initial begin
         rx_axis_tuser,
         xgmii_txd,
         xgmii_txc,
-        tx_start_packet_0,
-        tx_start_packet_4,
+        tx_start_packet,
         tx_error_underflow,
-        rx_start_packet_0,
-        rx_start_packet_4,
+        rx_start_packet,
         rx_error_bad_frame,
         rx_error_bad_fcs
     );
@@ -144,11 +140,9 @@ UUT (
     .xgmii_rxc(xgmii_rxc),
     .xgmii_txd(xgmii_txd),
     .xgmii_txc(xgmii_txc),
-    .tx_start_packet_0(tx_start_packet_0),
-    .tx_start_packet_4(tx_start_packet_4),
+    .tx_start_packet(tx_start_packet),
     .tx_error_underflow(tx_error_underflow),
-    .rx_start_packet_0(rx_start_packet_0),
-    .rx_start_packet_4(rx_start_packet_4),
+    .rx_start_packet(rx_start_packet),
     .rx_error_bad_frame(rx_error_bad_frame),
     .rx_error_bad_fcs(rx_error_bad_fcs),
     .ifg_delay(ifg_delay)

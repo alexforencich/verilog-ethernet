@@ -82,11 +82,9 @@ def bench():
     rx_axis_tuser = Signal(bool(0))
     xgmii_txd = Signal(intbv(0x0707070707070707)[DATA_WIDTH:])
     xgmii_txc = Signal(intbv(0xff)[CTRL_WIDTH:])
-    tx_start_packet_0 = Signal(bool(0))
-    tx_start_packet_4 = Signal(bool(0))
+    tx_start_packet = Signal(intbv(0)[2:])
     tx_error_underflow = Signal(bool(0))
-    rx_start_packet_0 = Signal(bool(0))
-    rx_start_packet_4 = Signal(bool(0))
+    rx_start_packet = Signal(intbv(0)[2:])
     rx_error_bad_frame = Signal(bool(0))
     rx_error_bad_fcs = Signal(bool(0))
 
@@ -175,11 +173,9 @@ def bench():
         xgmii_txd=xgmii_txd,
         xgmii_txc=xgmii_txc,
 
-        tx_start_packet_0=tx_start_packet_0,
-        tx_start_packet_4=tx_start_packet_4,
+        tx_start_packet=tx_start_packet,
         tx_error_underflow=tx_error_underflow,
-        rx_start_packet_0=rx_start_packet_0,
-        rx_start_packet_4=rx_start_packet_4,
+        rx_start_packet=rx_start_packet,
         rx_error_bad_frame=rx_error_bad_frame,
         rx_error_bad_fcs=rx_error_bad_fcs,
 

@@ -69,8 +69,7 @@ def bench():
     s_axis_tready = Signal(bool(0))
     encoded_tx_data = Signal(intbv(0)[DATA_WIDTH:])
     encoded_tx_hdr = Signal(intbv(1)[HDR_WIDTH:])
-    start_packet_0 = Signal(bool(0))
-    start_packet_4 = Signal(bool(0))
+    start_packet = Signal(intbv(0)[2:])
     error_underflow = Signal(bool(0))
 
     # sources and sinks
@@ -119,8 +118,7 @@ def bench():
         encoded_tx_data=encoded_tx_data,
         encoded_tx_hdr=encoded_tx_hdr,
         ifg_delay=ifg_delay,
-        start_packet_0=start_packet_0,
-        start_packet_4=start_packet_4,
+        start_packet=start_packet,
         error_underflow=error_underflow
     )
 

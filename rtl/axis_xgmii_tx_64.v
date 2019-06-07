@@ -63,8 +63,7 @@ module axis_xgmii_tx_64 #
     /*
      * Status
      */
-    output wire        start_packet_0,
-    output wire        start_packet_4,
+    output wire [1:0]  start_packet,
     output wire        error_underflow
 );
 
@@ -139,8 +138,7 @@ wire [31:0] crc_next7;
 reg [63:0] xgmii_txd_reg = {8{XGMII_IDLE}}, xgmii_txd_next;
 reg [7:0] xgmii_txc_reg = 8'b11111111, xgmii_txc_next;
 
-reg start_packet_0_reg = 1'b0, start_packet_0_next;
-reg start_packet_4_reg = 1'b0, start_packet_4_next;
+reg start_packet_reg = 2'b00, start_packet_next;
 reg error_underflow_reg = 1'b0, error_underflow_next;
 
 assign s_axis_tready = s_axis_tready_reg;
@@ -148,8 +146,7 @@ assign s_axis_tready = s_axis_tready_reg;
 assign xgmii_txd = xgmii_txd_reg;
 assign xgmii_txc = xgmii_txc_reg;
 
-assign start_packet_0 = start_packet_0_reg;
-assign start_packet_4 = start_packet_4_reg;
+assign start_packet = start_packet_reg;
 assign error_underflow = error_underflow_reg;
 
 lfsr #(
@@ -405,8 +402,7 @@ always @* begin
     xgmii_txd_next = {8{XGMII_IDLE}};
     xgmii_txc_next = 8'b11111111;
 
-    start_packet_0_next = 1'b0;
-    start_packet_4_next = 1'b0;
+    start_packet_next = 2'b00;
     error_underflow_next = 1'b0;
 
     case (state_reg)
@@ -428,11 +424,11 @@ always @* begin
                 if (ifg_count_reg > 8'd0) begin
                     // need to send more idles - swap lanes
                     swap_lanes = 1'b1;
-                    start_packet_4_next = 1'b1;
+                    start_packet_next = 2'b10;
                 end else begin
                     // no more idles - unswap
                     unswap_lanes = 1'b1;
-                    start_packet_0_next = 1'b1;
+                    start_packet_next = 2'b01;
                 end
                 xgmii_txd_next = {ETH_SFD, {6{ETH_PRE}}, XGMII_START};
                 xgmii_txc_next = 8'b00000001;
@@ -661,8 +657,7 @@ always @(posedge clk) begin
         xgmii_txd_reg <= {8{XGMII_IDLE}};
         xgmii_txc_reg <= 8'b11111111;
 
-        start_packet_0_reg <= 1'b0;
-        start_packet_4_reg <= 1'b0;
+        start_packet_reg <= 2'b00;
         error_underflow_reg <= 1'b0;
 
         crc_state <= 32'hFFFFFFFF;
@@ -678,8 +673,7 @@ always @(posedge clk) begin
 
         s_axis_tready_reg <= s_axis_tready_next;
 
-        start_packet_0_reg <= start_packet_0_next;
-        start_packet_4_reg <= start_packet_4_next;
+        start_packet_reg <= start_packet_next;
         error_underflow_reg <= error_underflow_next;
 
         if (swap_lanes || (lanes_swapped && !unswap_lanes)) begin

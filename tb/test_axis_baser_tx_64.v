@@ -55,8 +55,7 @@ reg [7:0] ifg_delay = 0;
 wire s_axis_tready;
 wire [DATA_WIDTH-1:0] encoded_tx_data;
 wire [HDR_WIDTH-1:0] encoded_tx_hdr;
-wire start_packet_0;
-wire start_packet_4;
+wire [1:0] start_packet;
 wire error_underflow;
 
 initial begin
@@ -76,8 +75,7 @@ initial begin
         s_axis_tready,
         encoded_tx_data,
         encoded_tx_hdr,
-        start_packet_0,
-        start_packet_4,
+        start_packet,
         error_underflow
     );
 
@@ -106,8 +104,7 @@ UUT (
     .encoded_tx_data(encoded_tx_data),
     .encoded_tx_hdr(encoded_tx_hdr),
     .ifg_delay(ifg_delay),
-    .start_packet_0(start_packet_0),
-    .start_packet_4(start_packet_4),
+    .start_packet(start_packet),
     .error_underflow(error_underflow)
 );
 

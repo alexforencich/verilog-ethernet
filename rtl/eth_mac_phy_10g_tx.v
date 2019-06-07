@@ -65,8 +65,7 @@ module eth_mac_phy_10g_tx #
     /*
      * Status
      */
-    output wire                  tx_start_packet_0,
-    output wire                  tx_start_packet_4,
+    output wire [1:0]            tx_start_packet,
     output wire                  tx_error_underflow,
 
     /*
@@ -116,8 +115,7 @@ axis_baser_tx_inst (
     .s_axis_tuser(s_axis_tuser),
     .encoded_tx_data(encoded_tx_data),
     .encoded_tx_hdr(encoded_tx_hdr),
-    .start_packet_0(tx_start_packet_0),
-    .start_packet_4(tx_start_packet_4),
+    .start_packet(tx_start_packet),
     .error_underflow(tx_error_underflow),
     .ifg_delay(ifg_delay)
 );

@@ -65,8 +65,7 @@ def bench():
     m_axis_tvalid = Signal(bool(0))
     m_axis_tlast = Signal(bool(0))
     m_axis_tuser = Signal(bool(0))
-    start_packet_0 = Signal(bool(0))
-    start_packet_4 = Signal(bool(0))
+    start_packet = Signal(intbv(0)[2:])
     error_bad_frame = Signal(bool(0))
     error_bad_fcs = Signal(bool(0))
     rx_bad_block = Signal(bool(0))
@@ -111,8 +110,7 @@ def bench():
         m_axis_tvalid=m_axis_tvalid,
         m_axis_tlast=m_axis_tlast,
         m_axis_tuser=m_axis_tuser,
-        start_packet_0=start_packet_0,
-        start_packet_4=start_packet_4,
+        start_packet=start_packet,
         error_bad_frame=error_bad_frame,
         error_bad_fcs=error_bad_fcs,
         rx_bad_block=rx_bad_block
