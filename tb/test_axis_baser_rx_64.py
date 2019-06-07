@@ -50,6 +50,11 @@ def bench():
     DATA_WIDTH = 64
     KEEP_WIDTH = (DATA_WIDTH/8)
     HDR_WIDTH = 2
+    PTP_PERIOD_NS = 0x6
+    PTP_PERIOD_FNS = 0x6666
+    PTP_TS_ENABLE = 0
+    PTP_TS_WIDTH = 96
+    USER_WIDTH = (PTP_TS_WIDTH if PTP_TS_ENABLE else 0) + 1
 
     # Inputs
     clk = Signal(bool(0))
@@ -58,13 +63,14 @@ def bench():
 
     encoded_rx_data = Signal(intbv(0)[DATA_WIDTH:])
     encoded_rx_hdr = Signal(intbv(1)[HDR_WIDTH:])
+    ptp_ts = Signal(intbv(0)[PTP_TS_WIDTH:])
 
     # Outputs
     m_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
     m_axis_tkeep = Signal(intbv(0)[KEEP_WIDTH:])
     m_axis_tvalid = Signal(bool(0))
     m_axis_tlast = Signal(bool(0))
-    m_axis_tuser = Signal(bool(0))
+    m_axis_tuser = Signal(intbv(0)[USER_WIDTH:])
     start_packet = Signal(intbv(0)[2:])
     error_bad_frame = Signal(bool(0))
     error_bad_fcs = Signal(bool(0))
@@ -110,6 +116,7 @@ def bench():
         m_axis_tvalid=m_axis_tvalid,
         m_axis_tlast=m_axis_tlast,
         m_axis_tuser=m_axis_tuser,
+        ptp_ts=ptp_ts,
         start_packet=start_packet,
         error_bad_frame=error_bad_frame,
         error_bad_fcs=error_bad_fcs,

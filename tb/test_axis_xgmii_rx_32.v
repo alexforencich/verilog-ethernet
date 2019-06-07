@@ -32,21 +32,28 @@ THE SOFTWARE.
 module test_axis_xgmii_rx_32;
 
 // Parameters
+parameter DATA_WIDTH = 32;
+parameter KEEP_WIDTH = (DATA_WIDTH/8);
+parameter CTRL_WIDTH = (DATA_WIDTH/8);
+parameter PTP_TS_ENABLE = 0;
+parameter PTP_TS_WIDTH = 96;
+parameter USER_WIDTH = (PTP_TS_ENABLE ? PTP_TS_WIDTH : 0) + 1;
 
 // Inputs
 reg clk = 0;
 reg rst = 0;
-reg [3:0] current_test = 0;
+reg [7:0] current_test = 0;
 
-reg [31:0] xgmii_rxd = 32'h07070707;
-reg [3:0] xgmii_rxc = 4'hf;
+reg [DATA_WIDTH-1:0] xgmii_rxd = 32'h07070707;
+reg [CTRL_WIDTH-1:0] xgmii_rxc = 4'hf;
+reg [PTP_TS_WIDTH-1:0] ptp_ts = 0;
 
 // Outputs
-wire [31:0] m_axis_tdata;
-wire [3:0] m_axis_tkeep;
+wire [DATA_WIDTH-1:0] m_axis_tdata;
+wire [KEEP_WIDTH-1:0] m_axis_tkeep;
 wire m_axis_tvalid;
 wire m_axis_tlast;
-wire m_axis_tuser;
+wire [USER_WIDTH-1:0] m_axis_tuser;
 wire start_packet;
 wire error_bad_frame;
 wire error_bad_fcs;
@@ -58,7 +65,8 @@ initial begin
         rst,
         current_test,
         xgmii_rxd,
-        xgmii_rxc
+        xgmii_rxc,
+        ptp_ts
     );
     $to_myhdl(
         m_axis_tdata,
@@ -76,7 +84,14 @@ initial begin
     $dumpvars(0, test_axis_xgmii_rx_32);
 end
 
-axis_xgmii_rx_32
+axis_xgmii_rx_32 #(
+    .DATA_WIDTH(DATA_WIDTH),
+    .KEEP_WIDTH(KEEP_WIDTH),
+    .CTRL_WIDTH(CTRL_WIDTH),
+    .PTP_TS_ENABLE(PTP_TS_ENABLE),
+    .PTP_TS_WIDTH(PTP_TS_WIDTH),
+    .USER_WIDTH(USER_WIDTH)
+)
 UUT (
     .clk(clk),
     .rst(rst),
@@ -87,6 +102,7 @@ UUT (
     .m_axis_tvalid(m_axis_tvalid),
     .m_axis_tlast(m_axis_tlast),
     .m_axis_tuser(m_axis_tuser),
+    .ptp_ts(ptp_ts),
     .start_packet(start_packet),
     .error_bad_frame(error_bad_frame),
     .error_bad_fcs(error_bad_fcs)

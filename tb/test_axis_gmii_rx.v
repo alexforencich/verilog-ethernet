@@ -32,24 +32,28 @@ THE SOFTWARE.
 module test_axis_gmii_rx;
 
 // Parameters
+parameter DATA_WIDTH = 8;
+parameter PTP_TS_ENABLE = 0;
+parameter PTP_TS_WIDTH = 96;
+parameter USER_WIDTH = (PTP_TS_ENABLE ? PTP_TS_WIDTH : 0) + 1;
 
 // Inputs
 reg clk = 0;
 reg rst = 0;
 reg [7:0] current_test = 0;
 
-reg [7:0] gmii_rxd = 0;
+reg [DATA_WIDTH-1:0] gmii_rxd = 0;
 reg gmii_rx_dv = 0;
 reg gmii_rx_er = 0;
-
+reg [PTP_TS_WIDTH-1:0] ptp_ts = 0;
 reg clk_enable = 1;
 reg mii_select = 0;
 
 // Outputs
-wire [7:0] m_axis_tdata;
+wire [DATA_WIDTH-1:0] m_axis_tdata;
 wire m_axis_tvalid;
 wire m_axis_tlast;
-wire m_axis_tuser;
+wire [USER_WIDTH-1:0] m_axis_tuser;
 wire start_packet;
 wire error_bad_frame;
 wire error_bad_fcs;
@@ -63,6 +67,7 @@ initial begin
         gmii_rxd,
         gmii_rx_dv,
         gmii_rx_er,
+        ptp_ts,
         clk_enable,
         mii_select
     );
@@ -81,7 +86,12 @@ initial begin
     $dumpvars(0, test_axis_gmii_rx);
 end
 
-axis_gmii_rx
+axis_gmii_rx #(
+    .DATA_WIDTH(DATA_WIDTH),
+    .PTP_TS_ENABLE(PTP_TS_ENABLE),
+    .PTP_TS_WIDTH(PTP_TS_WIDTH),
+    .USER_WIDTH(USER_WIDTH)
+)
 UUT (
     .clk(clk),
     .rst(rst),
@@ -92,6 +102,7 @@ UUT (
     .m_axis_tvalid(m_axis_tvalid),
     .m_axis_tlast(m_axis_tlast),
     .m_axis_tuser(m_axis_tuser),
+    .ptp_ts(ptp_ts),
     .clk_enable(clk_enable),
     .mii_select(mii_select),
     .start_packet(start_packet),

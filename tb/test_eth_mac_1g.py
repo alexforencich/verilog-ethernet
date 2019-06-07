@@ -48,8 +48,17 @@ build_cmd = "iverilog -o %s.vvp %s" % (testbench, src)
 def bench():
 
     # Parameters
+    DATA_WIDTH = 8
     ENABLE_PADDING = 1
     MIN_FRAME_LENGTH = 64
+    TX_PTP_TS_ENABLE = 0
+    TX_PTP_TS_WIDTH = 96
+    TX_PTP_TAG_ENABLE = 0
+    TX_PTP_TAG_WIDTH = 16
+    RX_PTP_TS_ENABLE = 0
+    RX_PTP_TS_WIDTH = 96
+    TX_USER_WIDTH = (TX_PTP_TAG_WIDTH if TX_PTP_TS_ENABLE and TX_PTP_TAG_ENABLE else 0) + 1
+    RX_USER_WIDTH = (RX_PTP_TS_WIDTH if RX_PTP_TS_ENABLE else 0) + 1
 
     # Inputs
     clk = Signal(bool(0))
@@ -60,13 +69,15 @@ def bench():
     rx_rst = Signal(bool(0))
     tx_clk = Signal(bool(0))
     tx_rst = Signal(bool(0))
-    tx_axis_tdata = Signal(intbv(0)[8:])
+    tx_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
     tx_axis_tvalid = Signal(bool(0))
     tx_axis_tlast = Signal(bool(0))
-    tx_axis_tuser = Signal(bool(0))
-    gmii_rxd = Signal(intbv(0)[8:])
+    tx_axis_tuser = Signal(intbv(0)[TX_USER_WIDTH:])
+    gmii_rxd = Signal(intbv(0)[DATA_WIDTH:])
     gmii_rx_dv = Signal(bool(0))
     gmii_rx_er = Signal(bool(0))
+    tx_ptp_ts = Signal(intbv(0)[TX_PTP_TS_WIDTH:])
+    rx_ptp_ts = Signal(intbv(0)[RX_PTP_TS_WIDTH:])
     rx_clk_enable = Signal(bool(1))
     tx_clk_enable = Signal(bool(1))
     rx_mii_select = Signal(bool(0))
@@ -75,13 +86,16 @@ def bench():
 
     # Outputs
     tx_axis_tready = Signal(bool(0))
-    rx_axis_tdata = Signal(intbv(0)[8:])
+    rx_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
     rx_axis_tvalid = Signal(bool(0))
     rx_axis_tlast = Signal(bool(0))
-    rx_axis_tuser = Signal(bool(0))
-    gmii_txd = Signal(intbv(0)[8:])
+    rx_axis_tuser = Signal(intbv(0)[RX_USER_WIDTH:])
+    gmii_txd = Signal(intbv(0)[DATA_WIDTH:])
     gmii_tx_en = Signal(bool(0))
     gmii_tx_er = Signal(bool(0))
+    tx_axis_ptp_ts = Signal(intbv(0)[TX_PTP_TS_WIDTH:])
+    tx_axis_ptp_ts_tag = Signal(intbv(0)[TX_PTP_TAG_WIDTH:])
+    tx_axis_ptp_ts_valid = Signal(bool(0))
     tx_start_packet = Signal(bool(0))
     tx_error_underflow = Signal(bool(0))
     rx_start_packet = Signal(bool(0))
@@ -176,6 +190,12 @@ def bench():
         gmii_txd=gmii_txd,
         gmii_tx_en=gmii_tx_en,
         gmii_tx_er=gmii_tx_er,
+
+        tx_ptp_ts=tx_ptp_ts,
+        rx_ptp_ts=rx_ptp_ts,
+        tx_axis_ptp_ts=tx_axis_ptp_ts,
+        tx_axis_ptp_ts_tag=tx_axis_ptp_ts_tag,
+        tx_axis_ptp_ts_valid=tx_axis_ptp_ts_valid,
 
         rx_clk_enable=rx_clk_enable,
         tx_clk_enable=tx_clk_enable,

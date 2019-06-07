@@ -38,41 +38,56 @@ module eth_mac_phy_10g_tx #
     parameter ENABLE_PADDING = 1,
     parameter ENABLE_DIC = 1,
     parameter MIN_FRAME_LENGTH = 64,
+    parameter PTP_PERIOD_NS = 4'h6,
+    parameter PTP_PERIOD_FNS = 16'h6666,
+    parameter PTP_TS_ENABLE = 0,
+    parameter PTP_TS_WIDTH = 96,
+    parameter PTP_TAG_ENABLE = 0,
+    parameter PTP_TAG_WIDTH = 16,
+    parameter USER_WIDTH = (PTP_TS_ENABLE && PTP_TAG_ENABLE ? PTP_TAG_WIDTH : 0) + 1,
     parameter BIT_REVERSE = 0,
     parameter SCRAMBLER_DISABLE = 0,
     parameter PRBS31_ENABLE = 0
 )
 (
-    input  wire                  clk,
-    input  wire                  rst,
+    input  wire                      clk,
+    input  wire                      rst,
 
     /*
      * AXI input
      */
-    input  wire [DATA_WIDTH-1:0] s_axis_tdata,
-    input  wire [KEEP_WIDTH-1:0] s_axis_tkeep,
-    input  wire                  s_axis_tvalid,
-    output wire                  s_axis_tready,
-    input  wire                  s_axis_tlast,
-    input  wire                  s_axis_tuser,
+    input  wire [DATA_WIDTH-1:0]     s_axis_tdata,
+    input  wire [KEEP_WIDTH-1:0]     s_axis_tkeep,
+    input  wire                      s_axis_tvalid,
+    output wire                      s_axis_tready,
+    input  wire                      s_axis_tlast,
+    input  wire [USER_WIDTH-1:0]     s_axis_tuser,
 
     /*
      * SERDES interface
      */
-    output wire [DATA_WIDTH-1:0] serdes_tx_data,
-    output wire [HDR_WIDTH-1:0]  serdes_tx_hdr,
+    output wire [DATA_WIDTH-1:0]     serdes_tx_data,
+    output wire [HDR_WIDTH-1:0]      serdes_tx_hdr,
+
+    /*
+     * PTP
+     */
+    input  wire [PTP_TS_WIDTH-1:0]   ptp_ts,
+    output wire [PTP_TS_WIDTH-1:0]   m_axis_ptp_ts,
+    output wire [PTP_TAG_WIDTH-1:0]  m_axis_ptp_ts_tag,
+    output wire                      m_axis_ptp_ts_valid,
 
     /*
      * Status
      */
-    output wire [1:0]            tx_start_packet,
-    output wire                  tx_error_underflow,
+    output wire [1:0]                tx_start_packet,
+    output wire                      tx_error_underflow,
 
     /*
      * Configuration
      */
-    input  wire [7:0]            ifg_delay,
-    input  wire                  tx_prbs31_enable
+    input  wire [7:0]                ifg_delay,
+    input  wire                      tx_prbs31_enable
 );
 
 // bus width assertions
@@ -102,7 +117,14 @@ axis_baser_tx_64 #(
     .HDR_WIDTH(HDR_WIDTH),
     .ENABLE_PADDING(ENABLE_PADDING),
     .ENABLE_DIC(ENABLE_DIC),
-    .MIN_FRAME_LENGTH(MIN_FRAME_LENGTH)
+    .MIN_FRAME_LENGTH(MIN_FRAME_LENGTH),
+    .PTP_PERIOD_NS(PTP_PERIOD_NS),
+    .PTP_PERIOD_FNS(PTP_PERIOD_FNS),
+    .PTP_TS_ENABLE(PTP_TS_ENABLE),
+    .PTP_TS_WIDTH(PTP_TS_WIDTH),
+    .PTP_TAG_ENABLE(PTP_TAG_ENABLE),
+    .PTP_TAG_WIDTH(PTP_TAG_WIDTH),
+    .USER_WIDTH(USER_WIDTH)
 )
 axis_baser_tx_inst (
     .clk(clk),
@@ -115,6 +137,10 @@ axis_baser_tx_inst (
     .s_axis_tuser(s_axis_tuser),
     .encoded_tx_data(encoded_tx_data),
     .encoded_tx_hdr(encoded_tx_hdr),
+    .ptp_ts(ptp_ts),
+    .m_axis_ptp_ts(m_axis_ptp_ts),
+    .m_axis_ptp_ts_tag(m_axis_ptp_ts_tag),
+    .m_axis_ptp_ts_valid(m_axis_ptp_ts_valid),
     .start_packet(tx_start_packet),
     .error_underflow(tx_error_underflow),
     .ifg_delay(ifg_delay)

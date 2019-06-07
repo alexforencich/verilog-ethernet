@@ -46,27 +46,37 @@ build_cmd = "iverilog -o %s.vvp %s" % (testbench, src)
 def bench():
 
     # Parameters
+    DATA_WIDTH = 8
     ENABLE_PADDING = 1
     MIN_FRAME_LENGTH = 64
+    PTP_TS_ENABLE = 0
+    PTP_TS_WIDTH = 96
+    PTP_TAG_ENABLE = 0
+    PTP_TAG_WIDTH = 16
+    USER_WIDTH = (PTP_TAG_WIDTH if PTP_TS_ENABLE and PTP_TAG_ENABLE else 0) + 1
 
     # Inputs
     clk = Signal(bool(0))
     rst = Signal(bool(0))
     current_test = Signal(intbv(0)[8:])
 
-    s_axis_tdata = Signal(intbv(0)[8:])
+    s_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
     s_axis_tvalid = Signal(bool(0))
     s_axis_tlast = Signal(bool(0))
-    s_axis_tuser = Signal(bool(0))
+    s_axis_tuser = Signal(intbv(0)[USER_WIDTH:])
+    ptp_ts = Signal(intbv(0)[PTP_TS_WIDTH:])
     clk_enable = Signal(bool(1))
     mii_select = Signal(bool(0))
     ifg_delay = Signal(intbv(0)[8:])
 
     # Outputs
     s_axis_tready = Signal(bool(0))
-    gmii_txd = Signal(intbv(0)[8:])
+    gmii_txd = Signal(intbv(0)[DATA_WIDTH:])
     gmii_tx_en = Signal(bool(0))
     gmii_tx_er = Signal(bool(0))
+    m_axis_ptp_ts = Signal(intbv(0)[PTP_TS_WIDTH:])
+    m_axis_ptp_ts_tag = Signal(intbv(0)[PTP_TAG_WIDTH:])
+    m_axis_ptp_ts_valid = Signal(bool(0))
     start_packet = Signal(bool(0))
     error_underflow = Signal(bool(0))
 
@@ -119,6 +129,11 @@ def bench():
         gmii_txd=gmii_txd,
         gmii_tx_en=gmii_tx_en,
         gmii_tx_er=gmii_tx_er,
+
+        ptp_ts=ptp_ts,
+        m_axis_ptp_ts=m_axis_ptp_ts,
+        m_axis_ptp_ts_tag=m_axis_ptp_ts_tag,
+        m_axis_ptp_ts_valid=m_axis_ptp_ts_valid,
 
         clk_enable=clk_enable,
         mii_select=mii_select,

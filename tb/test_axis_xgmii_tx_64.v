@@ -32,25 +32,40 @@ THE SOFTWARE.
 module test_axis_xgmii_tx_64;
 
 // Parameters
+parameter DATA_WIDTH = 64;
+parameter KEEP_WIDTH = (DATA_WIDTH/8);
+parameter CTRL_WIDTH = (DATA_WIDTH/8);
 parameter ENABLE_PADDING = 1;
+parameter ENABLE_DIC = 1;
 parameter MIN_FRAME_LENGTH = 64;
+parameter PTP_PERIOD_NS = 4'h6;
+parameter PTP_PERIOD_FNS = 16'h6666;
+parameter PTP_TS_ENABLE = 0;
+parameter PTP_TS_WIDTH = 96;
+parameter PTP_TAG_ENABLE = 0;
+parameter PTP_TAG_WIDTH = 16;
+parameter USER_WIDTH = (PTP_TS_ENABLE && PTP_TAG_ENABLE ? PTP_TAG_WIDTH : 0) + 1;
 
 // Inputs
 reg clk = 0;
 reg rst = 0;
 reg [7:0] current_test = 0;
 
-reg [63:0] s_axis_tdata = 0;
-reg [7:0] s_axis_tkeep = 0;
+reg [DATA_WIDTH-1:0] s_axis_tdata = 0;
+reg [KEEP_WIDTH-1:0] s_axis_tkeep = 0;
 reg s_axis_tvalid = 0;
 reg s_axis_tlast = 0;
-reg s_axis_tuser = 0;
+reg [USER_WIDTH-1:0] s_axis_tuser = 0;
+reg [PTP_TS_WIDTH-1:0] ptp_ts = 0;
 reg [7:0] ifg_delay = 0;
 
 // Outputs
 wire s_axis_tready;
-wire [63:0] xgmii_txd;
-wire [7:0] xgmii_txc;
+wire [DATA_WIDTH-1:0] xgmii_txd;
+wire [CTRL_WIDTH-1:0] xgmii_txc;
+wire [PTP_TS_WIDTH-1:0] m_axis_ptp_ts;
+wire [PTP_TAG_WIDTH-1:0] m_axis_ptp_ts_tag;
+wire m_axis_ptp_ts_valid;
 wire [1:0] start_packet;
 wire error_underflow;
 
@@ -65,12 +80,16 @@ initial begin
         s_axis_tvalid,
         s_axis_tlast,
         s_axis_tuser,
+        ptp_ts,
         ifg_delay
     );
     $to_myhdl(
         s_axis_tready,
         xgmii_txd,
         xgmii_txc,
+        m_axis_ptp_ts,
+        m_axis_ptp_ts_tag,
+        m_axis_ptp_ts_valid,
         start_packet,
         error_underflow
     );
@@ -81,8 +100,19 @@ initial begin
 end
 
 axis_xgmii_tx_64 #(
+    .DATA_WIDTH(DATA_WIDTH),
+    .KEEP_WIDTH(KEEP_WIDTH),
+    .CTRL_WIDTH(CTRL_WIDTH),
     .ENABLE_PADDING(ENABLE_PADDING),
-    .MIN_FRAME_LENGTH(MIN_FRAME_LENGTH)
+    .ENABLE_DIC(ENABLE_DIC),
+    .MIN_FRAME_LENGTH(MIN_FRAME_LENGTH),
+    .PTP_PERIOD_NS(PTP_PERIOD_NS),
+    .PTP_PERIOD_FNS(PTP_PERIOD_FNS),
+    .PTP_TS_ENABLE(PTP_TS_ENABLE),
+    .PTP_TS_WIDTH(PTP_TS_WIDTH),
+    .PTP_TAG_ENABLE(PTP_TAG_ENABLE),
+    .PTP_TAG_WIDTH(PTP_TAG_WIDTH),
+    .USER_WIDTH(USER_WIDTH)
 )
 UUT (
     .clk(clk),
@@ -95,6 +125,10 @@ UUT (
     .s_axis_tuser(s_axis_tuser),
     .xgmii_txd(xgmii_txd),
     .xgmii_txc(xgmii_txc),
+    .ptp_ts(ptp_ts),
+    .m_axis_ptp_ts(m_axis_ptp_ts),
+    .m_axis_ptp_ts_tag(m_axis_ptp_ts_tag),
+    .m_axis_ptp_ts_valid(m_axis_ptp_ts_valid),
     .ifg_delay(ifg_delay),
     .start_packet(start_packet),
     .error_underflow(error_underflow)

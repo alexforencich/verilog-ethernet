@@ -54,6 +54,14 @@ def bench():
     ENABLE_PADDING = 1
     ENABLE_DIC = 1
     MIN_FRAME_LENGTH = 64
+    TX_PTP_TS_ENABLE = 0
+    TX_PTP_TS_WIDTH = 96
+    TX_PTP_TAG_ENABLE = 0
+    TX_PTP_TAG_WIDTH = 16
+    RX_PTP_TS_ENABLE = 0
+    RX_PTP_TS_WIDTH = 96
+    TX_USER_WIDTH = (TX_PTP_TAG_WIDTH if TX_PTP_TS_ENABLE and TX_PTP_TAG_ENABLE else 0) + 1
+    RX_USER_WIDTH = (RX_PTP_TS_WIDTH if RX_PTP_TS_ENABLE else 0) + 1
 
     # Inputs
     clk = Signal(bool(0))
@@ -68,9 +76,11 @@ def bench():
     tx_axis_tkeep = Signal(intbv(0)[KEEP_WIDTH:])
     tx_axis_tvalid = Signal(bool(0))
     tx_axis_tlast = Signal(bool(0))
-    tx_axis_tuser = Signal(bool(0))
+    tx_axis_tuser = Signal(intbv(0)[TX_USER_WIDTH:])
     xgmii_rxd = Signal(intbv(0x0707070707070707)[DATA_WIDTH:])
     xgmii_rxc = Signal(intbv(0xff)[CTRL_WIDTH:])
+    tx_ptp_ts = Signal(intbv(0)[TX_PTP_TS_WIDTH:])
+    rx_ptp_ts = Signal(intbv(0)[RX_PTP_TS_WIDTH:])
     ifg_delay = Signal(intbv(0)[8:])
 
     # Outputs
@@ -79,9 +89,12 @@ def bench():
     rx_axis_tkeep = Signal(intbv(0)[KEEP_WIDTH:])
     rx_axis_tvalid = Signal(bool(0))
     rx_axis_tlast = Signal(bool(0))
-    rx_axis_tuser = Signal(bool(0))
+    rx_axis_tuser = Signal(intbv(0)[RX_USER_WIDTH:])
     xgmii_txd = Signal(intbv(0x0707070707070707)[DATA_WIDTH:])
     xgmii_txc = Signal(intbv(0xff)[CTRL_WIDTH:])
+    tx_axis_ptp_ts = Signal(intbv(0)[TX_PTP_TS_WIDTH:])
+    tx_axis_ptp_ts_tag = Signal(intbv(0)[TX_PTP_TAG_WIDTH:])
+    tx_axis_ptp_ts_valid = Signal(bool(0))
     tx_start_packet = Signal(intbv(0)[2:])
     tx_error_underflow = Signal(bool(0))
     rx_start_packet = Signal(intbv(0)[2:])
@@ -172,6 +185,12 @@ def bench():
 
         xgmii_txd=xgmii_txd,
         xgmii_txc=xgmii_txc,
+
+        tx_ptp_ts=tx_ptp_ts,
+        rx_ptp_ts=rx_ptp_ts,
+        tx_axis_ptp_ts=tx_axis_ptp_ts,
+        tx_axis_ptp_ts_tag=tx_axis_ptp_ts_tag,
+        tx_axis_ptp_ts_valid=tx_axis_ptp_ts_valid,
 
         tx_start_packet=tx_start_packet,
         tx_error_underflow=tx_error_underflow,

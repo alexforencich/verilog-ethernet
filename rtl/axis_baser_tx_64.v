@@ -36,38 +36,53 @@ module axis_baser_tx_64 #
     parameter HDR_WIDTH = 2,
     parameter ENABLE_PADDING = 1,
     parameter ENABLE_DIC = 1,
-    parameter MIN_FRAME_LENGTH = 64
+    parameter MIN_FRAME_LENGTH = 64,
+    parameter PTP_PERIOD_NS = 4'h6,
+    parameter PTP_PERIOD_FNS = 16'h6666,
+    parameter PTP_TS_ENABLE = 0,
+    parameter PTP_TS_WIDTH = 96,
+    parameter PTP_TAG_ENABLE = 0,
+    parameter PTP_TAG_WIDTH = 16,
+    parameter USER_WIDTH = (PTP_TS_ENABLE && PTP_TAG_ENABLE ? PTP_TAG_WIDTH : 0) + 1
 )
 (
-    input  wire                  clk,
-    input  wire                  rst,
+    input  wire                      clk,
+    input  wire                      rst,
 
     /*
      * AXI input
      */
-    input  wire [DATA_WIDTH-1:0] s_axis_tdata,
-    input  wire [KEEP_WIDTH-1:0] s_axis_tkeep,
-    input  wire                  s_axis_tvalid,
-    output wire                  s_axis_tready,
-    input  wire                  s_axis_tlast,
-    input  wire                  s_axis_tuser,
+    input  wire [DATA_WIDTH-1:0]     s_axis_tdata,
+    input  wire [KEEP_WIDTH-1:0]     s_axis_tkeep,
+    input  wire                      s_axis_tvalid,
+    output wire                      s_axis_tready,
+    input  wire                      s_axis_tlast,
+    input  wire [USER_WIDTH-1:0]     s_axis_tuser,
 
     /*
      * 10GBASE-R encoded interface
      */
-    output wire [DATA_WIDTH-1:0] encoded_tx_data,
-    output wire [HDR_WIDTH-1:0]  encoded_tx_hdr,
+    output wire [DATA_WIDTH-1:0]     encoded_tx_data,
+    output wire [HDR_WIDTH-1:0]      encoded_tx_hdr,
+
+    /*
+     * PTP
+     */
+    input  wire [PTP_TS_WIDTH-1:0]   ptp_ts,
+    output wire [PTP_TS_WIDTH-1:0]   m_axis_ptp_ts,
+    output wire [PTP_TAG_WIDTH-1:0]  m_axis_ptp_ts_tag,
+    output wire                      m_axis_ptp_ts_valid,
 
     /*
      * Configuration
      */
-    input  wire [7:0]            ifg_delay,
+    input  wire [7:0]                ifg_delay,
 
     /*
      * Status
      */
-    output wire [1:0]            start_packet,
-    output wire                  error_underflow
+    output wire [1:0]                start_packet,
+    output wire                      error_underflow
 );
 
 // bus width assertions
@@ -192,6 +207,11 @@ reg [1:0] deficit_idle_count_reg = 2'd0, deficit_idle_count_next;
 
 reg s_axis_tready_reg = 1'b0, s_axis_tready_next;
 
+reg [PTP_TS_WIDTH-1:0] m_axis_ptp_ts_reg = 0, m_axis_ptp_ts_next;
+reg [PTP_TAG_WIDTH-1:0] m_axis_ptp_ts_tag_reg = 0, m_axis_ptp_ts_tag_next;
+reg m_axis_ptp_ts_valid_reg = 1'b0, m_axis_ptp_ts_valid_next;
+reg m_axis_ptp_ts_valid_int_reg = 1'b0, m_axis_ptp_ts_valid_int_next;
+
 reg [31:0] crc_state = 32'hFFFFFFFF;
 
 wire [31:0] crc_next0;
@@ -216,6 +236,10 @@ assign s_axis_tready = s_axis_tready_reg;
 
 assign encoded_tx_data = encoded_tx_data_reg;
 assign encoded_tx_hdr = encoded_tx_hdr_reg;
+
+assign m_axis_ptp_ts = PTP_TS_ENABLE ? m_axis_ptp_ts_reg : 0;
+assign m_axis_ptp_ts_tag = PTP_TS_ENABLE && PTP_TAG_ENABLE ? m_axis_ptp_ts_tag_reg : 0;
+assign m_axis_ptp_ts_valid = PTP_TS_ENABLE ? m_axis_ptp_ts_valid_reg : 1'b0;
 
 assign start_packet = start_packet_reg;
 assign error_underflow = error_underflow_reg;
@@ -469,11 +493,25 @@ always @* begin
     s_tdata_next = s_tdata_reg;
     s_tkeep_next = s_tkeep_reg;
 
+    m_axis_ptp_ts_next = m_axis_ptp_ts_reg;
+    m_axis_ptp_ts_tag_next = m_axis_ptp_ts_tag_reg;
+    m_axis_ptp_ts_valid_next = 1'b0;
+    m_axis_ptp_ts_valid_int_next = 1'b0;
+
     output_data_next = s_tdata_reg;
     output_type_next = OUTPUT_TYPE_IDLE;
 
     start_packet_next = 2'b00;
     error_underflow_next = 1'b0;
+
+    if (m_axis_ptp_ts_valid_int_reg) begin
+        m_axis_ptp_ts_valid_next = 1'b1;
+        if (PTP_TS_WIDTH == 96 && $signed({1'b0, m_axis_ptp_ts_reg[45:16]}) - $signed(31'd1000000000) > 0) begin
+            // ns field rollover
+            m_axis_ptp_ts_next[45:16] <= $signed({1'b0, m_axis_ptp_ts_reg[45:16]}) - $signed(31'd1000000000);
+            m_axis_ptp_ts_next[95:48] <= m_axis_ptp_ts_reg[95:48] + 1;
+        end
+    end
 
     case (state_reg)
         STATE_IDLE: begin
@@ -493,10 +531,26 @@ always @* begin
                 if (ifg_count_reg > 8'd0) begin
                     // need to send more idles - swap lanes
                     swap_lanes = 1'b1;
+                    if (PTP_TS_WIDTH == 96) begin
+                        m_axis_ptp_ts_next[45:0] <= ptp_ts[45:0] + (PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS) * 1.5;
+                        m_axis_ptp_ts_next[95:48] <= ptp_ts[95:48];
+                    end else begin
+                        m_axis_ptp_ts_next = ptp_ts + (PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS) * 1.5;
+                    end
+                    m_axis_ptp_ts_tag_next = s_axis_tuser >> 1;
+                    m_axis_ptp_ts_valid_int_next = 1'b1;
                     start_packet_next = 2'b10;
                 end else begin
                     // no more idles - unswap
                     unswap_lanes = 1'b1;
+                    if (PTP_TS_WIDTH == 96) begin
+                        m_axis_ptp_ts_next[45:0] <= ptp_ts[45:0] + (PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS);
+                        m_axis_ptp_ts_next[95:48] <= ptp_ts[95:48];
+                    end else begin
+                        m_axis_ptp_ts_next = ptp_ts + (PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS);
+                    end
+                    m_axis_ptp_ts_tag_next = s_axis_tuser >> 1;
+                    m_axis_ptp_ts_valid_int_next = 1'b1;
                     start_packet_next = 2'b01;
                 end
                 output_data_next = {ETH_SFD, {7{ETH_PRE}}};
@@ -527,7 +581,7 @@ always @* begin
                 if (s_axis_tlast) begin
                     frame_ptr_next = frame_ptr_reg + keep2count(s_axis_tkeep);
                     s_axis_tready_next = 1'b0;
-                    if (s_axis_tuser) begin
+                    if (s_axis_tuser[0]) begin
                         output_type_next = OUTPUT_TYPE_ERROR;
                         frame_ptr_next = 16'd0;
                         ifg_count_next = 8'd8;
@@ -721,6 +775,9 @@ always @(posedge clk) begin
 
         s_axis_tready_reg <= 1'b0;
 
+        m_axis_ptp_ts_valid_reg <= 1'b0;
+        m_axis_ptp_ts_valid_int_reg <= 1'b0;
+
         encoded_tx_data_reg <= {{8{CTRL_IDLE}}, BLOCK_TYPE_CTRL};
         encoded_tx_hdr_reg <= SYNC_CTRL;
 
@@ -745,6 +802,9 @@ always @(posedge clk) begin
         deficit_idle_count_reg <= deficit_idle_count_next;
 
         s_axis_tready_reg <= s_axis_tready_next;
+    
+        m_axis_ptp_ts_valid_reg <= m_axis_ptp_ts_valid_next;
+        m_axis_ptp_ts_valid_int_reg <= m_axis_ptp_ts_valid_int_next;
 
         start_packet_reg <= start_packet_next;
         error_underflow_reg <= error_underflow_next;
@@ -844,6 +904,9 @@ always @(posedge clk) begin
 
     s_tdata_reg <= s_tdata_next;
     s_tkeep_reg <= s_tkeep_next;
+
+    m_axis_ptp_ts_reg <= m_axis_ptp_ts_next;
+    m_axis_ptp_ts_tag_reg <= m_axis_ptp_ts_tag_next;
 
     swap_data <= output_data_next[63:32];
 

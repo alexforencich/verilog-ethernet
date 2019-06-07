@@ -46,24 +46,28 @@ build_cmd = "iverilog -o %s.vvp %s" % (testbench, src)
 def bench():
 
     # Parameters
-
+    DATA_WIDTH = 8
+    PTP_TS_ENABLE = 0
+    PTP_TS_WIDTH = 96
+    USER_WIDTH = (PTP_TS_WIDTH if PTP_TS_ENABLE else 0) + 1
 
     # Inputs
     clk = Signal(bool(0))
     rst = Signal(bool(0))
     current_test = Signal(intbv(0)[8:])
 
-    gmii_rxd = Signal(intbv(0)[8:])
+    gmii_rxd = Signal(intbv(0)[DATA_WIDTH:])
     gmii_rx_dv = Signal(bool(0))
     gmii_rx_er = Signal(bool(0))
+    ptp_ts = Signal(intbv(0)[PTP_TS_WIDTH:])
     clk_enable = Signal(bool(1))
     mii_select = Signal(bool(0))
 
     # Outputs
-    m_axis_tdata = Signal(intbv(0)[8:])
+    m_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
     m_axis_tvalid = Signal(bool(0))
     m_axis_tlast = Signal(bool(0))
-    m_axis_tuser = Signal(bool(0))
+    m_axis_tuser = Signal(intbv(0)[USER_WIDTH:])
     start_packet = Signal(bool(0))
     error_bad_frame = Signal(bool(0))
     error_bad_fcs = Signal(bool(0))
@@ -112,6 +116,8 @@ def bench():
         m_axis_tvalid=m_axis_tvalid,
         m_axis_tlast=m_axis_tlast,
         m_axis_tuser=m_axis_tuser,
+
+        ptp_ts=ptp_ts,
 
         clk_enable=clk_enable,
         mii_select=mii_select,

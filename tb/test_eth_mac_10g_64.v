@@ -38,6 +38,16 @@ parameter CTRL_WIDTH = (DATA_WIDTH/8);
 parameter ENABLE_PADDING = 1;
 parameter ENABLE_DIC = 1;
 parameter MIN_FRAME_LENGTH = 64;
+parameter PTP_PERIOD_NS = 4'h6;
+parameter PTP_PERIOD_FNS = 16'h6666;
+parameter TX_PTP_TS_ENABLE = 0;
+parameter TX_PTP_TS_WIDTH = 96;
+parameter TX_PTP_TAG_ENABLE = 0;
+parameter TX_PTP_TAG_WIDTH = 16;
+parameter RX_PTP_TS_ENABLE = 0;
+parameter RX_PTP_TS_WIDTH = 96;
+parameter TX_USER_WIDTH = (TX_PTP_TS_ENABLE && TX_PTP_TAG_ENABLE ? TX_PTP_TAG_WIDTH : 0) + 1;
+parameter RX_USER_WIDTH = (RX_PTP_TS_ENABLE ? RX_PTP_TS_WIDTH : 0) + 1;
 
 // Inputs
 reg clk = 0;
@@ -52,9 +62,11 @@ reg [DATA_WIDTH-1:0] tx_axis_tdata = 0;
 reg [KEEP_WIDTH-1:0] tx_axis_tkeep = 0;
 reg tx_axis_tvalid = 0;
 reg tx_axis_tlast = 0;
-reg tx_axis_tuser = 0;
+reg [TX_USER_WIDTH-1:0] tx_axis_tuser = 0;
 reg [DATA_WIDTH-1:0] xgmii_rxd = 0;
 reg [CTRL_WIDTH-1:0] xgmii_rxc = 0;
+reg [TX_PTP_TS_WIDTH-1:0] tx_ptp_ts = 0;
+reg [RX_PTP_TS_WIDTH-1:0] rx_ptp_ts = 0;
 reg [7:0] ifg_delay = 0;
 
 // Outputs
@@ -63,9 +75,12 @@ wire [DATA_WIDTH-1:0] rx_axis_tdata;
 wire [KEEP_WIDTH-1:0] rx_axis_tkeep;
 wire rx_axis_tvalid;
 wire rx_axis_tlast;
-wire rx_axis_tuser;
+wire [RX_USER_WIDTH-1:0] rx_axis_tuser;
 wire [DATA_WIDTH-1:0] xgmii_txd;
 wire [CTRL_WIDTH-1:0] xgmii_txc;
+wire [TX_PTP_TS_WIDTH-1:0] tx_axis_ptp_ts;
+wire [TX_PTP_TAG_WIDTH-1:0] tx_axis_ptp_ts_tag;
+wire tx_axis_ptp_ts_valid;
 wire [1:0] tx_start_packet;
 wire tx_error_underflow;
 wire [1:0] rx_start_packet;
@@ -89,6 +104,8 @@ initial begin
         tx_axis_tuser,
         xgmii_rxd,
         xgmii_rxc,
+        tx_ptp_ts,
+        rx_ptp_ts,
         ifg_delay
     );
     $to_myhdl(
@@ -100,6 +117,9 @@ initial begin
         rx_axis_tuser,
         xgmii_txd,
         xgmii_txc,
+        tx_axis_ptp_ts,
+        tx_axis_ptp_ts_tag,
+        tx_axis_ptp_ts_valid,
         tx_start_packet,
         tx_error_underflow,
         rx_start_packet,
@@ -118,7 +138,17 @@ eth_mac_10g #(
     .CTRL_WIDTH(CTRL_WIDTH),
     .ENABLE_PADDING(ENABLE_PADDING),
     .ENABLE_DIC(ENABLE_DIC),
-    .MIN_FRAME_LENGTH(MIN_FRAME_LENGTH)
+    .MIN_FRAME_LENGTH(MIN_FRAME_LENGTH),
+    .PTP_PERIOD_NS(PTP_PERIOD_NS),
+    .PTP_PERIOD_FNS(PTP_PERIOD_FNS),
+    .TX_PTP_TS_ENABLE(TX_PTP_TS_ENABLE),
+    .TX_PTP_TS_WIDTH(TX_PTP_TS_WIDTH),
+    .TX_PTP_TAG_ENABLE(TX_PTP_TAG_ENABLE),
+    .TX_PTP_TAG_WIDTH(TX_PTP_TAG_WIDTH),
+    .RX_PTP_TS_ENABLE(RX_PTP_TS_ENABLE),
+    .RX_PTP_TS_WIDTH(RX_PTP_TS_WIDTH),
+    .TX_USER_WIDTH(TX_USER_WIDTH),
+    .RX_USER_WIDTH(RX_USER_WIDTH)
 )
 UUT (
     .rx_clk(rx_clk),
@@ -140,6 +170,11 @@ UUT (
     .xgmii_rxc(xgmii_rxc),
     .xgmii_txd(xgmii_txd),
     .xgmii_txc(xgmii_txc),
+    .tx_ptp_ts(tx_ptp_ts),
+    .rx_ptp_ts(rx_ptp_ts),
+    .tx_axis_ptp_ts(tx_axis_ptp_ts),
+    .tx_axis_ptp_ts_tag(tx_axis_ptp_ts_tag),
+    .tx_axis_ptp_ts_valid(tx_axis_ptp_ts_valid),
     .tx_start_packet(tx_start_packet),
     .tx_error_underflow(tx_error_underflow),
     .rx_start_packet(rx_start_packet),

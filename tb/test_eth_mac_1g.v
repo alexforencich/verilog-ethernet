@@ -32,8 +32,17 @@ THE SOFTWARE.
 module test_eth_mac_1g;
 
 // Parameters
+parameter DATA_WIDTH = 8;
 parameter ENABLE_PADDING = 1;
 parameter MIN_FRAME_LENGTH = 64;
+parameter TX_PTP_TS_ENABLE = 0;
+parameter TX_PTP_TS_WIDTH = 96;
+parameter TX_PTP_TAG_ENABLE = 0;
+parameter TX_PTP_TAG_WIDTH = 16;
+parameter RX_PTP_TS_ENABLE = 0;
+parameter RX_PTP_TS_WIDTH = 96;
+parameter TX_USER_WIDTH = (TX_PTP_TS_ENABLE && TX_PTP_TAG_ENABLE ? TX_PTP_TAG_WIDTH : 0) + 1;
+parameter RX_USER_WIDTH = (RX_PTP_TS_ENABLE ? RX_PTP_TS_WIDTH : 0) + 1;
 
 // Inputs
 reg clk = 0;
@@ -44,13 +53,15 @@ reg rx_clk = 0;
 reg rx_rst = 0;
 reg tx_clk = 0;
 reg tx_rst = 0;
-reg [7:0] tx_axis_tdata = 0;
+reg [DATA_WIDTH-1:0] tx_axis_tdata = 0;
 reg tx_axis_tvalid = 0;
 reg tx_axis_tlast = 0;
-reg tx_axis_tuser = 0;
-reg [7:0] gmii_rxd = 0;
+reg [TX_USER_WIDTH-1:0] tx_axis_tuser = 0;
+reg [DATA_WIDTH-1:0] gmii_rxd = 0;
 reg gmii_rx_dv = 0;
 reg gmii_rx_er = 0;
+reg [TX_PTP_TS_WIDTH-1:0] tx_ptp_ts = 0;
+reg [RX_PTP_TS_WIDTH-1:0] rx_ptp_ts = 0;
 reg rx_clk_enable = 1;
 reg tx_clk_enable = 1;
 reg rx_mii_select = 0;
@@ -59,13 +70,16 @@ reg [7:0] ifg_delay = 0;
 
 // Outputs
 wire tx_axis_tready;
-wire [7:0] rx_axis_tdata;
+wire [DATA_WIDTH-1:0] rx_axis_tdata;
 wire rx_axis_tvalid;
 wire rx_axis_tlast;
-wire rx_axis_tuser;
-wire [7:0] gmii_txd;
+wire [RX_USER_WIDTH-1:0] rx_axis_tuser;
+wire [DATA_WIDTH-1:0] gmii_txd;
 wire gmii_tx_en;
 wire gmii_tx_er;
+wire [TX_PTP_TS_WIDTH-1:0] tx_axis_ptp_ts;
+wire [TX_PTP_TAG_WIDTH-1:0] tx_axis_ptp_ts_tag;
+wire tx_axis_ptp_ts_valid;
 wire tx_start_packet;
 wire tx_error_underflow;
 wire rx_start_packet;
@@ -89,6 +103,8 @@ initial begin
         gmii_rxd,
         gmii_rx_dv,
         gmii_rx_er,
+        tx_ptp_ts,
+        rx_ptp_ts,
         rx_clk_enable,
         tx_clk_enable,
         rx_mii_select,
@@ -104,6 +120,9 @@ initial begin
         gmii_txd,
         gmii_tx_en,
         gmii_tx_er,
+        tx_axis_ptp_ts,
+        tx_axis_ptp_ts_tag,
+        tx_axis_ptp_ts_valid,
         tx_start_packet,
         tx_error_underflow,
         rx_start_packet,
@@ -117,8 +136,17 @@ initial begin
 end
 
 eth_mac_1g #(
+    .DATA_WIDTH(DATA_WIDTH),
     .ENABLE_PADDING(ENABLE_PADDING),
-    .MIN_FRAME_LENGTH(MIN_FRAME_LENGTH)
+    .MIN_FRAME_LENGTH(MIN_FRAME_LENGTH),
+    .TX_PTP_TS_ENABLE(TX_PTP_TS_ENABLE),
+    .TX_PTP_TS_WIDTH(TX_PTP_TS_WIDTH),
+    .TX_PTP_TAG_ENABLE(TX_PTP_TAG_ENABLE),
+    .TX_PTP_TAG_WIDTH(TX_PTP_TAG_WIDTH),
+    .RX_PTP_TS_ENABLE(RX_PTP_TS_ENABLE),
+    .RX_PTP_TS_WIDTH(RX_PTP_TS_WIDTH),
+    .TX_USER_WIDTH(TX_USER_WIDTH),
+    .RX_USER_WIDTH(RX_USER_WIDTH)
 )
 UUT (
     .rx_clk(rx_clk),
@@ -140,6 +168,11 @@ UUT (
     .gmii_txd(gmii_txd),
     .gmii_tx_en(gmii_tx_en),
     .gmii_tx_er(gmii_tx_er),
+    .tx_ptp_ts(tx_ptp_ts),
+    .rx_ptp_ts(rx_ptp_ts),
+    .tx_axis_ptp_ts(tx_axis_ptp_ts),
+    .tx_axis_ptp_ts_tag(tx_axis_ptp_ts_tag),
+    .tx_axis_ptp_ts_valid(tx_axis_ptp_ts_valid),
     .rx_clk_enable(rx_clk_enable),
     .tx_clk_enable(tx_clk_enable),
     .rx_mii_select(rx_mii_select),

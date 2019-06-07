@@ -29,39 +29,58 @@ THE SOFTWARE.
 /*
  * AXI4-Stream GMII frame receiver (GMII in, AXI out)
  */
-module axis_gmii_rx
+module axis_gmii_rx #
 (
-    input  wire        clk,
-    input  wire        rst,
+    parameter DATA_WIDTH = 8,
+    parameter PTP_TS_ENABLE = 0,
+    parameter PTP_TS_WIDTH = 96,
+    parameter USER_WIDTH = (PTP_TS_ENABLE ? PTP_TS_WIDTH : 0) + 1
+)
+(
+    input  wire                     clk,
+    input  wire                     rst,
 
     /*
      * GMII input
      */
-    input  wire [7:0]  gmii_rxd,
-    input  wire        gmii_rx_dv,
-    input  wire        gmii_rx_er,
+    input  wire [DATA_WIDTH-1:0]    gmii_rxd,
+    input  wire                     gmii_rx_dv,
+    input  wire                     gmii_rx_er,
 
     /*
      * AXI output
      */
-    output wire [7:0]  m_axis_tdata,
-    output wire        m_axis_tvalid,
-    output wire        m_axis_tlast,
-    output wire        m_axis_tuser,
+    output wire [DATA_WIDTH-1:0]    m_axis_tdata,
+    output wire                     m_axis_tvalid,
+    output wire                     m_axis_tlast,
+    output wire [USER_WIDTH-1:0]    m_axis_tuser,
+
+    /*
+     * PTP
+     */
+    input  wire [PTP_TS_WIDTH-1:0]  ptp_ts,
 
     /*
      * Control
      */
-    input  wire        clk_enable,
-    input  wire        mii_select,
+    input  wire                     clk_enable,
+    input  wire                     mii_select,
 
     /*
      * Status
      */
-    output wire        start_packet,
-    output wire        error_bad_frame,
-    output wire        error_bad_fcs
+    output wire                     start_packet,
+    output wire                     error_bad_frame,
+    output wire                     error_bad_fcs
 );
+
+// bus width assertions
+initial begin
+    if (DATA_WIDTH != 8) begin
+        $error("Error: Interface width must be 8");
+        $finish;
+    end
+end
 
 localparam [7:0]
     ETH_PRE = 8'h55,
@@ -81,11 +100,11 @@ reg update_crc;
 reg mii_odd = 1'b0;
 reg mii_locked = 1'b0;
 
-reg [7:0] gmii_rxd_d0 = 8'd0;
-reg [7:0] gmii_rxd_d1 = 8'd0;
-reg [7:0] gmii_rxd_d2 = 8'd0;
-reg [7:0] gmii_rxd_d3 = 8'd0;
-reg [7:0] gmii_rxd_d4 = 8'd0;
+reg [DATA_WIDTH-1:0] gmii_rxd_d0 = {DATA_WIDTH{1'b0}};
+reg [DATA_WIDTH-1:0] gmii_rxd_d1 = {DATA_WIDTH{1'b0}};
+reg [DATA_WIDTH-1:0] gmii_rxd_d2 = {DATA_WIDTH{1'b0}};
+reg [DATA_WIDTH-1:0] gmii_rxd_d3 = {DATA_WIDTH{1'b0}};
+reg [DATA_WIDTH-1:0] gmii_rxd_d4 = {DATA_WIDTH{1'b0}};
 
 reg gmii_rx_dv_d0 = 1'b0;
 reg gmii_rx_dv_d1 = 1'b0;
@@ -99,7 +118,7 @@ reg gmii_rx_er_d2 = 1'b0;
 reg gmii_rx_er_d3 = 1'b0;
 reg gmii_rx_er_d4 = 1'b0;
 
-reg [7:0] m_axis_tdata_reg = 8'd0, m_axis_tdata_next;
+reg [DATA_WIDTH-1:0] m_axis_tdata_reg = {DATA_WIDTH{1'b0}}, m_axis_tdata_next;
 reg m_axis_tvalid_reg = 1'b0, m_axis_tvalid_next;
 reg m_axis_tlast_reg = 1'b0, m_axis_tlast_next;
 reg m_axis_tuser_reg = 1'b0, m_axis_tuser_next;
@@ -108,13 +127,15 @@ reg start_packet_reg = 1'b0, start_packet_next;
 reg error_bad_frame_reg = 1'b0, error_bad_frame_next;
 reg error_bad_fcs_reg = 1'b0, error_bad_fcs_next;
 
+reg [PTP_TS_WIDTH-1:0] ptp_ts_reg = 0, ptp_ts_next;
+
 reg [31:0] crc_state = 32'hFFFFFFFF;
 wire [31:0] crc_next;
 
 assign m_axis_tdata = m_axis_tdata_reg;
 assign m_axis_tvalid = m_axis_tvalid_reg;
 assign m_axis_tlast = m_axis_tlast_reg;
-assign m_axis_tuser = m_axis_tuser_reg;
+assign m_axis_tuser = PTP_TS_ENABLE ? {ptp_ts_reg, m_axis_tuser_reg} : m_axis_tuser_reg;
 
 assign start_packet = start_packet_reg;
 assign error_bad_frame = error_bad_frame_reg;
@@ -142,7 +163,7 @@ always @* begin
     reset_crc = 1'b0;
     update_crc = 1'b0;
 
-    m_axis_tdata_next = 8'd0;
+    m_axis_tdata_next = {DATA_WIDTH{1'b0}};
     m_axis_tvalid_next = 1'b0;
     m_axis_tlast_next = 1'b0;
     m_axis_tuser_next = 1'b0;
@@ -150,6 +171,8 @@ always @* begin
     start_packet_next = 1'b0;
     error_bad_frame_next = 1'b0;
     error_bad_fcs_next = 1'b0;
+
+    ptp_ts_next = ptp_ts_reg;
 
     if (!clk_enable) begin
         // clock disabled - hold state
@@ -164,6 +187,7 @@ always @* begin
                 reset_crc = 1'b1;
 
                 if (gmii_rx_dv_d4 && !gmii_rx_er_d4 && gmii_rxd_d4 == ETH_SFD) begin
+                    ptp_ts_next = ptp_ts;
                     start_packet_next = 1'b1;
                     state_next = STATE_PAYLOAD;
                 end else begin
@@ -282,6 +306,8 @@ always @(posedge clk) begin
             end
         end
     end
+
+    ptp_ts_reg <= ptp_ts_next;
 
     m_axis_tdata_reg <= m_axis_tdata_next;
     m_axis_tlast_reg <= m_axis_tlast_next;

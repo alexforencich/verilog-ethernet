@@ -31,66 +31,89 @@ THE SOFTWARE.
  */
 module eth_mac_1g #
 (
+    parameter DATA_WIDTH = 8,
     parameter ENABLE_PADDING = 1,
-    parameter MIN_FRAME_LENGTH = 64
+    parameter MIN_FRAME_LENGTH = 64,
+    parameter TX_PTP_TS_ENABLE = 0,
+    parameter TX_PTP_TS_WIDTH = 96,
+    parameter TX_PTP_TAG_ENABLE = 0,
+    parameter TX_PTP_TAG_WIDTH = 16,
+    parameter RX_PTP_TS_ENABLE = 0,
+    parameter RX_PTP_TS_WIDTH = 96,
+    parameter TX_USER_WIDTH = (TX_PTP_TS_ENABLE && TX_PTP_TAG_ENABLE ? TX_PTP_TAG_WIDTH : 0) + 1,
+    parameter RX_USER_WIDTH = (RX_PTP_TS_ENABLE ? RX_PTP_TS_WIDTH : 0) + 1
 )
 (
-    input  wire        rx_clk,
-    input  wire        rx_rst,
-    input  wire        tx_clk,
-    input  wire        tx_rst,
+    input  wire                         rx_clk,
+    input  wire                         rx_rst,
+    input  wire                         tx_clk,
+    input  wire                         tx_rst,
 
     /*
      * AXI input
      */
-    input  wire [7:0]  tx_axis_tdata,
-    input  wire        tx_axis_tvalid,
-    output wire        tx_axis_tready,
-    input  wire        tx_axis_tlast,
-    input  wire        tx_axis_tuser,
+    input  wire [DATA_WIDTH-1:0]        tx_axis_tdata,
+    input  wire                         tx_axis_tvalid,
+    output wire                         tx_axis_tready,
+    input  wire                         tx_axis_tlast,
+    input  wire [TX_USER_WIDTH-1:0]     tx_axis_tuser,
 
     /*
      * AXI output
      */
-    output wire [7:0]  rx_axis_tdata,
-    output wire        rx_axis_tvalid,
-    output wire        rx_axis_tlast,
-    output wire        rx_axis_tuser,
+    output wire [DATA_WIDTH-1:0]        rx_axis_tdata,
+    output wire                         rx_axis_tvalid,
+    output wire                         rx_axis_tlast,
+    output wire [RX_USER_WIDTH-1:0]     rx_axis_tuser,
 
     /*
      * GMII interface
      */
-    input  wire [7:0]  gmii_rxd,
-    input  wire        gmii_rx_dv,
-    input  wire        gmii_rx_er,
-    output wire [7:0]  gmii_txd,
-    output wire        gmii_tx_en,
-    output wire        gmii_tx_er,
+    input  wire [DATA_WIDTH-1:0]        gmii_rxd,
+    input  wire                         gmii_rx_dv,
+    input  wire                         gmii_rx_er,
+    output wire [DATA_WIDTH-1:0]        gmii_txd,
+    output wire                         gmii_tx_en,
+    output wire                         gmii_tx_er,
+
+    /*
+     * PTP
+     */
+    input  wire [TX_PTP_TS_WIDTH-1:0]   tx_ptp_ts,
+    input  wire [RX_PTP_TS_WIDTH-1:0]   rx_ptp_ts,
+    output wire [TX_PTP_TS_WIDTH-1:0]   tx_axis_ptp_ts,
+    output wire [TX_PTP_TAG_WIDTH-1:0]  tx_axis_ptp_ts_tag,
+    output wire                         tx_axis_ptp_ts_valid,
 
     /*
      * Control
      */
-    input  wire        rx_clk_enable,
-    input  wire        tx_clk_enable,
-    input  wire        rx_mii_select,
-    input  wire        tx_mii_select,
+    input  wire                         rx_clk_enable,
+    input  wire                         tx_clk_enable,
+    input  wire                         rx_mii_select,
+    input  wire                         tx_mii_select,
 
     /*
      * Status
      */
-    output wire        tx_start_packet,
-    output wire        tx_error_underflow,
-    output wire        rx_start_packet,
-    output wire        rx_error_bad_frame,
-    output wire        rx_error_bad_fcs,
+    output wire                         tx_start_packet,
+    output wire                         tx_error_underflow,
+    output wire                         rx_start_packet,
+    output wire                         rx_error_bad_frame,
+    output wire                         rx_error_bad_fcs,
 
     /*
      * Configuration
      */
-    input  wire [7:0]  ifg_delay
+    input  wire [7:0]                   ifg_delay
 );
 
-axis_gmii_rx
+axis_gmii_rx #(
+    .DATA_WIDTH(DATA_WIDTH),
+    .PTP_TS_ENABLE(RX_PTP_TS_ENABLE),
+    .PTP_TS_WIDTH(RX_PTP_TS_WIDTH),
+    .USER_WIDTH(RX_USER_WIDTH)
+)
 axis_gmii_rx_inst (
     .clk(rx_clk),
     .rst(rx_rst),
@@ -101,6 +124,7 @@ axis_gmii_rx_inst (
     .m_axis_tvalid(rx_axis_tvalid),
     .m_axis_tlast(rx_axis_tlast),
     .m_axis_tuser(rx_axis_tuser),
+    .ptp_ts(rx_ptp_ts),
     .clk_enable(rx_clk_enable),
     .mii_select(rx_mii_select),
     .start_packet(rx_start_packet),
@@ -109,8 +133,14 @@ axis_gmii_rx_inst (
 );
 
 axis_gmii_tx #(
+    .DATA_WIDTH(DATA_WIDTH),
     .ENABLE_PADDING(ENABLE_PADDING),
-    .MIN_FRAME_LENGTH(MIN_FRAME_LENGTH)
+    .MIN_FRAME_LENGTH(MIN_FRAME_LENGTH),
+    .PTP_TS_ENABLE(TX_PTP_TS_ENABLE),
+    .PTP_TS_WIDTH(TX_PTP_TS_WIDTH),
+    .PTP_TAG_ENABLE(TX_PTP_TAG_ENABLE),
+    .PTP_TAG_WIDTH(TX_PTP_TAG_WIDTH),
+    .USER_WIDTH(TX_USER_WIDTH)
 )
 axis_gmii_tx_inst (
     .clk(tx_clk),
@@ -123,6 +153,10 @@ axis_gmii_tx_inst (
     .gmii_txd(gmii_txd),
     .gmii_tx_en(gmii_tx_en),
     .gmii_tx_er(gmii_tx_er),
+    .ptp_ts(tx_ptp_ts),
+    .m_axis_ptp_ts(tx_axis_ptp_ts),
+    .m_axis_ptp_ts_tag(tx_axis_ptp_ts_tag),
+    .m_axis_ptp_ts_valid(tx_axis_ptp_ts_valid),
     .clk_enable(tx_clk_enable),
     .mii_select(tx_mii_select),
     .ifg_delay(ifg_delay),

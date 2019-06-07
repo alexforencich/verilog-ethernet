@@ -35,6 +35,11 @@ module test_axis_baser_rx_64;
 parameter DATA_WIDTH = 64;
 parameter KEEP_WIDTH = (DATA_WIDTH/8);
 parameter HDR_WIDTH = 2;
+parameter PTP_PERIOD_NS = 4'h6;
+parameter PTP_PERIOD_FNS = 16'h6666;
+parameter PTP_TS_ENABLE = 0;
+parameter PTP_TS_WIDTH = 96;
+parameter USER_WIDTH = (PTP_TS_ENABLE ? PTP_TS_WIDTH : 0) + 1;
 
 // Inputs
 reg clk = 0;
@@ -43,13 +48,14 @@ reg [7:0] current_test = 0;
 
 reg [DATA_WIDTH-1:0] encoded_rx_data = 0;
 reg [HDR_WIDTH-1:0] encoded_rx_hdr = 1;
+reg [PTP_TS_WIDTH-1:0] ptp_ts = 0;
 
 // Outputs
 wire [DATA_WIDTH-1:0] m_axis_tdata;
 wire [KEEP_WIDTH-1:0] m_axis_tkeep;
 wire m_axis_tvalid;
 wire m_axis_tlast;
-wire m_axis_tuser;
+wire [USER_WIDTH-1:0] m_axis_tuser;
 wire [1:0] start_packet;
 wire error_bad_frame;
 wire error_bad_fcs;
@@ -62,7 +68,8 @@ initial begin
         rst,
         current_test,
         encoded_rx_data,
-        encoded_rx_hdr
+        encoded_rx_hdr,
+        ptp_ts
     );
     $to_myhdl(
         m_axis_tdata,
@@ -84,7 +91,12 @@ end
 axis_baser_rx_64 #(
     .DATA_WIDTH(DATA_WIDTH),
     .KEEP_WIDTH(KEEP_WIDTH),
-    .HDR_WIDTH(HDR_WIDTH)
+    .HDR_WIDTH(HDR_WIDTH),
+    .PTP_PERIOD_NS(PTP_PERIOD_NS),
+    .PTP_PERIOD_FNS(PTP_PERIOD_FNS),
+    .PTP_TS_ENABLE(PTP_TS_ENABLE),
+    .PTP_TS_WIDTH(PTP_TS_WIDTH),
+    .USER_WIDTH(USER_WIDTH)
 )
 UUT (
     .clk(clk),
@@ -96,6 +108,7 @@ UUT (
     .m_axis_tvalid(m_axis_tvalid),
     .m_axis_tlast(m_axis_tlast),
     .m_axis_tuser(m_axis_tuser),
+    .ptp_ts(ptp_ts),
     .start_packet(start_packet),
     .error_bad_frame(error_bad_frame),
     .error_bad_fcs(error_bad_fcs),

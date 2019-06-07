@@ -31,46 +31,68 @@ THE SOFTWARE.
  */
 module axis_gmii_tx #
 (
+    parameter DATA_WIDTH = 8,
     parameter ENABLE_PADDING = 1,
-    parameter MIN_FRAME_LENGTH = 64
+    parameter MIN_FRAME_LENGTH = 64,
+    parameter PTP_TS_ENABLE = 0,
+    parameter PTP_TS_WIDTH = 96,
+    parameter PTP_TAG_ENABLE = 0,
+    parameter PTP_TAG_WIDTH = 16,
+    parameter USER_WIDTH = (PTP_TS_ENABLE && PTP_TAG_ENABLE ? PTP_TAG_WIDTH : 0) + 1
 )
 (
-    input  wire        clk,
-    input  wire        rst,
+    input  wire                      clk,
+    input  wire                      rst,
 
     /*
      * AXI input
      */
-    input  wire [7:0]  s_axis_tdata,
-    input  wire        s_axis_tvalid,
-    output wire        s_axis_tready,
-    input  wire        s_axis_tlast,
-    input  wire        s_axis_tuser,
+    input  wire [DATA_WIDTH-1:0]     s_axis_tdata,
+    input  wire                      s_axis_tvalid,
+    output wire                      s_axis_tready,
+    input  wire                      s_axis_tlast,
+    input  wire [USER_WIDTH-1:0]     s_axis_tuser,
 
     /*
      * GMII output
      */
-    output wire [7:0]  gmii_txd,
-    output wire        gmii_tx_en,
-    output wire        gmii_tx_er,
+    output wire [DATA_WIDTH-1:0]     gmii_txd,
+    output wire                      gmii_tx_en,
+    output wire                      gmii_tx_er,
+
+    /*
+     * PTP
+     */
+    input  wire [PTP_TS_WIDTH-1:0]   ptp_ts,
+    output wire [PTP_TS_WIDTH-1:0]   m_axis_ptp_ts,
+    output wire [PTP_TAG_WIDTH-1:0]  m_axis_ptp_ts_tag,
+    output wire                      m_axis_ptp_ts_valid,
 
     /*
      * Control
      */
-    input  wire        clk_enable,
-    input  wire        mii_select,
+    input  wire                      clk_enable,
+    input  wire                      mii_select,
 
     /*
      * Configuration
      */
-    input  wire [7:0]  ifg_delay,
+    input  wire [7:0]                ifg_delay,
 
     /*
      * Status
      */
-    output wire        start_packet,
-    output wire        error_underflow
+    output wire                      start_packet,
+    output wire                      error_underflow
 );
+
+// bus width assertions
+initial begin
+    if (DATA_WIDTH != 8) begin
+        $error("Error: Interface width must be 8");
+        $finish;
+    end
+end
 
 localparam [7:0]
     ETH_PRE = 8'h55,
@@ -105,6 +127,10 @@ reg gmii_tx_er_reg = 1'b0, gmii_tx_er_next;
 
 reg s_axis_tready_reg = 1'b0, s_axis_tready_next;
 
+reg [PTP_TS_WIDTH-1:0] m_axis_ptp_ts_reg = 0, m_axis_ptp_ts_next;
+reg [PTP_TAG_WIDTH-1:0] m_axis_ptp_ts_tag_reg = 0, m_axis_ptp_ts_tag_next;
+reg m_axis_ptp_ts_valid_reg = 1'b0, m_axis_ptp_ts_valid_next;
+
 reg start_packet_reg = 1'b0, start_packet_next;
 reg error_underflow_reg = 1'b0, error_underflow_next;
 
@@ -116,6 +142,10 @@ assign s_axis_tready = s_axis_tready_reg;
 assign gmii_txd = gmii_txd_reg;
 assign gmii_tx_en = gmii_tx_en_reg;
 assign gmii_tx_er = gmii_tx_er_reg;
+
+assign m_axis_ptp_ts = PTP_TS_ENABLE ? m_axis_ptp_ts_reg : 0;
+assign m_axis_ptp_ts_tag = PTP_TS_ENABLE && PTP_TAG_ENABLE ? m_axis_ptp_ts_tag_reg : 0;
+assign m_axis_ptp_ts_valid = PTP_TS_ENABLE ? m_axis_ptp_ts_valid_reg : 1'b0;
 
 assign start_packet = start_packet_reg;
 assign error_underflow = error_underflow_reg;
@@ -151,7 +181,11 @@ always @* begin
 
     s_tdata_next = s_tdata_reg;
 
-    gmii_txd_next = 8'd0;
+    m_axis_ptp_ts_next = m_axis_ptp_ts_reg;
+    m_axis_ptp_ts_tag_next = m_axis_ptp_ts_tag_reg;
+    m_axis_ptp_ts_valid_next = 1'b0;
+
+    gmii_txd_next = {DATA_WIDTH{1'b0}};
     gmii_tx_en_next = 1'b0;
     gmii_tx_er_next = 1'b0;
 
@@ -210,6 +244,9 @@ always @* begin
                         s_tdata_next = s_axis_tdata;
                     end
                     gmii_txd_next = ETH_SFD;
+                    m_axis_ptp_ts_next = ptp_ts;
+                    m_axis_ptp_ts_tag_next = s_axis_tuser >> 1;
+                    m_axis_ptp_ts_valid_next = 1'b1;
                     start_packet_next = 1'b1;
                     state_next = STATE_PAYLOAD;
                 end else begin
@@ -233,7 +270,7 @@ always @* begin
                 if (s_axis_tvalid) begin
                     if (s_axis_tlast) begin
                         s_axis_tready_next = !s_axis_tready_reg;
-                        if (s_axis_tuser) begin
+                        if (s_axis_tuser[0]) begin
                             gmii_tx_er_next = 1'b1;
                             frame_ptr_next = 1'b0;
                             state_next = STATE_IFG;
@@ -365,6 +402,8 @@ always @(posedge clk) begin
 
         s_axis_tready_reg <= 1'b0;
 
+        m_axis_ptp_ts_valid_reg <= 1'b0;
+
         gmii_tx_en_reg <= 1'b0;
         gmii_tx_er_reg <= 1'b0;
 
@@ -378,6 +417,8 @@ always @(posedge clk) begin
         frame_ptr_reg <= frame_ptr_next;
 
         s_axis_tready_reg <= s_axis_tready_next;
+    
+        m_axis_ptp_ts_valid_reg <= m_axis_ptp_ts_valid_next;
 
         gmii_tx_en_reg <= gmii_tx_en_next;
         gmii_tx_er_reg <= gmii_tx_er_next;
@@ -392,6 +433,9 @@ always @(posedge clk) begin
             crc_state <= crc_next;
         end
     end
+
+    m_axis_ptp_ts_reg <= m_axis_ptp_ts_next;
+    m_axis_ptp_ts_tag_reg <= m_axis_ptp_ts_tag_next;
 
     mii_odd_reg <= mii_odd_next;
     mii_msn_reg <= mii_msn_next;
