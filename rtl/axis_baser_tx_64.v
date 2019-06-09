@@ -532,10 +532,10 @@ always @* begin
                     // need to send more idles - swap lanes
                     swap_lanes = 1'b1;
                     if (PTP_TS_WIDTH == 96) begin
-                        m_axis_ptp_ts_next[45:0] <= ptp_ts[45:0] + (PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS) * 1.5;
+                        m_axis_ptp_ts_next[45:0] <= ptp_ts[45:0] + (((PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS) * 3) >> 1);
                         m_axis_ptp_ts_next[95:48] <= ptp_ts[95:48];
                     end else begin
-                        m_axis_ptp_ts_next = ptp_ts + (PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS) * 1.5;
+                        m_axis_ptp_ts_next = ptp_ts + (((PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS) * 3) >> 1);
                     end
                     m_axis_ptp_ts_tag_next = s_axis_tuser >> 1;
                     m_axis_ptp_ts_valid_int_next = 1'b1;

@@ -516,10 +516,10 @@ always @(posedge clk) begin
         end
     end else if (xgmii_rxc[4] && xgmii_rxd[39:32] == XGMII_START) begin
         if (PTP_TS_WIDTH == 96) begin
-            ptp_ts_reg[45:0] <= ptp_ts[45:0] + (PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS) * 1.5;
+            ptp_ts_reg[45:0] <= ptp_ts[45:0] + (((PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS) * 3) >> 1);
             ptp_ts_reg[95:48] <= ptp_ts[95:48];
         end else begin
-            ptp_ts_reg <= ptp_ts + (PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS) * 1.5;
+            ptp_ts_reg <= ptp_ts + (((PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS) * 3) >> 1);
         end
     end
 
