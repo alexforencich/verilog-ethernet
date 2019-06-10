@@ -302,7 +302,7 @@ always @* begin
             wr_ptr_cur_gray_next = wr_ptr_cur_next ^ (wr_ptr_cur_next >> 1);
             if (s_axis_tlast) begin
                 // end of frame
-                if (DROP_BAD_FRAME && (USER_BAD_FRAME_MASK & s_axis_tuser == USER_BAD_FRAME_VALUE)) begin
+                if (DROP_BAD_FRAME && USER_BAD_FRAME_MASK & ~(s_axis_tuser ^ USER_BAD_FRAME_VALUE)) begin
                     // bad packet, reset write pointer
                     wr_ptr_cur_next = wr_ptr_reg;
                     wr_ptr_cur_gray_next = wr_ptr_cur_next ^ (wr_ptr_cur_next >> 1);
