@@ -42,9 +42,9 @@ parameter PTP_PERIOD_NS = 4'h6;
 parameter PTP_PERIOD_FNS = 16'h6666;
 parameter PTP_TS_ENABLE = 0;
 parameter PTP_TS_WIDTH = 96;
-parameter PTP_TAG_ENABLE = 0;
+parameter PTP_TAG_ENABLE = PTP_TS_ENABLE;
 parameter PTP_TAG_WIDTH = 16;
-parameter USER_WIDTH = (PTP_TS_ENABLE && PTP_TAG_ENABLE ? PTP_TAG_WIDTH : 0) + 1;
+parameter USER_WIDTH = (PTP_TAG_ENABLE ? PTP_TAG_WIDTH : 0) + 1;
 
 // Inputs
 reg clk = 0;

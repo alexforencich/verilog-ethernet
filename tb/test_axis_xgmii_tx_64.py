@@ -56,9 +56,9 @@ def bench():
     PTP_PERIOD_FNS = 0x6666
     PTP_TS_ENABLE = 0
     PTP_TS_WIDTH = 96
-    PTP_TAG_ENABLE = 0
+    PTP_TAG_ENABLE = PTP_TS_ENABLE
     PTP_TAG_WIDTH = 16
-    USER_WIDTH = (PTP_TAG_WIDTH if PTP_TS_ENABLE and PTP_TAG_ENABLE else 0) + 1
+    USER_WIDTH = (PTP_TAG_WIDTH if PTP_TAG_ENABLE else 0) + 1
 
     # Inputs
     clk = Signal(bool(0))

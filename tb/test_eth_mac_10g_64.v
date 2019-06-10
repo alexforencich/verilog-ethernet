@@ -42,11 +42,11 @@ parameter PTP_PERIOD_NS = 4'h6;
 parameter PTP_PERIOD_FNS = 16'h6666;
 parameter TX_PTP_TS_ENABLE = 0;
 parameter TX_PTP_TS_WIDTH = 96;
-parameter TX_PTP_TAG_ENABLE = 0;
+parameter TX_PTP_TAG_ENABLE = TX_PTP_TS_ENABLE;
 parameter TX_PTP_TAG_WIDTH = 16;
 parameter RX_PTP_TS_ENABLE = 0;
 parameter RX_PTP_TS_WIDTH = 96;
-parameter TX_USER_WIDTH = (TX_PTP_TS_ENABLE && TX_PTP_TAG_ENABLE ? TX_PTP_TAG_WIDTH : 0) + 1;
+parameter TX_USER_WIDTH = (TX_PTP_TAG_ENABLE ? TX_PTP_TAG_WIDTH : 0) + 1;
 parameter RX_USER_WIDTH = (RX_PTP_TS_ENABLE ? RX_PTP_TS_WIDTH : 0) + 1;
 
 // Inputs

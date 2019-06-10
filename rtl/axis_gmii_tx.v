@@ -36,9 +36,9 @@ module axis_gmii_tx #
     parameter MIN_FRAME_LENGTH = 64,
     parameter PTP_TS_ENABLE = 0,
     parameter PTP_TS_WIDTH = 96,
-    parameter PTP_TAG_ENABLE = 0,
+    parameter PTP_TAG_ENABLE = PTP_TS_ENABLE,
     parameter PTP_TAG_WIDTH = 16,
-    parameter USER_WIDTH = (PTP_TS_ENABLE && PTP_TAG_ENABLE ? PTP_TAG_WIDTH : 0) + 1
+    parameter USER_WIDTH = (PTP_TAG_ENABLE ? PTP_TAG_WIDTH : 0) + 1
 )
 (
     input  wire                      clk,
@@ -144,8 +144,8 @@ assign gmii_tx_en = gmii_tx_en_reg;
 assign gmii_tx_er = gmii_tx_er_reg;
 
 assign m_axis_ptp_ts = PTP_TS_ENABLE ? m_axis_ptp_ts_reg : 0;
-assign m_axis_ptp_ts_tag = PTP_TS_ENABLE && PTP_TAG_ENABLE ? m_axis_ptp_ts_tag_reg : 0;
-assign m_axis_ptp_ts_valid = PTP_TS_ENABLE ? m_axis_ptp_ts_valid_reg : 1'b0;
+assign m_axis_ptp_ts_tag = PTP_TAG_ENABLE ? m_axis_ptp_ts_tag_reg : 0;
+assign m_axis_ptp_ts_valid = PTP_TS_ENABLE || PTP_TAG_ENABLE ? m_axis_ptp_ts_valid_reg : 1'b0;
 
 assign start_packet = start_packet_reg;
 assign error_underflow = error_underflow_reg;
