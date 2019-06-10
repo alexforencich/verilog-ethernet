@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 
-Copyright (c) 2014-2018 Alex Forencich
+Copyright (c) 2019 Alex Forencich
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -28,12 +28,14 @@ import os
 
 import axis_ep
 
-module = 'axis_adapter'
+module = 'axis_fifo_adapter'
 testbench = 'test_%s_8_64' % module
 
 srcs = []
 
 srcs.append("../rtl/%s.v" % module)
+srcs.append("../rtl/axis_adapter.v")
+srcs.append("../rtl/axis_fifo.v")
 srcs.append("%s.v" % testbench)
 
 src = ' '.join(srcs)
@@ -43,6 +45,7 @@ build_cmd = "iverilog -o %s.vvp %s" % (testbench, src)
 def bench():
 
     # Parameters
+    ADDR_WIDTH = 2
     S_DATA_WIDTH = 8
     S_KEEP_ENABLE = (S_DATA_WIDTH>8)
     S_KEEP_WIDTH = (S_DATA_WIDTH/8)
@@ -55,6 +58,11 @@ def bench():
     DEST_WIDTH = 8
     USER_ENABLE = 1
     USER_WIDTH = 1
+    FRAME_FIFO = 0
+    USER_BAD_FRAME_VALUE = 1
+    USER_BAD_FRAME_MASK = 1
+    DROP_BAD_FRAME = 0
+    DROP_WHEN_FULL = 0
 
     # Inputs
     clk = Signal(bool(0))

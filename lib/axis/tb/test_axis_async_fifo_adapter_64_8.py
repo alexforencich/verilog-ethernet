@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 
-Copyright (c) 2014-2018 Alex Forencich
+Copyright (c) 2019 Alex Forencich
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -28,12 +28,14 @@ import os
 
 import axis_ep
 
-module = 'axis_adapter'
-testbench = 'test_%s_8_64' % module
+module = 'axis_async_fifo_adapter'
+testbench = 'test_%s_64_8' % module
 
 srcs = []
 
 srcs.append("../rtl/%s.v" % module)
+srcs.append("../rtl/axis_adapter.v")
+srcs.append("../rtl/axis_async_fifo.v")
 srcs.append("%s.v" % testbench)
 
 src = ' '.join(srcs)
@@ -43,10 +45,11 @@ build_cmd = "iverilog -o %s.vvp %s" % (testbench, src)
 def bench():
 
     # Parameters
-    S_DATA_WIDTH = 8
+    ADDR_WIDTH = 2
+    S_DATA_WIDTH = 64
     S_KEEP_ENABLE = (S_DATA_WIDTH>8)
     S_KEEP_WIDTH = (S_DATA_WIDTH/8)
-    M_DATA_WIDTH = 64
+    M_DATA_WIDTH = 8
     M_KEEP_ENABLE = (M_DATA_WIDTH>8)
     M_KEEP_WIDTH = (M_DATA_WIDTH/8)
     ID_ENABLE = 1
@@ -55,10 +58,17 @@ def bench():
     DEST_WIDTH = 8
     USER_ENABLE = 1
     USER_WIDTH = 1
+    FRAME_FIFO = 0
+    USER_BAD_FRAME_VALUE = 1
+    USER_BAD_FRAME_MASK = 1
+    DROP_BAD_FRAME = 0
+    DROP_WHEN_FULL = 0
 
     # Inputs
-    clk = Signal(bool(0))
-    rst = Signal(bool(0))
+    s_clk = Signal(bool(0))
+    s_rst = Signal(bool(0))
+    m_clk = Signal(bool(0))
+    m_rst = Signal(bool(0))
     current_test = Signal(intbv(0)[8:])
 
     s_axis_tdata = Signal(intbv(0)[S_DATA_WIDTH:])
@@ -87,8 +97,8 @@ def bench():
     source = axis_ep.AXIStreamSource()
 
     source_logic = source.create_logic(
-        clk,
-        rst,
+        s_clk,
+        s_rst,
         tdata=s_axis_tdata,
         tkeep=s_axis_tkeep,
         tvalid=s_axis_tvalid,
@@ -104,8 +114,8 @@ def bench():
     sink = axis_ep.AXIStreamSink()
 
     sink_logic = sink.create_logic(
-        clk,
-        rst,
+        m_clk,
+        m_rst,
         tdata=m_axis_tdata,
         tkeep=m_axis_tkeep,
         tvalid=m_axis_tvalid,
@@ -124,8 +134,10 @@ def bench():
 
     dut = Cosimulation(
         "vvp -m myhdl %s.vvp -lxt2" % testbench,
-        clk=clk,
-        rst=rst,
+        s_clk=s_clk,
+        s_rst=s_rst,
+        m_clk=m_clk,
+        m_rst=m_rst,
         current_test=current_test,
 
         s_axis_tdata=s_axis_tdata,
@@ -148,46 +160,54 @@ def bench():
     )
 
     @always(delay(4))
-    def clkgen():
-        clk.next = not clk
+    def s_clkgen():
+        s_clk.next = not s_clk
+
+    @always(delay(5))
+    def m_clkgen():
+        m_clk.next = not m_clk
 
     def wait_normal():
         while s_axis_tvalid or m_axis_tvalid:
-            yield clk.posedge
+            yield s_clk.posedge
 
     def wait_pause_source():
         while s_axis_tvalid or m_axis_tvalid:
-            yield clk.posedge
-            yield clk.posedge
+            yield s_clk.posedge
+            yield s_clk.posedge
             source_pause.next = False
-            yield clk.posedge
+            yield s_clk.posedge
             source_pause.next = True
-            yield clk.posedge
+            yield s_clk.posedge
 
         source_pause.next = False
 
     def wait_pause_sink():
         while s_axis_tvalid or m_axis_tvalid:
             sink_pause.next = True
-            yield clk.posedge
-            yield clk.posedge
-            yield clk.posedge
+            yield s_clk.posedge
+            yield s_clk.posedge
+            yield s_clk.posedge
             sink_pause.next = False
-            yield clk.posedge
+            yield s_clk.posedge
 
     @instance
     def check():
         yield delay(100)
-        yield clk.posedge
-        rst.next = 1
-        yield clk.posedge
-        rst.next = 0
-        yield clk.posedge
+        yield s_clk.posedge
+        s_rst.next = 1
+        m_rst.next = 1
+        yield s_clk.posedge
+        yield s_clk.posedge
+        yield s_clk.posedge
+        s_rst.next = 0
+        m_rst.next = 0
+        yield s_clk.posedge
         yield delay(100)
-        yield clk.posedge
+        yield s_clk.posedge
 
         for payload_len in range(1,18):
-            yield clk.posedge
+            yield s_clk.posedge
             print("test 1: test packet, length %d" % payload_len)
             current_test.next = 1
 
@@ -199,8 +219,8 @@ def bench():
 
             for wait in wait_normal, wait_pause_source, wait_pause_sink:
                 source.send(test_frame)
-                yield clk.posedge
-                yield clk.posedge
+                yield s_clk.posedge
+                yield s_clk.posedge
 
                 yield wait()
 
@@ -213,7 +233,7 @@ def bench():
 
                 yield delay(100)
 
-            yield clk.posedge
+            yield s_clk.posedge
             print("test 2: back-to-back packets, length %d" % payload_len)
             current_test.next = 2
 
@@ -231,8 +251,8 @@ def bench():
             for wait in wait_normal, wait_pause_source, wait_pause_sink:
                 source.send(test_frame1)
                 source.send(test_frame2)
-                yield clk.posedge
-                yield clk.posedge
+                yield s_clk.posedge
+                yield s_clk.posedge
 
                 yield wait()
 
@@ -250,7 +270,7 @@ def bench():
 
                 yield delay(100)
 
-            yield clk.posedge
+            yield s_clk.posedge
             print("test 3: tuser assert, length %d" % payload_len)
             current_test.next = 3
 
@@ -269,8 +289,8 @@ def bench():
             for wait in wait_normal, wait_pause_source, wait_pause_sink:
                 source.send(test_frame1)
                 source.send(test_frame2)
-                yield clk.posedge
-                yield clk.posedge
+                yield s_clk.posedge
+                yield s_clk.posedge
 
                 yield wait()
 

@@ -192,9 +192,6 @@ def bench():
             current_test.next = 1
 
             test_frame = axis_ep.AXIStreamFrame(
-                b'\xDA\xD1\xD2\xD3\xD4\xD5' +
-                b'\x5A\x51\x52\x53\x54\x55' +
-                b'\x80\x00' +
                 bytearray(range(payload_len)),
                 id=1,
                 dest=1,
@@ -221,17 +218,11 @@ def bench():
             current_test.next = 2
 
             test_frame1 = axis_ep.AXIStreamFrame(
-                b'\xDA\xD1\xD2\xD3\xD4\xD5' +
-                b'\x5A\x51\x52\x53\x54\x55' +
-                b'\x80\x00' +
                 bytearray(range(payload_len)),
                 id=2,
                 dest=1,
             )
             test_frame2 = axis_ep.AXIStreamFrame(
-                b'\xDA\xD1\xD2\xD3\xD4\xD5' +
-                b'\x5A\x51\x52\x53\x54\x55' +
-                b'\x80\x00' +
                 bytearray(range(payload_len)),
                 id=2,
                 dest=2,
@@ -264,18 +255,12 @@ def bench():
             current_test.next = 3
 
             test_frame1 = axis_ep.AXIStreamFrame(
-                b'\xDA\xD1\xD2\xD3\xD4\xD5' +
-                b'\x5A\x51\x52\x53\x54\x55' +
-                b'\x80\x00' +
                 bytearray(range(payload_len)),
                 id=3,
                 dest=1,
                 last_cycle_user=1
             )
             test_frame2 = axis_ep.AXIStreamFrame(
-                b'\xDA\xD1\xD2\xD3\xD4\xD5' +
-                b'\x5A\x51\x52\x53\x54\x55' +
-                b'\x80\x00' +
                 bytearray(range(payload_len)),
                 id=3,
                 dest=2,
