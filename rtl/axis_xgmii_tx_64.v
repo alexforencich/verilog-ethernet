@@ -454,8 +454,8 @@ always @* begin
         m_axis_ptp_ts_valid_next = 1'b1;
         if (PTP_TS_WIDTH == 96 && $signed({1'b0, m_axis_ptp_ts_reg[45:16]}) - $signed(31'd1000000000) > 0) begin
             // ns field rollover
-            m_axis_ptp_ts_next[45:16] <= $signed({1'b0, m_axis_ptp_ts_reg[45:16]}) - $signed(31'd1000000000);
-            m_axis_ptp_ts_next[95:48] <= m_axis_ptp_ts_reg[95:48] + 1;
+            m_axis_ptp_ts_next[45:16] = $signed({1'b0, m_axis_ptp_ts_reg[45:16]}) - $signed(31'd1000000000);
+            m_axis_ptp_ts_next[95:48] = m_axis_ptp_ts_reg[95:48] + 1;
         end
     end
 
