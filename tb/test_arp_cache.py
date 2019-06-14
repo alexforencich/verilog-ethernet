@@ -43,6 +43,9 @@ build_cmd = "iverilog -o %s.vvp %s" % (testbench, src)
 
 def bench():
 
+    # Parameters
+    CACHE_ADDR_WIDTH = 2
+
     # Inputs
     clk = Signal(bool(0))
     rst = Signal(bool(0))
@@ -193,8 +196,6 @@ def bench():
 
         yield delay(100)
 
-        raise StopSimulation
-
         yield clk.posedge
         print("test 3: write more")
         current_test.next = 3
@@ -202,7 +203,7 @@ def bench():
         yield clk.posedge
         write_request_source.send([(0xc0a80121, 0x0000c0a80121)])
         write_request_source.send([(0xc0a80122, 0x0000c0a80122)])
-        # overwrites 0xc0a80121 due to LRU
+        # overwrites 0xc0a80112
         write_request_source.send([(0xc0a80123, 0x0000c0a80123)])
 
         while not write_request_source.empty():
@@ -222,21 +223,21 @@ def bench():
         assert resp.data[0][0] == 0x0000c0a80111
         assert not resp.user[0]
 
+        # not in cache; was overwritten
         yield clk.posedge
         query_request_source.send([(0xc0a80112, )])
 
         yield query_response_sink.wait()
         resp = query_response_sink.recv()
-        assert resp.data[0][0] == 0x0000c0a80112
-        assert not resp.user[0]
+        assert resp.user[0]
 
-        # not in cache; was overwritten
         yield clk.posedge
         query_request_source.send([(0xc0a80121, )])
 
         yield query_response_sink.wait()
         resp = query_response_sink.recv()
-        assert resp.user[0]
+        assert resp.data[0][0] == 0x0000c0a80121
+        assert not resp.user[0]
 
         yield clk.posedge
         query_request_source.send([(0xc0a80122, )])
@@ -254,236 +255,64 @@ def bench():
         assert resp.data[0][0] == 0x0000c0a80123
         assert not resp.user[0]
 
-        # LRU reset by previous operation
-
         yield delay(100)
 
-        raise StopSimulation
-
         yield clk.posedge
-        print("test 5: LRU test")
+        print("test 5: Test overwrite")
         current_test.next = 5
 
-        # read to set LRU bit
         yield clk.posedge
-        query_request_valid.next = True
-        query_request_ip.next = 0xc0a80111
-        yield clk.posedge
-        query_request_valid.next = False
+        write_request_source.send([(0xc0a80123, 0x0000c0a80164)])
 
-        yield query_response_valid.posedge
-        assert not bool(query_response_error)
-        assert int(query_response_mac) == 0x0000c0a80111
-
-        yield clk.posedge
-        write_request_valid.next = True
-        write_request_ip.next = 0xc0a80131
-        write_request_mac.next = 0x0000c0a80131
-        yield clk.posedge
-        write_request_valid.next = False
-
-        yield write_complete.posedge
-        yield clk.posedge
-
-        yield clk.posedge
-        write_request_valid.next = True
-        write_request_ip.next = 0xc0a80132
-        write_request_mac.next = 0x0000c0a80132
-        yield clk.posedge
-        write_request_valid.next = False
-
-        yield write_complete.posedge
-        yield clk.posedge
-
-        yield clk.posedge
-        write_request_valid.next = True
-        write_request_ip.next = 0xc0a80133
-        write_request_mac.next = 0x0000c0a80133
-        yield clk.posedge
-        write_request_valid.next = False
-
-        yield write_complete.posedge
-        yield clk.posedge
+        while not write_request_source.empty():
+            yield clk.posedge
 
         # read values
         yield clk.posedge
-        query_request_valid.next = True
-        query_request_ip.next = 0xc0a80111
-        yield clk.posedge
-        query_request_valid.next = False
+        query_request_source.send([(0xc0a80111, )])
 
-        yield query_response_valid.posedge
-        assert not bool(query_response_error)
-        assert int(query_response_mac) == 0x0000c0a80111
+        yield query_response_sink.wait()
+        resp = query_response_sink.recv()
+        assert resp.data[0][0] == 0x0000c0a80111
+        assert not resp.user[0]
 
+        # not in cache; was overwritten
         yield clk.posedge
-        query_request_valid.next = True
-        query_request_ip.next = 0xc0a80112
-        yield clk.posedge
-        query_request_valid.next = False
+        query_request_source.send([(0xc0a80112, )])
 
-        yield query_response_valid.posedge
-        assert bool(query_response_error)
+        yield query_response_sink.wait()
+        resp = query_response_sink.recv()
+        assert resp.user[0]
 
         yield clk.posedge
-        query_request_valid.next = True
-        query_request_ip.next = 0xc0a80121
-        yield clk.posedge
-        query_request_valid.next = False
+        query_request_source.send([(0xc0a80121, )])
 
-        yield query_response_valid.posedge
-        assert bool(query_response_error)
-
-        yield clk.posedge
-        query_request_valid.next = True
-        query_request_ip.next = 0xc0a80122
-        yield clk.posedge
-        query_request_valid.next = False
-
-        yield query_response_valid.posedge
-        assert bool(query_response_error)
+        yield query_response_sink.wait()
+        resp = query_response_sink.recv()
+        assert resp.data[0][0] == 0x0000c0a80121
+        assert not resp.user[0]
 
         yield clk.posedge
-        query_request_valid.next = True
-        query_request_ip.next = 0xc0a80123
-        yield clk.posedge
-        query_request_valid.next = False
+        query_request_source.send([(0xc0a80122, )])
 
-        yield query_response_valid.posedge
-        assert bool(query_response_error)
-
-        yield clk.posedge
-        query_request_valid.next = True
-        query_request_ip.next = 0xc0a80131
-        yield clk.posedge
-        query_request_valid.next = False
-
-        yield query_response_valid.posedge
-        assert not bool(query_response_error)
-        assert int(query_response_mac) == 0x0000c0a80131
+        yield query_response_sink.wait()
+        resp = query_response_sink.recv()
+        assert resp.data[0][0] == 0x0000c0a80122
+        assert not resp.user[0]
 
         yield clk.posedge
-        query_request_valid.next = True
-        query_request_ip.next = 0xc0a80132
-        yield clk.posedge
-        query_request_valid.next = False
+        query_request_source.send([(0xc0a80123, )])
 
-        yield query_response_valid.posedge
-        assert not bool(query_response_error)
-        assert int(query_response_mac) == 0x0000c0a80132
-
-        yield clk.posedge
-        query_request_valid.next = True
-        query_request_ip.next = 0xc0a80133
-        yield clk.posedge
-        query_request_valid.next = False
-
-        yield query_response_valid.posedge
-        assert not bool(query_response_error)
-        assert int(query_response_mac) == 0x0000c0a80133
-
-        # LRU reset by previous operation
+        yield query_response_sink.wait()
+        resp = query_response_sink.recv()
+        assert resp.data[0][0] == 0x0000c0a80164
+        assert not resp.user[0]
 
         yield delay(100)
 
         yield clk.posedge
-        print("test 6: Test overwrite")
+        print("test 6: clear cache")
         current_test.next = 6
-
-        yield clk.posedge
-        write_request_valid.next = True
-        write_request_ip.next = 0xc0a80133
-        write_request_mac.next = 0x0000c0a80164
-        yield clk.posedge
-        write_request_valid.next = False
-
-        yield write_complete.posedge
-        yield clk.posedge
-
-        # read values
-        yield clk.posedge
-        query_request_valid.next = True
-        query_request_ip.next = 0xc0a80111
-        yield clk.posedge
-        query_request_valid.next = False
-
-        yield query_response_valid.posedge
-        assert not bool(query_response_error)
-        assert int(query_response_mac) == 0x0000c0a80111
-
-        yield clk.posedge
-        query_request_valid.next = True
-        query_request_ip.next = 0xc0a80112
-        yield clk.posedge
-        query_request_valid.next = False
-
-        yield query_response_valid.posedge
-        assert bool(query_response_error)
-
-        yield clk.posedge
-        query_request_valid.next = True
-        query_request_ip.next = 0xc0a80121
-        yield clk.posedge
-        query_request_valid.next = False
-
-        yield query_response_valid.posedge
-        assert bool(query_response_error)
-
-        yield clk.posedge
-        query_request_valid.next = True
-        query_request_ip.next = 0xc0a80122
-        yield clk.posedge
-        query_request_valid.next = False
-
-        yield query_response_valid.posedge
-        assert bool(query_response_error)
-
-        yield clk.posedge
-        query_request_valid.next = True
-        query_request_ip.next = 0xc0a80123
-        yield clk.posedge
-        query_request_valid.next = False
-
-        yield query_response_valid.posedge
-        assert bool(query_response_error)
-
-        yield clk.posedge
-        query_request_valid.next = True
-        query_request_ip.next = 0xc0a80131
-        yield clk.posedge
-        query_request_valid.next = False
-
-        yield query_response_valid.posedge
-        assert not bool(query_response_error)
-        assert int(query_response_mac) == 0x0000c0a80131
-
-        yield clk.posedge
-        query_request_valid.next = True
-        query_request_ip.next = 0xc0a80132
-        yield clk.posedge
-        query_request_valid.next = False
-
-        yield query_response_valid.posedge
-        assert not bool(query_response_error)
-        assert int(query_response_mac) == 0x0000c0a80132
-
-        yield clk.posedge
-        query_request_valid.next = True
-        query_request_ip.next = 0xc0a80133
-        yield clk.posedge
-        query_request_valid.next = False
-
-        yield query_response_valid.posedge
-        assert not bool(query_response_error)
-        assert int(query_response_mac) == 0x0000c0a80164
-
-        # LRU reset by previous operation
-
-        yield delay(100)
-
-        yield clk.posedge
-        print("test 7: clear cache")
-        current_test.next = 7
 
         yield clk.posedge
         clear_cache.next = True
@@ -493,13 +322,11 @@ def bench():
         yield delay(100)
 
         yield clk.posedge
-        query_request_valid.next = True
-        query_request_ip.next = 0xc0a80111
-        yield clk.posedge
-        query_request_valid.next = False
+        query_request_source.send([(0xc0a80111, )])
 
-        yield query_response_valid.posedge
-        assert bool(query_response_error)
+        yield query_response_sink.wait()
+        resp = query_response_sink.recv()
+        assert resp.user[0]
 
         yield delay(100)
 

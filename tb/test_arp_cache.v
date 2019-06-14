@@ -31,6 +31,9 @@ THE SOFTWARE.
  */
 module test_arp_cache;
 
+// Parameters
+parameter CACHE_ADDR_WIDTH = 2;
+
 // Inputs
 reg clk = 0;
 reg rst = 0;
@@ -84,7 +87,7 @@ initial begin
 end
 
 arp_cache #(
-    .CACHE_ADDR_WIDTH(2)
+    .CACHE_ADDR_WIDTH(CACHE_ADDR_WIDTH)
 )
 UUT (
     .clk(clk),
