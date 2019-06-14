@@ -71,6 +71,7 @@ reg [31:0] query_ip_reg = 0;
 reg write_ip_valid_reg = 0, write_ip_valid_next;
 reg [31:0] write_ip_reg = 0;
 reg [47:0] write_mac_reg = 0;
+reg clear_cache_reg = 0, clear_cache_next;
 
 reg [CACHE_ADDR_WIDTH-1:0] wr_ptr_reg = {CACHE_ADDR_WIDTH{1'b0}}, wr_ptr_next;
 reg [CACHE_ADDR_WIDTH-1:0] rd_ptr_reg = {CACHE_ADDR_WIDTH{1'b0}}, rd_ptr_next;
@@ -148,9 +149,11 @@ always @* begin
     wr_ptr_next = wr_ptr_reg;
     rd_ptr_next = rd_ptr_reg;
 
+    clear_cache_next = clear_cache_reg | clear_cache;
+
     query_ip_valid_next = query_ip_valid_reg;
 
-    query_request_ready_next = ~query_ip_valid_reg || ~query_request_valid || query_response_ready;
+    query_request_ready_next = (~query_ip_valid_reg || ~query_request_valid || query_response_ready) && !clear_cache_next;
 
     query_response_valid_next = query_response_valid_reg & ~query_response_ready;
     query_response_error_next = query_response_error_reg;
@@ -173,7 +176,7 @@ always @* begin
 
     write_ip_valid_next = write_ip_valid_reg;
 
-    write_request_ready_next = 1'b1;
+    write_request_ready_next = !clear_cache_next;
 
     if (write_ip_valid_reg) begin
         write_ip_valid_next = 0;
@@ -185,6 +188,15 @@ always @* begin
         write_ip_valid_next = 1;
         wr_ptr_next = write_request_hash[CACHE_ADDR_WIDTH-1:0];
     end
+
+    if (clear_cache) begin
+        clear_cache_next = 1'b1;
+        wr_ptr_next = 0;
+    end else if (clear_cache_reg) begin
+        wr_ptr_next = wr_ptr_reg + 1;
+        clear_cache_next = wr_ptr_next != 0;
+        mem_write = 1;
+    end
 end
 
 always @(posedge clk) begin
@@ -194,12 +206,16 @@ always @(posedge clk) begin
         query_response_valid_reg <= 1'b0;
         write_ip_valid_reg <= 1'b0;
         write_request_ready_reg <= 1'b0;
+        clear_cache_reg <= 1'b1;
+        wr_ptr_reg <= 0;
     end else begin
         query_ip_valid_reg <= query_ip_valid_next;
         query_request_ready_reg <= query_request_ready_next;
         query_response_valid_reg <= query_response_valid_next;
         write_ip_valid_reg <= write_ip_valid_next;
         write_request_ready_reg <= write_request_ready_next;
+        clear_cache_reg <= clear_cache_next;
+        wr_ptr_reg <= wr_ptr_next;
     end
 
     query_response_error_reg <= query_response_error_next;
@@ -213,13 +229,12 @@ always @(posedge clk) begin
         write_mac_reg <= write_request_mac;
     end
 
-    wr_ptr_reg <= wr_ptr_next;
     rd_ptr_reg <= rd_ptr_next;
 
     query_response_mac_reg <= mac_addr_mem[rd_ptr_reg];
 
     if (mem_write) begin
-        valid_mem[wr_ptr_reg] <= 1'b1;
+        valid_mem[wr_ptr_reg] <= !clear_cache_reg;
         ip_addr_mem[wr_ptr_reg] <= write_ip_reg;
         mac_addr_mem[wr_ptr_reg] <= write_mac_reg;
     end
