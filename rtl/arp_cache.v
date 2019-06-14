@@ -130,6 +130,16 @@ wr_hash (
     .state_out(write_request_hash)
 );
 
+integer i;
+
+initial begin
+    for (i = 0; i < 2**CACHE_ADDR_WIDTH; i = i + 1) begin
+        valid_mem[i] = 1'b0;
+        ip_addr_mem[i] = 32'd0;
+        mac_addr_mem[i] = 48'd0;
+    end
+end
+
 always @* begin
     mem_write = 1'b0;
     store_query = 1'b0;
