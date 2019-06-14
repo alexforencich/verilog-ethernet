@@ -270,6 +270,12 @@ Fully parametrizable combinatorial parallel LFSR/CRC module.
 
 MII PHY interface and clocking logic.
 
+### ptp_clock module
+
+PTP clock module with PPS output.  Generates both 64 bit and 96 bit timestamp
+formats.  Fine frequeny adjustment supported with configurable fractional
+nanoseconds field.
+
 ### rgmii_phy_if module
 
 RGMII PHY interface and clocking logic.
@@ -420,8 +426,9 @@ and data lines.
     rtl/ip_eth_tx_64.v              : IPv4 frame transmitter (64 bit)
     rtl/ip_mux.v                    : IP frame multiplexer
     rtl/lfsr.v                      : Generic LFSR/CRC module
-    rtl/oddr.v                      : Generic DDR output register
     rtl/mii_phy_if.v                : MII PHY interface
+    rtl/oddr.v                      : Generic DDR output register
+    rtl/ptp_clock.v                 : PTP clock
     rtl/rgmii_phy_if.v              : RGMII PHY interface
     rtl/ssio_ddr_in.v               : Generic source synchronous IO DDR input module
     rtl/ssio_ddr_in_diff.v          : Generic source synchronous IO DDR differential input module
@@ -545,6 +552,7 @@ individual test scripts can be run with python directly.
     tb/gmii_ep.py        : MyHDL GMII endpoints
     tb/ip_ep.py          : MyHDL IP frame endpoints
     tb/mii_ep.py         : MyHDL MII endpoints
+    tb/ptp.py            : MyHDL PTP clock model
     tb/rgmii_ep.py       : MyHDL RGMII endpoints
     tb/udp_ep.py         : MyHDL UDP frame endpoints
     tb/xgmii_ep.py       : MyHDL XGMII endpoints
