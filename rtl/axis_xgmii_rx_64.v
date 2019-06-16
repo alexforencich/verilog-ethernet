@@ -241,17 +241,11 @@ eth_crc_64 (
 );
 
 // detect control characters
-reg [7:0] detect_term;
+reg [7:0] detect_term = 8'd0;
 
 reg [7:0] detect_term_save = 8'd0;
 
 integer i;
-
-always @* begin
-    for (i = 0; i < 8; i = i + 1) begin
-        detect_term[i] = xgmii_rxc_d0[i] && (xgmii_rxd_d0[i*8 +: 8] == XGMII_TERM);
-    end
-end
 
 // mask errors to within packet
 reg [7:0] control_masked;
@@ -524,15 +518,33 @@ always @(posedge clk) begin
     if (xgmii_rxc[0] && xgmii_rxd[7:0] == XGMII_START) begin
         xgmii_rxd_d0 <= xgmii_rxd;
         xgmii_rxd_crc <= xgmii_rxd;
+        
+        for (i = 0; i < 8; i = i + 1) begin
+            detect_term[i] <= xgmii_rxc[i] && (xgmii_rxd[i*8 +: 8] == XGMII_TERM);
+        end
     end else if (xgmii_rxc[4] && xgmii_rxd[39:32] == XGMII_START) begin
         xgmii_rxd_d0 <= {xgmii_rxd[31:0], swap_rxd};
         xgmii_rxd_crc <= {xgmii_rxd[31:0], swap_rxd};
+
+        for (i = 0; i < 4; i = i + 1) begin
+            detect_term[i] <= swap_rxc[i] && (swap_rxd[i*8 +: 8] == XGMII_TERM);
+            detect_term[i+4] <= xgmii_rxc[i] && (xgmii_rxd[i*8 +: 8] == XGMII_TERM);
+        end
     end else if (lanes_swapped) begin
         xgmii_rxd_d0 <= {xgmii_rxd[31:0], swap_rxd};
         xgmii_rxd_crc <= {xgmii_rxd[31:0], swap_rxd};
+
+        for (i = 0; i < 4; i = i + 1) begin
+            detect_term[i] <= swap_rxc[i] && (swap_rxd[i*8 +: 8] == XGMII_TERM);
+            detect_term[i+4] <= xgmii_rxc[i] && (xgmii_rxd[i*8 +: 8] == XGMII_TERM);
+        end
     end else begin
         xgmii_rxd_d0 <= xgmii_rxd;
         xgmii_rxd_crc <= xgmii_rxd;
+
+        for (i = 0; i < 8; i = i + 1) begin
+            detect_term[i] <= xgmii_rxc[i] && (xgmii_rxd[i*8 +: 8] == XGMII_TERM);
+        end
     end
 
     if (state_next == STATE_LAST) begin

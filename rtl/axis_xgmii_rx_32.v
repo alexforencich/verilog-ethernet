@@ -221,17 +221,11 @@ eth_crc_32 (
 );
 
 // detect control characters
-reg [3:0] detect_term;
+reg [3:0] detect_term = 4'd0;
 
 reg [3:0] detect_term_save;
 
 integer i;
-
-always @* begin
-    for (i = 0; i < 4; i = i + 1) begin
-        detect_term[i] = xgmii_rxc_d0[i] && (xgmii_rxd_d0[i*8 +: 8] == XGMII_TERM);
-    end
-end
 
 // mask errors to within packet
 reg [3:0] control_masked;
@@ -439,6 +433,10 @@ always @(posedge clk) begin
     ptp_ts_reg <= ptp_ts_next;
 
     last_cycle_tkeep_reg <= last_cycle_tkeep_next;
+
+    for (i = 0; i < 4; i = i + 1) begin
+        detect_term[i] <= xgmii_rxc[i] && (xgmii_rxd[i*8 +: 8] == XGMII_TERM);
+    end
 
     detect_term_save <= detect_term;
 
