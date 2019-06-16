@@ -60,20 +60,20 @@ module fpga (
      */
     input  wire       qsfp_rx1_p,
     input  wire       qsfp_rx1_n,
-    // input  wire       qsfp_rx2_p,
-    // input  wire       qsfp_rx2_n,
-    // input  wire       qsfp_rx3_p,
-    // input  wire       qsfp_rx3_n,
-    // input  wire       qsfp_rx4_p,
-    // input  wire       qsfp_rx4_n,
+    input  wire       qsfp_rx2_p,
+    input  wire       qsfp_rx2_n,
+    input  wire       qsfp_rx3_p,
+    input  wire       qsfp_rx3_n,
+    input  wire       qsfp_rx4_p,
+    input  wire       qsfp_rx4_n,
     output wire       qsfp_tx1_p,
     output wire       qsfp_tx1_n,
-    // output wire       qsfp_tx2_p,
-    // output wire       qsfp_tx2_n,
-    // output wire       qsfp_tx3_p,
-    // output wire       qsfp_tx3_n,
-    // output wire       qsfp_tx4_p,
-    // output wire       qsfp_tx4_n,
+    output wire       qsfp_tx2_p,
+    output wire       qsfp_tx2_n,
+    output wire       qsfp_tx3_p,
+    output wire       qsfp_tx3_n,
+    output wire       qsfp_tx4_p,
+    output wire       qsfp_tx4_n,
     input  wire       qsfp_mgt_refclk_0_p,
     input  wire       qsfp_mgt_refclk_0_n,
     // input  wire       qsfp_mgt_refclk_1_p,
@@ -252,231 +252,509 @@ sync_signal_inst (
 
 // SI570 I2C
 wire i2c_scl_i;
-wire i2c_scl_o;
-wire i2c_scl_t;
+wire i2c_scl_o = 1'b1;
+wire i2c_scl_t = 1'b1;
 wire i2c_sda_i;
-wire i2c_sda_o;
-wire i2c_sda_t;
+wire i2c_sda_o = 1'b1;
+wire i2c_sda_t = 1'b1;
 
 assign i2c_scl_i = i2c_scl;
 assign i2c_scl = i2c_scl_t ? 1'bz : i2c_scl_o;
 assign i2c_sda_i = i2c_sda;
 assign i2c_sda = i2c_sda_t ? 1'bz : i2c_sda_o;
 
-wire [6:0] si570_i2c_cmd_address;
-wire si570_i2c_cmd_start;
-wire si570_i2c_cmd_read;
-wire si570_i2c_cmd_write;
-wire si570_i2c_cmd_write_multiple;
-wire si570_i2c_cmd_stop;
-wire si570_i2c_cmd_valid;
-wire si570_i2c_cmd_ready;
-
-wire [7:0] si570_i2c_data;
-wire si570_i2c_data_valid;
-wire si570_i2c_data_ready;
-wire si570_i2c_data_last;
-
-wire si570_i2c_init_busy;
-
-// delay start by ~10 ms
-reg [20:0] si570_i2c_init_start_delay = 21'd0;
-
-always @(posedge clk_125mhz_int) begin
-    if (rst_125mhz_int) begin
-        si570_i2c_init_start_delay <= 21'd0;
-    end else begin
-        if (!si570_i2c_init_start_delay[20]) begin
-            si570_i2c_init_start_delay <= si570_i2c_init_start_delay + 21'd1;
-        end
-    end
-end
-
-si570_i2c_init
-si570_i2c_init_inst (
-    .clk(clk_125mhz_int),
-    .rst(rst_125mhz_int),
-    .cmd_address(si570_i2c_cmd_address),
-    .cmd_start(si570_i2c_cmd_start),
-    .cmd_read(si570_i2c_cmd_read),
-    .cmd_write(si570_i2c_cmd_write),
-    .cmd_write_multiple(si570_i2c_cmd_write_multiple),
-    .cmd_stop(si570_i2c_cmd_stop),
-    .cmd_valid(si570_i2c_cmd_valid),
-    .cmd_ready(si570_i2c_cmd_ready),
-    .data_out(si570_i2c_data),
-    .data_out_valid(si570_i2c_data_valid),
-    .data_out_ready(si570_i2c_data_ready),
-    .data_out_last(si570_i2c_data_last),
-    .busy(si570_i2c_init_busy),
-    .start(si570_i2c_init_start_delay[20])
-);
-
-i2c_master
-si570_i2c_master (
-    .clk(clk_125mhz_int),
-    .rst(rst_125mhz_int),
-    .cmd_address(si570_i2c_cmd_address),
-    .cmd_start(si570_i2c_cmd_start),
-    .cmd_read(si570_i2c_cmd_read),
-    .cmd_write(si570_i2c_cmd_write),
-    .cmd_write_multiple(si570_i2c_cmd_write_multiple),
-    .cmd_stop(si570_i2c_cmd_stop),
-    .cmd_valid(si570_i2c_cmd_valid),
-    .cmd_ready(si570_i2c_cmd_ready),
-    .data_in(si570_i2c_data),
-    .data_in_valid(si570_i2c_data_valid),
-    .data_in_ready(si570_i2c_data_ready),
-    .data_in_last(si570_i2c_data_last),
-    .data_out(),
-    .data_out_valid(),
-    .data_out_ready(1),
-    .data_out_last(),
-    .scl_i(i2c_scl_i),
-    .scl_o(i2c_scl_o),
-    .scl_t(i2c_scl_t),
-    .sda_i(i2c_sda_i),
-    .sda_o(i2c_sda_o),
-    .sda_t(i2c_sda_t),
-    .busy(),
-    .bus_control(),
-    .bus_active(),
-    .missed_ack(),
-    .prescale(800),
-    .stop_on_idle(1)
-);
-
 // XGMII 10G PHY
 assign qsfp_modsell = 1'b0;
 assign qsfp_resetl = 1'b1;
 assign qsfp_lpmode = 1'b0;
 
+wire        qsfp_tx_clk_1_int;
+wire        qsfp_tx_rst_1_int;
 wire [63:0] qsfp_txd_1_int;
 wire [7:0]  qsfp_txc_1_int;
+wire        qsfp_rx_clk_1_int;
+wire        qsfp_rx_rst_1_int;
 wire [63:0] qsfp_rxd_1_int;
 wire [7:0]  qsfp_rxc_1_int;
+wire        qsfp_tx_clk_2_int;
+wire        qsfp_tx_rst_2_int;
 wire [63:0] qsfp_txd_2_int;
 wire [7:0]  qsfp_txc_2_int;
-wire [63:0] qsfp_rxd_2_int = 64'h0707070707070707;
-wire [7:0]  qsfp_rxc_2_int = 8'hff;
+wire        qsfp_rx_clk_2_int;
+wire        qsfp_rx_rst_2_int;
+wire [63:0] qsfp_rxd_2_int;
+wire [7:0]  qsfp_rxc_2_int;
+wire        qsfp_tx_clk_3_int;
+wire        qsfp_tx_rst_3_int;
 wire [63:0] qsfp_txd_3_int;
 wire [7:0]  qsfp_txc_3_int;
-wire [63:0] qsfp_rxd_3_int = 64'h0707070707070707;
-wire [7:0]  qsfp_rxc_3_int = 8'hff;
+wire        qsfp_rx_clk_3_int;
+wire        qsfp_rx_rst_3_int;
+wire [63:0] qsfp_rxd_3_int;
+wire [7:0]  qsfp_rxc_3_int;
+wire        qsfp_tx_clk_4_int;
+wire        qsfp_tx_rst_4_int;
 wire [63:0] qsfp_txd_4_int;
 wire [7:0]  qsfp_txc_4_int;
-wire [63:0] qsfp_rxd_4_int = 64'h0707070707070707;
-wire [7:0]  qsfp_rxc_4_int = 8'hff;
+wire        qsfp_rx_clk_4_int;
+wire        qsfp_rx_rst_4_int;
+wire [63:0] qsfp_rxd_4_int;
+wire [7:0]  qsfp_rxc_4_int;
 
-wire [535:0] configuration_vector;
-wire [447:0] status_vector;
-wire [7:0] core_status;
+wire qsfp_rx_block_lock_1;
+wire qsfp_rx_block_lock_2;
+wire qsfp_rx_block_lock_3;
+wire qsfp_rx_block_lock_4;
 
-assign configuration_vector[0]       = 1'b0; // PMA Loopback Enable
-assign configuration_vector[14:1]    = 0;
-assign configuration_vector[15]      = 1'b0; // PMA Reset
-assign configuration_vector[16]      = 1'b0; // Global PMD TX Disable
-assign configuration_vector[109:17]  = 0;
-assign configuration_vector[110]     = 1'b0; // PCS Loopback Enable
-assign configuration_vector[111]     = 1'b0; // PCS Reset
-assign configuration_vector[169:112] = 58'd0; // 10GBASE-R Test Pattern Seed A0-3
-assign configuration_vector[175:170] = 0;
-assign configuration_vector[233:176] = 58'd0; // 10GBASE-R Test Pattern Seed B0-3
-assign configuration_vector[239:234] = 0;
-assign configuration_vector[240]     = 1'b0; // Data Pattern Select
-assign configuration_vector[241]     = 1'b0; // Test Pattern Select
-assign configuration_vector[242]     = 1'b0; // RX Test Pattern Checking Enable
-assign configuration_vector[243]     = 1'b0; // TX Test Pattern Enable
-assign configuration_vector[244]     = 1'b0; // PRBS31 TX Test Pattern Enable
-assign configuration_vector[245]     = 1'b0; // PRBS31 RX Test Pattern Checking Enable
-assign configuration_vector[383:246] = 0;
-assign configuration_vector[399:384] = 16'h4C4B; // 125 us timer control
-assign configuration_vector[511:400] = 0;
-assign configuration_vector[512]     = 1'b0; // Set PMA Link Status
-assign configuration_vector[513]     = 1'b0; // Clear PMA/PMD Link Faults
-assign configuration_vector[515:514] = 0;
-assign configuration_vector[516]     = 1'b0; // Set PCS Link Status
-assign configuration_vector[517]     = 1'b0; // Clear PCS Link Faults
-assign configuration_vector[518]     = 1'b0; // Clear 10GBASE-R Status 2
-assign configuration_vector[519]     = 1'b0; // Clear 10GBASE-R Test Pattern Error Counter
-assign configuration_vector[535:520] = 0;
+wire qsfp_mgt_refclk_0;
 
-wire        drp_gnt;
-wire        gt_drprdy;
-wire [15:0] gt_drpdo;
-wire        gt_drpen;
-wire        gt_drpwe;
-wire [15:0] gt_drpaddr;
-wire [15:0] gt_drpdi;
+wire [3:0] gt_txclkout;
+wire gt_txusrclk;
 
-ten_gig_eth_pcs_pma_0
-ten_gig_eth_pcs_pma_inst (
-    .refclk_p(qsfp_mgt_refclk_0_p),
-    .refclk_n(qsfp_mgt_refclk_0_n),
+wire [3:0] gt_rxclkout;
+wire [3:0] gt_rxusrclk;
 
-    .dclk(clk_125mhz_int),
+wire gt_reset_tx_done;
+wire gt_reset_rx_done;
 
-    .coreclk_out(),
+wire [3:0] gt_txprgdivresetdone;
+wire [3:0] gt_txpmaresetdone;
+wire [3:0] gt_rxprgdivresetdone;
+wire [3:0] gt_rxpmaresetdone;
 
-    .reset(rst_125mhz_int | si570_i2c_init_busy),
+wire gt_tx_reset = ~((&gt_txprgdivresetdone) & (&gt_txpmaresetdone));
+wire gt_rx_reset = ~&gt_rxpmaresetdone;
 
-    .sim_speedup_control(1'b0),
+reg gt_userclk_tx_active = 1'b0;
+reg [3:0] gt_userclk_rx_active = 1'b0;
+
+IBUFDS_GTE3 ibufds_gte3_qsfp_mgt_refclk_0_inst (
+    .I             (qsfp_mgt_refclk_0_p),
+    .IB            (qsfp_mgt_refclk_0_n),
+    .CEB           (1'b0),
+    .O             (qsfp_mgt_refclk_0),
+    .ODIV2         ()
+);
+
+
+BUFG_GT bufg_gt_tx_usrclk_inst (
+    .CE      (1'b1),
+    .CEMASK  (1'b0),
+    .CLR     (gt_tx_reset),
+    .CLRMASK (1'b0),
+    .DIV     (3'd0),
+    .I       (gt_txclkout[0]),
+    .O       (gt_txusrclk)
+);
+
+assign clk_156mhz_int = gt_txusrclk;
+
+always @(posedge gt_txusrclk, posedge gt_tx_reset) begin
+    if (gt_tx_reset) begin
+        gt_userclk_tx_active <= 1'b0;
+    end else begin
+        gt_userclk_tx_active <= 1'b1;
+    end
+end
+
+genvar n;
+
+generate
+
+for (n = 0; n < 4; n = n + 1) begin
+
+    BUFG_GT bufg_gt_rx_usrclk_inst (
+        .CE      (1'b1),
+        .CEMASK  (1'b0),
+        .CLR     (gt_rx_reset),
+        .CLRMASK (1'b0),
+        .DIV     (3'd0),
+        .I       (gt_rxclkout[n]),
+        .O       (gt_rxusrclk[n])
+    );
+
+    always @(posedge gt_rxusrclk[n], posedge gt_rx_reset) begin
+        if (gt_rx_reset) begin
+            gt_userclk_rx_active[n] <= 1'b0;
+        end else begin
+            gt_userclk_rx_active[n] <= 1'b1;
+        end
+    end
+
+end
+
+endgenerate
+
+sync_reset #(
+    .N(4)
+)
+sync_reset_156mhz_inst (
+    .clk(clk_156mhz_int),
+    .rst(~gt_reset_tx_done),
+    .sync_reset_out(rst_156mhz_int)
+);
+
+wire [5:0] qsfp_gt_txheader_1;
+wire [127:0] qsfp_gt_txdata_1;
+wire qsfp_gt_rxgearboxslip_1;
+wire [5:0] qsfp_gt_rxheader_1;
+wire [1:0] qsfp_gt_rxheadervalid_1;
+wire [127:0] qsfp_gt_rxdata_1;
+wire [1:0] qsfp_gt_rxdatavalid_1;
+
+wire [5:0] qsfp_gt_txheader_2;
+wire [127:0] qsfp_gt_txdata_2;
+wire qsfp_gt_rxgearboxslip_2;
+wire [5:0] qsfp_gt_rxheader_2;
+wire [1:0] qsfp_gt_rxheadervalid_2;
+wire [127:0] qsfp_gt_rxdata_2;
+wire [1:0] qsfp_gt_rxdatavalid_2;
+
+wire [5:0] qsfp_gt_txheader_3;
+wire [127:0] qsfp_gt_txdata_3;
+wire qsfp_gt_rxgearboxslip_3;
+wire [5:0] qsfp_gt_rxheader_3;
+wire [1:0] qsfp_gt_rxheadervalid_3;
+wire [127:0] qsfp_gt_rxdata_3;
+wire [1:0] qsfp_gt_rxdatavalid_3;
+
+wire [5:0] qsfp_gt_txheader_4;
+wire [127:0] qsfp_gt_txdata_4;
+wire qsfp_gt_rxgearboxslip_4;
+wire [5:0] qsfp_gt_rxheader_4;
+wire [1:0] qsfp_gt_rxheadervalid_4;
+wire [127:0] qsfp_gt_rxdata_4;
+wire [1:0] qsfp_gt_rxdatavalid_4;
+
+gtwizard_ultrascale_0
+qsfp_gty_inst (
+    .gtwiz_userclk_tx_active_in(&gt_userclk_tx_active),
+    .gtwiz_userclk_rx_active_in(&gt_userclk_rx_active),
+
+    .gtwiz_reset_clk_freerun_in(clk_125mhz_int),
+    .gtwiz_reset_all_in(rst_125mhz_int),
+
+    .gtwiz_reset_tx_pll_and_datapath_in(1'b0),
+    .gtwiz_reset_tx_datapath_in(1'b0),
+
+    .gtwiz_reset_rx_pll_and_datapath_in(1'b0),
+    .gtwiz_reset_rx_datapath_in(1'b0),
+
+    .gtwiz_reset_rx_cdr_stable_out(),
+
+    .gtwiz_reset_tx_done_out(gt_reset_tx_done),
+    .gtwiz_reset_rx_done_out(gt_reset_rx_done),
+
+    .gtrefclk00_in({1{qsfp_mgt_refclk_0}}),
 
     .qpll0outclk_out(),
     .qpll0outrefclk_out(),
-    .qpll0lock_out(),
 
-    .rxrecclk_out(),
+    .gtyrxn_in({qsfp_rx4_n, qsfp_rx3_n, qsfp_rx2_n, qsfp_rx1_n}),
+    .gtyrxp_in({qsfp_rx4_p, qsfp_rx3_p, qsfp_rx2_p, qsfp_rx1_p}),
 
-    .txusrclk_out(),
-    .txusrclk2_out(clk_156mhz_int),
+    .rxusrclk_in(gt_rxusrclk),
+    .rxusrclk2_in(gt_rxusrclk),
 
-    .gttxreset_out(),
-    .gtrxreset_out(),
+    .txdata_in({qsfp_gt_txdata_4, qsfp_gt_txdata_3, qsfp_gt_txdata_2, qsfp_gt_txdata_1}),
+    .txheader_in({qsfp_gt_txheader_4, qsfp_gt_txheader_3, qsfp_gt_txheader_2, qsfp_gt_txheader_1}),
+    .txsequence_in({4{1'b0}}),
 
-    .txuserrdy_out(),
+    .txusrclk_in({4{gt_txusrclk}}),
+    .txusrclk2_in({4{gt_txusrclk}}),
 
-    .areset_datapathclk_out(rst_156mhz_int),
-    .areset_coreclk_out(),
-    .reset_counter_done_out(),
+    .gtpowergood_out(),
 
+    .gtytxn_out({qsfp_tx4_n, qsfp_tx3_n, qsfp_tx2_n, qsfp_tx1_n}),
+    .gtytxp_out({qsfp_tx4_p, qsfp_tx3_p, qsfp_tx2_p, qsfp_tx1_p}),
+
+    .rxgearboxslip_in({qsfp_gt_rxgearboxslip_4, qsfp_gt_rxgearboxslip_3, qsfp_gt_rxgearboxslip_2, qsfp_gt_rxgearboxslip_1}),
+    .rxdata_out({qsfp_gt_rxdata_4, qsfp_gt_rxdata_3, qsfp_gt_rxdata_2, qsfp_gt_rxdata_1}),
+    .rxdatavalid_out({qsfp_gt_rxdatavalid_4, qsfp_gt_rxdatavalid_3, qsfp_gt_rxdatavalid_2, qsfp_gt_rxdatavalid_1}),
+    .rxheader_out({qsfp_gt_rxheader_4, qsfp_gt_rxheader_3, qsfp_gt_rxheader_2, qsfp_gt_rxheader_1}),
+    .rxheadervalid_out({qsfp_gt_rxheadervalid_4, qsfp_gt_rxheadervalid_3, qsfp_gt_rxheadervalid_2, qsfp_gt_rxheadervalid_1}),
+    .rxoutclk_out(gt_rxclkout),
+    .rxpmaresetdone_out(gt_rxpmaresetdone),
+    .rxprgdivresetdone_out(gt_rxprgdivresetdone),
+    .rxstartofseq_out(),
+
+    .txoutclk_out(gt_txclkout),
+    .txpmaresetdone_out(gt_txpmaresetdone),
+    .txprgdivresetdone_out(gt_txprgdivresetdone)
+);
+
+assign qsfp_tx_clk_1_int = clk_156mhz_int;
+assign qsfp_tx_rst_1_int = rst_156mhz_int;
+
+assign qsfp_rx_clk_1_int = gt_rxusrclk[0];
+
+sync_reset #(
+    .N(4)
+)
+qsfp_rx_rst_1_reset_sync_inst (
+    .clk(qsfp_rx_clk_1_int),
+    .rst(~gt_reset_rx_done),
+    .sync_reset_out(qsfp_rx_rst_1_int)
+);
+
+eth_phy_10g #(
+    .BIT_REVERSE(1)
+)
+qsfp_phy_1_inst (
+    .tx_clk(qsfp_tx_clk_1_int),
+    .tx_rst(qsfp_tx_rst_1_int),
+    .rx_clk(qsfp_rx_clk_1_int),
+    .rx_rst(qsfp_rx_rst_1_int),
     .xgmii_txd(qsfp_txd_1_int),
     .xgmii_txc(qsfp_txc_1_int),
     .xgmii_rxd(qsfp_rxd_1_int),
     .xgmii_rxc(qsfp_rxc_1_int),
-
-    .txp(qsfp_tx1_p),
-    .txn(qsfp_tx1_n),
-    .rxp(qsfp_rx1_p),
-    .rxn(qsfp_rx1_n),
-
-    .resetdone_out(),
-    .signal_detect(1'b1),
-    .tx_fault(1'b0),
-
-    .drp_req(drp_gnt),
-    .drp_gnt(drp_gnt),
-
-    .core_to_gt_drprdy(gt_drprdy),
-    .core_to_gt_drpdo(gt_drpdo),
-    .core_to_gt_drpen(gt_drpen),
-    .core_to_gt_drpwe(gt_drpwe),
-    .core_to_gt_drpaddr(gt_drpaddr),
-    .core_to_gt_drpdi(gt_drpdi),
-
-    .gt_drprdy(gt_drprdy),
-    .gt_drpdo(gt_drpdo),
-    .gt_drpen(gt_drpen),
-    .gt_drpwe(gt_drpwe),
-    .gt_drpaddr(gt_drpaddr),
-    .gt_drpdi(gt_drpdi),
-
-    .tx_disable(),
-    .configuration_vector(configuration_vector),
-    .status_vector(status_vector),
-    .pma_pmd_type(3'b101),
-    .core_status(core_status)
+    .serdes_tx_data(qsfp_gt_txdata_1),
+    .serdes_tx_hdr(qsfp_gt_txheader_1),
+    .serdes_rx_data(qsfp_gt_rxdata_1),
+    .serdes_rx_hdr(qsfp_gt_rxheader_1),
+    .serdes_rx_bitslip(qsfp_gt_rxgearboxslip_1),
+    .rx_block_lock(qsfp_rx_block_lock_1),
+    .rx_high_ber()
 );
+
+assign qsfp_tx_clk_2_int = clk_156mhz_int;
+assign qsfp_tx_rst_2_int = rst_156mhz_int;
+
+assign qsfp_rx_clk_2_int = gt_rxusrclk[1];
+
+sync_reset #(
+    .N(4)
+)
+qsfp_rx_rst_2_reset_sync_inst (
+    .clk(qsfp_rx_clk_2_int),
+    .rst(~gt_reset_rx_done),
+    .sync_reset_out(qsfp_rx_rst_2_int)
+);
+
+eth_phy_10g #(
+    .BIT_REVERSE(1)
+)
+qsfp_phy_2_inst (
+    .tx_clk(qsfp_tx_clk_2_int),
+    .tx_rst(qsfp_tx_rst_2_int),
+    .rx_clk(qsfp_rx_clk_2_int),
+    .rx_rst(qsfp_rx_rst_2_int),
+    .xgmii_txd(qsfp_txd_2_int),
+    .xgmii_txc(qsfp_txc_2_int),
+    .xgmii_rxd(qsfp_rxd_2_int),
+    .xgmii_rxc(qsfp_rxc_2_int),
+    .serdes_tx_data(qsfp_gt_txdata_2),
+    .serdes_tx_hdr(qsfp_gt_txheader_2),
+    .serdes_rx_data(qsfp_gt_rxdata_2),
+    .serdes_rx_hdr(qsfp_gt_rxheader_2),
+    .serdes_rx_bitslip(qsfp_gt_rxgearboxslip_2),
+    .rx_block_lock(qsfp_rx_block_lock_2),
+    .rx_high_ber()
+);
+
+assign qsfp_tx_clk_3_int = clk_156mhz_int;
+assign qsfp_tx_rst_3_int = rst_156mhz_int;
+
+assign qsfp_rx_clk_3_int = gt_rxusrclk[2];
+
+sync_reset #(
+    .N(4)
+)
+qsfp_rx_rst_3_reset_sync_inst (
+    .clk(qsfp_rx_clk_3_int),
+    .rst(~gt_reset_rx_done),
+    .sync_reset_out(qsfp_rx_rst_3_int)
+);
+
+eth_phy_10g #(
+    .BIT_REVERSE(1)
+)
+qsfp_phy_3_inst (
+    .tx_clk(qsfp_tx_clk_3_int),
+    .tx_rst(qsfp_tx_rst_3_int),
+    .rx_clk(qsfp_rx_clk_3_int),
+    .rx_rst(qsfp_rx_rst_3_int),
+    .xgmii_txd(qsfp_txd_3_int),
+    .xgmii_txc(qsfp_txc_3_int),
+    .xgmii_rxd(qsfp_rxd_3_int),
+    .xgmii_rxc(qsfp_rxc_3_int),
+    .serdes_tx_data(qsfp_gt_txdata_3),
+    .serdes_tx_hdr(qsfp_gt_txheader_3),
+    .serdes_rx_data(qsfp_gt_rxdata_3),
+    .serdes_rx_hdr(qsfp_gt_rxheader_3),
+    .serdes_rx_bitslip(qsfp_gt_rxgearboxslip_3),
+    .rx_block_lock(qsfp_rx_block_lock_3),
+    .rx_high_ber()
+);
+
+assign qsfp_tx_clk_4_int = clk_156mhz_int;
+assign qsfp_tx_rst_4_int = rst_156mhz_int;
+
+assign qsfp_rx_clk_4_int = gt_rxusrclk[3];
+
+sync_reset #(
+    .N(4)
+)
+qsfp_rx_rst_4_reset_sync_inst (
+    .clk(qsfp_rx_clk_4_int),
+    .rst(~gt_reset_rx_done),
+    .sync_reset_out(qsfp_rx_rst_4_int)
+);
+
+eth_phy_10g #(
+    .BIT_REVERSE(1)
+)
+qsfp_phy_4_inst (
+    .tx_clk(qsfp_tx_clk_4_int),
+    .tx_rst(qsfp_tx_rst_4_int),
+    .rx_clk(qsfp_rx_clk_4_int),
+    .rx_rst(qsfp_rx_rst_4_int),
+    .xgmii_txd(qsfp_txd_4_int),
+    .xgmii_txc(qsfp_txc_4_int),
+    .xgmii_rxd(qsfp_rxd_4_int),
+    .xgmii_rxc(qsfp_rxc_4_int),
+    .serdes_tx_data(qsfp_gt_txdata_4),
+    .serdes_tx_hdr(qsfp_gt_txheader_4),
+    .serdes_rx_data(qsfp_gt_rxdata_4),
+    .serdes_rx_hdr(qsfp_gt_rxheader_4),
+    .serdes_rx_bitslip(qsfp_gt_rxgearboxslip_4),
+    .rx_block_lock(qsfp_rx_block_lock_4),
+    .rx_high_ber()
+);
+
+// // XGMII 10G PHY
+// assign qsfp_modsell = 1'b0;
+// assign qsfp_resetl = 1'b1;
+// assign qsfp_lpmode = 1'b0;
+
+// wire [63:0] qsfp_txd_1_int;
+// wire [7:0]  qsfp_txc_1_int;
+// wire [63:0] qsfp_rxd_1_int;
+// wire [7:0]  qsfp_rxc_1_int;
+// wire [63:0] qsfp_txd_2_int;
+// wire [7:0]  qsfp_txc_2_int;
+// wire [63:0] qsfp_rxd_2_int = 64'h0707070707070707;
+// wire [7:0]  qsfp_rxc_2_int = 8'hff;
+// wire [63:0] qsfp_txd_3_int;
+// wire [7:0]  qsfp_txc_3_int;
+// wire [63:0] qsfp_rxd_3_int = 64'h0707070707070707;
+// wire [7:0]  qsfp_rxc_3_int = 8'hff;
+// wire [63:0] qsfp_txd_4_int;
+// wire [7:0]  qsfp_txc_4_int;
+// wire [63:0] qsfp_rxd_4_int = 64'h0707070707070707;
+// wire [7:0]  qsfp_rxc_4_int = 8'hff;
+
+// wire [535:0] configuration_vector;
+// wire [447:0] status_vector;
+// wire [7:0] core_status;
+
+// assign configuration_vector[0]       = 1'b0; // PMA Loopback Enable
+// assign configuration_vector[14:1]    = 0;
+// assign configuration_vector[15]      = 1'b0; // PMA Reset
+// assign configuration_vector[16]      = 1'b0; // Global PMD TX Disable
+// assign configuration_vector[109:17]  = 0;
+// assign configuration_vector[110]     = 1'b0; // PCS Loopback Enable
+// assign configuration_vector[111]     = 1'b0; // PCS Reset
+// assign configuration_vector[169:112] = 58'd0; // 10GBASE-R Test Pattern Seed A0-3
+// assign configuration_vector[175:170] = 0;
+// assign configuration_vector[233:176] = 58'd0; // 10GBASE-R Test Pattern Seed B0-3
+// assign configuration_vector[239:234] = 0;
+// assign configuration_vector[240]     = 1'b0; // Data Pattern Select
+// assign configuration_vector[241]     = 1'b0; // Test Pattern Select
+// assign configuration_vector[242]     = 1'b0; // RX Test Pattern Checking Enable
+// assign configuration_vector[243]     = 1'b0; // TX Test Pattern Enable
+// assign configuration_vector[244]     = 1'b0; // PRBS31 TX Test Pattern Enable
+// assign configuration_vector[245]     = 1'b0; // PRBS31 RX Test Pattern Checking Enable
+// assign configuration_vector[383:246] = 0;
+// assign configuration_vector[399:384] = 16'h4C4B; // 125 us timer control
+// assign configuration_vector[511:400] = 0;
+// assign configuration_vector[512]     = 1'b0; // Set PMA Link Status
+// assign configuration_vector[513]     = 1'b0; // Clear PMA/PMD Link Faults
+// assign configuration_vector[515:514] = 0;
+// assign configuration_vector[516]     = 1'b0; // Set PCS Link Status
+// assign configuration_vector[517]     = 1'b0; // Clear PCS Link Faults
+// assign configuration_vector[518]     = 1'b0; // Clear 10GBASE-R Status 2
+// assign configuration_vector[519]     = 1'b0; // Clear 10GBASE-R Test Pattern Error Counter
+// assign configuration_vector[535:520] = 0;
+
+// wire        drp_gnt;
+// wire        gt_drprdy;
+// wire [15:0] gt_drpdo;
+// wire        gt_drpen;
+// wire        gt_drpwe;
+// wire [15:0] gt_drpaddr;
+// wire [15:0] gt_drpdi;
+
+// ten_gig_eth_pcs_pma_0
+// ten_gig_eth_pcs_pma_inst (
+//     .refclk_p(qsfp_mgt_refclk_0_p),
+//     .refclk_n(qsfp_mgt_refclk_0_n),
+
+//     .dclk(clk_125mhz_int),
+
+//     .coreclk_out(),
+
+//     //.reset(rst_125mhz_int | si570_i2c_init_busy),
+//     .reset(rst_125mhz_int),
+
+//     .sim_speedup_control(1'b0),
+
+//     .qpll0outclk_out(),
+//     .qpll0outrefclk_out(),
+//     .qpll0lock_out(),
+
+//     .rxrecclk_out(),
+
+//     .txusrclk_out(),
+//     .txusrclk2_out(clk_156mhz_int),
+
+//     .gttxreset_out(),
+//     .gtrxreset_out(),
+
+//     .txuserrdy_out(),
+
+//     .areset_datapathclk_out(rst_156mhz_int),
+//     .areset_coreclk_out(),
+//     .reset_counter_done_out(),
+
+//     .xgmii_txd(qsfp_txd_1_int),
+//     .xgmii_txc(qsfp_txc_1_int),
+//     .xgmii_rxd(qsfp_rxd_1_int),
+//     .xgmii_rxc(qsfp_rxc_1_int),
+
+//     .txp(qsfp_tx1_p),
+//     .txn(qsfp_tx1_n),
+//     .rxp(qsfp_rx1_p),
+//     .rxn(qsfp_rx1_n),
+
+//     .resetdone_out(),
+//     .signal_detect(1'b1),
+//     .tx_fault(1'b0),
+
+//     .drp_req(drp_gnt),
+//     .drp_gnt(drp_gnt),
+
+//     .core_to_gt_drprdy(gt_drprdy),
+//     .core_to_gt_drpdo(gt_drpdo),
+//     .core_to_gt_drpen(gt_drpen),
+//     .core_to_gt_drpwe(gt_drpwe),
+//     .core_to_gt_drpaddr(gt_drpaddr),
+//     .core_to_gt_drpdi(gt_drpdi),
+
+//     .gt_drprdy(gt_drprdy),
+//     .gt_drpdo(gt_drpdo),
+//     .gt_drpen(gt_drpen),
+//     .gt_drpwe(gt_drpwe),
+//     .gt_drpaddr(gt_drpaddr),
+//     .gt_drpdi(gt_drpdi),
+
+//     .tx_disable(),
+//     .configuration_vector(configuration_vector),
+//     .status_vector(status_vector),
+//     .pma_pmd_type(3'b101),
+//     .core_status(core_status)
+// );
 
 // SGMII interface to PHY
 wire phy_gmii_clk_int;
@@ -581,7 +859,7 @@ gig_eth_pcspma (
 
 wire [7:0] led_int;
 
-assign led = sw[0] ? {7'd0, core_status[0]} : led_int;
+assign led = sw[0] ? {4'd0, qsfp_rx_block_lock_4, qsfp_rx_block_lock_3, qsfp_rx_block_lock_2, qsfp_rx_block_lock_1} : led_int;
 
 fpga_core
 core_inst (
@@ -604,20 +882,36 @@ core_inst (
     /*
      * Ethernet: QSFP28
      */
+    .qsfp_tx_clk_1(qsfp_tx_clk_1_int),
+    .qsfp_tx_rst_1(qsfp_tx_rst_1_int),
     .qsfp_txd_1(qsfp_txd_1_int),
     .qsfp_txc_1(qsfp_txc_1_int),
+    .qsfp_rx_clk_1(qsfp_rx_clk_1_int),
+    .qsfp_rx_rst_1(qsfp_rx_rst_1_int),
     .qsfp_rxd_1(qsfp_rxd_1_int),
     .qsfp_rxc_1(qsfp_rxc_1_int),
+    .qsfp_tx_clk_2(qsfp_tx_clk_2_int),
+    .qsfp_tx_rst_2(qsfp_tx_rst_2_int),
     .qsfp_txd_2(qsfp_txd_2_int),
     .qsfp_txc_2(qsfp_txc_2_int),
+    .qsfp_rx_clk_2(qsfp_rx_clk_2_int),
+    .qsfp_rx_rst_2(qsfp_rx_rst_2_int),
     .qsfp_rxd_2(qsfp_rxd_2_int),
     .qsfp_rxc_2(qsfp_rxc_2_int),
+    .qsfp_tx_clk_3(qsfp_tx_clk_3_int),
+    .qsfp_tx_rst_3(qsfp_tx_rst_3_int),
     .qsfp_txd_3(qsfp_txd_3_int),
     .qsfp_txc_3(qsfp_txc_3_int),
+    .qsfp_rx_clk_3(qsfp_rx_clk_3_int),
+    .qsfp_rx_rst_3(qsfp_rx_rst_3_int),
     .qsfp_rxd_3(qsfp_rxd_3_int),
     .qsfp_rxc_3(qsfp_rxc_3_int),
+    .qsfp_tx_clk_4(qsfp_tx_clk_4_int),
+    .qsfp_tx_rst_4(qsfp_tx_rst_4_int),
     .qsfp_txd_4(qsfp_txd_4_int),
     .qsfp_txc_4(qsfp_txc_4_int),
+    .qsfp_rx_clk_4(qsfp_rx_clk_4_int),
+    .qsfp_rx_rst_4(qsfp_rx_rst_4_int),
     .qsfp_rxd_4(qsfp_rxd_4_int),
     .qsfp_rxc_4(qsfp_rxc_4_int),
     /*

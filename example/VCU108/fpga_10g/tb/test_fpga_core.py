@@ -95,12 +95,28 @@ def bench():
     btnr = Signal(bool(0))
     btnc = Signal(bool(0))
     sw = Signal(intbv(0)[4:])
+    qsfp_tx_clk_1 = Signal(bool(0))
+    qsfp_tx_rst_1 = Signal(bool(0))
+    qsfp_rx_clk_1 = Signal(bool(0))
+    qsfp_rx_rst_1 = Signal(bool(0))
     qsfp_rxd_1 = Signal(intbv(0)[64:])
     qsfp_rxc_1 = Signal(intbv(0)[8:])
+    qsfp_tx_clk_2 = Signal(bool(0))
+    qsfp_tx_rst_2 = Signal(bool(0))
+    qsfp_rx_clk_2 = Signal(bool(0))
+    qsfp_rx_rst_2 = Signal(bool(0))
     qsfp_rxd_2 = Signal(intbv(0)[64:])
     qsfp_rxc_2 = Signal(intbv(0)[8:])
+    qsfp_tx_clk_3 = Signal(bool(0))
+    qsfp_tx_rst_3 = Signal(bool(0))
+    qsfp_rx_clk_3 = Signal(bool(0))
+    qsfp_rx_rst_3 = Signal(bool(0))
     qsfp_rxd_3 = Signal(intbv(0)[64:])
     qsfp_rxc_3 = Signal(intbv(0)[8:])
+    qsfp_tx_clk_4 = Signal(bool(0))
+    qsfp_tx_rst_4 = Signal(bool(0))
+    qsfp_rx_clk_4 = Signal(bool(0))
+    qsfp_rx_rst_4 = Signal(bool(0))
     qsfp_rxd_4 = Signal(intbv(0)[64:])
     qsfp_rxc_4 = Signal(intbv(0)[8:])
     phy_gmii_clk = Signal(bool(0))
@@ -132,28 +148,28 @@ def bench():
 
     # sources and sinks
     qsfp_1_source = xgmii_ep.XGMIISource()
-    qsfp_1_source_logic = qsfp_1_source.create_logic(clk, rst, txd=qsfp_rxd_1, txc=qsfp_rxc_1, name='qsfp_1_source')
+    qsfp_1_source_logic = qsfp_1_source.create_logic(qsfp_rx_clk_1, qsfp_rx_rst_1, txd=qsfp_rxd_1, txc=qsfp_rxc_1, name='qsfp_1_source')
 
     qsfp_1_sink = xgmii_ep.XGMIISink()
-    qsfp_1_sink_logic = qsfp_1_sink.create_logic(clk, rst, rxd=qsfp_txd_1, rxc=qsfp_txc_1, name='qsfp_1_sink')
+    qsfp_1_sink_logic = qsfp_1_sink.create_logic(qsfp_tx_clk_1, qsfp_tx_rst_1, rxd=qsfp_txd_1, rxc=qsfp_txc_1, name='qsfp_1_sink')
 
     qsfp_2_source = xgmii_ep.XGMIISource()
-    qsfp_2_source_logic = qsfp_2_source.create_logic(clk, rst, txd=qsfp_rxd_2, txc=qsfp_rxc_2, name='qsfp_2_source')
+    qsfp_2_source_logic = qsfp_2_source.create_logic(qsfp_rx_clk_2, qsfp_rx_rst_2, txd=qsfp_rxd_2, txc=qsfp_rxc_2, name='qsfp_2_source')
 
     qsfp_2_sink = xgmii_ep.XGMIISink()
-    qsfp_2_sink_logic = qsfp_2_sink.create_logic(clk, rst, rxd=qsfp_txd_2, rxc=qsfp_txc_2, name='qsfp_2_sink')
+    qsfp_2_sink_logic = qsfp_2_sink.create_logic(qsfp_tx_clk_2, qsfp_tx_rst_2, rxd=qsfp_txd_2, rxc=qsfp_txc_2, name='qsfp_2_sink')
 
     qsfp_3_source = xgmii_ep.XGMIISource()
-    qsfp_3_source_logic = qsfp_3_source.create_logic(clk, rst, txd=qsfp_rxd_3, txc=qsfp_rxc_3, name='qsfp_3_source')
+    qsfp_3_source_logic = qsfp_3_source.create_logic(qsfp_rx_clk_3, qsfp_rx_rst_3, txd=qsfp_rxd_3, txc=qsfp_rxc_3, name='qsfp_3_source')
 
     qsfp_3_sink = xgmii_ep.XGMIISink()
-    qsfp_3_sink_logic = qsfp_3_sink.create_logic(clk, rst, rxd=qsfp_txd_3, rxc=qsfp_txc_3, name='qsfp_3_sink')
+    qsfp_3_sink_logic = qsfp_3_sink.create_logic(qsfp_tx_clk_3, qsfp_tx_rst_3, rxd=qsfp_txd_3, rxc=qsfp_txc_3, name='qsfp_3_sink')
 
     qsfp_4_source = xgmii_ep.XGMIISource()
-    qsfp_4_source_logic = qsfp_4_source.create_logic(clk, rst, txd=qsfp_rxd_4, txc=qsfp_rxc_4, name='qsfp_4_source')
+    qsfp_4_source_logic = qsfp_4_source.create_logic(qsfp_rx_clk_4, qsfp_rx_rst_4, txd=qsfp_rxd_4, txc=qsfp_rxc_4, name='qsfp_4_source')
 
     qsfp_4_sink = xgmii_ep.XGMIISink()
-    qsfp_4_sink_logic = qsfp_4_sink.create_logic(clk, rst, rxd=qsfp_txd_4, rxc=qsfp_txc_4, name='qsfp_4_sink')
+    qsfp_4_sink_logic = qsfp_4_sink.create_logic(qsfp_tx_clk_4, qsfp_tx_rst_4, rxd=qsfp_txd_4, rxc=qsfp_txc_4, name='qsfp_4_sink')
 
     gmii_source = gmii_ep.GMIISource()
 
@@ -197,20 +213,36 @@ def bench():
         sw=sw,
         led=led,
 
+        qsfp_tx_clk_1=qsfp_tx_clk_1,
+        qsfp_tx_rst_1=qsfp_tx_rst_1,
         qsfp_txd_1=qsfp_txd_1,
         qsfp_txc_1=qsfp_txc_1,
+        qsfp_rx_clk_1=qsfp_rx_clk_1,
+        qsfp_rx_rst_1=qsfp_rx_rst_1,
         qsfp_rxd_1=qsfp_rxd_1,
         qsfp_rxc_1=qsfp_rxc_1,
+        qsfp_tx_clk_2=qsfp_tx_clk_2,
+        qsfp_tx_rst_2=qsfp_tx_rst_2,
         qsfp_txd_2=qsfp_txd_2,
         qsfp_txc_2=qsfp_txc_2,
+        qsfp_rx_clk_2=qsfp_rx_clk_2,
+        qsfp_rx_rst_2=qsfp_rx_rst_2,
         qsfp_rxd_2=qsfp_rxd_2,
         qsfp_rxc_2=qsfp_rxc_2,
+        qsfp_tx_clk_3=qsfp_tx_clk_3,
+        qsfp_tx_rst_3=qsfp_tx_rst_3,
         qsfp_txd_3=qsfp_txd_3,
         qsfp_txc_3=qsfp_txc_3,
+        qsfp_rx_clk_3=qsfp_rx_clk_3,
+        qsfp_rx_rst_3=qsfp_rx_rst_3,
         qsfp_rxd_3=qsfp_rxd_3,
         qsfp_rxc_3=qsfp_rxc_3,
+        qsfp_tx_clk_4=qsfp_tx_clk_4,
+        qsfp_tx_rst_4=qsfp_tx_rst_4,
         qsfp_txd_4=qsfp_txd_4,
         qsfp_txc_4=qsfp_txc_4,
+        qsfp_rx_clk_4=qsfp_rx_clk_4,
+        qsfp_rx_rst_4=qsfp_rx_rst_4,
         qsfp_rxd_4=qsfp_rxd_4,
         qsfp_rxc_4=qsfp_rxc_4,
 
@@ -235,6 +267,14 @@ def bench():
     @always(delay(4))
     def clkgen():
         clk.next = not clk
+        qsfp_tx_clk_1.next = not qsfp_tx_clk_1
+        qsfp_rx_clk_1.next = not qsfp_rx_clk_1
+        qsfp_tx_clk_2.next = not qsfp_tx_clk_2
+        qsfp_rx_clk_2.next = not qsfp_rx_clk_2
+        qsfp_tx_clk_3.next = not qsfp_tx_clk_3
+        qsfp_rx_clk_3.next = not qsfp_rx_clk_3
+        qsfp_tx_clk_4.next = not qsfp_tx_clk_4
+        qsfp_rx_clk_4.next = not qsfp_rx_clk_4
         phy_gmii_clk.next = not phy_gmii_clk
 
     clk_enable_rate = Signal(int(0))
@@ -254,9 +294,25 @@ def bench():
         yield delay(100)
         yield clk.posedge
         rst.next = 1
+        qsfp_tx_rst_1.next = 1
+        qsfp_rx_rst_1.next = 1
+        qsfp_tx_rst_2.next = 1
+        qsfp_rx_rst_2.next = 1
+        qsfp_tx_rst_3.next = 1
+        qsfp_rx_rst_3.next = 1
+        qsfp_tx_rst_4.next = 1
+        qsfp_rx_rst_4.next = 1
         phy_gmii_rst.next = 1
         yield clk.posedge
         rst.next = 0
+        qsfp_tx_rst_1.next = 0
+        qsfp_rx_rst_1.next = 0
+        qsfp_tx_rst_2.next = 0
+        qsfp_rx_rst_2.next = 0
+        qsfp_tx_rst_3.next = 0
+        qsfp_rx_rst_3.next = 0
+        qsfp_tx_rst_4.next = 0
+        qsfp_rx_rst_4.next = 0
         phy_gmii_rst.next = 0
         yield clk.posedge
         yield delay(100)

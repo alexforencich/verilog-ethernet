@@ -44,12 +44,28 @@ reg btnd = 0;
 reg btnr = 0;
 reg btnc = 0;
 reg [3:0] sw = 0;
+reg qsfp_tx_clk_1 = 0;
+reg qsfp_tx_rst_1 = 0;
+reg qsfp_rx_clk_1 = 0;
+reg qsfp_rx_rst_1 = 0;
 reg [63:0] qsfp_rxd_1 = 0;
 reg [7:0] qsfp_rxc_1 = 0;
+reg qsfp_tx_clk_2 = 0;
+reg qsfp_tx_rst_2 = 0;
+reg qsfp_rx_clk_2 = 0;
+reg qsfp_rx_rst_2 = 0;
 reg [63:0] qsfp_rxd_2 = 0;
 reg [7:0] qsfp_rxc_2 = 0;
+reg qsfp_tx_clk_3 = 0;
+reg qsfp_tx_rst_3 = 0;
+reg qsfp_rx_clk_3 = 0;
+reg qsfp_rx_rst_3 = 0;
 reg [63:0] qsfp_rxd_3 = 0;
 reg [7:0] qsfp_rxc_3 = 0;
+reg qsfp_tx_clk_4 = 0;
+reg qsfp_tx_rst_4 = 0;
+reg qsfp_rx_clk_4 = 0;
+reg qsfp_rx_rst_4 = 0;
 reg [63:0] qsfp_rxd_4 = 0;
 reg [7:0] qsfp_rxc_4 = 0;
 reg phy_gmii_clk = 0;
@@ -92,12 +108,28 @@ initial begin
         btnr,
         btnc,
         sw,
+        qsfp_tx_clk_1,
+        qsfp_tx_rst_1,
+        qsfp_rx_clk_1,
+        qsfp_rx_rst_1,
         qsfp_rxd_1,
         qsfp_rxc_1,
+        qsfp_tx_clk_2,
+        qsfp_tx_rst_2,
+        qsfp_rx_clk_2,
+        qsfp_rx_rst_2,
         qsfp_rxd_2,
         qsfp_rxc_2,
+        qsfp_tx_clk_3,
+        qsfp_tx_rst_3,
+        qsfp_rx_clk_3,
+        qsfp_rx_rst_3,
         qsfp_rxd_3,
         qsfp_rxc_3,
+        qsfp_tx_clk_4,
+        qsfp_tx_rst_4,
+        qsfp_rx_clk_4,
+        qsfp_rx_rst_4,
         qsfp_rxd_4,
         qsfp_rxc_4,
         phy_gmii_clk,
@@ -144,20 +176,36 @@ UUT (
     .btnc(btnc),
     .sw(sw),
     .led(led),
+    .qsfp_tx_clk_1(qsfp_tx_clk_1),
+    .qsfp_tx_rst_1(qsfp_tx_rst_1),
     .qsfp_txd_1(qsfp_txd_1),
     .qsfp_txc_1(qsfp_txc_1),
+    .qsfp_rx_clk_1(qsfp_rx_clk_1),
+    .qsfp_rx_rst_1(qsfp_rx_rst_1),
     .qsfp_rxd_1(qsfp_rxd_1),
     .qsfp_rxc_1(qsfp_rxc_1),
+    .qsfp_tx_clk_2(qsfp_tx_clk_2),
+    .qsfp_tx_rst_2(qsfp_tx_rst_2),
     .qsfp_txd_2(qsfp_txd_2),
     .qsfp_txc_2(qsfp_txc_2),
+    .qsfp_rx_clk_2(qsfp_rx_clk_2),
+    .qsfp_rx_rst_2(qsfp_rx_rst_2),
     .qsfp_rxd_2(qsfp_rxd_2),
     .qsfp_rxc_2(qsfp_rxc_2),
+    .qsfp_tx_clk_3(qsfp_tx_clk_3),
+    .qsfp_tx_rst_3(qsfp_tx_rst_3),
     .qsfp_txd_3(qsfp_txd_3),
     .qsfp_txc_3(qsfp_txc_3),
+    .qsfp_rx_clk_3(qsfp_rx_clk_3),
+    .qsfp_rx_rst_3(qsfp_rx_rst_3),
     .qsfp_rxd_3(qsfp_rxd_3),
     .qsfp_rxc_3(qsfp_rxc_3),
+    .qsfp_tx_clk_4(qsfp_tx_clk_4),
+    .qsfp_tx_rst_4(qsfp_tx_rst_4),
     .qsfp_txd_4(qsfp_txd_4),
     .qsfp_txc_4(qsfp_txc_4),
+    .qsfp_rx_clk_4(qsfp_rx_clk_4),
+    .qsfp_rx_rst_4(qsfp_rx_rst_4),
     .qsfp_rxd_4(qsfp_rxd_4),
     .qsfp_rxc_4(qsfp_rxc_4),
     .phy_gmii_clk(phy_gmii_clk),

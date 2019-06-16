@@ -55,20 +55,36 @@ module fpga_core #
     /*
      * Ethernet: QSFP28
      */
+    input  wire        qsfp_tx_clk_1,
+    input  wire        qsfp_tx_rst_1,
     output wire [63:0] qsfp_txd_1,
     output wire [7:0]  qsfp_txc_1,
+    input  wire        qsfp_rx_clk_1,
+    input  wire        qsfp_rx_rst_1,
     input  wire [63:0] qsfp_rxd_1,
     input  wire [7:0]  qsfp_rxc_1,
+    input  wire        qsfp_tx_clk_2,
+    input  wire        qsfp_tx_rst_2,
     output wire [63:0] qsfp_txd_2,
     output wire [7:0]  qsfp_txc_2,
+    input  wire        qsfp_rx_clk_2,
+    input  wire        qsfp_rx_rst_2,
     input  wire [63:0] qsfp_rxd_2,
     input  wire [7:0]  qsfp_rxc_2,
+    input  wire        qsfp_tx_clk_3,
+    input  wire        qsfp_tx_rst_3,
     output wire [63:0] qsfp_txd_3,
     output wire [7:0]  qsfp_txc_3,
+    input  wire        qsfp_rx_clk_3,
+    input  wire        qsfp_rx_rst_3,
     input  wire [63:0] qsfp_rxd_3,
     input  wire [7:0]  qsfp_rxc_3,
+    input  wire        qsfp_tx_clk_4,
+    input  wire        qsfp_tx_rst_4,
     output wire [63:0] qsfp_txd_4,
     output wire [7:0]  qsfp_txc_4,
+    input  wire        qsfp_rx_clk_4,
+    input  wire        qsfp_rx_rst_4,
     input  wire [63:0] qsfp_rxd_4,
     input  wire [7:0]  qsfp_rxc_4,
 
@@ -365,10 +381,10 @@ eth_mac_10g_fifo #(
     .RX_FRAME_FIFO(1)
 )
 eth_mac_10g_fifo_inst (
-    .rx_clk(clk),
-    .rx_rst(rst),
-    .tx_clk(clk),
-    .tx_rst(rst),
+    .rx_clk(qsfp_rx_clk_1),
+    .rx_rst(qsfp_rx_rst_1),
+    .tx_clk(qsfp_tx_clk_1),
+    .tx_rst(qsfp_tx_rst_1),
     .logic_clk(clk),
     .logic_rst(rst),
 
