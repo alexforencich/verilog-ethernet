@@ -326,7 +326,7 @@ always @* begin
     last_cycle_tkeep_next = last_cycle_tkeep_reg;
 
     m_axis_tdata_next = {DATA_WIDTH{1'b0}};
-    m_axis_tkeep_next = {KEEP_WIDTH{1'b0}};
+    m_axis_tkeep_next = {KEEP_WIDTH{1'b1}};
     m_axis_tvalid_next = 1'b0;
     m_axis_tlast_next = 1'b0;
     m_axis_tuser_next = 1'b0;
@@ -364,10 +364,12 @@ always @* begin
             update_crc = 1'b1;
 
             m_axis_tdata_next = xgmii_rxd_d1;
-            m_axis_tkeep_next = ~xgmii_rxc_d1;
+            m_axis_tkeep_next = {KEEP_WIDTH{1'b1}};
             m_axis_tvalid_next = 1'b1;
             m_axis_tlast_next = 1'b0;
             m_axis_tuser_next = 1'b0;
+
+            last_cycle_tkeep_next = {4'b0000, tkeep_mask[7:4]};
 
             if (control_masked) begin
                 // control or error characters in packet
@@ -396,7 +398,6 @@ always @* begin
                     state_next = STATE_IDLE;
                 end else begin
                     // need extra cycle
-                    last_cycle_tkeep_next = {4'b0000, tkeep_mask[7:4]};
                     state_next = STATE_LAST;
                 end
             end else begin
