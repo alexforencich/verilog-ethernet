@@ -221,9 +221,7 @@ eth_crc_32 (
 );
 
 // detect control characters
-reg [3:0] detect_start;
 reg [3:0] detect_term;
-reg [3:0] detect_error;
 
 reg [3:0] detect_term_save;
 
@@ -231,46 +229,37 @@ integer i;
 
 always @* begin
     for (i = 0; i < 4; i = i + 1) begin
-        detect_start[i] = xgmii_rxc_d0[i] && (xgmii_rxd_d0[i*8 +: 8] == XGMII_START);
         detect_term[i] = xgmii_rxc_d0[i] && (xgmii_rxd_d0[i*8 +: 8] == XGMII_TERM);
-        detect_error[i] = xgmii_rxc_d0[i] && (xgmii_rxd_d0[i*8 +: 8] == XGMII_ERROR);
     end
 end
 
 // mask errors to within packet
-reg [3:0] detect_error_masked;
 reg [3:0] control_masked;
 reg [3:0] tkeep_mask;
 
 always @* begin
     casez (detect_term)
     4'b0000: begin
-        detect_error_masked = detect_error;
         control_masked = xgmii_rxc_d0;
         tkeep_mask = 4'b1111;
     end
     4'bzzz1: begin
-        detect_error_masked = 0;
         control_masked = 0;
         tkeep_mask = 4'b0000;   
     end
     4'bzz10: begin
-        detect_error_masked = detect_error[0];
         control_masked = xgmii_rxc_d0[0];
         tkeep_mask = 4'b0001;
     end
     4'bz100: begin
-        detect_error_masked = detect_error[1:0];
         control_masked = xgmii_rxc_d0[1:0];
         tkeep_mask = 4'b0011;
     end
     4'b1000: begin
-        detect_error_masked = detect_error[2:0];
         control_masked = xgmii_rxc_d0[2:0];
         tkeep_mask = 4'b0111;
     end
     default: begin
-        detect_error_masked = detect_error;
         control_masked = xgmii_rxc_d0;
         tkeep_mask = 4'b1111;
     end
