@@ -95,12 +95,12 @@ localparam [7:0]
     XGMII_TERM = 8'hfd,
     XGMII_ERROR = 8'hfe;
 
-localparam [2:0]
-    STATE_IDLE = 3'd0,
-    STATE_PAYLOAD = 3'd1,
-    STATE_LAST = 3'd2;
+localparam [1:0]
+    STATE_IDLE = 2'd0,
+    STATE_PAYLOAD = 2'd1,
+    STATE_LAST = 2'd2;
 
-reg [2:0] state_reg = STATE_IDLE, state_next;
+reg [1:0] state_reg = STATE_IDLE, state_next;
 
 // datapath control signals
 reg reset_crc;
