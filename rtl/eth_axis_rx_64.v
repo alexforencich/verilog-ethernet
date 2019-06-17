@@ -118,7 +118,7 @@ reg shift_axis_tvalid;
 reg shift_axis_tlast;
 reg shift_axis_tuser;
 reg shift_axis_s_tready;
-reg shift_axis_extra_cycle;
+reg shift_axis_extra_cycle_reg = 1'b0;
 
 // internal datapath
 reg [63:0] m_eth_payload_axis_tdata_int;
@@ -142,9 +142,8 @@ assign error_header_early_termination = error_header_early_termination_reg;
 always @* begin
     shift_axis_tdata[15:0] = save_axis_tdata_reg[63:48];
     shift_axis_tkeep[1:0] = save_axis_tkeep_reg[7:6];
-    shift_axis_extra_cycle = save_axis_tlast_reg && (save_axis_tkeep_reg[7:6] != 0);
 
-    if (shift_axis_extra_cycle) begin
+    if (shift_axis_extra_cycle_reg) begin
         shift_axis_tdata[63:16] = 48'd0;
         shift_axis_tkeep[7:2] = 6'd0;
         shift_axis_tvalid = 1'b1;
@@ -276,6 +275,7 @@ always @(posedge clk) begin
         s_axis_tready_reg <= 1'b0;
         m_eth_hdr_valid_reg <= 1'b0;
         save_axis_tlast_reg <= 1'b0;
+        shift_axis_extra_cycle_reg <= 1'b0;
         busy_reg <= 1'b0;
         error_header_early_termination_reg <= 1'b0;
     end else begin
@@ -293,8 +293,10 @@ always @(posedge clk) begin
 
         if (flush_save) begin
             save_axis_tlast_reg <= 1'b0;
+            shift_axis_extra_cycle_reg <= 1'b0;
         end else if (transfer_in_save) begin
             save_axis_tlast_reg <= s_axis_tlast;
+            shift_axis_extra_cycle_reg <= s_axis_tlast && (s_axis_tkeep[7:6] != 0);
         end
     end
 
