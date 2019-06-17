@@ -334,6 +334,8 @@ always @* begin
             m_ip_payload_axis_tlast_int = s_udp_payload_axis_tlast;
             m_ip_payload_axis_tuser_int = s_udp_payload_axis_tuser;
 
+            store_last_word = 1'b1;
+
             if (m_ip_payload_axis_tready_int_reg && s_udp_payload_axis_tvalid) begin
                 // word transfer through
                 frame_ptr_next = frame_ptr_reg+keep2count(s_udp_payload_axis_tkeep);
@@ -346,7 +348,6 @@ always @* begin
                         s_udp_hdr_ready_next = !m_ip_hdr_valid_next;
                         state_next = STATE_IDLE;
                     end else begin
-                        store_last_word = 1'b1;
                         m_ip_payload_axis_tvalid_int = 1'b0;
                         state_next = STATE_WRITE_PAYLOAD_LAST;
                     end

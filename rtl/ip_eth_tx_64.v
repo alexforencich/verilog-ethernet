@@ -407,6 +407,8 @@ always @* begin
             m_eth_payload_axis_tlast_int = shift_ip_payload_axis_tlast;
             m_eth_payload_axis_tuser_int = shift_ip_payload_axis_tuser;
 
+            store_last_word = 1'b1;
+
             if (m_eth_payload_axis_tready_int_reg && shift_ip_payload_axis_tvalid) begin
                 // word transfer through
                 frame_ptr_next = frame_ptr_reg+keep2count(shift_ip_payload_axis_tkeep);
@@ -421,7 +423,6 @@ always @* begin
                         s_ip_hdr_ready_next = !m_eth_hdr_valid_next;
                         state_next = STATE_IDLE;
                     end else begin
-                        store_last_word = 1'b1;
                         m_eth_payload_axis_tvalid_int = 1'b0;
                         state_next = STATE_WRITE_PAYLOAD_LAST;
                     end
