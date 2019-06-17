@@ -103,7 +103,6 @@ reg [1:0] state_reg = STATE_IDLE, state_next;
 
 // datapath control signals
 reg reset_crc;
-reg update_crc;
 
 reg [3:0] last_cycle_tkeep_reg = 4'd0, last_cycle_tkeep_next;
 
@@ -264,7 +263,6 @@ always @* begin
     state_next = STATE_IDLE;
 
     reset_crc = 1'b0;
-    update_crc = 1'b0;
 
     last_cycle_tkeep_next = last_cycle_tkeep_reg;
 
@@ -298,7 +296,6 @@ always @* begin
                     state_next = STATE_IDLE;
                 end else begin
                     reset_crc = 1'b0;
-                    update_crc = 1'b1;
                     state_next = STATE_PREAMBLE;
                 end
             end else begin
@@ -307,15 +304,12 @@ always @* begin
         end
         STATE_PREAMBLE: begin
             // drop preamble
-            update_crc = 1'b1;
             ptp_ts_next = ptp_ts;
             start_packet_next = 1'b1;
             state_next = STATE_PAYLOAD;
         end
         STATE_PAYLOAD: begin
             // read payload
-            update_crc = 1'b1;
-
             m_axis_tdata_next = xgmii_rxd_d2;
             m_axis_tkeep_next = {KEEP_WIDTH{1'b1}};
             m_axis_tvalid_next = 1'b1;
@@ -389,10 +383,6 @@ always @(posedge clk) begin
         error_bad_fcs_reg <= 1'b0;
 
         crc_state <= 32'hFFFFFFFF;
-        crc_valid0_save <= 1'b0;
-        crc_valid1_save <= 1'b0;
-        crc_valid2_save <= 1'b0;
-        crc_valid3_save <= 1'b0;
 
         xgmii_rxc_d0 <= {CTRL_WIDTH{1'b0}};
         xgmii_rxc_d1 <= {CTRL_WIDTH{1'b0}};
@@ -412,16 +402,8 @@ always @(posedge clk) begin
         // datapath
         if (reset_crc) begin
             crc_state <= 32'hFFFFFFFF;
-            crc_valid0_save <= 1'b0;
-            crc_valid1_save <= 1'b0;
-            crc_valid2_save <= 1'b0;
-            crc_valid3_save <= 1'b0;
-        end else if (update_crc) begin
+        end else begin
             crc_state <= crc_next3;
-            crc_valid0_save <= crc_valid0;
-            crc_valid1_save <= crc_valid1;
-            crc_valid2_save <= crc_valid2;
-            crc_valid3_save <= crc_valid3;
         end
     end
 
@@ -439,6 +421,11 @@ always @(posedge clk) begin
     end
 
     detect_term_save <= detect_term;
+
+    crc_valid0_save <= crc_valid0;
+    crc_valid1_save <= crc_valid1;
+    crc_valid2_save <= crc_valid2;
+    crc_valid3_save <= crc_valid3;
 
     xgmii_rxd_d0 <= xgmii_rxd;
     xgmii_rxd_d1 <= xgmii_rxd_d0;

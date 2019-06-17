@@ -104,7 +104,7 @@ reg [1:0] state_reg = STATE_IDLE, state_next;
 
 // datapath control signals
 reg reset_crc;
-reg update_crc;
+reg update_crc_last;
 
 reg [7:0] last_cycle_tkeep_reg = 8'd0, last_cycle_tkeep_next;
 
@@ -158,8 +158,6 @@ assign start_packet = start_packet_reg;
 assign error_bad_frame = error_bad_frame_reg;
 assign error_bad_fcs = error_bad_fcs_reg;
 
-wire last_cycle = state_reg == STATE_LAST;
-
 lfsr #(
     .LFSR_WIDTH(32),
     .LFSR_POLY(32'h4c11db7),
@@ -171,7 +169,7 @@ lfsr #(
 )
 eth_crc_8 (
     .data_in(xgmii_rxd_crc[7:0]),
-    .state_in(last_cycle ? crc_state3 : crc_state),
+    .state_in(crc_state3),
     .data_out(),
     .state_out(crc_next0)
 );
@@ -187,7 +185,7 @@ lfsr #(
 )
 eth_crc_16 (
     .data_in(xgmii_rxd_crc[15:0]),
-    .state_in(last_cycle ? crc_state3 : crc_state),
+    .state_in(crc_state3),
     .data_out(),
     .state_out(crc_next1)
 );
@@ -203,7 +201,7 @@ lfsr #(
 )
 eth_crc_24 (
     .data_in(xgmii_rxd_crc[23:0]),
-    .state_in(last_cycle ? crc_state3 : crc_state),
+    .state_in(crc_state3),
     .data_out(),
     .state_out(crc_next2)
 );
@@ -219,7 +217,7 @@ lfsr #(
 )
 eth_crc_32 (
     .data_in(xgmii_rxd_crc[31:0]),
-    .state_in(last_cycle ? crc_state3 : crc_state),
+    .state_in(crc_state3),
     .data_out(),
     .state_out(crc_next3)
 );
@@ -234,7 +232,7 @@ lfsr #(
     .STYLE("AUTO")
 )
 eth_crc_64 (
-    .data_in(xgmii_rxd_d0[63:0]),
+    .data_in(xgmii_rxd_crc[63:0]),
     .state_in(crc_state),
     .data_out(),
     .state_out(crc_next7)
@@ -300,7 +298,7 @@ always @* begin
     state_next = STATE_IDLE;
 
     reset_crc = 1'b0;
-    update_crc = 1'b0;
+    update_crc_last = 1'b0;
 
     last_cycle_tkeep_next = last_cycle_tkeep_reg;
 
@@ -331,7 +329,6 @@ always @* begin
                     state_next = STATE_IDLE;
                 end else begin
                     reset_crc = 1'b0;
-                    update_crc = 1'b1;
                     state_next = STATE_PAYLOAD;
                 end
             end else begin
@@ -340,8 +337,6 @@ always @* begin
         end
         STATE_PAYLOAD: begin
             // read payload
-            update_crc = 1'b1;
-
             m_axis_tdata_next = xgmii_rxd_d1;
             m_axis_tkeep_next = {KEEP_WIDTH{1'b1}};
             m_axis_tvalid_next = 1'b1;
@@ -377,6 +372,7 @@ always @* begin
                     state_next = STATE_IDLE;
                 end else begin
                     // need extra cycle
+                    update_crc_last = 1'b1;
                     state_next = STATE_LAST;
                 end
             end else begin
@@ -416,7 +412,6 @@ always @* begin
                     state_next = STATE_IDLE;
                 end else begin
                     reset_crc = 1'b0;
-                    update_crc = 1'b1;
                     state_next = STATE_PAYLOAD;
                 end
             end else begin
@@ -438,7 +433,6 @@ always @(posedge clk) begin
 
         crc_state <= 32'hFFFFFFFF;
         crc_state3 <= 32'hFFFFFFFF;
-        crc_valid7_save <= 1'b0;
 
         xgmii_rxc_d0 <= {CTRL_WIDTH{1'b0}};
         xgmii_rxc_d1 <= {CTRL_WIDTH{1'b0}};
@@ -472,12 +466,14 @@ always @(posedge clk) begin
         // datapath
         if (reset_crc) begin
             crc_state <= 32'hFFFFFFFF;
-            crc_state3 <= 32'hFFFFFFFF;
-            crc_valid7_save <= 1'b0;
-        end else if (update_crc) begin
+        end else begin
             crc_state <= crc_next7;
+        end
+
+        if (update_crc_last) begin
             crc_state3 <= crc_next3;
-            crc_valid7_save <= crc_valid7;
+        end else begin
+            crc_state3 <= crc_next7;
         end
     end
 
@@ -546,6 +542,8 @@ always @(posedge clk) begin
             detect_term[i] <= xgmii_rxc[i] && (xgmii_rxd[i*8 +: 8] == XGMII_TERM);
         end
     end
+
+    crc_valid7_save <= crc_valid7;
 
     if (state_next == STATE_LAST) begin
         xgmii_rxd_crc[31:0] <= xgmii_rxd_crc[63:32];
