@@ -123,7 +123,8 @@ reg [2:0] state_reg = STATE_IDLE, state_next;
 reg store_ip_hdr;
 reg store_last_word;
 
-reg [15:0] frame_ptr_reg = 16'd0, frame_ptr_next;
+reg [5:0] hdr_ptr_reg = 6'd0, hdr_ptr_next;
+reg [15:0] word_count_reg = 16'd0, word_count_next;
 
 reg [15:0] hdr_sum_reg = 16'd0, hdr_sum_next;
 
@@ -189,7 +190,8 @@ always @* begin
 
     store_last_word = 1'b0;
 
-    frame_ptr_next = frame_ptr_reg;
+    hdr_ptr_next = hdr_ptr_reg;
+    word_count_next = word_count_reg;
 
     hdr_sum_next = hdr_sum_reg;
 
@@ -205,7 +207,7 @@ always @* begin
     case (state_reg)
         STATE_IDLE: begin
             // idle state - wait for data
-            frame_ptr_next = 16'd0;
+            hdr_ptr_next = 6'd0;
             s_ip_hdr_ready_next = !m_eth_hdr_valid_next;
 
             if (s_ip_hdr_ready && s_ip_hdr_valid) begin
@@ -215,7 +217,7 @@ always @* begin
                 if (m_eth_payload_axis_tready_int_reg) begin
                     m_eth_payload_axis_tvalid_int = 1'b1;
                     m_eth_payload_axis_tdata_int = {4'd4, 4'd5}; // ip_version, ip_ihl
-                    frame_ptr_next = 16'd1;
+                    hdr_ptr_next = 6'd1;
                 end
                 state_next = STATE_WRITE_HEADER;
             end else begin
@@ -224,60 +226,62 @@ always @* begin
         end
         STATE_WRITE_HEADER: begin
             // write header
+            word_count_next = ip_length_reg - 5*4;
+
             if (m_eth_payload_axis_tready_int_reg) begin
-                frame_ptr_next = frame_ptr_reg + 16'd1;
+                hdr_ptr_next = hdr_ptr_reg + 6'd1;
                 m_eth_payload_axis_tvalid_int = 1;
                 state_next = STATE_WRITE_HEADER;
-                case (frame_ptr_reg)
-                    8'h00: begin
+                case (hdr_ptr_reg)
+                    6'h00: begin
                         m_eth_payload_axis_tdata_int = {4'd4, 4'd5}; // ip_version, ip_ihl
                     end
-                    8'h01: begin
+                    6'h01: begin
                         m_eth_payload_axis_tdata_int = {ip_dscp_reg, ip_ecn_reg};
                         hdr_sum_next = {4'd4, 4'd5, ip_dscp_reg, ip_ecn_reg};
                     end
-                    8'h02: begin
+                    6'h02: begin
                         m_eth_payload_axis_tdata_int = ip_length_reg[15: 8];
                         hdr_sum_next = add1c16b(hdr_sum_reg, ip_length_reg);
                     end
-                    8'h03: begin
+                    6'h03: begin
                         m_eth_payload_axis_tdata_int = ip_length_reg[ 7: 0];
                         hdr_sum_next = add1c16b(hdr_sum_reg, ip_identification_reg);
                     end
-                    8'h04: begin
+                    6'h04: begin
                         m_eth_payload_axis_tdata_int = ip_identification_reg[15: 8];
                         hdr_sum_next = add1c16b(hdr_sum_reg, {ip_flags_reg, ip_fragment_offset_reg});
                     end
-                    8'h05: begin
+                    6'h05: begin
                         m_eth_payload_axis_tdata_int = ip_identification_reg[ 7: 0];
                         hdr_sum_next = add1c16b(hdr_sum_reg, {ip_ttl_reg, ip_protocol_reg});
                     end
-                    8'h06: begin
+                    6'h06: begin
                         m_eth_payload_axis_tdata_int = {ip_flags_reg, ip_fragment_offset_reg[12:8]};
                         hdr_sum_next = add1c16b(hdr_sum_reg, ip_source_ip_reg[31:16]);
                     end
-                    8'h07: begin
+                    6'h07: begin
                         m_eth_payload_axis_tdata_int = ip_fragment_offset_reg[ 7: 0];
                         hdr_sum_next = add1c16b(hdr_sum_reg, ip_source_ip_reg[15:0]);
                     end
-                    8'h08: begin
+                    6'h08: begin
                         m_eth_payload_axis_tdata_int = ip_ttl_reg;
                         hdr_sum_next = add1c16b(hdr_sum_reg, ip_dest_ip_reg[31:16]);
                     end
-                    8'h09: begin
+                    6'h09: begin
                         m_eth_payload_axis_tdata_int = ip_protocol_reg;
                         hdr_sum_next = add1c16b(hdr_sum_reg, ip_dest_ip_reg[15:0]);
                     end
-                    8'h0A: m_eth_payload_axis_tdata_int = ~hdr_sum_reg[15: 8];
-                    8'h0B: m_eth_payload_axis_tdata_int = ~hdr_sum_reg[ 7: 0];
-                    8'h0C: m_eth_payload_axis_tdata_int = ip_source_ip_reg[31:24];
-                    8'h0D: m_eth_payload_axis_tdata_int = ip_source_ip_reg[23:16];
-                    8'h0E: m_eth_payload_axis_tdata_int = ip_source_ip_reg[15: 8];
-                    8'h0F: m_eth_payload_axis_tdata_int = ip_source_ip_reg[ 7: 0];
-                    8'h10: m_eth_payload_axis_tdata_int = ip_dest_ip_reg[31:24];
-                    8'h11: m_eth_payload_axis_tdata_int = ip_dest_ip_reg[23:16];
-                    8'h12: m_eth_payload_axis_tdata_int = ip_dest_ip_reg[15: 8];
-                    8'h13: begin
+                    6'h0A: m_eth_payload_axis_tdata_int = ~hdr_sum_reg[15: 8];
+                    6'h0B: m_eth_payload_axis_tdata_int = ~hdr_sum_reg[ 7: 0];
+                    6'h0C: m_eth_payload_axis_tdata_int = ip_source_ip_reg[31:24];
+                    6'h0D: m_eth_payload_axis_tdata_int = ip_source_ip_reg[23:16];
+                    6'h0E: m_eth_payload_axis_tdata_int = ip_source_ip_reg[15: 8];
+                    6'h0F: m_eth_payload_axis_tdata_int = ip_source_ip_reg[ 7: 0];
+                    6'h10: m_eth_payload_axis_tdata_int = ip_dest_ip_reg[31:24];
+                    6'h11: m_eth_payload_axis_tdata_int = ip_dest_ip_reg[23:16];
+                    6'h12: m_eth_payload_axis_tdata_int = ip_dest_ip_reg[15: 8];
+                    6'h13: begin
                         m_eth_payload_axis_tdata_int = ip_dest_ip_reg[ 7: 0];
                         s_ip_payload_axis_tready_next = m_eth_payload_axis_tready_int_early;
                         state_next = STATE_WRITE_PAYLOAD;
@@ -298,9 +302,9 @@ always @* begin
 
             if (s_ip_payload_axis_tready && s_ip_payload_axis_tvalid) begin
                 // word transfer through
-                frame_ptr_next = frame_ptr_reg + 16'd1;
+                word_count_next = word_count_reg - 6'd1;
                 if (s_ip_payload_axis_tlast) begin
-                    if (frame_ptr_next != ip_length_reg) begin
+                    if (word_count_reg != 16'd1) begin
                         // end of frame, but length does not match
                         m_eth_payload_axis_tuser_int = 1'b1;
                         error_payload_early_termination_next = 1'b1;
@@ -309,7 +313,7 @@ always @* begin
                     s_ip_payload_axis_tready_next = 1'b0;
                     state_next = STATE_IDLE;
                 end else begin
-                    if (frame_ptr_next == ip_length_reg) begin
+                    if (word_count_reg == 16'd1) begin
                         store_last_word = 1'b1;
                         m_eth_payload_axis_tvalid_int = 1'b0;
                         state_next = STATE_WRITE_PAYLOAD_LAST;
@@ -364,8 +368,6 @@ end
 always @(posedge clk) begin
     if (rst) begin
         state_reg <= STATE_IDLE;
-        frame_ptr_reg <= 16'd0;
-        hdr_sum_reg <= 16'd0;
         s_ip_hdr_ready_reg <= 1'b0;
         s_ip_payload_axis_tready_reg <= 1'b0;
         m_eth_hdr_valid_reg <= 1'b0;
@@ -373,10 +375,6 @@ always @(posedge clk) begin
         error_payload_early_termination_reg <= 1'b0;
     end else begin
         state_reg <= state_next;
-
-        frame_ptr_reg <= frame_ptr_next;
-
-        hdr_sum_reg <= hdr_sum_next;
 
         s_ip_hdr_ready_reg <= s_ip_hdr_ready_next;
         s_ip_payload_axis_tready_reg <= s_ip_payload_axis_tready_next;
@@ -387,6 +385,11 @@ always @(posedge clk) begin
 
         error_payload_early_termination_reg <= error_payload_early_termination_next;
     end
+
+    hdr_ptr_reg <= hdr_ptr_next;
+    word_count_reg <= word_count_next;
+
+    hdr_sum_reg <= hdr_sum_next;
 
     // datapath
     if (store_ip_hdr) begin

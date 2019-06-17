@@ -137,7 +137,8 @@ reg store_last_word;
 reg flush_save;
 reg transfer_in_save;
 
-reg [15:0] frame_ptr_reg = 16'd0, frame_ptr_next;
+reg [5:0] hdr_ptr_reg = 6'd0, hdr_ptr_next;
+reg [15:0] word_count_reg = 16'd0, word_count_next;
 
 reg [16:0] hdr_sum_high_reg = 17'd0;
 reg [16:0] hdr_sum_low_reg = 17'd0;
@@ -291,7 +292,8 @@ always @* begin
 
     store_last_word = 1'b0;
 
-    frame_ptr_next = frame_ptr_reg;
+    hdr_ptr_next = hdr_ptr_reg;
+    word_count_next = word_count_reg;
 
     hdr_sum_temp = 32'd0;
     hdr_sum_next = hdr_sum_reg;
@@ -313,7 +315,7 @@ always @* begin
     case (state_reg)
         STATE_IDLE: begin
             // idle state - wait for header
-            frame_ptr_next = 16'd0;
+            hdr_ptr_next = 6'd0;
             hdr_sum_next = 32'd0;
             flush_save = 1'b1;
             s_eth_hdr_ready_next = !m_ip_hdr_valid_next;
@@ -330,25 +332,25 @@ always @* begin
         STATE_READ_HEADER: begin
             // read header
             s_eth_payload_axis_tready_next = shift_eth_payload_s_tready;
+            word_count_next = m_ip_length_reg - 5*4;
 
             if (s_eth_payload_axis_tvalid) begin
                 // word transfer in - store it
-                frame_ptr_next = frame_ptr_reg + 16'd8;
+                hdr_ptr_next = hdr_ptr_reg + 6'd8;
                 transfer_in_save = 1'b1;
                 state_next = STATE_READ_HEADER;
 
-                case (frame_ptr_reg)
-                    8'h00: begin
+                case (hdr_ptr_reg)
+                    6'h00: begin
                         store_hdr_word_0 = 1'b1;
                     end
-                    8'h08: begin
+                    6'h08: begin
                         store_hdr_word_1 = 1'b1;
                         hdr_sum_next = hdr_sum_high_reg + hdr_sum_low_reg;
                     end
-                    8'h10: begin
+                    6'h10: begin
                         store_hdr_word_2 = 1'b1;
                         hdr_sum_next = hdr_sum_reg + hdr_sum_high_reg + hdr_sum_low_reg;
-                        frame_ptr_next = frame_ptr_reg + 16'd4;
 
                         // check header checksum on next cycle for improved timing
                         check_hdr_next = 1'b1;
@@ -392,12 +394,11 @@ always @* begin
 
             if (m_ip_payload_axis_tready_int_reg && shift_eth_payload_axis_tvalid) begin
                 // word transfer through
-                frame_ptr_next = frame_ptr_reg+keep2count(shift_eth_payload_axis_tkeep);
+                word_count_next = word_count_reg - 16'd8;
                 transfer_in_save = 1'b1;
-                if (frame_ptr_next >= m_ip_length_reg) begin
+                if (word_count_reg <= keep2count(shift_eth_payload_axis_tkeep)) begin
                     // have entire payload
-                    frame_ptr_next = m_ip_length_reg;
-                    m_ip_payload_axis_tkeep_int = shift_eth_payload_axis_tkeep & count2keep(m_ip_length_reg - frame_ptr_reg);
+                    m_ip_payload_axis_tkeep_int = shift_eth_payload_axis_tkeep & count2keep(word_count_reg);
                     if (shift_eth_payload_axis_tlast) begin
                         s_eth_payload_axis_tready_next = 1'b0;
                         flush_save = 1'b1;
@@ -496,9 +497,6 @@ end
 always @(posedge clk) begin
     if (rst) begin
         state_reg <= STATE_IDLE;
-        frame_ptr_reg <= 16'd0;
-        hdr_sum_reg <= 16'd0;
-        check_hdr_reg <= 1'b0;
         s_eth_hdr_ready_reg <= 1'b0;
         s_eth_payload_axis_tready_reg <= 1'b0;
         m_ip_hdr_valid_reg <= 1'b0;
@@ -511,11 +509,6 @@ always @(posedge clk) begin
         error_invalid_checksum_reg <= 1'b0;
     end else begin
         state_reg <= state_next;
-
-        frame_ptr_reg <= frame_ptr_next;
-
-        hdr_sum_reg <= hdr_sum_next;
-        check_hdr_reg <= check_hdr_next;
 
         s_eth_hdr_ready_reg <= s_eth_hdr_ready_next;
         s_eth_payload_axis_tready_reg <= s_eth_payload_axis_tready_next;
@@ -538,6 +531,12 @@ always @(posedge clk) begin
             shift_eth_payload_extra_cycle_reg <= s_eth_payload_axis_tlast && (s_eth_payload_axis_tkeep[7:4] != 0);
         end
     end
+
+    hdr_ptr_reg <= hdr_ptr_next;
+    word_count_reg <= word_count_next;
+
+    hdr_sum_reg <= hdr_sum_next;
+    check_hdr_reg <= check_hdr_next;
 
     if (s_eth_payload_axis_tvalid) begin
         hdr_sum_low_reg <= s_eth_payload_axis_tdata[15:0] + s_eth_payload_axis_tdata[31:16];

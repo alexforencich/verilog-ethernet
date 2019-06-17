@@ -149,7 +149,7 @@ reg [2:0] state_reg = STATE_IDLE, state_next;
 reg store_udp_hdr;
 reg store_last_word;
 
-reg [15:0] frame_ptr_reg = 16'd0, frame_ptr_next;
+reg [15:0] word_count_reg = 16'd0, word_count_next;
 
 reg [63:0] last_word_data_reg = 64'd0;
 reg [7:0] last_word_keep_reg = 8'd0;
@@ -256,7 +256,7 @@ always @* begin
 
     store_last_word = 1'b0;
 
-    frame_ptr_next = frame_ptr_reg;
+    word_count_next = word_count_reg;
 
     m_ip_hdr_valid_next = m_ip_hdr_valid_reg && !m_ip_hdr_ready;
 
@@ -271,8 +271,8 @@ always @* begin
     case (state_reg)
         STATE_IDLE: begin
             // idle state - wait for data
-            frame_ptr_next = 16'd0;
             s_udp_hdr_ready_next = !m_ip_hdr_valid_next;
+            word_count_next = s_udp_length - 16'd8;
 
             if (s_udp_hdr_ready && s_udp_hdr_valid) begin
                 store_udp_hdr = 1'b1;
@@ -290,7 +290,6 @@ always @* begin
                     m_ip_payload_axis_tdata_int[55:48] = s_udp_checksum[15: 8];
                     m_ip_payload_axis_tdata_int[63:56] = s_udp_checksum[ 7: 0];
                     m_ip_payload_axis_tkeep_int = 8'hff;
-                    frame_ptr_next = 16'd8;
                     s_udp_payload_axis_tready_next = m_ip_payload_axis_tready_int_early;
                     state_next = STATE_WRITE_PAYLOAD;
                 end
@@ -302,24 +301,18 @@ always @* begin
             // write header state
             if (m_ip_payload_axis_tready_int_reg) begin
                 // word transfer out
-                frame_ptr_next = frame_ptr_reg + 16'd8;
                 m_ip_payload_axis_tvalid_int = 1'b1;
-                state_next = STATE_WRITE_HEADER;
-                case (frame_ptr_reg)
-                    8'h00: begin
-                        m_ip_payload_axis_tdata_int[ 7: 0] = udp_source_port_reg[15: 8];
-                        m_ip_payload_axis_tdata_int[15: 8] = udp_source_port_reg[ 7: 0];
-                        m_ip_payload_axis_tdata_int[23:16] = udp_dest_port_reg[15: 8];
-                        m_ip_payload_axis_tdata_int[31:24] = udp_dest_port_reg[ 7: 0];
-                        m_ip_payload_axis_tdata_int[39:32] = udp_length_reg[15: 8];
-                        m_ip_payload_axis_tdata_int[47:40] = udp_length_reg[ 7: 0];
-                        m_ip_payload_axis_tdata_int[55:48] = udp_checksum_reg[15: 8];
-                        m_ip_payload_axis_tdata_int[63:56] = udp_checksum_reg[ 7: 0];
-                        m_ip_payload_axis_tkeep_int = 8'hff;
-                        s_udp_payload_axis_tready_next = m_ip_payload_axis_tready_int_early;
-                        state_next = STATE_WRITE_PAYLOAD;
-                    end
-                endcase
+                m_ip_payload_axis_tdata_int[ 7: 0] = udp_source_port_reg[15: 8];
+                m_ip_payload_axis_tdata_int[15: 8] = udp_source_port_reg[ 7: 0];
+                m_ip_payload_axis_tdata_int[23:16] = udp_dest_port_reg[15: 8];
+                m_ip_payload_axis_tdata_int[31:24] = udp_dest_port_reg[ 7: 0];
+                m_ip_payload_axis_tdata_int[39:32] = udp_length_reg[15: 8];
+                m_ip_payload_axis_tdata_int[47:40] = udp_length_reg[ 7: 0];
+                m_ip_payload_axis_tdata_int[55:48] = udp_checksum_reg[15: 8];
+                m_ip_payload_axis_tdata_int[63:56] = udp_checksum_reg[ 7: 0];
+                m_ip_payload_axis_tkeep_int = 8'hff;
+                s_udp_payload_axis_tready_next = m_ip_payload_axis_tready_int_early;
+                state_next = STATE_WRITE_PAYLOAD;
             end else begin
                 state_next = STATE_WRITE_HEADER;
             end
@@ -338,11 +331,10 @@ always @* begin
 
             if (m_ip_payload_axis_tready_int_reg && s_udp_payload_axis_tvalid) begin
                 // word transfer through
-                frame_ptr_next = frame_ptr_reg+keep2count(s_udp_payload_axis_tkeep);
-                if (frame_ptr_next >= udp_length_reg) begin
+                word_count_next = word_count_reg - 16'd8;
+                if (keep2count(s_udp_payload_axis_tkeep) >= word_count_reg) begin
                     // have entire payload
-                    frame_ptr_next = udp_length_reg;
-                    m_ip_payload_axis_tkeep_int = count2keep(udp_length_reg - frame_ptr_reg);
+                    m_ip_payload_axis_tkeep_int = count2keep(word_count_reg);
                     if (s_udp_payload_axis_tlast) begin
                         s_udp_payload_axis_tready_next = 1'b0;
                         s_udp_hdr_ready_next = !m_ip_hdr_valid_next;
@@ -411,7 +403,6 @@ end
 always @(posedge clk) begin
     if (rst) begin
         state_reg <= STATE_IDLE;
-        frame_ptr_reg <= 16'd0;
         s_udp_hdr_ready_reg <= 1'b0;
         s_udp_payload_axis_tready_reg <= 1'b0;
         m_ip_hdr_valid_reg <= 1'b0;
@@ -420,7 +411,6 @@ always @(posedge clk) begin
     end else begin
         state_reg <= state_next;
 
-        frame_ptr_reg <= frame_ptr_next;
 
         s_udp_hdr_ready_reg <= s_udp_hdr_ready_next;
         s_udp_payload_axis_tready_reg <= s_udp_payload_axis_tready_next;
@@ -431,6 +421,8 @@ always @(posedge clk) begin
 
         error_payload_early_termination_reg <= error_payload_early_termination_next;
     end
+
+    word_count_reg <= word_count_next;
 
     // datapath
     if (store_udp_hdr) begin

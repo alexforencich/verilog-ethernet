@@ -149,7 +149,8 @@ reg store_ip_dest_ip_2;
 reg store_ip_dest_ip_3;
 reg store_last_word;
 
-reg [15:0] frame_ptr_reg = 16'd0, frame_ptr_next;
+reg [5:0] hdr_ptr_reg = 6'd0, hdr_ptr_next;
+reg [15:0] word_count_reg = 16'd0, word_count_next;
 
 reg [15:0] hdr_sum_reg = 16'd0, hdr_sum_next;
 
@@ -256,7 +257,8 @@ always @* begin
 
     store_last_word = 1'b0;
 
-    frame_ptr_next = frame_ptr_reg;
+    hdr_ptr_next = hdr_ptr_reg;
+    word_count_next = word_count_reg;
 
     hdr_sum_next = hdr_sum_reg;
 
@@ -275,7 +277,7 @@ always @* begin
     case (state_reg)
         STATE_IDLE: begin
             // idle state - wait for header
-            frame_ptr_next = 16'd0;
+            hdr_ptr_next = 16'd0;
             hdr_sum_next = 16'd0;
             s_eth_hdr_ready_next = !m_ip_hdr_valid_next;
 
@@ -291,39 +293,40 @@ always @* begin
         STATE_READ_HEADER: begin
             // read header
             s_eth_payload_axis_tready_next = 1'b1;
+            word_count_next = m_ip_length_reg - 5*4;
 
             if (s_eth_payload_axis_tready && s_eth_payload_axis_tvalid) begin
                 // word transfer in - store it
-                frame_ptr_next = frame_ptr_reg + 16'd1;
+                hdr_ptr_next = hdr_ptr_reg + 6'd1;
                 state_next = STATE_READ_HEADER;
 
-                if (frame_ptr_reg[0]) begin
+                if (hdr_ptr_reg[0]) begin
                     hdr_sum_next = add1c16b(hdr_sum_reg, {8'd0, s_eth_payload_axis_tdata});
                 end else begin
                     hdr_sum_next = add1c16b(hdr_sum_reg, {s_eth_payload_axis_tdata, 8'd0});
                 end
 
-                case (frame_ptr_reg)
-                    8'h00: store_ip_version_ihl = 1'b1;
-                    8'h01: store_ip_dscp_ecn = 1'b1;
-                    8'h02: store_ip_length_1 = 1'b1;
-                    8'h03: store_ip_length_0 = 1'b1;
-                    8'h04: store_ip_identification_1 = 1'b1;
-                    8'h05: store_ip_identification_0 = 1'b1;
-                    8'h06: store_ip_flags_fragment_offset_1 = 1'b1;
-                    8'h07: store_ip_flags_fragment_offset_0 = 1'b1;
-                    8'h08: store_ip_ttl = 1'b1;
-                    8'h09: store_ip_protocol = 1'b1;
-                    8'h0A: store_ip_header_checksum_1 = 1'b1;
-                    8'h0B: store_ip_header_checksum_0 = 1'b1;
-                    8'h0C: store_ip_source_ip_3 = 1'b1;
-                    8'h0D: store_ip_source_ip_2 = 1'b1;
-                    8'h0E: store_ip_source_ip_1 = 1'b1;
-                    8'h0F: store_ip_source_ip_0 = 1'b1;
-                    8'h10: store_ip_dest_ip_3 = 1'b1;
-                    8'h11: store_ip_dest_ip_2 = 1'b1;
-                    8'h12: store_ip_dest_ip_1 = 1'b1;
-                    8'h13: begin
+                case (hdr_ptr_reg)
+                    6'h00: store_ip_version_ihl = 1'b1;
+                    6'h01: store_ip_dscp_ecn = 1'b1;
+                    6'h02: store_ip_length_1 = 1'b1;
+                    6'h03: store_ip_length_0 = 1'b1;
+                    6'h04: store_ip_identification_1 = 1'b1;
+                    6'h05: store_ip_identification_0 = 1'b1;
+                    6'h06: store_ip_flags_fragment_offset_1 = 1'b1;
+                    6'h07: store_ip_flags_fragment_offset_0 = 1'b1;
+                    6'h08: store_ip_ttl = 1'b1;
+                    6'h09: store_ip_protocol = 1'b1;
+                    6'h0A: store_ip_header_checksum_1 = 1'b1;
+                    6'h0B: store_ip_header_checksum_0 = 1'b1;
+                    6'h0C: store_ip_source_ip_3 = 1'b1;
+                    6'h0D: store_ip_source_ip_2 = 1'b1;
+                    6'h0E: store_ip_source_ip_1 = 1'b1;
+                    6'h0F: store_ip_source_ip_0 = 1'b1;
+                    6'h10: store_ip_dest_ip_3 = 1'b1;
+                    6'h11: store_ip_dest_ip_2 = 1'b1;
+                    6'h12: store_ip_dest_ip_1 = 1'b1;
+                    6'h13: begin
                         store_ip_dest_ip_0 = 1'b1;
                         if (m_ip_version_reg != 4'd4 || m_ip_ihl_reg != 4'd5) begin
                             error_invalid_header_next = 1'b1;
@@ -362,9 +365,9 @@ always @* begin
 
             if (s_eth_payload_axis_tready && s_eth_payload_axis_tvalid) begin
                 // word transfer through
-                frame_ptr_next = frame_ptr_reg + 16'd1;
+                word_count_next = word_count_reg - 16'd1;
                 if (s_eth_payload_axis_tlast) begin
-                    if (frame_ptr_next != m_ip_length_reg) begin
+                    if (word_count_reg > 16'd1) begin
                         // end of frame, but length does not match
                         m_ip_payload_axis_tuser_int = 1'b1;
                         error_payload_early_termination_next = 1'b1;
@@ -373,7 +376,7 @@ always @* begin
                     s_eth_payload_axis_tready_next = 1'b0;
                     state_next = STATE_IDLE;
                 end else begin
-                    if (frame_ptr_next == m_ip_length_reg) begin
+                    if (word_count_reg == 16'd1) begin
                         store_last_word = 1'b1;
                         m_ip_payload_axis_tvalid_int = 1'b0;
                         state_next = STATE_READ_PAYLOAD_LAST;
@@ -428,8 +431,6 @@ end
 always @(posedge clk) begin
     if (rst) begin
         state_reg <= STATE_IDLE;
-        frame_ptr_reg <= 16'd0;
-        hdr_sum_reg <= 16'd0;
         s_eth_hdr_ready_reg <= 1'b0;
         s_eth_payload_axis_tready_reg <= 1'b0;
         m_ip_hdr_valid_reg <= 1'b0;
@@ -440,10 +441,6 @@ always @(posedge clk) begin
         error_invalid_checksum_reg <= 1'b0;
     end else begin
         state_reg <= state_next;
-
-        frame_ptr_reg <= frame_ptr_next;
-
-        hdr_sum_reg <= hdr_sum_next;
 
         s_eth_hdr_ready_reg <= s_eth_hdr_ready_next;
         s_eth_payload_axis_tready_reg <= s_eth_payload_axis_tready_next;
@@ -457,6 +454,11 @@ always @(posedge clk) begin
 
         busy_reg <= state_next != STATE_IDLE;
     end
+
+    hdr_ptr_reg <= hdr_ptr_next;
+    word_count_reg <= word_count_next;
+
+    hdr_sum_reg <= hdr_sum_next;
 
     // datapath
     if (store_eth_hdr) begin
