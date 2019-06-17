@@ -139,8 +139,10 @@ reg transfer_in_save;
 
 reg [15:0] frame_ptr_reg = 16'd0, frame_ptr_next;
 
-reg [31:0] hdr_sum_temp;
-reg [31:0] hdr_sum_reg = 32'd0, hdr_sum_next;
+reg [16:0] hdr_sum_high_reg = 17'd0;
+reg [16:0] hdr_sum_low_reg = 17'd0;
+reg [19:0] hdr_sum_temp;
+reg [19:0] hdr_sum_reg = 20'd0, hdr_sum_next;
 reg check_hdr_reg = 1'b0, check_hdr_next;
 
 reg [63:0] last_word_data_reg = 64'd0;
@@ -338,24 +340,14 @@ always @* begin
                 case (frame_ptr_reg)
                     8'h00: begin
                         store_hdr_word_0 = 1'b1;
-                        hdr_sum_next = s_eth_payload_axis_tdata[15:0] +
-                                       s_eth_payload_axis_tdata[31:16] +
-                                       s_eth_payload_axis_tdata[47:32] +
-                                       s_eth_payload_axis_tdata[63:48];
                     end
                     8'h08: begin
                         store_hdr_word_1 = 1'b1;
-                        hdr_sum_next = hdr_sum_reg +
-                                       s_eth_payload_axis_tdata[15:0] +
-                                       s_eth_payload_axis_tdata[31:16] +
-                                       s_eth_payload_axis_tdata[47:32] +
-                                       s_eth_payload_axis_tdata[63:48];
+                        hdr_sum_next = hdr_sum_high_reg + hdr_sum_low_reg;
                     end
                     8'h10: begin
                         store_hdr_word_2 = 1'b1;
-                        hdr_sum_next = hdr_sum_reg +
-                                       s_eth_payload_axis_tdata[15:0] +
-                                       s_eth_payload_axis_tdata[31:16];
+                        hdr_sum_next = hdr_sum_reg + hdr_sum_high_reg + hdr_sum_low_reg;
                         frame_ptr_next = frame_ptr_reg + 16'd4;
 
                         // check header checksum on next cycle for improved timing
@@ -435,10 +427,9 @@ always @* begin
             if (check_hdr_reg) begin
                 check_hdr_next = 1'b0;
 
-                hdr_sum_temp = hdr_sum_reg[15:0] + hdr_sum_reg[31:16];
-                hdr_sum_temp = hdr_sum_temp[15:0] + hdr_sum_temp[16];
+                hdr_sum_temp = hdr_sum_reg[15:0] + hdr_sum_reg[19:16] + hdr_sum_low_reg;
 
-                if (hdr_sum_temp != 16'hffff) begin
+                if (hdr_sum_temp != 19'h0ffff && hdr_sum_temp != 19'h1fffe) begin
                     // bad checksum
                     error_invalid_checksum_next = 1'b1;
                     m_ip_payload_axis_tvalid_int = 1'b0;
@@ -546,6 +537,11 @@ always @(posedge clk) begin
             save_eth_payload_axis_tlast_reg <= s_eth_payload_axis_tlast;
             shift_eth_payload_extra_cycle_reg <= s_eth_payload_axis_tlast && (s_eth_payload_axis_tkeep[7:4] != 0);
         end
+    end
+
+    if (s_eth_payload_axis_tvalid) begin
+        hdr_sum_low_reg <= s_eth_payload_axis_tdata[15:0] + s_eth_payload_axis_tdata[31:16];
+        hdr_sum_high_reg <= s_eth_payload_axis_tdata[47:32] + s_eth_payload_axis_tdata[63:48];
     end
 
     // datapath

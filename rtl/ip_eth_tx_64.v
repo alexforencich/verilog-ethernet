@@ -131,8 +131,8 @@ reg [15:0] frame_ptr_reg = 16'd0, frame_ptr_next;
 reg flush_save;
 reg transfer_in_save;
 
-reg [31:0] hdr_sum_temp;
-reg [31:0] hdr_sum_reg = 32'd0, hdr_sum_next;
+reg [19:0] hdr_sum_temp;
+reg [19:0] hdr_sum_reg = 20'd0, hdr_sum_next;
 
 reg [63:0] last_word_data_reg = 64'd0;
 reg [7:0] last_word_keep_reg = 8'd0;
@@ -258,7 +258,7 @@ always @* begin
 
     frame_ptr_next = frame_ptr_reg;
 
-    hdr_sum_temp = 16'd0;
+    hdr_sum_temp = 20'd0;
     hdr_sum_next = hdr_sum_reg;
 
     m_eth_hdr_valid_next = m_eth_hdr_valid_reg && !m_eth_hdr_ready;
@@ -328,7 +328,7 @@ always @* begin
                         m_eth_payload_axis_tkeep_int = 8'hff;
                     end
                     8'h08: begin
-                        hdr_sum_temp = hdr_sum_reg[15:0] + hdr_sum_reg[31:16];
+                        hdr_sum_temp = hdr_sum_reg[15:0] + hdr_sum_reg[19:16];
                         hdr_sum_temp = hdr_sum_temp[15:0] + hdr_sum_temp[16];
                         m_eth_payload_axis_tdata_int[ 7: 0] = ip_ttl_reg;
                         m_eth_payload_axis_tdata_int[15: 8] = ip_protocol_reg;
