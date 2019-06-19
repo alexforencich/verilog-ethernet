@@ -213,6 +213,14 @@ def bench():
 
         # testbench stimulus
 
+        # wait for block lock
+        while not rx_block_lock:
+            yield clk.posedge
+
+        # dump garbage
+        while not xgmii_sink.empty():
+            xgmii_sink.recv()
+
         yield clk.posedge
         print("test 1: test RX packet")
         current_test.next = 1

@@ -183,6 +183,14 @@ def bench():
 
         # testbench stimulus
 
+        # wait for block lock
+        while not rx_block_lock:
+            yield clk.posedge
+
+        # dump garbage
+        while not sink.empty():
+            sink.recv()
+
         for payload_len in list(range(16,34)):
             yield clk.posedge
             print("test 1: test packet, length %d" % payload_len)
