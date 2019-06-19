@@ -158,7 +158,7 @@ integer i;
 always @* begin
     rx_error_count_1_temp = 0;
     rx_error_count_2_temp = 0;
-    for (i = 0; i < DATA_WIDTH; i = i + 1) begin
+    for (i = 0; i < DATA_WIDTH+HDR_WIDTH; i = i + 1) begin
         if (i & 1) begin
             rx_error_count_1_temp = rx_error_count_1_temp + prbs31_data[i];
         end else begin
