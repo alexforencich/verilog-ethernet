@@ -332,10 +332,15 @@ always @* begin
             if (m_ip_payload_axis_tready_int_reg && s_udp_payload_axis_tvalid) begin
                 // word transfer through
                 word_count_next = word_count_reg - 16'd8;
-                if (keep2count(s_udp_payload_axis_tkeep) >= word_count_reg) begin
+                if (word_count_reg <= 8) begin
                     // have entire payload
                     m_ip_payload_axis_tkeep_int = count2keep(word_count_reg);
                     if (s_udp_payload_axis_tlast) begin
+                        if (keep2count(s_udp_payload_axis_tkeep) < word_count_reg[4:0]) begin
+                            // end of frame, but length does not match
+                            error_payload_early_termination_next = 1'b1;
+                            m_ip_payload_axis_tuser_int = 1'b1;
+                        end
                         s_udp_payload_axis_tready_next = 1'b0;
                         s_udp_hdr_ready_next = !m_ip_hdr_valid_next;
                         state_next = STATE_IDLE;

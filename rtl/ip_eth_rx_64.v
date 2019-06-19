@@ -396,10 +396,15 @@ always @* begin
                 // word transfer through
                 word_count_next = word_count_reg - 16'd8;
                 transfer_in_save = 1'b1;
-                if (word_count_reg <= keep2count(shift_eth_payload_axis_tkeep)) begin
+                if (word_count_reg <= 8) begin
                     // have entire payload
                     m_ip_payload_axis_tkeep_int = shift_eth_payload_axis_tkeep & count2keep(word_count_reg);
                     if (shift_eth_payload_axis_tlast) begin
+                        if (keep2count(shift_eth_payload_axis_tkeep) < word_count_reg[4:0]) begin
+                            // end of frame, but length does not match
+                            error_payload_early_termination_next = 1'b1;
+                            m_ip_payload_axis_tuser_int = 1'b1;
+                        end
                         s_eth_payload_axis_tready_next = 1'b0;
                         flush_save = 1'b1;
                         s_eth_hdr_ready_next = !m_ip_hdr_valid_reg && !check_hdr_reg;
