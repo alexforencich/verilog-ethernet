@@ -38,6 +38,7 @@ parameter HDR_WIDTH = 2;
 parameter BIT_REVERSE = 0;
 parameter SCRAMBLER_DISABLE = 0;
 parameter PRBS31_ENABLE = 1;
+parameter SERDES_PIPELINE = 2;
 
 // Inputs
 reg clk = 0;
@@ -78,7 +79,8 @@ eth_phy_10g_tx #(
     .HDR_WIDTH(HDR_WIDTH),
     .BIT_REVERSE(BIT_REVERSE),
     .SCRAMBLER_DISABLE(SCRAMBLER_DISABLE),
-    .PRBS31_ENABLE(PRBS31_ENABLE)
+    .PRBS31_ENABLE(PRBS31_ENABLE),
+    .SERDES_PIPELINE(SERDES_PIPELINE)
 )
 UUT (
     .clk(clk),

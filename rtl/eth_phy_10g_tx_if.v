@@ -35,7 +35,8 @@ module eth_phy_10g_tx_if #
     parameter HDR_WIDTH = 2,
     parameter BIT_REVERSE = 0,
     parameter SCRAMBLER_DISABLE = 0,
-    parameter PRBS31_ENABLE = 0
+    parameter PRBS31_ENABLE = 0,
+    parameter SERDES_PIPELINE = 0
 )
 (
     input  wire                  clk,
@@ -83,21 +84,50 @@ wire [DATA_WIDTH+HDR_WIDTH-1:0] prbs31_data;
 reg [DATA_WIDTH-1:0] serdes_tx_data_reg = {DATA_WIDTH{1'b0}};
 reg [HDR_WIDTH-1:0] serdes_tx_hdr_reg = {HDR_WIDTH{1'b0}};
 
+wire [DATA_WIDTH-1:0] serdes_tx_data_int;
+wire [HDR_WIDTH-1:0]  serdes_tx_hdr_int;
+
 generate
     genvar n;
 
     if (BIT_REVERSE) begin
         for (n = 0; n < DATA_WIDTH; n = n + 1) begin
-            assign serdes_tx_data[n] = serdes_tx_data_reg[DATA_WIDTH-n-1];
+            assign serdes_tx_data_int[n] = serdes_tx_data_reg[DATA_WIDTH-n-1];
         end
 
         for (n = 0; n < HDR_WIDTH; n = n + 1) begin
-            assign serdes_tx_hdr[n] = serdes_tx_hdr_reg[HDR_WIDTH-n-1];
+            assign serdes_tx_hdr_int[n] = serdes_tx_hdr_reg[HDR_WIDTH-n-1];
         end
     end else begin
-        assign serdes_tx_data = serdes_tx_data_reg;
-        assign serdes_tx_hdr = serdes_tx_hdr_reg;
+        assign serdes_tx_data_int = serdes_tx_data_reg;
+        assign serdes_tx_hdr_int = serdes_tx_hdr_reg;
     end
+
+    if (SERDES_PIPELINE > 0) begin
+        (* srl_style = "register" *)
+        reg [DATA_WIDTH-1:0] serdes_tx_data_pipe_reg[SERDES_PIPELINE-1:0];
+        (* srl_style = "register" *)
+        reg [HDR_WIDTH-1:0]  serdes_tx_hdr_pipe_reg[SERDES_PIPELINE-1:0];
+
+        for (n = 0; n < SERDES_PIPELINE; n = n + 1) begin
+            initial begin
+                serdes_tx_data_pipe_reg[n] <= {DATA_WIDTH{1'b0}};
+                serdes_tx_hdr_pipe_reg[n] <= {HDR_WIDTH{1'b0}};
+            end
+
+            always @(posedge clk) begin
+                serdes_tx_data_pipe_reg[n] <= n == 0 ? serdes_tx_data_int : serdes_tx_data_pipe_reg[n-1];
+                serdes_tx_hdr_pipe_reg[n] <= n == 0 ? serdes_tx_hdr_int : serdes_tx_hdr_pipe_reg[n-1];
+            end
+        end
+
+        assign serdes_tx_data = serdes_tx_data_pipe_reg[SERDES_PIPELINE-1];
+        assign serdes_tx_hdr = serdes_tx_hdr_pipe_reg[SERDES_PIPELINE-1];
+    end else begin
+        assign serdes_tx_data = serdes_tx_data_int;
+        assign serdes_tx_hdr = serdes_tx_hdr_int;
+    end
+
 endgenerate
 
 lfsr #(

@@ -66,6 +66,7 @@ def bench():
     BIT_REVERSE = 0
     SCRAMBLER_DISABLE = 0
     PRBS31_ENABLE = 1
+    SERDES_PIPELINE = 2
 
     # Inputs
     clk = Signal(bool(0))

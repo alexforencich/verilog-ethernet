@@ -36,6 +36,7 @@ module eth_phy_10g_rx_if #
     parameter BIT_REVERSE = 0,
     parameter SCRAMBLER_DISABLE = 0,
     parameter PRBS31_ENABLE = 0,
+    parameter SERDES_PIPELINE = 0,
     parameter SLIP_COUNT_WIDTH = 3,
     parameter COUNT_125US = 125000/6.4
 )
@@ -83,24 +84,50 @@ initial begin
     end
 end
 
-wire [DATA_WIDTH-1:0] serdes_rx_data_int;
-wire [HDR_WIDTH-1:0]  serdes_rx_hdr_int;
+wire [DATA_WIDTH-1:0] serdes_rx_data_rev, serdes_rx_data_int;
+wire [HDR_WIDTH-1:0]  serdes_rx_hdr_rev, serdes_rx_hdr_int;
 
 generate
     genvar n;
 
     if (BIT_REVERSE) begin
         for (n = 0; n < DATA_WIDTH; n = n + 1) begin
-            assign serdes_rx_data_int[n] = serdes_rx_data[DATA_WIDTH-n-1];
+            assign serdes_rx_data_rev[n] = serdes_rx_data[DATA_WIDTH-n-1];
         end
 
         for (n = 0; n < HDR_WIDTH; n = n + 1) begin
-            assign serdes_rx_hdr_int[n] = serdes_rx_hdr[HDR_WIDTH-n-1];
+            assign serdes_rx_hdr_rev[n] = serdes_rx_hdr[HDR_WIDTH-n-1];
         end
     end else begin
-        assign serdes_rx_data_int = serdes_rx_data;
-        assign serdes_rx_hdr_int = serdes_rx_hdr;
+        assign serdes_rx_data_rev = serdes_rx_data;
+        assign serdes_rx_hdr_rev = serdes_rx_hdr;
     end
+
+    if (SERDES_PIPELINE > 0) begin
+        (* srl_style = "register" *)
+        reg [DATA_WIDTH-1:0] serdes_rx_data_pipe_reg[SERDES_PIPELINE-1:0];
+        (* srl_style = "register" *)
+        reg [HDR_WIDTH-1:0]  serdes_rx_hdr_pipe_reg[SERDES_PIPELINE-1:0];
+
+        for (n = 0; n < SERDES_PIPELINE; n = n + 1) begin
+            initial begin
+                serdes_rx_data_pipe_reg[n] <= {DATA_WIDTH{1'b0}};
+                serdes_rx_hdr_pipe_reg[n] <= {HDR_WIDTH{1'b0}};
+            end
+
+            always @(posedge clk) begin
+                serdes_rx_data_pipe_reg[n] <= n == 0 ? serdes_rx_data_rev : serdes_rx_data_pipe_reg[n-1];
+                serdes_rx_hdr_pipe_reg[n] <= n == 0 ? serdes_rx_hdr_rev : serdes_rx_hdr_pipe_reg[n-1];
+            end
+        end
+
+        assign serdes_rx_data_int = serdes_rx_data_pipe_reg[SERDES_PIPELINE-1];
+        assign serdes_rx_hdr_int = serdes_rx_hdr_pipe_reg[SERDES_PIPELINE-1];
+    end else begin
+        assign serdes_rx_data_int = serdes_rx_data_rev;
+        assign serdes_rx_hdr_int = serdes_rx_hdr_rev;
+    end
+
 endgenerate
 
 wire [DATA_WIDTH-1:0] descrambled_rx_data;

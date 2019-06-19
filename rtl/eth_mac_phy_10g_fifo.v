@@ -41,6 +41,8 @@ module eth_mac_phy_10g_fifo #
     parameter BIT_REVERSE = 0,
     parameter SCRAMBLER_DISABLE = 0,
     parameter PRBS31_ENABLE = 0,
+    parameter TX_SERDES_PIPELINE = 0,
+    parameter RX_SERDES_PIPELINE = 0,
     parameter SLIP_COUNT_WIDTH = 3,
     parameter COUNT_125US = 125000/6.4,
     parameter TX_FIFO_ADDR_WIDTH = 12-$clog2(KEEP_WIDTH),
@@ -201,6 +203,8 @@ eth_mac_phy_10g #(
     .BIT_REVERSE(BIT_REVERSE),
     .SCRAMBLER_DISABLE(SCRAMBLER_DISABLE),
     .PRBS31_ENABLE(PRBS31_ENABLE),
+    .TX_SERDES_PIPELINE(TX_SERDES_PIPELINE),
+    .RX_SERDES_PIPELINE(RX_SERDES_PIPELINE),
     .SLIP_COUNT_WIDTH(SLIP_COUNT_WIDTH),
     .COUNT_125US(COUNT_125US)
 )

@@ -43,6 +43,7 @@ module eth_mac_phy_10g_rx #
     parameter BIT_REVERSE = 0,
     parameter SCRAMBLER_DISABLE = 0,
     parameter PRBS31_ENABLE = 0,
+    parameter SERDES_PIPELINE = 0,
     parameter SLIP_COUNT_WIDTH = 3,
     parameter COUNT_125US = 125000/6.4
 )
@@ -115,6 +116,7 @@ eth_phy_10g_rx_if #(
     .BIT_REVERSE(BIT_REVERSE),
     .SCRAMBLER_DISABLE(SCRAMBLER_DISABLE),
     .PRBS31_ENABLE(PRBS31_ENABLE),
+    .SERDES_PIPELINE(SERDES_PIPELINE),
     .SLIP_COUNT_WIDTH(SLIP_COUNT_WIDTH),
     .COUNT_125US(COUNT_125US)
 )

@@ -47,7 +47,8 @@ module eth_mac_phy_10g_tx #
     parameter USER_WIDTH = (PTP_TAG_ENABLE ? PTP_TAG_WIDTH : 0) + 1,
     parameter BIT_REVERSE = 0,
     parameter SCRAMBLER_DISABLE = 0,
-    parameter PRBS31_ENABLE = 0
+    parameter PRBS31_ENABLE = 0,
+    parameter SERDES_PIPELINE = 0
 )
 (
     input  wire                      clk,
@@ -151,7 +152,8 @@ eth_phy_10g_tx_if #(
     .HDR_WIDTH(HDR_WIDTH),
     .BIT_REVERSE(BIT_REVERSE),
     .SCRAMBLER_DISABLE(SCRAMBLER_DISABLE),
-    .PRBS31_ENABLE(PRBS31_ENABLE)
+    .PRBS31_ENABLE(PRBS31_ENABLE),
+    .SERDES_PIPELINE(SERDES_PIPELINE)
 )
 eth_phy_10g_tx_if_inst (
     .clk(clk),
