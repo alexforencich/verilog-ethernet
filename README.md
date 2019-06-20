@@ -6,20 +6,23 @@ GitHub repository: https://github.com/alexforencich/verilog-ethernet
 
 ## Introduction
 
-Collection of Ethernet-related components for both gigabit and 10G packet
+Collection of Ethernet-related components for gigabit, 10G, and 25G packet
 processing (8 bit and 64 bit datapaths).  Includes modules for handling
 Ethernet frames as well as IP, UDP, and ARP and the components for
 constructing a complete UDP/IP stack.  Includes MAC modules for gigabit and
-10G, a 10G PCS/PMA PHY module, and a 10G combination MAC/PCS/PMA module.  Also
-includes full MyHDL testbench with intelligent bus cosimulation endpoints.
+10G/25G, a 10G/25G PCS/PMA PHY module, and a 10G/25G combination MAC/PCS/PMA
+module.  Also includes full MyHDL testbench with intelligent bus cosimulation
+endpoints.
 
-For IP and ARP support only, use ip_complete (1G) or ip_complete_64 (10G).
+For IP and ARP support only, use ip_complete (1G) or ip_complete_64 (10G/25G).
 
-For UDP, IP, and ARP support, use udp_complete (1G) or udp_complete_64 (10G).
+For UDP, IP, and ARP support, use udp_complete (1G) or udp_complete_64
+(10G/25G).
 
-Top level gigabit and 10G MAC modules are eth_mac_*, with various interfaces
-and with/without FIFOs.  Top level 10G PCS/PMA PHY module is eth_phy_10g.  Top
-level 10G MAC/PCS/PMA combination module is eth_mac_phy_10g.
+Top level gigabit and 10G/25G MAC modules are eth_mac_*, with various
+interfaces and with/without FIFOs.  Top level 10G/25G PCS/PMA PHY module is
+eth_phy_10g.  Top level 10G/25G MAC/PCS/PMA combination module is
+eth_mac_phy_10g.
 
 ## Documentation
 
@@ -30,7 +33,7 @@ ARP handling logic with parametrizable retry timeout parameters.
 ### arp_64 module
 
 ARP handling logic with parametrizable retry timeout parameters and 64 bit
-datapath for 10G Ethernet.
+datapath for 10G/25G Ethernet.
 
 ### arp_cache module
 
@@ -42,7 +45,7 @@ ARP frame receiver.
 
 ### arp_eth_rx_64 module
 
-ARP frame receiver with 64 bit datapath for 10G Ethernet.
+ARP frame receiver with 64 bit datapath for 10G/25G Ethernet.
 
 ### arp_eth_tx module
 
@@ -50,7 +53,7 @@ ARP frame transmitter.
 
 ### arp_eth_tx_64 module
 
-ARP frame transmitter with 64 bit datapath for 10G Ethernet.
+ARP frame transmitter with 64 bit datapath for 10G/25G Ethernet.
 
 ### axis_eth_fcs module
 
@@ -58,7 +61,8 @@ Ethernet frame check sequence calculator.
 
 ### axis_eth_fcs_64 module
 
-Ethernet frame check sequence calculator with 64 bit datapath for 10G Ethernet.
+Ethernet frame check sequence calculator with 64 bit datapath for 10G/25G
+Ethernet.
 
 ### axis_eth_fcs_check module
 
@@ -103,7 +107,7 @@ Ethernet frame receiver.
 
 ### eth_axis_rx_64 module
 
-Ethernet frame receiver with 64 bit datapath for 10G Ethernet.
+Ethernet frame receiver with 64 bit datapath for 10G/25G Ethernet.
 
 ### eth_axis_tx module
 
@@ -111,7 +115,7 @@ Ethernet frame transmitter.
 
 ### eth_axis_tx_64 module
 
-Ethernet frame transmitter with 64 bit datapath for 10G Ethernet.
+Ethernet frame transmitter with 64 bit datapath for 10G/25G Ethernet.
 
 ### eth_demux module
 
@@ -148,13 +152,13 @@ adaptation logic.
 
 ### eth_mac_10g module
 
-10G Ethernet MAC with XGMII interface.  Datapath selectable between 32 and 64
-bits.
+10G/25G Ethernet MAC with XGMII interface.  Datapath selectable between 32 and
+64 bits.
 
 ### eth_mac_10g_fifo module
 
-10G Ethernet MAC with XGMII interface and FIFOs.  Datapath selectable between
-32 and 64 bits.
+10G/25G Ethernet MAC with XGMII interface and FIFOs.  Datapath selectable
+between 32 and 64 bits.
 
 ### eth_mac_mii module
 
@@ -166,19 +170,19 @@ Ethernet MAC with MII interface and FIFOs.
 
 ### eth_mac_phy_10g module
 
-10G Ethernet MAC/PHY combination module with SERDES interface.
+10G/25G Ethernet MAC/PHY combination module with SERDES interface.
 
 ### eth_mac_phy_10g_fifo module
 
-10G Ethernet MAC/PHY combination module with SERDES interface and FIFOs.
+10G/25G Ethernet MAC/PHY combination module with SERDES interface and FIFOs.
 
 ### eth_mac_phy_10g_rx module
 
-10G Ethernet MAC/PHY combination module with SERDES interface, RX path.
+10G/25G Ethernet MAC/PHY combination module with SERDES interface, RX path.
 
 ### eth_mac_phy_10g_tx module
 
-10G Ethernet MAC/PHY combination module with SERDES interface, TX path.
+10G/25G Ethernet MAC/PHY combination module with SERDES interface, TX path.
 
 ### eth_mux module
 
@@ -187,23 +191,23 @@ Supports priority and round-robin arbitration.
 
 ### eth_phy_10g module
 
-10G Ethernet PCS/PMA PHY.
+10G/25G Ethernet PCS/PMA PHY.
 
 ### eth_phy_10g_rx module
 
-10G Ethernet PCS/PMA PHY receive-side logic.
+10G/25G Ethernet PCS/PMA PHY receive-side logic.
 
 ### eth_phy_10g_rx_ber_mon module
 
-10G Ethernet PCS/PMA PHY BER monitor.
+10G/25G Ethernet PCS/PMA PHY BER monitor.
 
 ### eth_phy_10g_rx_frame_sync module
 
-10G Ethernet PCS/PMA PHY frame synchronizer.
+10G/25G Ethernet PCS/PMA PHY frame synchronizer.
 
 ### eth_phy_10g_tx module
 
-10G Ethernet PCS/PMA PHY transmit-side logic.
+10G/25G Ethernet PCS/PMA PHY transmit-side logic.
 
 ### gmii_phy_if module
 
@@ -216,7 +220,7 @@ transmssion and reception.  Interfaces with ARP module for MAC address lookup.
 
 ### ip_64 module
 
-IPv4 block with 64 bit data width for 10G Ethernet.  Manages IPv4 packet
+IPv4 block with 64 bit data width for 10G/25G Ethernet.  Manages IPv4 packet
 transmssion and reception.  Interfaces with ARP module for MAC address lookup.
 
 ### ip_arb_mux module
@@ -232,9 +236,9 @@ Top level for gigabit IP stack.
 
 ### ip_complete_64 module
 
-IPv4 module with ARP integration and 64 bit data width for 10G Ethernet.
+IPv4 module with ARP integration and 64 bit data width for 10G/25G Ethernet.
 
-Top level for 10G IP stack.
+Top level for 10G/25G IP stack.
 
 ### ip_demux module
 
@@ -247,7 +251,7 @@ IP frame receiver.
 
 ### ip_eth_rx_64 module
 
-IP frame receiver with 64 bit datapath for 10G Ethernet.
+IP frame receiver with 64 bit datapath for 10G/25G Ethernet.
 
 ### ip_eth_tx module
 
@@ -255,7 +259,7 @@ IP frame transmitter.
 
 ### ip_eth_tx_64 module
 
-IP frame transmitter with 64 bit datapath for 10G Ethernet.
+IP frame transmitter with 64 bit datapath for 10G/25G Ethernet.
 
 ### ip_mux module
 
@@ -287,7 +291,7 @@ transmssion and reception.
 
 ### udp_64 module
 
-UDP block with 64 bit data width for 10G Ethernet.  Manages UDP packet
+UDP block with 64 bit data width for 10G/25G Ethernet.  Manages UDP packet
 transmssion and reception.
 
 ### udp_arb_mux module
@@ -316,7 +320,7 @@ Top level for gigabit UDP stack.
 UDP module with IPv4 and ARP integration and 64 bit data width for 10G
 Ethernet.
 
-Top level for 10G UDP stack.
+Top level for 10G/25G UDP stack.
 
 ### udp_demux module
 
@@ -329,7 +333,7 @@ UDP frame receiver.
 
 ### udp_ip_rx_64 module
 
-UDP frame receiver with 64 bit datapath for 10G Ethernet.
+UDP frame receiver with 64 bit datapath for 10G/25G Ethernet.
 
 ### udp_ip_tx module
 
@@ -337,7 +341,7 @@ UDP frame transmitter.
 
 ### udp_ip_tx_64 module
 
-UDP frame transmitter with 64 bit datapath for 10G Ethernet.
+UDP frame transmitter with 64 bit datapath for 10G/25G Ethernet.
 
 ### udp_mux module
 
@@ -403,14 +407,14 @@ and data lines.
     rtl/eth_mac_1g_gmii_fifo.v      : Tri-mode Ethernet GMII/MII MAC with FIFO
     rtl/eth_mac_1g_rgmii.v          : Tri-mode Ethernet RGMII MAC
     rtl/eth_mac_1g_rgmii_fifo.v     : Tri-mode Ethernet RGMII MAC with FIFO
-    rtl/eth_mac_10g.v               : 10G Ethernet XGMII MAC
-    rtl/eth_mac_10g_fifo.v          : 10G Ethernet XGMII MAC with FIFO
+    rtl/eth_mac_10g.v               : 10G/25G Ethernet XGMII MAC
+    rtl/eth_mac_10g_fifo.v          : 10G/25G Ethernet XGMII MAC with FIFO
     rtl/eth_mac_mii.v               : Ethernet MII MAC
     rtl/eth_mac_mii_fifo.v          : Ethernet MII MAC with FIFO
-    rtl/eth_mac_phy_10g.v           : 10G Ethernet XGMII MAC/PHY
-    rtl/eth_mac_phy_10g_fifo.v      : 10G Ethernet XGMII MAC/PHY with FIFO
-    rtl/eth_mac_phy_10g_rx.v        : 10G Ethernet XGMII MAC/PHY RX with FIFO
-    rtl/eth_mac_phy_10g_tx.v        : 10G Ethernet XGMII MAC/PHY TX with FIFO
+    rtl/eth_mac_phy_10g.v           : 10G/25G Ethernet XGMII MAC/PHY
+    rtl/eth_mac_phy_10g_fifo.v      : 10G/25G Ethernet XGMII MAC/PHY with FIFO
+    rtl/eth_mac_phy_10g_rx.v        : 10G/25G Ethernet XGMII MAC/PHY RX with FIFO
+    rtl/eth_mac_phy_10g_tx.v        : 10G/25G Ethernet XGMII MAC/PHY TX with FIFO
     rtl/eth_mux.v                   : Ethernet frame multiplexer
     rtl/gmii_phy_if.v               : GMII PHY interface
     rtl/iddr.v                      : Generic DDR input register
