@@ -24,9 +24,9 @@ netcat -u 192.168.1.128 1234 to open a UDP connection to port 1234.  Any text
 entered into netcat will be echoed back after pressing enter.  
 
 Note that the gigabit PHY is also enabled for debugging.  The gigabit port can
-be inserted into the 10G data path between the 10G MAC and 10G PHY so that the
-10G interface can be tested with a QSFP loopback adapter.  Turn on SW12.1 to
-insert the gigabit port into the 10G data path, or off to bypass the gigabit
+be inserted into the 25G data path between the 25G MAC and 25G PHY so that the
+25G interface can be tested with a QSFP loopback adapter.  Turn on SW12.1 to
+insert the gigabit port into the 25G data path, or off to bypass the gigabit
 port.  Turn on SW12.2 to place the port in the TX path or off to place the
 port in the RX path.  
 
