@@ -161,7 +161,7 @@ reg [1:0] state_reg = STATE_IDLE, state_next;
 
 // datapath control signals
 reg reset_crc;
-reg update_crc;
+reg update_crc_last;
 
 reg lanes_swapped = 1'b0;
 reg [31:0] swap_data = 32'd0;
@@ -217,8 +217,6 @@ assign error_bad_frame = error_bad_frame_reg;
 assign error_bad_fcs = error_bad_fcs_reg;
 assign rx_bad_block = rx_bad_block_reg;
 
-wire last_cycle = state_reg == STATE_LAST;
-
 lfsr #(
     .LFSR_WIDTH(32),
     .LFSR_POLY(32'h4c11db7),
@@ -230,7 +228,7 @@ lfsr #(
 )
 eth_crc_8 (
     .data_in(input_data_crc[7:0]),
-    .state_in(last_cycle ? crc_state3 : crc_state),
+    .state_in(crc_state3),
     .data_out(),
     .state_out(crc_next0)
 );
@@ -246,7 +244,7 @@ lfsr #(
 )
 eth_crc_16 (
     .data_in(input_data_crc[15:0]),
-    .state_in(last_cycle ? crc_state3 : crc_state),
+    .state_in(crc_state3),
     .data_out(),
     .state_out(crc_next1)
 );
@@ -262,7 +260,7 @@ lfsr #(
 )
 eth_crc_24 (
     .data_in(input_data_crc[23:0]),
-    .state_in(last_cycle ? crc_state3 : crc_state),
+    .state_in(crc_state3),
     .data_out(),
     .state_out(crc_next2)
 );
@@ -278,7 +276,7 @@ lfsr #(
 )
 eth_crc_32 (
     .data_in(input_data_crc[31:0]),
-    .state_in(last_cycle ? crc_state3 : crc_state),
+    .state_in(crc_state3),
     .data_out(),
     .state_out(crc_next3)
 );
@@ -303,7 +301,7 @@ always @* begin
     state_next = STATE_IDLE;
 
     reset_crc = 1'b0;
-    update_crc = 1'b0;
+    update_crc_last = 1'b0;
 
     m_axis_tdata_next = input_data_d1;
     m_axis_tkeep_next = 8'd0;
@@ -322,7 +320,6 @@ always @* begin
             if (input_type_d1 == INPUT_TYPE_START_0) begin
                 // start condition
                 reset_crc = 1'b0;
-                update_crc = 1'b1;
                 state_next = STATE_PAYLOAD;
             end else begin
                 state_next = STATE_IDLE;
@@ -330,8 +327,6 @@ always @* begin
         end
         STATE_PAYLOAD: begin
             // read payload
-            update_crc = 1'b1;
-
             m_axis_tdata_next = input_data_d1;
             m_axis_tkeep_next = 8'hff;
             m_axis_tvalid_next = 1'b1;
@@ -367,6 +362,7 @@ always @* begin
                     state_next = STATE_IDLE;
                 end else begin
                     // need extra cycle
+                    update_crc_last = 1'b1;
                     state_next = STATE_LAST;
                 end
             end else begin
@@ -422,7 +418,6 @@ always @(posedge clk) begin
 
         crc_state <= 32'hFFFFFFFF;
         crc_state3 <= 32'hFFFFFFFF;
-        crc_valid7_save <= 1'b0;
 
         input_type_d0 <= INPUT_TYPE_IDLE;
         input_type_d1 <= INPUT_TYPE_IDLE;
@@ -521,12 +516,14 @@ always @(posedge clk) begin
         // datapath
         if (reset_crc) begin
             crc_state <= 32'hFFFFFFFF;
-            crc_state3 <= 32'hFFFFFFFF;
-            crc_valid7_save <= 1'b0;
-        end else if (update_crc) begin
+        end else begin
             crc_state <= crc_next7;
+        end
+
+        if (update_crc_last) begin
             crc_state3 <= crc_next3;
-            crc_valid7_save <= crc_valid7;
+        end else begin
+            crc_state3 <= crc_next7;
         end
     end
 
@@ -586,6 +583,8 @@ always @(posedge clk) begin
             input_data_crc <= {8'd0, encoded_rx_data[63:8]};
         end
     end
+
+    crc_valid7_save <= crc_valid7;
 
     if (state_next == STATE_LAST) begin
         input_data_crc[31:0] <= input_data_crc[63:32];
