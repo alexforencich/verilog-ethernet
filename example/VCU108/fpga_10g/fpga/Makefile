@@ -83,8 +83,8 @@ program: $(FPGA_TOP).bit
 	mkdir -p rev
 	COUNT=100; \
 	while [ -e rev/$*_rev$$COUNT.bit ]; \
-	do let COUNT=COUNT+1; done; \
-	let COUNT=COUNT-1; \
+	do COUNT=$$((COUNT+1)); done; \
+	COUNT=$$((COUNT-1)); \
 	for x in .mcs .prm; \
 	do cp $*$$x rev/$*_rev$$COUNT$$x; \
 	echo "Output: rev/$*_rev$$COUNT$$x"; done;
