@@ -59,18 +59,20 @@ program: $(FPGA_TOP).bit
 	echo "exit" >> program.tcl
 	vivado -mode batch -source program.tcl
 
-%.mcs: %.bit
+%.mcs %.prm: %.bit
 	echo "write_cfgmem -force -format mcs -size 128 -interface BPIx16 -loadbit {up 0x0000000 $*.bit} -checksum -file $*.mcs" > generate_mcs.tcl
 	echo "exit" >> generate_mcs.tcl
 	vivado -mode batch -source generate_mcs.tcl
 	mkdir -p rev
-	EXT=mcs; COUNT=100; \
-	while [ -e rev/$*_rev$$COUNT.$$EXT ]; \
+	COUNT=100; \
+	while [ -e rev/$*_rev$$COUNT.bit ]; \
 	do let COUNT=COUNT+1; done; \
-	cp $@ rev/$*_rev$$COUNT.$$EXT; \
-	echo "Output: rev/$*_rev$$COUNT.$$EXT";
+	let COUNT=COUNT-1; \
+	for x in .mcs .prm; \
+	do cp $*$$x rev/$*_rev$$COUNT$$x; \
+	echo "Output: rev/$*_rev$$COUNT$$x"; done;
 
-flash: $(FPGA_TOP).mcs
+flash: $(FPGA_TOP).mcs $(FPGA_TOP).prm
 	echo "open_hw" > flash.tcl
 	echo "connect_hw_server" >> flash.tcl
 	echo "open_hw_target" >> flash.tcl
@@ -79,6 +81,7 @@ flash: $(FPGA_TOP).mcs
 	echo "create_hw_cfgmem -hw_device [current_hw_device] [lindex [get_cfgmem_parts {mt28gu01gaax1e-bpi-x16}] 0]" >> flash.tcl
 	echo "current_hw_cfgmem -hw_device [current_hw_device] [get_property PROGRAM.HW_CFGMEM [current_hw_device]]" >> flash.tcl
 	echo "set_property PROGRAM.FILES [list "$(FPGA_TOP).mcs"] [current_hw_cfgmem]" >> flash.tcl
+	echo "set_property PROGRAM.PRM_FILES [list "$(FPGA_TOP).prm"] [current_hw_cfgmem]" >> flash.tcl
 	echo "set_property PROGRAM.ERASE 1 [current_hw_cfgmem]" >> flash.tcl
 	echo "set_property PROGRAM.CFG_PROGRAM 1 [current_hw_cfgmem]" >> flash.tcl
 	echo "set_property PROGRAM.VERIFY 1 [current_hw_cfgmem]" >> flash.tcl
