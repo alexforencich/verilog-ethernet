@@ -64,5 +64,5 @@ program: $(FPGA_TOP).bit
 	echo "set_property PROGRAM.FILE {$(FPGA_TOP).bit} [current_hw_device]" >> program.tcl
 	echo "program_hw_devices [current_hw_device]" >> program.tcl
 	echo "exit" >> program.tcl
-	vivado -mode batch -source program.tcl
+	vivado -nojournal -nolog -mode batch -source program.tcl
 

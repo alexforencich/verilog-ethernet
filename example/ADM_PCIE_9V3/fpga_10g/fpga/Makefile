@@ -65,12 +65,12 @@ program: $(FPGA_TOP).bit
 	echo "set_property PROGRAM.FILE {$(FPGA_TOP).bit} [current_hw_device]" >> program.tcl
 	echo "program_hw_devices [current_hw_device]" >> program.tcl
 	echo "exit" >> program.tcl
-	vivado -mode batch -source program.tcl
+	vivado -nojournal -nolog -mode batch -source program.tcl
 
 %_primary.mcs %_secondary.mcs %_primary.prm %_secondary.prm: %.bit
 	echo "write_cfgmem -force -format mcs -size 64 -interface SPIx8 -loadbit {up 0x0000000 $*.bit} -checksum -file $*.mcs" > generate_mcs.tcl
 	echo "exit" >> generate_mcs.tcl
-	vivado -mode batch -source generate_mcs.tcl
+	vivado -nojournal -nolog -mode batch -source generate_mcs.tcl
 	mkdir -p rev
 	COUNT=100; \
 	while [ -e rev/$*_rev$$COUNT.bit ]; \
@@ -102,5 +102,5 @@ flash: $(FPGA_TOP)_primary.mcs $(FPGA_TOP)_secondary.mcs $(FPGA_TOP)_primary.prm
 	echo "program_hw_cfgmem -hw_cfgmem [current_hw_cfgmem]" >> flash.tcl
 	echo "boot_hw_device [current_hw_device]" >> flash.tcl
 	echo "exit" >> flash.tcl
-	vivado -mode batch -source flash.tcl
+	vivado -nojournal -nolog -mode batch -source flash.tcl
 
