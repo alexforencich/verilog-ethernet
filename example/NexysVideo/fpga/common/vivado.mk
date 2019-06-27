@@ -31,7 +31,7 @@
 .PHONY: clean fpga
 
 # prevent make from deleting intermediate files and reports
-.PRECIOUS: %.xpr %.bit
+.PRECIOUS: %.xpr %.bit %.mcs %.prm
 .SECONDARY:
 
 CONFIG ?= config.mk
@@ -63,7 +63,7 @@ tmpclean:
 	-rm -rf create_project.tcl run_synth.tcl run_impl.tcl generate_bit.tcl
 
 clean: tmpclean
-	-rm -rf *.bit program.tcl
+	-rm -rf *.bit program.tcl generate_mcs.tcl *.mcs *.prm flash.tcl
 
 distclean: clean
 	-rm -rf rev
@@ -83,7 +83,7 @@ distclean: clean
 	for x in $(XDC_FILES_REL); do echo "add_files -fileset constrs_1 $$x" >> create_project.tcl; done
 	for x in $(XCI_FILES_REL); do echo "import_ip $$x" >> create_project.tcl; done
 	echo "exit" >> create_project.tcl
-	vivado -mode batch -source create_project.tcl
+	vivado -nojournal -nolog -mode batch -source create_project.tcl
 
 # synthesis run
 %.runs/synth_1/%.dcp: %.xpr $(SYN_FILES_REL) $(INC_FILES_REL) $(XDC_FILES_REL)
@@ -92,7 +92,7 @@ distclean: clean
 	echo "launch_runs synth_1" >> run_synth.tcl
 	echo "wait_on_run synth_1" >> run_synth.tcl
 	echo "exit" >> run_synth.tcl
-	vivado -mode batch -source run_synth.tcl
+	vivado -nojournal -nolog -mode batch -source run_synth.tcl
 
 # implementation run
 %.runs/impl_1/%_routed.dcp: %.runs/synth_1/%.dcp
@@ -101,7 +101,7 @@ distclean: clean
 	echo "launch_runs impl_1" >> run_impl.tcl
 	echo "wait_on_run impl_1" >> run_impl.tcl
 	echo "exit" >> run_impl.tcl
-	vivado -mode batch -source run_impl.tcl
+	vivado -nojournal -nolog -mode batch -source run_impl.tcl
 
 # bit file
 %.bit: %.runs/impl_1/%_routed.dcp
@@ -109,10 +109,10 @@ distclean: clean
 	echo "open_run impl_1" >> generate_bit.tcl
 	echo "write_bitstream -force $*.bit" >> generate_bit.tcl
 	echo "exit" >> generate_bit.tcl
-	vivado -mode batch -source generate_bit.tcl
+	vivado -nojournal -nolog -mode batch -source generate_bit.tcl
 	mkdir -p rev
 	EXT=bit; COUNT=100; \
 	while [ -e rev/$*_rev$$COUNT.$$EXT ]; \
-	do let COUNT=COUNT+1; done; \
+	do COUNT=$$((COUNT+1)); done; \
 	cp $@ rev/$*_rev$$COUNT.$$EXT; \
 	echo "Output: rev/$*_rev$$COUNT.$$EXT";
