@@ -11,8 +11,9 @@ processing (8 bit and 64 bit datapaths).  Includes modules for handling
 Ethernet frames as well as IP, UDP, and ARP and the components for
 constructing a complete UDP/IP stack.  Includes MAC modules for gigabit and
 10G/25G, a 10G/25G PCS/PMA PHY module, and a 10G/25G combination MAC/PCS/PMA
-module.  Also includes full MyHDL testbench with intelligent bus cosimulation
-endpoints.
+module.  Includes various PTP related components for implementing systems that
+require precise time synchronization.  Also includes full MyHDL testbench with
+intelligent bus cosimulation endpoints.
 
 For IP and ARP support only, use ip_complete (1G) or ip_complete_64 (10G/25G).
 
@@ -23,6 +24,9 @@ Top level gigabit and 10G/25G MAC modules are eth_mac_*, with various
 interfaces and with/without FIFOs.  Top level 10G/25G PCS/PMA PHY module is
 eth_phy_10g.  Top level 10G/25G MAC/PCS/PMA combination module is
 eth_mac_phy_10g.
+
+PTP components include a configurable PTP clock (ptp_clock) and a PTP clock CDC
+module (ptp_clock_cdc) for transferring PTP time across clock domains.
 
 ## Documentation
 
@@ -280,6 +284,17 @@ PTP clock module with PPS output.  Generates both 64 bit and 96 bit timestamp
 formats.  Fine frequeny adjustment supported with configurable fractional
 nanoseconds field.
 
+### ptp_clock_cdc module
+
+PTP clock CDC module with PPS output.  Use this module to transfer and deskew a
+free-running PTP clock across clock domains.  Currently supports 96 bit
+timestamps.
+
+### ptp_ts_extract module
+
+PTP timestamp extract module.  Use this module to extract a PTP timestamp
+embedded in the tuser sideband signal of an AXI stream interface.
+
 ### rgmii_phy_if module
 
 RGMII PHY interface and clocking logic.
@@ -433,6 +448,8 @@ and data lines.
     rtl/mii_phy_if.v                : MII PHY interface
     rtl/oddr.v                      : Generic DDR output register
     rtl/ptp_clock.v                 : PTP clock
+    rtl/ptp_clock_cdc.v             : PTP clock CDC
+    rtl/ptp_ts_extract.v            : PTP timestamp extract
     rtl/rgmii_phy_if.v              : RGMII PHY interface
     rtl/ssio_ddr_in.v               : Generic source synchronous IO DDR input module
     rtl/ssio_ddr_in_diff.v          : Generic source synchronous IO DDR differential input module
