@@ -289,8 +289,8 @@ nanoseconds field.
 ### ptp_clock_cdc module
 
 PTP clock CDC module with PPS output.  Use this module to transfer and deskew a
-free-running PTP clock across clock domains.  Currently supports 96 bit
-timestamps.
+free-running PTP clock across clock domains.  Supports both 64 and 96 bit
+timestamp formats.
 
 ### ptp_ts_extract module
 
