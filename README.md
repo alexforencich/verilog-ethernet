@@ -25,8 +25,10 @@ interfaces and with/without FIFOs.  Top level 10G/25G PCS/PMA PHY module is
 eth_phy_10g.  Top level 10G/25G MAC/PCS/PMA combination module is
 eth_mac_phy_10g.
 
-PTP components include a configurable PTP clock (ptp_clock) and a PTP clock CDC
-module (ptp_clock_cdc) for transferring PTP time across clock domains.
+PTP components include a configurable PTP clock (ptp_clock), a PTP clock CDC
+module (ptp_clock_cdc) for transferring PTP time across clock domains, and a
+configurable PTP period output module for precisely generating arbitrary
+frequencies from PTP time.
 
 ## Documentation
 
@@ -295,6 +297,11 @@ timestamps.
 PTP timestamp extract module.  Use this module to extract a PTP timestamp
 embedded in the tuser sideband signal of an AXI stream interface.
 
+### ptp_perout module
+
+PTP period output module.  Generates a pulse output, configurable in absolute
+start time, period, and width, based on PTP time from a PTP clock.
+
 ### rgmii_phy_if module
 
 RGMII PHY interface and clocking logic.
@@ -450,6 +457,7 @@ and data lines.
     rtl/ptp_clock.v                 : PTP clock
     rtl/ptp_clock_cdc.v             : PTP clock CDC
     rtl/ptp_ts_extract.v            : PTP timestamp extract
+    rtl/ptp_perout.v                : PTP period out
     rtl/rgmii_phy_if.v              : RGMII PHY interface
     rtl/ssio_ddr_in.v               : Generic source synchronous IO DDR input module
     rtl/ssio_ddr_in_diff.v          : Generic source synchronous IO DDR differential input module
