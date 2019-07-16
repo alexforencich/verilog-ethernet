@@ -43,7 +43,6 @@ module ptp_ts_extract #
      * AXI stream input
      */
     input  wire                   s_axis_tvalid,
-    input  wire                   s_axis_tready,
     input  wire                   s_axis_tlast,
     input  wire [USER_WIDTH-1:0]  s_axis_tuser,
 
@@ -57,10 +56,10 @@ module ptp_ts_extract #
 reg frame_reg = 1'b0;
 
 assign m_axis_ts = s_axis_tuser >> TS_OFFSET;
-assign m_axis_ts_valid = s_axis_tvalid && s_axis_tready && !frame_reg;
+assign m_axis_ts_valid = s_axis_tvalid && !frame_reg;
 
 always @(posedge clk) begin
-    if (s_axis_tvalid && s_axis_tready) begin
+    if (s_axis_tvalid) begin
         frame_reg <= !s_axis_tlast;
     end
 
