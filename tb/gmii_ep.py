@@ -193,6 +193,7 @@ class GMIISink(object):
         return not self.queue
 
     def wait(self, timeout=0):
+        yield delay(0)
         if self.queue:
             return
         if timeout:
