@@ -41,8 +41,8 @@ parameter DEST_ENABLE = 1;
 parameter DEST_WIDTH = 8;
 parameter USER_ENABLE = 1;
 parameter USER_WIDTH = 1;
-parameter FRAME_FIFO_ADDR_WIDTH = 12;
-parameter HEADER_FIFO_ADDR_WIDTH = 3;
+parameter FRAME_FIFO_DEPTH = 4096;
+parameter HEADER_FIFO_DEPTH = 8;
 
 // Inputs
 reg clk = 0;
@@ -125,8 +125,8 @@ axis_frame_length_adjust_fifo #(
     .DEST_WIDTH(DEST_WIDTH),
     .USER_ENABLE(USER_ENABLE),
     .USER_WIDTH(USER_WIDTH),
-    .FRAME_FIFO_ADDR_WIDTH(FRAME_FIFO_ADDR_WIDTH),
-    .HEADER_FIFO_ADDR_WIDTH(HEADER_FIFO_ADDR_WIDTH)
+    .FRAME_FIFO_DEPTH(FRAME_FIFO_DEPTH),
+    .HEADER_FIFO_DEPTH(HEADER_FIFO_DEPTH)
 )
 UUT (
     .clk(clk),

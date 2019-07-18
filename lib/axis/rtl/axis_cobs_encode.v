@@ -101,7 +101,7 @@ wire code_fifo_out_tuser;
 reg code_fifo_out_tready;
 
 axis_fifo #(
-    .ADDR_WIDTH(8),
+    .DEPTH(256),
     .DATA_WIDTH(8),
     .KEEP_ENABLE(0),
     .LAST_ENABLE(1),
@@ -149,7 +149,7 @@ wire data_fifo_out_tlast;
 reg data_fifo_out_tready;
 
 axis_fifo #(
-    .ADDR_WIDTH(8),
+    .DEPTH(256),
     .DATA_WIDTH(8),
     .KEEP_ENABLE(0),
     .LAST_ENABLE(1),

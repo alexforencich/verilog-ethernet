@@ -32,7 +32,7 @@ THE SOFTWARE.
 module test_axis_fifo_64;
 
 // Parameters
-parameter ADDR_WIDTH = 2;
+parameter DEPTH = 32;
 parameter DATA_WIDTH = 64;
 parameter KEEP_ENABLE = (DATA_WIDTH>8);
 parameter KEEP_WIDTH = (DATA_WIDTH/8);
@@ -105,7 +105,7 @@ initial begin
 end
 
 axis_fifo #(
-    .ADDR_WIDTH(ADDR_WIDTH),
+    .DEPTH(DEPTH),
     .DATA_WIDTH(DATA_WIDTH),
     .KEEP_ENABLE(KEEP_ENABLE),
     .KEEP_WIDTH(KEEP_WIDTH),

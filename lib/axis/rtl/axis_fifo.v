@@ -31,7 +31,7 @@ THE SOFTWARE.
  */
 module axis_fifo #
 (
-    parameter ADDR_WIDTH = 12,
+    parameter DEPTH = 4096,
     parameter DATA_WIDTH = 8,
     parameter KEEP_ENABLE = (DATA_WIDTH>8),
     parameter KEEP_WIDTH = (DATA_WIDTH/8),
@@ -83,6 +83,8 @@ module axis_fifo #
     output wire                   status_bad_frame,
     output wire                   status_good_frame
 );
+
+parameter ADDR_WIDTH = (KEEP_ENABLE && KEEP_WIDTH > 1) ? $clog2(DEPTH/KEEP_WIDTH) : $clog2(DEPTH);
 
 // check configuration
 initial begin
