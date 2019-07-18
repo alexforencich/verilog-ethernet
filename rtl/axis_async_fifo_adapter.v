@@ -31,7 +31,7 @@ THE SOFTWARE.
  */
 module axis_async_fifo_adapter #
 (
-    parameter ADDR_WIDTH = 12,
+    parameter DEPTH = 4096,
     parameter S_DATA_WIDTH = 8,
     parameter S_KEEP_ENABLE = (S_DATA_WIDTH>8),
     parameter S_KEEP_WIDTH = (S_DATA_WIDTH/8),
@@ -269,7 +269,7 @@ end
 endgenerate
 
 axis_async_fifo #(
-    .ADDR_WIDTH(ADDR_WIDTH),
+    .DEPTH(DEPTH),
     .DATA_WIDTH(DATA_WIDTH),
     .KEEP_ENABLE(EXPAND_BUS ? M_KEEP_ENABLE : S_KEEP_ENABLE),
     .KEEP_WIDTH(KEEP_WIDTH),

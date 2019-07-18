@@ -40,8 +40,8 @@ module axis_frame_length_adjust_fifo #
     parameter DEST_WIDTH = 8,
     parameter USER_ENABLE = 1,
     parameter USER_WIDTH = 1,
-    parameter FRAME_FIFO_ADDR_WIDTH = 12,
-    parameter HEADER_FIFO_ADDR_WIDTH = 3
+    parameter FRAME_FIFO_DEPTH = 4096,
+    parameter HEADER_FIFO_DEPTH = 8
 )
 (
     input  wire                   clk,
@@ -145,7 +145,7 @@ axis_frame_length_adjust_inst (
 );
 
 axis_fifo #(
-    .ADDR_WIDTH(FRAME_FIFO_ADDR_WIDTH),
+    .DEPTH(FRAME_FIFO_DEPTH),
     .DATA_WIDTH(DATA_WIDTH),
     .KEEP_ENABLE(KEEP_ENABLE),
     .KEEP_WIDTH(KEEP_WIDTH),
@@ -186,7 +186,7 @@ frame_fifo_inst (
 );
 
 axis_fifo #(
-    .ADDR_WIDTH(HEADER_FIFO_ADDR_WIDTH),
+    .DEPTH(HEADER_FIFO_DEPTH),
     .DATA_WIDTH(1+1+16+16),
     .KEEP_ENABLE(0),
     .LAST_ENABLE(0),
