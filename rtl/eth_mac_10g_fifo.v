@@ -37,11 +37,11 @@ module eth_mac_10g_fifo #
     parameter ENABLE_PADDING = 1,
     parameter ENABLE_DIC = 1,
     parameter MIN_FRAME_LENGTH = 64,
-    parameter TX_FIFO_ADDR_WIDTH = 9,
+    parameter TX_FIFO_ADDR_WIDTH = 12-$clog2(KEEP_WIDTH),
     parameter TX_FRAME_FIFO = 1,
     parameter TX_DROP_BAD_FRAME = TX_FRAME_FIFO,
     parameter TX_DROP_WHEN_FULL = 0,
-    parameter RX_FIFO_ADDR_WIDTH = 9,
+    parameter RX_FIFO_ADDR_WIDTH = 12-$clog2(KEEP_WIDTH),
     parameter RX_FRAME_FIFO = 1,
     parameter RX_DROP_BAD_FRAME = RX_FRAME_FIFO,
     parameter RX_DROP_WHEN_FULL = RX_FRAME_FIFO
