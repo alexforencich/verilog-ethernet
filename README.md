@@ -40,6 +40,13 @@ Configurable word-based or frame-based asynchronous FIFO with parametrizable
 data width, depth, type, and bad frame detection.  Supports power of two
 depths only.
 
+### axis_async_fifo_adapter module
+
+Configurable word-based or frame-based asynchronous FIFO with parametrizable
+data width, depth, type, and bad frame detection.  Supports different input
+and output data widths, inserting an axis_adapter instance appropriately.
+Supports power of two depths only.
+
 ### axis_broadcast module
 
 AXI stream broadcaster.  Duplicates one input stream across multiple output
@@ -71,6 +78,13 @@ count.
 Configurable word-based or frame-based synchronous FIFO with parametrizable
 data width, depth, type, and bad frame detection.  Supports power of two
 depths only.
+
+### axis_fifo_adapter module
+
+Configurable word-based or frame-based synchronous FIFO with parametrizable
+data width, depth, type, and bad frame detection.  Supports different input
+and output data widths, inserting an axis_adapter instance appropriately.
+Supports power of two depths only.
 
 ### axis_frame_join module
 
@@ -191,12 +205,14 @@ Parametrizable priority encoder.
     axis_adapter.v                     : Parametrizable bus width adapter
     axis_arb_mux.v                     : Parametrizable arbitrated multiplexer
     axis_async_fifo.v                  : Parametrizable asynchronous FIFO
+    axis_async_fifo_adapter.v          : FIFO/width adapter wrapper
     axis_broadcast.v                   : AXI stream broadcaster
     axis_cobs_decode.v                 : COBS decoder
     axis_cobs_encode.v                 : COBS encoder
     axis_crosspoint.v                  : Parametrizable crosspoint switch
     axis_demux.v                       : Parametrizable demultiplexer
     axis_fifo.v                        : Parametrizable synchronous FIFO
+    axis_fifo_adapter.v                : FIFO/width adapter wrapper
     axis_frame_join.v                  : Parametrizable frame joiner
     axis_frame_length_adjust.v         : Frame length adjuster
     axis_frame_length_adjust_fifo.v    : Frame length adjuster with FIFO
