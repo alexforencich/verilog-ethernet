@@ -32,10 +32,19 @@ THE SOFTWARE.
 module test_eth_mac_1g_fifo;
 
 // Parameters
+parameter AXIS_DATA_WIDTH = 8;
+parameter AXIS_KEEP_ENABLE = (AXIS_DATA_WIDTH>8);
+parameter AXIS_KEEP_WIDTH = (AXIS_DATA_WIDTH/8);
 parameter ENABLE_PADDING = 1;
 parameter MIN_FRAME_LENGTH = 64;
-parameter TX_FIFO_ADDR_WIDTH = 9;
-parameter RX_FIFO_ADDR_WIDTH = 9;
+parameter TX_FIFO_DEPTH = 4096;
+parameter TX_FRAME_FIFO = 1;
+parameter TX_DROP_BAD_FRAME = TX_FRAME_FIFO;
+parameter TX_DROP_WHEN_FULL = 0;
+parameter RX_FIFO_DEPTH = 4096;
+parameter RX_FRAME_FIFO = 1;
+parameter RX_DROP_BAD_FRAME = RX_FRAME_FIFO;
+parameter RX_DROP_WHEN_FULL = RX_FRAME_FIFO;
 
 // Inputs
 reg clk = 0;
@@ -48,7 +57,8 @@ reg tx_clk = 0;
 reg tx_rst = 0;
 reg logic_clk = 0;
 reg logic_rst = 0;
-reg [7:0] tx_axis_tdata = 0;
+reg [AXIS_DATA_WIDTH-1:0] tx_axis_tdata = 0;
+reg [AXIS_KEEP_WIDTH-1:0] tx_axis_tkeep = 0;
 reg tx_axis_tvalid = 0;
 reg tx_axis_tlast = 0;
 reg tx_axis_tuser = 0;
@@ -64,7 +74,8 @@ reg [7:0] ifg_delay = 0;
 
 // Outputs
 wire tx_axis_tready;
-wire [7:0] rx_axis_tdata;
+wire [AXIS_DATA_WIDTH-1:0] rx_axis_tdata;
+wire [AXIS_KEEP_WIDTH-1:0] rx_axis_tkeep;
 wire rx_axis_tvalid;
 wire rx_axis_tlast;
 wire rx_axis_tuser;
@@ -94,6 +105,7 @@ initial begin
         logic_clk,
         logic_rst,
         tx_axis_tdata,
+        tx_axis_tkeep,
         tx_axis_tvalid,
         tx_axis_tlast,
         tx_axis_tuser,
@@ -110,6 +122,7 @@ initial begin
     $to_myhdl(
         tx_axis_tready,
         rx_axis_tdata,
+        rx_axis_tkeep,
         rx_axis_tvalid,
         rx_axis_tlast,
         rx_axis_tuser,
@@ -133,10 +146,19 @@ initial begin
 end
 
 eth_mac_1g_fifo #(
+    .AXIS_DATA_WIDTH(AXIS_DATA_WIDTH),
+    .AXIS_KEEP_ENABLE(AXIS_KEEP_ENABLE),
+    .AXIS_KEEP_WIDTH(AXIS_KEEP_WIDTH),
     .ENABLE_PADDING(ENABLE_PADDING),
     .MIN_FRAME_LENGTH(MIN_FRAME_LENGTH),
-    .TX_FIFO_ADDR_WIDTH(TX_FIFO_ADDR_WIDTH),
-    .RX_FIFO_ADDR_WIDTH(RX_FIFO_ADDR_WIDTH)
+    .TX_FIFO_DEPTH(TX_FIFO_DEPTH),
+    .TX_FRAME_FIFO(TX_FRAME_FIFO),
+    .TX_DROP_BAD_FRAME(TX_DROP_BAD_FRAME),
+    .TX_DROP_WHEN_FULL(TX_DROP_WHEN_FULL),
+    .RX_FIFO_DEPTH(RX_FIFO_DEPTH),
+    .RX_FRAME_FIFO(RX_FRAME_FIFO),
+    .RX_DROP_BAD_FRAME(RX_DROP_BAD_FRAME),
+    .RX_DROP_WHEN_FULL(RX_DROP_WHEN_FULL)
 )
 UUT (
     .rx_clk(rx_clk),
@@ -146,11 +168,13 @@ UUT (
     .logic_clk(logic_clk),
     .logic_rst(logic_rst),
     .tx_axis_tdata(tx_axis_tdata),
+    .tx_axis_tkeep(tx_axis_tkeep),
     .tx_axis_tvalid(tx_axis_tvalid),
     .tx_axis_tready(tx_axis_tready),
     .tx_axis_tlast(tx_axis_tlast),
     .tx_axis_tuser(tx_axis_tuser),
     .rx_axis_tdata(rx_axis_tdata),
+    .rx_axis_tkeep(rx_axis_tkeep),
     .rx_axis_tvalid(rx_axis_tvalid),
     .rx_axis_tready(rx_axis_tready),
     .rx_axis_tlast(rx_axis_tlast),

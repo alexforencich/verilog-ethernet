@@ -41,6 +41,7 @@ srcs.append("../rtl/axis_xgmii_rx_64.v")
 srcs.append("../rtl/axis_xgmii_tx_64.v")
 srcs.append("../rtl/eth_mac_10g.v")
 srcs.append("../lib/axis/rtl/axis_async_fifo.v")
+srcs.append("../lib/axis/rtl/axis_async_fifo_adapter.v")
 srcs.append("%s.v" % testbench)
 
 src = ' '.join(srcs)
@@ -51,13 +52,21 @@ def bench():
 
     # Parameters
     DATA_WIDTH = 64
-    KEEP_WIDTH = (DATA_WIDTH/8)
     CTRL_WIDTH = (DATA_WIDTH/8)
+    AXIS_DATA_WIDTH = DATA_WIDTH
+    AXIS_KEEP_ENABLE = (AXIS_DATA_WIDTH>8)
+    AXIS_KEEP_WIDTH = (AXIS_DATA_WIDTH/8)
     ENABLE_PADDING = 1
     ENABLE_DIC = 1
     MIN_FRAME_LENGTH = 64
-    TX_FIFO_ADDR_WIDTH = 9
-    RX_FIFO_ADDR_WIDTH = 9
+    TX_FIFO_DEPTH = 4096
+    TX_FRAME_FIFO = 1
+    TX_DROP_BAD_FRAME = TX_FRAME_FIFO
+    TX_DROP_WHEN_FULL = 0
+    RX_FIFO_DEPTH = 4096
+    RX_FRAME_FIFO = 1
+    RX_DROP_BAD_FRAME = RX_FRAME_FIFO
+    RX_DROP_WHEN_FULL = RX_FRAME_FIFO
 
     # Inputs
     clk = Signal(bool(0))
@@ -70,8 +79,8 @@ def bench():
     tx_rst = Signal(bool(0))
     logic_clk = Signal(bool(0))
     logic_rst = Signal(bool(0))
-    tx_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
-    tx_axis_tkeep = Signal(intbv(0)[KEEP_WIDTH:])
+    tx_axis_tdata = Signal(intbv(0)[AXIS_DATA_WIDTH:])
+    tx_axis_tkeep = Signal(intbv(0)[AXIS_KEEP_WIDTH:])
     tx_axis_tvalid = Signal(bool(0))
     tx_axis_tlast = Signal(bool(0))
     tx_axis_tuser = Signal(bool(0))
@@ -82,8 +91,8 @@ def bench():
 
     # Outputs
     tx_axis_tready = Signal(bool(0))
-    rx_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
-    rx_axis_tkeep = Signal(intbv(0)[KEEP_WIDTH:])
+    rx_axis_tdata = Signal(intbv(0)[AXIS_DATA_WIDTH:])
+    rx_axis_tkeep = Signal(intbv(0)[AXIS_KEEP_WIDTH:])
     rx_axis_tvalid = Signal(bool(0))
     rx_axis_tlast = Signal(bool(0))
     rx_axis_tuser = Signal(bool(0))

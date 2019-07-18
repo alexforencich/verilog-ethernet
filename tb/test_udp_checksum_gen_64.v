@@ -32,8 +32,8 @@ THE SOFTWARE.
 module test_udp_checksum_gen_64;
 
 // Parameters
-parameter PAYLOAD_FIFO_ADDR_WIDTH = 8;
-parameter HEADER_FIFO_ADDR_WIDTH = 3;
+parameter PAYLOAD_FIFO_DEPTH = 2048;
+parameter HEADER_FIFO_DEPTH = 8;
 
 // Inputs
 reg clk = 0;
@@ -165,8 +165,8 @@ initial begin
 end
 
 udp_checksum_gen_64 #(
-    .PAYLOAD_FIFO_ADDR_WIDTH(PAYLOAD_FIFO_ADDR_WIDTH),
-    .HEADER_FIFO_ADDR_WIDTH(HEADER_FIFO_ADDR_WIDTH)
+    .PAYLOAD_FIFO_DEPTH(PAYLOAD_FIFO_DEPTH),
+    .HEADER_FIFO_DEPTH(HEADER_FIFO_DEPTH)
 )
 UUT (
     .clk(clk),

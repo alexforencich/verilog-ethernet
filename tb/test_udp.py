@@ -48,6 +48,10 @@ build_cmd = "iverilog -o %s.vvp %s" % (testbench, src)
 
 def bench():
 
+    # Parameters
+    CHECKSUM_PAYLOAD_FIFO_DEPTH = 2048
+    CHECKSUM_HEADER_FIFO_DEPTH = 8
+
     # Inputs
     clk = Signal(bool(0))
     rst = Signal(bool(0))

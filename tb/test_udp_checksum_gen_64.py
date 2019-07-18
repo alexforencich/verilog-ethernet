@@ -47,8 +47,8 @@ build_cmd = "iverilog -o %s.vvp %s" % (testbench, src)
 def bench():
 
     # Parameters
-    PAYLOAD_FIFO_ADDR_WIDTH = 8
-    HEADER_FIFO_ADDR_WIDTH = 3
+    PAYLOAD_FIFO_DEPTH = 2048
+    HEADER_FIFO_DEPTH = 8
 
     # Inputs
     clk = Signal(bool(0))

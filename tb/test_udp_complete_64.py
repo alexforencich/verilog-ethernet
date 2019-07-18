@@ -63,6 +63,15 @@ build_cmd = "iverilog -o %s.vvp %s" % (testbench, src)
 
 def bench():
 
+    # Parameters
+    ARP_CACHE_ADDR_WIDTH = 2
+    ARP_REQUEST_RETRY_COUNT = 4
+    ARP_REQUEST_RETRY_INTERVAL = 150
+    ARP_REQUEST_TIMEOUT = 400
+    UDP_CHECKSUM_GEN_ENABLE = 1
+    UDP_CHECKSUM_PAYLOAD_FIFO_DEPTH = 2048
+    UDP_CHECKSUM_HEADER_FIFO_DEPTH = 8
+
     # Inputs
     clk = Signal(bool(0))
     rst = Signal(bool(0))

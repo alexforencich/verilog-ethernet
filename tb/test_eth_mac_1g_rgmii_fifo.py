@@ -47,6 +47,7 @@ srcs.append("../rtl/oddr.v")
 srcs.append("../rtl/ssio_ddr_in.v")
 srcs.append("../rtl/ssio_ddr_out.v")
 srcs.append("../lib/axis/rtl/axis_async_fifo.v")
+srcs.append("../lib/axis/rtl/axis_async_fifo_adapter.v")
 srcs.append("%s.v" % testbench)
 
 src = ' '.join(srcs)
@@ -60,8 +61,19 @@ def bench():
     IODDR_STYLE = "IODDR2"
     CLOCK_INPUT_STYLE = "BUFIO2"
     USE_CLK90 = "TRUE"
+    AXIS_DATA_WIDTH = 8
+    AXIS_KEEP_ENABLE = (AXIS_DATA_WIDTH>8)
+    AXIS_KEEP_WIDTH = (AXIS_DATA_WIDTH/8)
     ENABLE_PADDING = 1
     MIN_FRAME_LENGTH = 64
+    TX_FIFO_DEPTH = 4096
+    TX_FRAME_FIFO = 1
+    TX_DROP_BAD_FRAME = TX_FRAME_FIFO
+    TX_DROP_WHEN_FULL = 0
+    RX_FIFO_DEPTH = 4096
+    RX_FRAME_FIFO = 1
+    RX_DROP_BAD_FRAME = RX_FRAME_FIFO
+    RX_DROP_WHEN_FULL = RX_FRAME_FIFO
 
     # Inputs
     clk = Signal(bool(0))
@@ -73,7 +85,8 @@ def bench():
     gtx_rst = Signal(bool(0))
     logic_clk = Signal(bool(0))
     logic_rst = Signal(bool(0))
-    tx_axis_tdata = Signal(intbv(0)[8:])
+    tx_axis_tdata = Signal(intbv(0)[AXIS_DATA_WIDTH:])
+    tx_axis_tkeep = Signal(intbv(1)[AXIS_KEEP_WIDTH:])
     tx_axis_tvalid = Signal(bool(0))
     tx_axis_tlast = Signal(bool(0))
     tx_axis_tuser = Signal(bool(0))
@@ -85,7 +98,8 @@ def bench():
 
     # Outputs
     tx_axis_tready = Signal(bool(0))
-    rx_axis_tdata = Signal(intbv(0)[8:])
+    rx_axis_tdata = Signal(intbv(0)[AXIS_DATA_WIDTH:])
+    rx_axis_tkeep = Signal(intbv(1)[AXIS_KEEP_WIDTH:])
     rx_axis_tvalid = Signal(bool(0))
     rx_axis_tlast = Signal(bool(0))
     rx_axis_tuser = Signal(bool(0))
@@ -137,6 +151,7 @@ def bench():
         logic_clk,
         logic_rst,
         tdata=tx_axis_tdata,
+        tkeep=tx_axis_tkeep,
         tvalid=tx_axis_tvalid,
         tready=tx_axis_tready,
         tlast=tx_axis_tlast,
@@ -151,6 +166,7 @@ def bench():
         logic_clk,
         logic_rst,
         tdata=rx_axis_tdata,
+        tkeep=rx_axis_tkeep,
         tvalid=rx_axis_tvalid,
         tready=rx_axis_tready,
         tlast=rx_axis_tlast,
@@ -176,12 +192,14 @@ def bench():
         logic_rst=logic_rst,
 
         tx_axis_tdata=tx_axis_tdata,
+        tx_axis_tkeep=tx_axis_tkeep,
         tx_axis_tvalid=tx_axis_tvalid,
         tx_axis_tready=tx_axis_tready,
         tx_axis_tlast=tx_axis_tlast,
         tx_axis_tuser=tx_axis_tuser,
 
         rx_axis_tdata=rx_axis_tdata,
+        rx_axis_tkeep=rx_axis_tkeep,
         rx_axis_tvalid=rx_axis_tvalid,
         rx_axis_tready=rx_axis_tready,
         rx_axis_tlast=rx_axis_tlast,

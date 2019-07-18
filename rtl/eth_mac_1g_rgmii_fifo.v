@@ -44,70 +44,75 @@ module eth_mac_1g_rgmii_fifo #
     parameter CLOCK_INPUT_STYLE = "BUFIO2",
     // Use 90 degree clock for RGMII transmit ("TRUE", "FALSE")
     parameter USE_CLK90 = "TRUE",
+    parameter AXIS_DATA_WIDTH = 8,
+    parameter AXIS_KEEP_ENABLE = (AXIS_DATA_WIDTH>8),
+    parameter AXIS_KEEP_WIDTH = (AXIS_DATA_WIDTH/8),
     parameter ENABLE_PADDING = 1,
     parameter MIN_FRAME_LENGTH = 64,
-    parameter TX_FIFO_ADDR_WIDTH = 12,
+    parameter TX_FIFO_DEPTH = 4096,
     parameter TX_FRAME_FIFO = 1,
     parameter TX_DROP_BAD_FRAME = TX_FRAME_FIFO,
     parameter TX_DROP_WHEN_FULL = 0,
-    parameter RX_FIFO_ADDR_WIDTH = 12,
+    parameter RX_FIFO_DEPTH = 4096,
     parameter RX_FRAME_FIFO = 1,
     parameter RX_DROP_BAD_FRAME = RX_FRAME_FIFO,
     parameter RX_DROP_WHEN_FULL = RX_FRAME_FIFO
 )
 (
-    input  wire        gtx_clk,
-    input  wire        gtx_clk90,
-    input  wire        gtx_rst,
-    input  wire        logic_clk,
-    input  wire        logic_rst,
+    input  wire                       gtx_clk,
+    input  wire                       gtx_clk90,
+    input  wire                       gtx_rst,
+    input  wire                       logic_clk,
+    input  wire                       logic_rst,
 
     /*
      * AXI input
      */
-    input  wire [7:0]  tx_axis_tdata,
-    input  wire        tx_axis_tvalid,
-    output wire        tx_axis_tready,
-    input  wire        tx_axis_tlast,
-    input  wire        tx_axis_tuser,
+    input  wire [AXIS_DATA_WIDTH-1:0] tx_axis_tdata,
+    input  wire [AXIS_KEEP_WIDTH-1:0] tx_axis_tkeep,
+    input  wire                       tx_axis_tvalid,
+    output wire                       tx_axis_tready,
+    input  wire                       tx_axis_tlast,
+    input  wire                       tx_axis_tuser,
 
     /*
      * AXI output
      */
-    output wire [7:0]  rx_axis_tdata,
-    output wire        rx_axis_tvalid,
-    input  wire        rx_axis_tready,
-    output wire        rx_axis_tlast,
-    output wire        rx_axis_tuser,
+    output wire [AXIS_DATA_WIDTH-1:0] rx_axis_tdata,
+    output wire [AXIS_KEEP_WIDTH-1:0] rx_axis_tkeep,
+    output wire                       rx_axis_tvalid,
+    input  wire                       rx_axis_tready,
+    output wire                       rx_axis_tlast,
+    output wire                       rx_axis_tuser,
 
     /*
      * RGMII interface
      */
-    input  wire        rgmii_rx_clk,
-    input  wire [3:0]  rgmii_rxd,
-    input  wire        rgmii_rx_ctl,
-    output wire        rgmii_tx_clk,
-    output wire [3:0]  rgmii_txd,
-    output wire        rgmii_tx_ctl,
+    input  wire                       rgmii_rx_clk,
+    input  wire [3:0]                 rgmii_rxd,
+    input  wire                       rgmii_rx_ctl,
+    output wire                       rgmii_tx_clk,
+    output wire [3:0]                 rgmii_txd,
+    output wire                       rgmii_tx_ctl,
 
     /*
      * Status
      */
-    output wire        tx_error_underflow,
-    output wire        tx_fifo_overflow,
-    output wire        tx_fifo_bad_frame,
-    output wire        tx_fifo_good_frame,
-    output wire        rx_error_bad_frame,
-    output wire        rx_error_bad_fcs,
-    output wire        rx_fifo_overflow,
-    output wire        rx_fifo_bad_frame,
-    output wire        rx_fifo_good_frame,
-    output wire [1:0]  speed,
+    output wire                       tx_error_underflow,
+    output wire                       tx_fifo_overflow,
+    output wire                       tx_fifo_bad_frame,
+    output wire                       tx_fifo_good_frame,
+    output wire                       rx_error_bad_frame,
+    output wire                       rx_error_bad_fcs,
+    output wire                       rx_fifo_overflow,
+    output wire                       rx_fifo_bad_frame,
+    output wire                       rx_fifo_good_frame,
+    output wire [1:0]                 speed,
 
     /*
      * Configuration
      */
-    input  wire [7:0]  ifg_delay
+    input  wire [7:0]                 ifg_delay
 );
 
 wire tx_clk;
@@ -237,11 +242,13 @@ eth_mac_1g_rgmii_inst (
     .ifg_delay(ifg_delay)
 );
 
-axis_async_fifo #(
-    .ADDR_WIDTH(TX_FIFO_ADDR_WIDTH),
-    .DATA_WIDTH(8),
-    .KEEP_ENABLE(0),
-    .LAST_ENABLE(1),
+axis_async_fifo_adapter #(
+    .DEPTH(TX_FIFO_DEPTH),
+    .S_DATA_WIDTH(AXIS_DATA_WIDTH),
+    .S_KEEP_ENABLE(AXIS_KEEP_ENABLE),
+    .S_KEEP_WIDTH(AXIS_KEEP_WIDTH),
+    .M_DATA_WIDTH(8),
+    .M_KEEP_ENABLE(0),
     .ID_ENABLE(0),
     .DEST_ENABLE(0),
     .USER_ENABLE(1),
@@ -253,12 +260,11 @@ axis_async_fifo #(
     .DROP_WHEN_FULL(TX_DROP_WHEN_FULL)
 )
 tx_fifo (
-    // Common reset
-    .async_rst(logic_rst | tx_rst),
     // AXI input
     .s_clk(logic_clk),
+    .s_rst(logic_rst),
     .s_axis_tdata(tx_axis_tdata),
-    .s_axis_tkeep(0),
+    .s_axis_tkeep(tx_axis_tkeep),
     .s_axis_tvalid(tx_axis_tvalid),
     .s_axis_tready(tx_axis_tready),
     .s_axis_tlast(tx_axis_tlast),
@@ -267,6 +273,7 @@ tx_fifo (
     .s_axis_tuser(tx_axis_tuser),
     // AXI output
     .m_clk(tx_clk),
+    .m_rst(tx_rst),
     .m_axis_tdata(tx_fifo_axis_tdata),
     .m_axis_tkeep(),
     .m_axis_tvalid(tx_fifo_axis_tvalid),
@@ -284,11 +291,13 @@ tx_fifo (
     .m_status_good_frame()
 );
 
-axis_async_fifo #(
-    .ADDR_WIDTH(RX_FIFO_ADDR_WIDTH),
-    .DATA_WIDTH(8),
-    .KEEP_ENABLE(0),
-    .LAST_ENABLE(1),
+axis_async_fifo_adapter #(
+    .DEPTH(RX_FIFO_DEPTH),
+    .S_DATA_WIDTH(8),
+    .S_KEEP_ENABLE(0),
+    .M_DATA_WIDTH(AXIS_DATA_WIDTH),
+    .M_KEEP_ENABLE(AXIS_KEEP_ENABLE),
+    .M_KEEP_WIDTH(AXIS_KEEP_WIDTH),
     .ID_ENABLE(0),
     .DEST_ENABLE(0),
     .USER_ENABLE(1),
@@ -300,10 +309,9 @@ axis_async_fifo #(
     .DROP_WHEN_FULL(TX_DROP_WHEN_FULL)
 )
 rx_fifo (
-    // Common reset
-    .async_rst(rx_rst | logic_rst),
     // AXI input
     .s_clk(rx_clk),
+    .s_rst(rx_rst),
     .s_axis_tdata(rx_fifo_axis_tdata),
     .s_axis_tkeep(0),
     .s_axis_tvalid(rx_fifo_axis_tvalid),
@@ -314,8 +322,9 @@ rx_fifo (
     .s_axis_tuser(rx_fifo_axis_tuser),
     // AXI output
     .m_clk(logic_clk),
+    .m_rst(logic_rst),
     .m_axis_tdata(rx_axis_tdata),
-    .m_axis_tkeep(),
+    .m_axis_tkeep(rx_axis_tkeep),
     .m_axis_tvalid(rx_axis_tvalid),
     .m_axis_tready(rx_axis_tready),
     .m_axis_tlast(rx_axis_tlast),

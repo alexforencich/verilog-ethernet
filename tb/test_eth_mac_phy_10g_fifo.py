@@ -48,6 +48,7 @@ srcs.append("../rtl/eth_phy_10g_rx_ber_mon.v")
 srcs.append("../rtl/eth_phy_10g_rx_frame_sync.v")
 srcs.append("../rtl/lfsr.v")
 srcs.append("../lib/axis/rtl/axis_async_fifo.v")
+srcs.append("../lib/axis/rtl/axis_async_fifo_adapter.v")
 srcs.append("%s.v" % testbench)
 
 src = ' '.join(srcs)
@@ -58,9 +59,10 @@ def bench():
 
     # Parameters
     DATA_WIDTH = 64
-    KEEP_WIDTH = int(DATA_WIDTH/8)
-    CTRL_WIDTH = int(DATA_WIDTH/8)
-    HDR_WIDTH = int(DATA_WIDTH/32)
+    HDR_WIDTH = (DATA_WIDTH/32)
+    AXIS_DATA_WIDTH = DATA_WIDTH
+    AXIS_KEEP_ENABLE = (AXIS_DATA_WIDTH>8)
+    AXIS_KEEP_WIDTH = (AXIS_DATA_WIDTH/8)
     ENABLE_PADDING = 1
     ENABLE_DIC = 1
     MIN_FRAME_LENGTH = 64
@@ -71,11 +73,11 @@ def bench():
     RX_SERDES_PIPELINE = 2
     SLIP_COUNT_WIDTH = 3
     COUNT_125US = 125000/6.4
-    TX_FIFO_ADDR_WIDTH = 12-(KEEP_WIDTH-1).bit_length()
+    TX_FIFO_DEPTH = 4096
     TX_FRAME_FIFO = 1
     TX_DROP_BAD_FRAME = TX_FRAME_FIFO
     TX_DROP_WHEN_FULL = 0
-    RX_FIFO_ADDR_WIDTH = 12-(KEEP_WIDTH-1).bit_length()
+    RX_FIFO_DEPTH = 4096
     RX_FRAME_FIFO = 1
     RX_DROP_BAD_FRAME = RX_FRAME_FIFO
     RX_DROP_WHEN_FULL = RX_FRAME_FIFO
@@ -91,8 +93,8 @@ def bench():
     tx_rst = Signal(bool(0))
     logic_clk = Signal(bool(0))
     logic_rst = Signal(bool(0))
-    tx_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
-    tx_axis_tkeep = Signal(intbv(0)[KEEP_WIDTH:])
+    tx_axis_tdata = Signal(intbv(0)[AXIS_DATA_WIDTH:])
+    tx_axis_tkeep = Signal(intbv(0)[AXIS_KEEP_WIDTH:])
     tx_axis_tvalid = Signal(bool(0))
     tx_axis_tlast = Signal(bool(0))
     tx_axis_tuser = Signal(bool(0))
@@ -108,8 +110,8 @@ def bench():
 
     # Outputs
     tx_axis_tready = Signal(bool(0))
-    rx_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
-    rx_axis_tkeep = Signal(intbv(0)[KEEP_WIDTH:])
+    rx_axis_tdata = Signal(intbv(0)[AXIS_DATA_WIDTH:])
+    rx_axis_tkeep = Signal(intbv(0)[AXIS_KEEP_WIDTH:])
     rx_axis_tvalid = Signal(bool(0))
     rx_axis_tlast = Signal(bool(0))
     rx_axis_tuser = Signal(bool(0))
@@ -131,6 +133,7 @@ def bench():
 
     # sources and sinks
     axis_source_pause = Signal(bool(0))
+    axis_sink_pause = Signal(bool(0))
 
     serdes_source = baser_serdes_ep.BaseRSerdesSource()
 
@@ -176,6 +179,7 @@ def bench():
         tready=rx_axis_tready,
         tlast=rx_axis_tlast,
         tuser=rx_axis_tuser,
+        pause=axis_sink_pause,
         name='axis_sink'
     )
 

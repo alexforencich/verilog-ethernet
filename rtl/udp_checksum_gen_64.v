@@ -31,8 +31,8 @@ THE SOFTWARE.
  */
 module udp_checksum_gen_64 #
 (
-    parameter PAYLOAD_FIFO_ADDR_WIDTH = 8,
-    parameter HEADER_FIFO_ADDR_WIDTH = 3
+    parameter PAYLOAD_FIFO_DEPTH = 2048,
+    parameter HEADER_FIFO_DEPTH = 8
 )
 (
     input  wire        clk,
@@ -140,6 +140,8 @@ header fields in parallel along with the UDP payload in a separate AXI stream.
 
 */
 
+parameter HEADER_FIFO_ADDR_WIDTH = $clog2(HEADER_FIFO_DEPTH);
+
 localparam [2:0]
     STATE_IDLE = 3'd0,
     STATE_SUM_HEADER = 3'd1,
@@ -202,7 +204,7 @@ wire m_udp_payload_fifo_tlast;
 wire m_udp_payload_fifo_tuser;
 
 axis_fifo #(
-    .ADDR_WIDTH(PAYLOAD_FIFO_ADDR_WIDTH),
+    .DEPTH(PAYLOAD_FIFO_DEPTH),
     .DATA_WIDTH(64),
     .KEEP_ENABLE(1),
     .KEEP_WIDTH(8),

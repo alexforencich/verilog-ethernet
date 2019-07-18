@@ -32,8 +32,8 @@ THE SOFTWARE.
 module udp #
 (
     parameter CHECKSUM_GEN_ENABLE = 1,
-    parameter CHECKSUM_PAYLOAD_FIFO_ADDR_WIDTH = 11,
-    parameter CHECKSUM_HEADER_FIFO_ADDR_WIDTH = 3
+    parameter CHECKSUM_PAYLOAD_FIFO_DEPTH = 2048,
+    parameter CHECKSUM_HEADER_FIFO_DEPTH = 8
 )
 (
     input  wire        clk,
@@ -256,8 +256,8 @@ generate
 if (CHECKSUM_GEN_ENABLE) begin
 
     udp_checksum_gen #(
-        .PAYLOAD_FIFO_ADDR_WIDTH(CHECKSUM_PAYLOAD_FIFO_ADDR_WIDTH),
-        .HEADER_FIFO_ADDR_WIDTH(CHECKSUM_HEADER_FIFO_ADDR_WIDTH)
+        .PAYLOAD_FIFO_DEPTH(CHECKSUM_PAYLOAD_FIFO_DEPTH),
+        .HEADER_FIFO_DEPTH(CHECKSUM_HEADER_FIFO_DEPTH)
     )
     udp_checksum_gen_inst (
         .clk(clk),
