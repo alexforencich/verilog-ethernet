@@ -90,7 +90,7 @@ reg [TS_NS_WIDTH-1:0] ts_ns_reg = 0;
 reg [FNS_WIDTH-1:0] ts_fns_reg = 0;
 reg [TS_NS_WIDTH-1:0] ts_ns_inc_reg = 0;
 reg [FNS_WIDTH-1:0] ts_fns_inc_reg = 0;
-reg [TS_NS_WIDTH+1-1:0] ts_ns_ovf_reg = {TS_NS_WIDTH{1'b1}};
+reg [TS_NS_WIDTH+1-1:0] ts_ns_ovf_reg = {TS_NS_WIDTH+1{1'b1}};
 reg [FNS_WIDTH-1:0] ts_fns_ovf_reg = {FNS_WIDTH{1'b1}};
 
 reg ts_step_reg = 1'b0;
@@ -444,7 +444,7 @@ always @(posedge output_clk) begin
         ts_fns_reg <= 0;
         ts_ns_inc_reg <= 0;
         ts_fns_inc_reg <= 0;
-        ts_ns_ovf_reg <= {TS_NS_WIDTH{1'b1}};
+        ts_ns_ovf_reg <= {TS_NS_WIDTH+1{1'b1}};
         ts_fns_ovf_reg <= {FNS_WIDTH{1'b1}};
         ts_step_reg <= 0;
         pps_reg <= 0;
