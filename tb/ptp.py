@@ -25,12 +25,12 @@ THE SOFTWARE.
 from myhdl import *
 
 class PtpClock(object):
-    def __init__(self):
-        self.period_ns = 0x6
-        self.period_fns = 0x6666
-        self.drift_ns = 0x0
-        self.drift_fns = 0x0002
-        self.drift_rate = 5
+    def __init__(self, period_ns=0x6, period_fns=0x6666, drift_ns=0x0, drift_fns=0x0002, drift_rate=5):
+        self.period_ns = period_ns
+        self.period_fns = period_fns
+        self.drift_ns = drift_ns
+        self.drift_fns = drift_fns
+        self.drift_rate = drift_rate
 
         self.set_96_l = []
         self.set_64_l = []
