@@ -44,6 +44,7 @@ srcs.append("../lib/eth/rtl/eth_axis_rx_64.v")
 srcs.append("../lib/eth/rtl/eth_axis_tx_64.v")
 srcs.append("../lib/eth/lib/axis/rtl/axis_crosspoint.v")
 srcs.append("../lib/eth/lib/axis/rtl/axis_async_fifo.v")
+srcs.append("../lib/eth/lib/axis/rtl/axis_async_fifo_adapter.v")
 srcs.append("%s.v" % testbench)
 
 src = ' '.join(srcs)

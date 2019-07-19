@@ -43,6 +43,7 @@ SYN_FILES += lib/eth/lib/axis/rtl/arbiter.v
 SYN_FILES += lib/eth/lib/axis/rtl/priority_encoder.v
 SYN_FILES += lib/eth/lib/axis/rtl/axis_fifo.v
 SYN_FILES += lib/eth/lib/axis/rtl/axis_async_fifo.v
+SYN_FILES += lib/eth/lib/axis/rtl/axis_async_fifo_adapter.v
 SYN_FILES += coregen/ten_gig_eth_pcs_pma_v2_6/ten_gig_eth_pcs_pma_v2_6.v
 SYN_FILES += coregen/ten_gig_eth_pcs_pma_v2_6/ten_gig_eth_pcs_pma_v2_6/example_design/ten_gig_eth_pcs_pma_v2_6_management_arbiter.v
 SYN_FILES += coregen/ten_gig_eth_pcs_pma_v2_6_v6gth_wrapper/ten_gig_eth_pcs_pma_v2_6_v6gth_wrapper_quad.v

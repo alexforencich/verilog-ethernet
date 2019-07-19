@@ -63,6 +63,7 @@ srcs.append("../lib/eth/lib/axis/rtl/arbiter.v")
 srcs.append("../lib/eth/lib/axis/rtl/priority_encoder.v")
 srcs.append("../lib/eth/lib/axis/rtl/axis_fifo.v")
 srcs.append("../lib/eth/lib/axis/rtl/axis_async_fifo.v")
+srcs.append("../lib/eth/lib/axis/rtl/axis_async_fifo_adapter.v")
 srcs.append("%s.v" % testbench)
 
 src = ' '.join(srcs)

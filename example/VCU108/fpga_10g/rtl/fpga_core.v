@@ -375,9 +375,9 @@ eth_mac_10g_fifo #(
     .ENABLE_PADDING(1),
     .ENABLE_DIC(1),
     .MIN_FRAME_LENGTH(64),
-    .TX_FIFO_ADDR_WIDTH(9),
+    .TX_FIFO_DEPTH(4906),
     .TX_FRAME_FIFO(1),
-    .RX_FIFO_ADDR_WIDTH(9),
+    .RX_FIFO_DEPTH(4906),
     .RX_FRAME_FIFO(1)
 )
 eth_mac_10g_fifo_inst (
@@ -449,9 +449,9 @@ wire gig_tx_axis_tuser_64;
 eth_mac_1g_fifo #(
     .ENABLE_PADDING(1),
     .MIN_FRAME_LENGTH(64),
-    .TX_FIFO_ADDR_WIDTH(12),
+    .TX_FIFO_DEPTH(4906),
     .TX_FRAME_FIFO(1),
-    .RX_FIFO_ADDR_WIDTH(12),
+    .RX_FIFO_DEPTH(4906),
     .RX_FRAME_FIFO(1)
 )
 eth_mac_1g_inst (
@@ -824,7 +824,7 @@ udp_complete_inst (
 );
 
 axis_fifo #(
-    .ADDR_WIDTH(10),
+    .DEPTH(8192),
     .DATA_WIDTH(64),
     .KEEP_ENABLE(1),
     .KEEP_WIDTH(8),

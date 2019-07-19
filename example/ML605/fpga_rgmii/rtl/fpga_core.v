@@ -323,9 +323,9 @@ eth_mac_1g_rgmii_fifo #(
     .USE_CLK90("TRUE"),
     .ENABLE_PADDING(1),
     .MIN_FRAME_LENGTH(64),
-    .TX_FIFO_ADDR_WIDTH(12),
+    .TX_FIFO_DEPTH(4906),
     .TX_FRAME_FIFO(1),
-    .RX_FIFO_ADDR_WIDTH(12),
+    .RX_FIFO_DEPTH(4906),
     .RX_FRAME_FIFO(1)
 )
 eth_mac_inst (
@@ -551,7 +551,7 @@ udp_complete_inst (
 );
 
 axis_fifo #(
-    .ADDR_WIDTH(12),
+    .DEPTH(8192),
     .DATA_WIDTH(8),
     .KEEP_ENABLE(0),
     .ID_ENABLE(0),
