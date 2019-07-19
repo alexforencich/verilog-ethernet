@@ -72,7 +72,7 @@ def bench():
     output_pps = Signal(bool(0))
 
     # PTP clock
-    ptp_clock = ptp.PtpClock()
+    ptp_clock = ptp.PtpClock(period_ns=INPUT_PERIOD_NS, period_fns=INPUT_PERIOD_FNS)
 
     ptp_logic = ptp_clock.create_logic(
         input_clk,
