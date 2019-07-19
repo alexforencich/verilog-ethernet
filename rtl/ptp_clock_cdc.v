@@ -182,13 +182,23 @@ endgenerate
 
 // pointer sync
 always @(posedge input_clk) begin
-    rd_ptr_gray_sync1_reg <= rd_ptr_gray_reg;
-    rd_ptr_gray_sync2_reg <= rd_ptr_gray_sync1_reg;
+    if (input_rst) begin
+        rd_ptr_gray_sync1_reg <= {FIFO_ADDR_WIDTH+1{1'b0}};
+        rd_ptr_gray_sync2_reg <= {FIFO_ADDR_WIDTH+1{1'b0}};
+    end else begin
+        rd_ptr_gray_sync1_reg <= rd_ptr_gray_reg;
+        rd_ptr_gray_sync2_reg <= rd_ptr_gray_sync1_reg;
+    end
 end
 
 always @(posedge output_clk) begin
-    wr_ptr_gray_sync1_reg <= wr_ptr_gray_reg;
-    wr_ptr_gray_sync2_reg <= wr_ptr_gray_sync1_reg;
+    if (output_rst) begin
+        wr_ptr_gray_sync1_reg <= {FIFO_ADDR_WIDTH+1{1'b0}};
+        wr_ptr_gray_sync2_reg <= {FIFO_ADDR_WIDTH+1{1'b0}};
+    end else begin
+        wr_ptr_gray_sync1_reg <= wr_ptr_gray_reg;
+        wr_ptr_gray_sync2_reg <= wr_ptr_gray_sync1_reg;
+    end
 end
 
 always @(posedge sample_clk) begin
