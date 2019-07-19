@@ -312,9 +312,9 @@ eth_mac_1g_rgmii_fifo #(
     .USE_CLK90("TRUE"),
     .ENABLE_PADDING(1),
     .MIN_FRAME_LENGTH(64),
-    .TX_FIFO_DEPTH(4906),
+    .TX_FIFO_DEPTH(4096),
     .TX_FRAME_FIFO(1),
-    .RX_FIFO_DEPTH(4906),
+    .RX_FIFO_DEPTH(4096),
     .RX_FRAME_FIFO(1)
 )
 eth_mac_inst (
