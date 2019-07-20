@@ -400,6 +400,7 @@ if (TX_PTP_TS_ENABLE) begin
             .m_status_good_frame()
         );
 
+        assign s_axis_tx_ptp_ts_ready = 1'b0;
         assign m_axis_tx_ptp_ts_tag = {PTP_TAG_WIDTH{1'b0}};
 
     end
