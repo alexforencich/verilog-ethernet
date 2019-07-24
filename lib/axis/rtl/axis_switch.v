@@ -31,20 +31,45 @@ THE SOFTWARE.
  */
 module axis_switch #
 (
+    // Number of AXI stream inputs
     parameter S_COUNT = 4,
+    // Number of AXI stream outputs
     parameter M_COUNT = 4,
+    // Width of AXI stream interfaces in bits
     parameter DATA_WIDTH = 8,
+    // Propagate tkeep signal
     parameter KEEP_ENABLE = (DATA_WIDTH>8),
+    // tkeep signal width (words per cycle)
     parameter KEEP_WIDTH = (DATA_WIDTH/8),
+    // Propagate tid signal
     parameter ID_ENABLE = 0,
+    // tid signal width
     parameter ID_WIDTH = 8,
-    parameter DEST_WIDTH = $clog2(S_COUNT),
+    // tdest signal width
+    // must be wide enough to uniquely address outputs
+    parameter DEST_WIDTH = $clog2(M_COUNT),
+    // Propagate tuser signal
     parameter USER_ENABLE = 1,
+    // tuser signal width
     parameter USER_WIDTH = 1,
-    parameter M_BASE = {2'd3, 2'd2, 2'd1, 2'd0},
-    parameter M_TOP = {2'd3, 2'd2, 2'd1, 2'd0},
+    // Output interface routing base tdest selection
+    // Concatenate M_COUNT DEST_WIDTH sized constants
+    // Port selected if M_BASE <= tdest <= M_TOP
+    // set to zero for default routing with tdest as port index
+    parameter M_BASE = 0,
+    // Output interface routing top tdest selection
+    // Concatenate M_COUNT DEST_WIDTH sized constants
+    // Port selected if M_BASE <= tdest <= M_TOP
+    // set to zero to inherit from M_BASE
+    parameter M_TOP = 0,
+    // Interface connection control
+    // M_COUNT concatenated fields of S_COUNT bits
     parameter M_CONNECT = {M_COUNT{{S_COUNT{1'b1}}}},
+    // Input interface register type
+    // 0 to bypass, 1 for simple buffer, 2 for skid buffer
     parameter S_REG_TYPE = 0,
+    // Output interface register type
+    // 0 to bypass, 1 for simple buffer, 2 for skid buffer
     parameter M_REG_TYPE = 2,
     // arbitration type: "PRIORITY" or "ROUND_ROBIN"
     parameter ARB_TYPE = "ROUND_ROBIN",
@@ -92,27 +117,36 @@ initial begin
         $finish;
     end
 
-    for (i = 0; i < M_COUNT; i = i + 1) begin
-        if (M_BASE[i*DEST_WIDTH +: DEST_WIDTH] < 0 || M_BASE[i*DEST_WIDTH +: DEST_WIDTH] > 2**DEST_WIDTH-1 || M_TOP[i*DEST_WIDTH +: DEST_WIDTH] < 0 || M_TOP[i*DEST_WIDTH +: DEST_WIDTH] > 2**DEST_WIDTH-1) begin
-            $error("Error: value out of range");
-            $finish;
+    if (M_BASE == 0) begin
+        // M_BASE is zero, route with tdest as port index
+    end else if (M_TOP == 0) begin
+        // M_TOP is zero, assume equal to M_BASE
+        for (i = 0; i < M_COUNT; i = i + 1) begin
+            for (j = i+1; j < M_COUNT; j = j + 1) begin
+                if (M_BASE[i*DEST_WIDTH +: DEST_WIDTH] == M_BASE[j*DEST_WIDTH +: DEST_WIDTH]) begin
+                    $display("%d: %08x", i, M_BASE[i*DEST_WIDTH +: DEST_WIDTH]);
+                    $display("%d: %08x", j, M_BASE[j*DEST_WIDTH +: DEST_WIDTH]);
+                    $error("Error: ranges overlap");
+                    $finish;
+                end
+            end
         end
-    end
-
-    for (i = 0; i < M_COUNT; i = i + 1) begin
-        if (M_BASE[i*DEST_WIDTH +: DEST_WIDTH] > M_TOP[i*DEST_WIDTH +: DEST_WIDTH]) begin
-            $error("Error: invalid range");
-            $finish;
-        end
-    end
-
-    for (i = 0; i < M_COUNT; i = i + 1) begin
-        for (j = i+1; j < M_COUNT; j = j + 1) begin
-            if (M_BASE[i*DEST_WIDTH +: DEST_WIDTH] <= M_TOP[j*DEST_WIDTH +: DEST_WIDTH] && M_BASE[j*DEST_WIDTH +: DEST_WIDTH] <= M_TOP[i*DEST_WIDTH +: DEST_WIDTH]) begin
-                $display("%d: %08x-%08x", i, M_BASE[i*DEST_WIDTH +: DEST_WIDTH], M_TOP[i*DEST_WIDTH +: DEST_WIDTH]);
-                $display("%d: %08x-%08x", j, M_BASE[j*DEST_WIDTH +: DEST_WIDTH], M_TOP[j*DEST_WIDTH +: DEST_WIDTH]);
-                $error("Error: ranges overlap");
+    end else begin
+        for (i = 0; i < M_COUNT; i = i + 1) begin
+            if (M_BASE[i*DEST_WIDTH +: DEST_WIDTH] > M_TOP[i*DEST_WIDTH +: DEST_WIDTH]) begin
+                $error("Error: invalid range");
                 $finish;
+            end
+        end
+
+        for (i = 0; i < M_COUNT; i = i + 1) begin
+            for (j = i+1; j < M_COUNT; j = j + 1) begin
+                if (M_BASE[i*DEST_WIDTH +: DEST_WIDTH] <= M_TOP[j*DEST_WIDTH +: DEST_WIDTH] && M_BASE[j*DEST_WIDTH +: DEST_WIDTH] <= M_TOP[i*DEST_WIDTH +: DEST_WIDTH]) begin
+                    $display("%d: %08x-%08x", i, M_BASE[i*DEST_WIDTH +: DEST_WIDTH], M_TOP[i*DEST_WIDTH +: DEST_WIDTH]);
+                    $display("%d: %08x-%08x", j, M_BASE[j*DEST_WIDTH +: DEST_WIDTH], M_TOP[j*DEST_WIDTH +: DEST_WIDTH]);
+                    $error("Error: ranges overlap");
+                    $finish;
+                end
             end
         end
     end
@@ -153,10 +187,26 @@ generate
                 select_valid_next = 1'b0;
                 drop_next = 1'b1;
                 for (k = 0; k < M_COUNT; k = k + 1) begin
-                    if (int_s_axis_tdest[m*DEST_WIDTH +: DEST_WIDTH] >= M_BASE[k*DEST_WIDTH +: DEST_WIDTH] && int_s_axis_tdest[m*DEST_WIDTH +: DEST_WIDTH] <= M_TOP[k*DEST_WIDTH +: DEST_WIDTH] && (M_CONNECT & (1 << (m+k*S_COUNT)))) begin
-                        select_next = k;
-                        select_valid_next = 1'b1;
-                        drop_next = 1'b0;
+                    if (M_BASE == 0) begin
+                        // M_BASE is zero, route with tdest as port index
+                        if (int_s_axis_tdest[m*DEST_WIDTH +: DEST_WIDTH] == k && (M_CONNECT & (1 << (m+k*S_COUNT)))) begin
+                            select_next = k;
+                            select_valid_next = 1'b1;
+                            drop_next = 1'b0;
+                        end
+                    end else if (M_TOP == 0) begin
+                        // M_TOP is zero, assume equal to M_BASE
+                        if (int_s_axis_tdest[m*DEST_WIDTH +: DEST_WIDTH] == M_BASE[k*DEST_WIDTH +: DEST_WIDTH] && (M_CONNECT & (1 << (m+k*S_COUNT)))) begin
+                            select_next = k;
+                            select_valid_next = 1'b1;
+                            drop_next = 1'b0;
+                        end
+                    end else begin
+                        if (int_s_axis_tdest[m*DEST_WIDTH +: DEST_WIDTH] >= M_BASE[k*DEST_WIDTH +: DEST_WIDTH] && int_s_axis_tdest[m*DEST_WIDTH +: DEST_WIDTH] <= M_TOP[k*DEST_WIDTH +: DEST_WIDTH] && (M_CONNECT & (1 << (m+k*S_COUNT)))) begin
+                            select_next = k;
+                            select_valid_next = 1'b1;
+                            drop_next = 1'b0;
+                        end
                     end
                 end
             end

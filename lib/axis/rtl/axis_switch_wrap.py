@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Generates an AXI Stream crosspoint wrapper with the specified number of ports
+Generates an AXI Stream switch wrapper with the specified number of ports
 """
 
 from __future__ import print_function
@@ -32,7 +32,7 @@ def generate(ports=4, name=None, output=None):
         m, n = ports
 
     if name is None:
-        name = "axis_crosspoint_wrap_{0}x{1}".format(m, n)
+        name = "axis_switch_wrap_{0}x{1}".format(m, n)
 
     if output is None:
         output = name + ".v"
@@ -41,7 +41,7 @@ def generate(ports=4, name=None, output=None):
 
     output_file = open(output, 'w')
 
-    print("Generating {0}x{1} port AXI stream crosspoint wrapper {2}...".format(m, n, name))
+    print("Generating {0}x{1} port AXI stream switch wrapper {2}...".format(m, n, name))
 
     cm = int(math.ceil(math.log(m, 2)))
     cn = int(math.ceil(math.log(n, 2)))
@@ -75,7 +75,7 @@ THE SOFTWARE.
 `timescale 1ns / 1ps
 
 /*
- * AXI4-Stream {{m}}x{{n}} crosspoint (wrapper)
+ * AXI4-Stream {{m}}x{{n}} switch (wrapper)
  */
 module {{name}} #
 (
@@ -85,20 +85,37 @@ module {{name}} #
     parameter KEEP_ENABLE = (DATA_WIDTH>8),
     // tkeep signal width (words per cycle)
     parameter KEEP_WIDTH = (DATA_WIDTH/8),
-    // Propagate tlast signal
-    parameter LAST_ENABLE = 1,
     // Propagate tid signal
     parameter ID_ENABLE = 0,
     // tid signal width
     parameter ID_WIDTH = 8,
-    // Propagate tdest signal
-    parameter DEST_ENABLE = 0,
     // tdest signal width
-    parameter DEST_WIDTH = 8,
+    // must be wide enough to uniquely address outputs
+    parameter DEST_WIDTH = {{cm}},
     // Propagate tuser signal
     parameter USER_ENABLE = 1,
     // tuser signal width
-    parameter USER_WIDTH = 1
+    parameter USER_WIDTH = 1,
+{%- for p in range(n) %}
+    // Output interface routing base tdest selection
+    // Port selected if M_BASE <= tdest <= M_TOP
+    parameter M{{'%02d'%p}}_BASE = {{p}},
+    // Output interface routing top tdest selection
+    // Port selected if M_BASE <= tdest <= M_TOP
+    parameter M{{'%02d'%p}}_TOP = {{p}},
+    // Interface connection control
+    parameter M{{'%02d'%p}}_CONNECT = {{m}}'b{% for p in range(m) %}1{% endfor %},
+{%- endfor %}
+    // Input interface register type
+    // 0 to bypass, 1 for simple buffer, 2 for skid buffer
+    parameter S_REG_TYPE = 0,
+    // Output interface register type
+    // 0 to bypass, 1 for simple buffer, 2 for skid buffer
+    parameter M_REG_TYPE = 2,
+    // arbitration type: "PRIORITY" or "ROUND_ROBIN"
+    parameter ARB_TYPE = "ROUND_ROBIN",
+    // LSB priority: "LOW", "HIGH"
+    parameter LSB_PRIORITY = "HIGH"
 )
 (
     input  wire                  clk,
@@ -111,6 +128,7 @@ module {{name}} #
     input  wire [DATA_WIDTH-1:0] s{{'%02d'%p}}_axis_tdata,
     input  wire [KEEP_WIDTH-1:0] s{{'%02d'%p}}_axis_tkeep,
     input  wire                  s{{'%02d'%p}}_axis_tvalid,
+    output wire                  s{{'%02d'%p}}_axis_tready,
     input  wire                  s{{'%02d'%p}}_axis_tlast,
     input  wire [ID_WIDTH-1:0]   s{{'%02d'%p}}_axis_tid,
     input  wire [DEST_WIDTH-1:0] s{{'%02d'%p}}_axis_tdest,
@@ -123,54 +141,63 @@ module {{name}} #
     output wire [DATA_WIDTH-1:0] m{{'%02d'%p}}_axis_tdata,
     output wire [KEEP_WIDTH-1:0] m{{'%02d'%p}}_axis_tkeep,
     output wire                  m{{'%02d'%p}}_axis_tvalid,
+    input  wire                  m{{'%02d'%p}}_axis_tready,
     output wire                  m{{'%02d'%p}}_axis_tlast,
     output wire [ID_WIDTH-1:0]   m{{'%02d'%p}}_axis_tid,
     output wire [DEST_WIDTH-1:0] m{{'%02d'%p}}_axis_tdest,
-    output wire [USER_WIDTH-1:0] m{{'%02d'%p}}_axis_tuser,
-{% endfor %}
-    /*
-     * Control
-     */
-{%- for p in range(n) %}
-    input  wire [{{cm-1}}:0]            m{{'%02d'%p}}_select{% if not loop.last %},{% endif %}
-{%- endfor %}
+    output wire [USER_WIDTH-1:0] m{{'%02d'%p}}_axis_tuser{% if not loop.last %},{% endif %}
+{% endfor -%}
 );
 
-axis_crosspoint #(
+// parameter sizing helpers
+function [31:0] w_32(input [31:0] val);
+    w_32 = val;
+endfunction
+
+function [S_COUNT-1:0] w_s(input [S_COUNT-1:0] val);
+    w_s = val;
+endfunction
+
+axis_switch #(
     .S_COUNT({{m}}),
     .M_COUNT({{n}}),
     .DATA_WIDTH(DATA_WIDTH),
     .KEEP_ENABLE(KEEP_ENABLE),
     .KEEP_WIDTH(KEEP_WIDTH),
-    .LAST_ENABLE(LAST_ENABLE),
     .ID_ENABLE(ID_ENABLE),
     .ID_WIDTH(ID_WIDTH),
-    .DEST_ENABLE(DEST_ENABLE),
     .DEST_WIDTH(DEST_WIDTH),
     .USER_ENABLE(USER_ENABLE),
-    .USER_WIDTH(USER_WIDTH)
+    .USER_WIDTH(USER_WIDTH),
+    .M_BASE({ {% for p in range(n-1,-1,-1) %}w_32(M{{'%02d'%p}}_BASE){% if not loop.last %}, {% endif %}{% endfor %} }),
+    .M_TOP({ {% for p in range(n-1,-1,-1) %}w_32(M{{'%02d'%p}}_TOP){% if not loop.last %}, {% endif %}{% endfor %} }),
+    .M_CONNECT({ {% for p in range(n-1,-1,-1) %}w_s(M{{'%02d'%p}}_CONNECT){% if not loop.last %}, {% endif %}{% endfor %} }),
+    .S_REG_TYPE(S_REG_TYPE),
+    .M_REG_TYPE(M_REG_TYPE),
+    .ARB_TYPE(ARB_TYPE),
+    .LSB_PRIORITY(LSB_PRIORITY)
 )
-axis_crosspoint_inst (
+axis_switch_inst (
     .clk(clk),
     .rst(rst),
     // AXI inputs
     .s_axis_tdata({ {% for p in range(m-1,-1,-1) %}s{{'%02d'%p}}_axis_tdata{% if not loop.last %}, {% endif %}{% endfor %} }),
     .s_axis_tkeep({ {% for p in range(m-1,-1,-1) %}s{{'%02d'%p}}_axis_tkeep{% if not loop.last %}, {% endif %}{% endfor %} }),
     .s_axis_tvalid({ {% for p in range(m-1,-1,-1) %}s{{'%02d'%p}}_axis_tvalid{% if not loop.last %}, {% endif %}{% endfor %} }),
+    .s_axis_tready({ {% for p in range(m-1,-1,-1) %}s{{'%02d'%p}}_axis_tready{% if not loop.last %}, {% endif %}{% endfor %} }),
     .s_axis_tlast({ {% for p in range(m-1,-1,-1) %}s{{'%02d'%p}}_axis_tlast{% if not loop.last %}, {% endif %}{% endfor %} }),
     .s_axis_tid({ {% for p in range(m-1,-1,-1) %}s{{'%02d'%p}}_axis_tid{% if not loop.last %}, {% endif %}{% endfor %} }),
     .s_axis_tdest({ {% for p in range(m-1,-1,-1) %}s{{'%02d'%p}}_axis_tdest{% if not loop.last %}, {% endif %}{% endfor %} }),
     .s_axis_tuser({ {% for p in range(m-1,-1,-1) %}s{{'%02d'%p}}_axis_tuser{% if not loop.last %}, {% endif %}{% endfor %} }),
-    // AXI output
+    // AXI outputs
     .m_axis_tdata({ {% for p in range(n-1,-1,-1) %}m{{'%02d'%p}}_axis_tdata{% if not loop.last %}, {% endif %}{% endfor %} }),
     .m_axis_tkeep({ {% for p in range(n-1,-1,-1) %}m{{'%02d'%p}}_axis_tkeep{% if not loop.last %}, {% endif %}{% endfor %} }),
     .m_axis_tvalid({ {% for p in range(n-1,-1,-1) %}m{{'%02d'%p}}_axis_tvalid{% if not loop.last %}, {% endif %}{% endfor %} }),
+    .m_axis_tready({ {% for p in range(n-1,-1,-1) %}m{{'%02d'%p}}_axis_tready{% if not loop.last %}, {% endif %}{% endfor %} }),
     .m_axis_tlast({ {% for p in range(n-1,-1,-1) %}m{{'%02d'%p}}_axis_tlast{% if not loop.last %}, {% endif %}{% endfor %} }),
     .m_axis_tid({ {% for p in range(n-1,-1,-1) %}m{{'%02d'%p}}_axis_tid{% if not loop.last %}, {% endif %}{% endfor %} }),
     .m_axis_tdest({ {% for p in range(n-1,-1,-1) %}m{{'%02d'%p}}_axis_tdest{% if not loop.last %}, {% endif %}{% endfor %} }),
-    .m_axis_tuser({ {% for p in range(n-1,-1,-1) %}m{{'%02d'%p}}_axis_tuser{% if not loop.last %}, {% endif %}{% endfor %} }),
-    // Control
-    .select({ {% for p in range(n-1,-1,-1) %}m{{'%02d'%p}}_select{% if not loop.last %}, {% endif %}{% endfor %} })
+    .m_axis_tuser({ {% for p in range(n-1,-1,-1) %}m{{'%02d'%p}}_axis_tuser{% if not loop.last %}, {% endif %}{% endfor %} })
 );
 
 endmodule

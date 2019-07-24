@@ -73,8 +73,11 @@ THE SOFTWARE.
  */
 module {{name}} #
 (
+    // Width of AXI stream interfaces in bits
     parameter DATA_WIDTH = 8,
+    // Prepend data with tag
     parameter TAG_ENABLE = 1,
+    // Tag field width
     parameter TAG_WIDTH = 16
 )
 (

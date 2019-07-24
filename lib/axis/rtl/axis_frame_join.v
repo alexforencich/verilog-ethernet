@@ -31,9 +31,13 @@ THE SOFTWARE.
  */
 module axis_frame_join #
 (
+    // Number of AXI stream inputs
     parameter S_COUNT = 4,
+    // Width of AXI stream interfaces in bits
     parameter DATA_WIDTH = 8,
+    // Prepend data with tag
     parameter TAG_ENABLE = 1,
+    // Tag field width
     parameter TAG_WIDTH = 16
 )
 (
