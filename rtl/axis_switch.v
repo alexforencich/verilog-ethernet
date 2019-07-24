@@ -225,7 +225,7 @@ generate
 
         // forwarding
         assign int_axis_tvalid[m*M_COUNT +: M_COUNT] = (int_s_axis_tvalid[m] && select_valid_reg && !drop_reg) << select_reg;
-        assign int_s_axis_tready[m] = int_axis_tready[select_reg*M_COUNT+m] || drop_reg;
+        assign int_s_axis_tready[m] = int_axis_tready[select_reg*S_COUNT+m] || drop_reg;
 
         // S side register
         axis_register #(
@@ -293,7 +293,7 @@ generate
         // mux
         wire [DATA_WIDTH-1:0] s_axis_tdata_mux   = int_s_axis_tdata[grant_encoded*DATA_WIDTH +: DATA_WIDTH];
         wire [KEEP_WIDTH-1:0] s_axis_tkeep_mux   = int_s_axis_tkeep[grant_encoded*KEEP_WIDTH +: KEEP_WIDTH];
-        wire                  s_axis_tvalid_mux  = int_axis_tvalid[grant_encoded*S_COUNT+n] && grant_valid;
+        wire                  s_axis_tvalid_mux  = int_axis_tvalid[grant_encoded*M_COUNT+n] && grant_valid;
         wire                  s_axis_tready_mux;
         wire                  s_axis_tlast_mux   = int_s_axis_tlast[grant_encoded];
         wire [ID_WIDTH-1:0]   s_axis_tid_mux     = int_s_axis_tid[grant_encoded*ID_WIDTH +: ID_WIDTH];
