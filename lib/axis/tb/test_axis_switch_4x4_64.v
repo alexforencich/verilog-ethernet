@@ -106,6 +106,8 @@ initial begin
 end
 
 axis_switch #(
+    .M_COUNT(M_COUNT),
+    .S_COUNT(S_COUNT),
     .DATA_WIDTH(DATA_WIDTH),
     .KEEP_ENABLE(KEEP_ENABLE),
     .KEEP_WIDTH(KEEP_WIDTH),
