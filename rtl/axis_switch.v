@@ -38,7 +38,7 @@ module axis_switch #
     parameter KEEP_WIDTH = (DATA_WIDTH/8),
     parameter ID_ENABLE = 0,
     parameter ID_WIDTH = 8,
-    parameter DEST_WIDTH = $clog2(S_COUNT),
+    parameter DEST_WIDTH = $clog2(M_COUNT),
     parameter USER_ENABLE = 1,
     parameter USER_WIDTH = 1,
     parameter M_BASE = {2'd3, 2'd2, 2'd1, 2'd0},
