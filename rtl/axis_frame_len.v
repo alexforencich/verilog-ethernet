@@ -31,9 +31,14 @@ THE SOFTWARE.
  */
 module axis_frame_len #
 (
+    // Width of AXI stream interfaces in bits
     parameter DATA_WIDTH = 64,
+    // Propagate tkeep signal
+    // If disabled, tkeep assumed to be 1'b1
     parameter KEEP_ENABLE = (DATA_WIDTH>8),
+    // tkeep signal width (words per cycle)
     parameter KEEP_WIDTH = (DATA_WIDTH/8),
+    // Width of length counter
     parameter LEN_WIDTH = 16
 )
 (

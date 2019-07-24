@@ -31,16 +31,28 @@ THE SOFTWARE.
  */
 module axis_stat_counter #
 (
+    // Width of AXI stream interfaces in bits
     parameter DATA_WIDTH = 64,
+    // Propagate tkeep signal
+    // If disabled, tkeep assumed to be 1'b1
     parameter KEEP_ENABLE = (DATA_WIDTH>8),
+    // tkeep signal width (words per cycle)
     parameter KEEP_WIDTH = (DATA_WIDTH/8),
+    // Prepend data with tag
     parameter TAG_ENABLE = 1,
+    // Tag field width
     parameter TAG_WIDTH = 16,
+    // Count cycles
     parameter TICK_COUNT_ENABLE = 1,
+    // Cycle counter width
     parameter TICK_COUNT_WIDTH = 32,
+    // Count bytes
     parameter BYTE_COUNT_ENABLE = 1,
+    // Byte counter width
     parameter BYTE_COUNT_WIDTH = 32,
+    // Count frames
     parameter FRAME_COUNT_ENABLE = 1,
+    // Frame counter width
     parameter FRAME_COUNT_WIDTH = 32
 )
 (

@@ -79,20 +79,38 @@ THE SOFTWARE.
  */
 module {{name}} #
 (
+    // Width of AXI stream interfaces in bits
     parameter DATA_WIDTH = 8,
+    // Propagate tkeep signal
     parameter KEEP_ENABLE = (DATA_WIDTH>8),
+    // tkeep signal width (words per cycle)
     parameter KEEP_WIDTH = (DATA_WIDTH/8),
+    // Propagate tid signal
     parameter ID_ENABLE = 0,
+    // tid signal width
     parameter ID_WIDTH = 8,
+    // tdest signal width
+    // must be wide enough to uniquely address outputs
     parameter DEST_WIDTH = {{cm}},
+    // Propagate tuser signal
     parameter USER_ENABLE = 1,
+    // tuser signal width
     parameter USER_WIDTH = 1,
 {%- for p in range(n) %}
+    // Output interface routing base tdest selection
+    // Port selected if M_BASE <= tdest <= M_TOP
     parameter M{{'%02d'%p}}_BASE = {{p}},
+    // Output interface routing top tdest selection
+    // Port selected if M_BASE <= tdest <= M_TOP
     parameter M{{'%02d'%p}}_TOP = {{p}},
+    // Interface connection control
     parameter M{{'%02d'%p}}_CONNECT = {{m}}'b{% for p in range(m) %}1{% endfor %},
 {%- endfor %}
+    // Input interface register type
+    // 0 to bypass, 1 for simple buffer, 2 for skid buffer
     parameter S_REG_TYPE = 0,
+    // Output interface register type
+    // 0 to bypass, 1 for simple buffer, 2 for skid buffer
     parameter M_REG_TYPE = 2,
     // arbitration type: "PRIORITY" or "ROUND_ROBIN"
     parameter ARB_TYPE = "ROUND_ROBIN",

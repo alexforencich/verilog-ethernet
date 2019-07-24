@@ -31,15 +31,26 @@ THE SOFTWARE.
  */
 module axis_rate_limit #
 (
+    // Width of AXI stream interfaces in bits
     parameter DATA_WIDTH = 8,
+    // Propagate tkeep signal
+    // If disabled, tkeep assumed to be 1'b1
     parameter KEEP_ENABLE = (DATA_WIDTH>8),
+    // tkeep signal width (words per cycle)
     parameter KEEP_WIDTH = (DATA_WIDTH/8),
+    // Propagate tlast signal
     parameter LAST_ENABLE = 1,
+    // Propagate tid signal
     parameter ID_ENABLE = 0,
+    // tid signal width
     parameter ID_WIDTH = 8,
+    // Propagate tdest signal
     parameter DEST_ENABLE = 0,
+    // tdest signal width
     parameter DEST_WIDTH = 8,
+    // Propagate tuser signal
     parameter USER_ENABLE = 1,
+    // tuser signal width
     parameter USER_WIDTH = 1
 )
 (

@@ -31,20 +31,45 @@ THE SOFTWARE.
  */
 module axis_switch #
 (
+    // Number of AXI stream inputs
     parameter S_COUNT = 4,
+    // Number of AXI stream outputs
     parameter M_COUNT = 4,
+    // Width of AXI stream interfaces in bits
     parameter DATA_WIDTH = 8,
+    // Propagate tkeep signal
     parameter KEEP_ENABLE = (DATA_WIDTH>8),
+    // tkeep signal width (words per cycle)
     parameter KEEP_WIDTH = (DATA_WIDTH/8),
+    // Propagate tid signal
     parameter ID_ENABLE = 0,
+    // tid signal width
     parameter ID_WIDTH = 8,
+    // tdest signal width
+    // must be wide enough to uniquely address outputs
     parameter DEST_WIDTH = $clog2(M_COUNT),
+    // Propagate tuser signal
     parameter USER_ENABLE = 1,
+    // tuser signal width
     parameter USER_WIDTH = 1,
+    // Output interface routing base tdest selection
+    // Concatenate M_COUNT DEST_WIDTH sized constants
+    // Port selected if M_BASE <= tdest <= M_TOP
+    // set to zero for default routing with tdest as port index
     parameter M_BASE = {2'd3, 2'd2, 2'd1, 2'd0},
+    // Output interface routing top tdest selection
+    // Concatenate M_COUNT DEST_WIDTH sized constants
+    // Port selected if M_BASE <= tdest <= M_TOP
+    // set to zero to inherit from M_BASE
     parameter M_TOP = {2'd3, 2'd2, 2'd1, 2'd0},
+    // Interface connection control
+    // M_COUNT concatenated fields of S_COUNT bits
     parameter M_CONNECT = {M_COUNT{{S_COUNT{1'b1}}}},
+    // Input interface register type
+    // 0 to bypass, 1 for simple buffer, 2 for skid buffer
     parameter S_REG_TYPE = 0,
+    // Output interface register type
+    // 0 to bypass, 1 for simple buffer, 2 for skid buffer
     parameter M_REG_TYPE = 2,
     // arbitration type: "PRIORITY" or "ROUND_ROBIN"
     parameter ARB_TYPE = "ROUND_ROBIN",
