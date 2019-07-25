@@ -113,7 +113,7 @@ integer i, j;
 // check configuration
 initial begin
     if (DEST_WIDTH < CL_M_COUNT) begin
-        $error("Error: DEST_WIDTH too small for port count");
+        $error("Error: DEST_WIDTH too small for port count (instance %m)");
         $finish;
     end
 
@@ -126,7 +126,7 @@ initial begin
                 if (M_BASE[i*DEST_WIDTH +: DEST_WIDTH] == M_BASE[j*DEST_WIDTH +: DEST_WIDTH]) begin
                     $display("%d: %08x", i, M_BASE[i*DEST_WIDTH +: DEST_WIDTH]);
                     $display("%d: %08x", j, M_BASE[j*DEST_WIDTH +: DEST_WIDTH]);
-                    $error("Error: ranges overlap");
+                    $error("Error: ranges overlap (instance %m)");
                     $finish;
                 end
             end
@@ -134,7 +134,7 @@ initial begin
     end else begin
         for (i = 0; i < M_COUNT; i = i + 1) begin
             if (M_BASE[i*DEST_WIDTH +: DEST_WIDTH] > M_TOP[i*DEST_WIDTH +: DEST_WIDTH]) begin
-                $error("Error: invalid range");
+                $error("Error: invalid range (instance %m)");
                 $finish;
             end
         end
@@ -144,7 +144,7 @@ initial begin
                 if (M_BASE[i*DEST_WIDTH +: DEST_WIDTH] <= M_TOP[j*DEST_WIDTH +: DEST_WIDTH] && M_BASE[j*DEST_WIDTH +: DEST_WIDTH] <= M_TOP[i*DEST_WIDTH +: DEST_WIDTH]) begin
                     $display("%d: %08x-%08x", i, M_BASE[i*DEST_WIDTH +: DEST_WIDTH], M_TOP[i*DEST_WIDTH +: DEST_WIDTH]);
                     $display("%d: %08x-%08x", j, M_BASE[j*DEST_WIDTH +: DEST_WIDTH], M_TOP[j*DEST_WIDTH +: DEST_WIDTH]);
-                    $error("Error: ranges overlap");
+                    $error("Error: ranges overlap (instance %m)");
                     $finish;
                 end
             end
