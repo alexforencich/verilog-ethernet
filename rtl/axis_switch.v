@@ -55,7 +55,7 @@ module axis_switch #
     // Output interface routing base tdest selection
     // Concatenate M_COUNT DEST_WIDTH sized constants
     // Port selected if M_BASE <= tdest <= M_TOP
-    // set to zero for default routing with tdest as port index
+    // set to zero for default routing with tdest MSBs as port index
     parameter M_BASE = 0,
     // Output interface routing top tdest selection
     // Concatenate M_COUNT DEST_WIDTH sized constants
@@ -188,8 +188,8 @@ generate
                 drop_next = 1'b1;
                 for (k = 0; k < M_COUNT; k = k + 1) begin
                     if (M_BASE == 0) begin
-                        // M_BASE is zero, route with tdest as port index
-                        if (int_s_axis_tdest[m*DEST_WIDTH +: DEST_WIDTH] == k && (M_CONNECT & (1 << (m+k*S_COUNT)))) begin
+                        // M_BASE is zero, route with $clog2(M_COUNT) MSBs of tdest as port index
+                        if (int_s_axis_tdest[m*DEST_WIDTH+(DEST_WIDTH-CL_M_COUNT) +: CL_M_COUNT] == k && (M_CONNECT & (1 << (m+k*S_COUNT)))) begin
                             select_next = k;
                             select_valid_next = 1'b1;
                             drop_next = 1'b0;
