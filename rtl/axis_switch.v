@@ -112,7 +112,7 @@ integer i, j;
 
 // check configuration
 initial begin
-    if (2**DEST_WIDTH < CL_M_COUNT) begin
+    if (DEST_WIDTH < CL_M_COUNT) begin
         $error("Error: DEST_WIDTH too small for port count");
         $finish;
     end
