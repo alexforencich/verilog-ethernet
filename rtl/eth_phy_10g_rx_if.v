@@ -61,7 +61,6 @@ module eth_phy_10g_rx_if #
      * Status
      */
     output wire [6:0]            rx_error_count,
-    output wire                  rx_bad_block,
     output wire                  rx_block_lock,
     output wire                  rx_high_ber,
 

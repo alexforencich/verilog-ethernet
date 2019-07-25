@@ -112,7 +112,6 @@ eth_phy_10g_rx_if_inst (
     .serdes_rx_hdr(serdes_rx_hdr),
     .serdes_rx_bitslip(serdes_rx_bitslip),
     .rx_error_count(rx_error_count),
-    .rx_bad_block(rx_bad_block),
     .rx_block_lock(rx_block_lock),
     .rx_high_ber(rx_high_ber),
     .rx_prbs31_enable(rx_prbs31_enable)
