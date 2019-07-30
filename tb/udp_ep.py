@@ -156,13 +156,27 @@ class UDPFrame(object):
         cksum = (cksum & 0xffff) + (cksum >> 16)
         return ~cksum & 0xffff
 
-    def calc_udp_checksum(self):
+    def update_ip_checksum(self):
+        self.ip_header_checksum = self.calc_ip_checksum()
+
+    def calc_udp_pseudo_header_checksum(self):
         cksum = self.ip_source_ip & 0xffff
         cksum += (self.ip_source_ip >> 16) & 0xffff
         cksum += self.ip_dest_ip & 0xffff
         cksum += (self.ip_dest_ip >> 16) & 0xffff
         cksum += self.ip_protocol
         cksum += self.udp_length
+        cksum = (cksum & 0xffff) + (cksum >> 16)
+        cksum = (cksum & 0xffff) + (cksum >> 16)
+        return cksum
+
+    def set_udp_pseudo_header_checksum(self):
+        if self.udp_length is None:
+            self.update_udp_length()
+        self.udp_checksum = self.calc_udp_pseudo_header_checksum()
+
+    def calc_udp_checksum(self):
+        cksum = self.calc_udp_pseudo_header_checksum()
         cksum += self.udp_source_port
         cksum += self.udp_dest_port
         cksum += self.udp_length
@@ -177,10 +191,9 @@ class UDPFrame(object):
         cksum = (cksum & 0xffff) + (cksum >> 16)
         return ~cksum & 0xffff
 
-    def update_ip_checksum(self):
-        self.ip_header_checksum = self.calc_ip_checksum()
-
     def update_udp_checksum(self):
+        if self.udp_length is None:
+            self.update_udp_length()
         self.udp_checksum = self.calc_udp_checksum()
 
     def update_checksum(self):
