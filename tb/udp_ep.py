@@ -159,6 +159,9 @@ class UDPFrame(object):
     def update_ip_checksum(self):
         self.ip_header_checksum = self.calc_ip_checksum()
 
+    def verify_ip_checksum(self):
+        return self.ip_header_checksum == self.calc_ip_checksum()
+
     def calc_udp_pseudo_header_checksum(self):
         cksum = self.ip_source_ip & 0xffff
         cksum += (self.ip_source_ip >> 16) & 0xffff
@@ -196,9 +199,15 @@ class UDPFrame(object):
             self.update_udp_length()
         self.udp_checksum = self.calc_udp_checksum()
 
+    def verify_udp_checksum(self):
+        return self.udp_checksum == self.calc_udp_checksum()
+
     def update_checksum(self):
         self.update_udp_checksum()
         self.update_ip_checksum()
+
+    def verify_checksums(self):
+        return self.verify_ip_checksum() and self.verify_udp_checksum()
 
     def build(self):
         if self.udp_length is None:

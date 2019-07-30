@@ -135,6 +135,9 @@ class IPFrame(object):
     def update_checksum(self):
         self.ip_header_checksum = self.calc_checksum()
 
+    def verify_checksum(self):
+        return self.ip_header_checksum == self.calc_checksum()
+
     def build(self):
         if self.ip_length is None:
             self.update_length()
