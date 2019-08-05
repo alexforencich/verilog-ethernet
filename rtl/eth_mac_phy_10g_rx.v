@@ -33,7 +33,6 @@ module eth_mac_phy_10g_rx #
 (
     parameter DATA_WIDTH = 64,
     parameter KEEP_WIDTH = (DATA_WIDTH/8),
-    parameter CTRL_WIDTH = (DATA_WIDTH/8),
     parameter HDR_WIDTH = (DATA_WIDTH/32),
     parameter PTP_PERIOD_NS = 4'h6,
     parameter PTP_PERIOD_FNS = 16'h6666,
@@ -96,7 +95,7 @@ initial begin
         $finish;
     end
 
-    if (KEEP_WIDTH * 8 != DATA_WIDTH || CTRL_WIDTH * 8 != DATA_WIDTH) begin
+    if (KEEP_WIDTH * 8 != DATA_WIDTH) begin
         $error("Error: Interface requires byte (8-bit) granularity");
         $finish;
     end

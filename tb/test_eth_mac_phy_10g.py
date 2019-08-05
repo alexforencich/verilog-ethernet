@@ -57,7 +57,6 @@ def bench():
     # Parameters
     DATA_WIDTH = 64
     KEEP_WIDTH = (DATA_WIDTH/8)
-    CTRL_WIDTH = (DATA_WIDTH/8)
     HDR_WIDTH = (DATA_WIDTH/32)
     ENABLE_PADDING = 1
     ENABLE_DIC = 1

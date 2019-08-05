@@ -33,7 +33,6 @@ module eth_mac_phy_10g #
 (
     parameter DATA_WIDTH = 64,
     parameter KEEP_WIDTH = (DATA_WIDTH/8),
-    parameter CTRL_WIDTH = (DATA_WIDTH/8),
     parameter HDR_WIDTH = (DATA_WIDTH/32),
     parameter ENABLE_PADDING = 1,
     parameter ENABLE_DIC = 1,
@@ -123,7 +122,6 @@ module eth_mac_phy_10g #
 eth_mac_phy_10g_rx #(
     .DATA_WIDTH(DATA_WIDTH),
     .KEEP_WIDTH(KEEP_WIDTH),
-    .CTRL_WIDTH(CTRL_WIDTH),
     .HDR_WIDTH(HDR_WIDTH),
     .PTP_PERIOD_NS(PTP_PERIOD_NS),
     .PTP_PERIOD_FNS(PTP_PERIOD_FNS),
@@ -162,7 +160,6 @@ eth_mac_phy_10g_rx_inst (
 eth_mac_phy_10g_tx #(
     .DATA_WIDTH(DATA_WIDTH),
     .KEEP_WIDTH(KEEP_WIDTH),
-    .CTRL_WIDTH(CTRL_WIDTH),
     .HDR_WIDTH(HDR_WIDTH),
     .ENABLE_PADDING(ENABLE_PADDING),
     .ENABLE_DIC(ENABLE_DIC),

@@ -32,7 +32,6 @@ THE SOFTWARE.
 module eth_mac_phy_10g_fifo #
 (
     parameter DATA_WIDTH = 64,
-    parameter CTRL_WIDTH = (DATA_WIDTH/8),
     parameter HDR_WIDTH = (DATA_WIDTH/32),
     parameter AXIS_DATA_WIDTH = DATA_WIDTH,
     parameter AXIS_KEEP_ENABLE = (AXIS_DATA_WIDTH>8),
@@ -540,7 +539,6 @@ endgenerate
 eth_mac_phy_10g #(
     .DATA_WIDTH(DATA_WIDTH),
     .KEEP_WIDTH(KEEP_WIDTH),
-    .CTRL_WIDTH(CTRL_WIDTH),
     .HDR_WIDTH(HDR_WIDTH),
     .ENABLE_PADDING(ENABLE_PADDING),
     .ENABLE_DIC(ENABLE_DIC),

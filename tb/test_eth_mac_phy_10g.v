@@ -34,7 +34,6 @@ module test_eth_mac_phy_10g;
 // Parameters
 parameter DATA_WIDTH = 64;
 parameter KEEP_WIDTH = (DATA_WIDTH/8);
-parameter CTRL_WIDTH = (DATA_WIDTH/8);
 parameter HDR_WIDTH = (DATA_WIDTH/32);
 parameter ENABLE_PADDING = 1;
 parameter ENABLE_DIC = 1;
@@ -157,7 +156,6 @@ end
 eth_mac_phy_10g #(
     .DATA_WIDTH(DATA_WIDTH),
     .KEEP_WIDTH(KEEP_WIDTH),
-    .CTRL_WIDTH(CTRL_WIDTH),
     .HDR_WIDTH(HDR_WIDTH),
     .ENABLE_PADDING(ENABLE_PADDING),
     .ENABLE_DIC(ENABLE_DIC),
