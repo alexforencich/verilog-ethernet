@@ -86,8 +86,6 @@ wire      m_axis_tready_int_early;
 
 reg s_axis_tready_mask;
 
-assign s_axis_tready = code_fifo_in_tready && data_fifo_in_tready && s_axis_tready_mask;
-
 reg [7:0] code_fifo_in_tdata;
 reg code_fifo_in_tvalid;
 reg code_fifo_in_tlast;
@@ -99,6 +97,8 @@ wire code_fifo_out_tvalid;
 wire code_fifo_out_tlast;
 wire code_fifo_out_tuser;
 reg code_fifo_out_tready;
+
+assign s_axis_tready = code_fifo_in_tready && data_fifo_in_tready && s_axis_tready_mask;
 
 axis_fifo #(
     .DEPTH(256),
