@@ -121,7 +121,7 @@ localparam [3:0]
     STATE_IFG = 4'd7,
     STATE_WAIT_END = 4'd8;
 
-reg [2:0] state_reg = STATE_IDLE, state_next;
+reg [3:0] state_reg = STATE_IDLE, state_next;
 
 // datapath control signals
 reg reset_crc;
