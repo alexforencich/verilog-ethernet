@@ -280,7 +280,7 @@ end
 always @* begin
     write = 1'b0;
 
-    drop_frame_next = 1'b0;
+    drop_frame_next = drop_frame_reg;
     overflow_next = 1'b0;
     bad_frame_next = 1'b0;
     good_frame_next = 1'b0;
