@@ -102,7 +102,7 @@ localparam DATA_WORD_WIDTH = DATA_WIDTH / KEEP_WIDTH;
 // bus width assertions
 initial begin
     if (DATA_WORD_WIDTH * KEEP_WIDTH != DATA_WIDTH) begin
-        $error("Error: data width not evenly divisble");
+        $error("Error: data width not evenly divisble (instance %m)");
         $finish;
     end
 end

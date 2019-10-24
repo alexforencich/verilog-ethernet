@@ -55,7 +55,7 @@ module axis_switch #
     // Output interface routing base tdest selection
     // Concatenate M_COUNT DEST_WIDTH sized constants
     // Port selected if M_BASE <= tdest <= M_TOP
-    // set to zero for default routing with tdest as port index
+    // set to zero for default routing with tdest MSBs as port index
     parameter M_BASE = 0,
     // Output interface routing top tdest selection
     // Concatenate M_COUNT DEST_WIDTH sized constants
@@ -112,8 +112,8 @@ integer i, j;
 
 // check configuration
 initial begin
-    if (2**DEST_WIDTH < CL_M_COUNT) begin
-        $error("Error: DEST_WIDTH too small for port count");
+    if (DEST_WIDTH < CL_M_COUNT) begin
+        $error("Error: DEST_WIDTH too small for port count (instance %m)");
         $finish;
     end
 
@@ -126,7 +126,7 @@ initial begin
                 if (M_BASE[i*DEST_WIDTH +: DEST_WIDTH] == M_BASE[j*DEST_WIDTH +: DEST_WIDTH]) begin
                     $display("%d: %08x", i, M_BASE[i*DEST_WIDTH +: DEST_WIDTH]);
                     $display("%d: %08x", j, M_BASE[j*DEST_WIDTH +: DEST_WIDTH]);
-                    $error("Error: ranges overlap");
+                    $error("Error: ranges overlap (instance %m)");
                     $finish;
                 end
             end
@@ -134,7 +134,7 @@ initial begin
     end else begin
         for (i = 0; i < M_COUNT; i = i + 1) begin
             if (M_BASE[i*DEST_WIDTH +: DEST_WIDTH] > M_TOP[i*DEST_WIDTH +: DEST_WIDTH]) begin
-                $error("Error: invalid range");
+                $error("Error: invalid range (instance %m)");
                 $finish;
             end
         end
@@ -144,7 +144,7 @@ initial begin
                 if (M_BASE[i*DEST_WIDTH +: DEST_WIDTH] <= M_TOP[j*DEST_WIDTH +: DEST_WIDTH] && M_BASE[j*DEST_WIDTH +: DEST_WIDTH] <= M_TOP[i*DEST_WIDTH +: DEST_WIDTH]) begin
                     $display("%d: %08x-%08x", i, M_BASE[i*DEST_WIDTH +: DEST_WIDTH], M_TOP[i*DEST_WIDTH +: DEST_WIDTH]);
                     $display("%d: %08x-%08x", j, M_BASE[j*DEST_WIDTH +: DEST_WIDTH], M_TOP[j*DEST_WIDTH +: DEST_WIDTH]);
-                    $error("Error: ranges overlap");
+                    $error("Error: ranges overlap (instance %m)");
                     $finish;
                 end
             end
@@ -188,8 +188,8 @@ generate
                 drop_next = 1'b1;
                 for (k = 0; k < M_COUNT; k = k + 1) begin
                     if (M_BASE == 0) begin
-                        // M_BASE is zero, route with tdest as port index
-                        if (int_s_axis_tdest[m*DEST_WIDTH +: DEST_WIDTH] == k && (M_CONNECT & (1 << (m+k*S_COUNT)))) begin
+                        // M_BASE is zero, route with $clog2(M_COUNT) MSBs of tdest as port index
+                        if (int_s_axis_tdest[m*DEST_WIDTH+(DEST_WIDTH-CL_M_COUNT) +: CL_M_COUNT] == k && (M_CONNECT & (1 << (m+k*S_COUNT)))) begin
                             select_next = k;
                             select_valid_next = 1'b1;
                             drop_next = 1'b0;
