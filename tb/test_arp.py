@@ -279,7 +279,7 @@ def bench():
         yield delay(100)
 
         yield clk.posedge
-        print("test 3: Unached read")
+        print("test 3: Uncached read")
         current_test.next = 3
 
         arp_request_source.send([(0xc0a80166,)])
