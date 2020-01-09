@@ -435,6 +435,15 @@ def bench():
         assert not err
         assert mac == 0xffffffffffff
 
+        # multicast
+        arp_request_source.send([(0xe0000181,)])
+
+        yield arp_response_sink.wait()
+        err, mac = arp_response_sink.recv().data[0]
+
+        assert not err
+        assert mac == 0x01005e000181
+
         yield delay(100)
 
         raise StopSimulation
