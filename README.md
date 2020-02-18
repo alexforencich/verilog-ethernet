@@ -124,6 +124,13 @@ Wrappers can generated with axis_mux_wrap.py.
 Parametrizable register pipeline.  LENGTH parameter determines number of
 register stages.
 
+### axis_ram_switch module
+
+Frame-aware AXI stream RAM switch with parametrizable data width, port count,
+and FIFO size.  Uses block RAM for storing packets in transit, time-sharing
+the RAM interface between ports.  Functionally equivalent to a combination of
+per-port frame FIFOs and width converters connected to an AXI stream switch.
+
 ### axis_rate_limit module
 
 Fractional rate limiter, supports word and frame modes.  Inserts wait states
@@ -218,6 +225,7 @@ Parametrizable priority encoder.
     axis_frame_length_adjust_fifo.v    : Frame length adjuster with FIFO
     axis_ll_bridge.v                   : AXI stream to LocalLink bridge
     axis_mux.v                         : Multiplexer generator
+    axis_ram_switch.v                  : AXI stream RAM switch
     axis_rate_limit.v                  : Fractional rate limiter
     axis_register.v                    : AXI Stream register
     axis_srl_fifo.v                    : SRL-based FIFO
