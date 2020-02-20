@@ -908,7 +908,7 @@ generate
             out_fifo_rd_en = 1'b0;
 
             // receive commands and issue memory reads
-            if ((!ram_rd_en_reg || ram_rd_ack) && ($unsigned(out_fifo_ctrl_wr_ptr_reg - out_fifo_rd_ptr_reg) < 16) && ($unsigned(out_fifo_data_wr_ptr_reg - out_fifo_rd_ptr_reg) < 16)) begin
+            if ((!ram_rd_en_reg || ram_rd_ack) && ($unsigned(out_fifo_ctrl_wr_ptr_reg - out_fifo_rd_ptr_reg) < 32)) begin
                 if (len_reg != 0) begin
                     // more data to read
 
@@ -933,9 +933,9 @@ generate
                         cmd_status_id_next = id_reg;
                         cmd_status_valid_next = 1 << src_reg;
                     end
-                end else if (cmd_valid_mux && !cmd_ready_reg) begin
+                end else if (cmd_valid_mux) begin
                     // fetch new command
-                    cmd_ready_next = 1'b1;
+                    cmd_ready_next = !cmd_ready_reg;
                     rd_ptr_next = cmd_addr_mux;
                     rd_ptr_next[ADDR_WIDTH-1:0] = cmd_addr_mux[ADDR_WIDTH-1:0] + 1;
                     len_next = cmd_len_mux;
@@ -964,6 +964,8 @@ generate
                         cmd_status_id_next = cmd_id_mux;
                         cmd_status_valid_next = 1 << grant_encoded;
                     end
+                end else begin
+                    cmd_ready_next = 1'b1;
                 end
             end
 
