@@ -827,7 +827,7 @@ generate
         wire [DATA_WIDTH-1:0]     ram_rd_data;
         wire                      ram_rd_data_valid;
 
-        reg cmd_ready_reg = 1'b0, cmd_ready_next;
+        reg cmd_ready_reg = 1'b1, cmd_ready_next;
 
         reg [CMD_ADDR_WIDTH-1:0] cmd_status_id_reg = {CMD_ADDR_WIDTH{1'b0}}, cmd_status_id_next;
         reg [S_COUNT-1:0]        cmd_status_valid_reg = 0, cmd_status_valid_next;
@@ -892,24 +892,38 @@ generate
             ram_rd_addr_next = ram_rd_addr_reg;
             ram_rd_en_next = ram_rd_en_reg && !ram_rd_ack;
 
-            cmd_ready_next = 1'b0;
+            cmd_ready_next = cmd_ready_reg;
 
             cmd_status_id_next = cmd_status_id_reg;
             cmd_status_valid_next = cmd_status_valid_reg & ~port_cmd_status_ready;
 
             out_fifo_data_wr_tdata = ram_rd_data;
             out_fifo_data_wr_en = 1'b0;
-            out_fifo_ctrl_wr_tkeep = len_next == 0 ? last_cycle_tkeep_next : {KEEP_WIDTH{1'b1}};
-            out_fifo_ctrl_wr_tlast = len_next == 0;
+            out_fifo_ctrl_wr_tkeep = len_reg == 0 ? last_cycle_tkeep_reg : {KEEP_WIDTH{1'b1}};
+            out_fifo_ctrl_wr_tlast = len_reg == 0;
             out_fifo_ctrl_wr_tid = tid_reg;
             out_fifo_ctrl_wr_tdest = tdest_reg;
             out_fifo_ctrl_wr_tuser = tuser_reg;
             out_fifo_ctrl_wr_en = 1'b0;
             out_fifo_rd_en = 1'b0;
 
-            // receive commands and issue memory reads
+            // receive commands
+            if (cmd_ready_reg && cmd_valid_mux) begin
+                cmd_ready_next = 1'b0;
+                rd_ptr_next = cmd_addr_mux;
+                len_next = cmd_len_mux;
+                last_cycle_tkeep_next = cmd_tkeep_mux;
+                id_next = cmd_id_mux;
+                tid_next = cmd_tid_mux;
+                tdest_next = cmd_tdest_mux;
+                tuser_next = cmd_tuser_mux;
+
+                src_next = grant_encoded;
+            end
+
+            // process commands and issue memory reads
             if ((!ram_rd_en_reg || ram_rd_ack) && ($unsigned(out_fifo_ctrl_wr_ptr_reg - out_fifo_rd_ptr_reg) < 32)) begin
-                if (len_reg != 0) begin
+                if (!cmd_ready_reg) begin
                     // more data to read
 
                     // update counters
@@ -921,51 +935,19 @@ generate
                     ram_rd_en_next = 1'b1;
 
                     // write output control FIFO
-                    out_fifo_ctrl_wr_tkeep = len_next == 0 ? last_cycle_tkeep_next : {KEEP_WIDTH{1'b1}};
-                    out_fifo_ctrl_wr_tlast = len_next == 0;
+                    out_fifo_ctrl_wr_tkeep = len_reg == 0 ? last_cycle_tkeep_reg : {KEEP_WIDTH{1'b1}};
+                    out_fifo_ctrl_wr_tlast = len_reg == 0;
                     out_fifo_ctrl_wr_tid = tid_reg;
                     out_fifo_ctrl_wr_tdest = tdest_reg;
                     out_fifo_ctrl_wr_tuser = tuser_reg;
                     out_fifo_ctrl_wr_en = 1'b1;
 
-                    if (len_next == 0) begin
+                    if (len_reg == 0) begin
                         // indicate operation complete
                         cmd_status_id_next = id_reg;
                         cmd_status_valid_next = 1 << src_reg;
+                        cmd_ready_next = 1'b1;
                     end
-                end else if (cmd_valid_mux) begin
-                    // fetch new command
-                    cmd_ready_next = !cmd_ready_reg;
-                    rd_ptr_next = cmd_addr_mux;
-                    rd_ptr_next[ADDR_WIDTH-1:0] = cmd_addr_mux[ADDR_WIDTH-1:0] + 1;
-                    len_next = cmd_len_mux;
-                    last_cycle_tkeep_next = cmd_tkeep_mux;
-                    id_next = cmd_id_mux;
-                    tid_next = cmd_tid_mux;
-                    tdest_next = cmd_tdest_mux;
-                    tuser_next = cmd_tuser_mux;
-
-                    src_next = grant_encoded;
-
-                    // issue memory read
-                    ram_rd_addr_next = cmd_addr_mux;
-                    ram_rd_en_next = 1'b1;
-
-                    // write output control FIFO
-                    out_fifo_ctrl_wr_tkeep = len_next == 0 ? last_cycle_tkeep_next : {KEEP_WIDTH{1'b1}};
-                    out_fifo_ctrl_wr_tlast = len_next == 0;
-                    out_fifo_ctrl_wr_tid = cmd_tid_mux;
-                    out_fifo_ctrl_wr_tdest = cmd_tdest_mux;
-                    out_fifo_ctrl_wr_tuser = cmd_tuser_mux;
-                    out_fifo_ctrl_wr_en = 1'b1;
-
-                    if (len_next == 0) begin
-                        // indicate operation complete
-                        cmd_status_id_next = cmd_id_mux;
-                        cmd_status_valid_next = 1 << grant_encoded;
-                    end
-                end else begin
-                    cmd_ready_next = 1'b1;
                 end
             end
 
@@ -1039,7 +1021,7 @@ generate
                 len_reg <= 0;
                 out_axis_tvalid_reg <= 1'b0;
                 ram_rd_en_reg <= 1'b0;
-                cmd_ready_reg <= 1'b0;
+                cmd_ready_reg <= 1'b1;
                 cmd_status_valid_reg <= 0;
                 out_fifo_data_wr_ptr_reg <= 0;
                 out_fifo_ctrl_wr_ptr_reg <= 0;
