@@ -58,7 +58,7 @@ def bench():
     s_eth_src_mac = Signal(intbv(0)[48:])
     s_eth_type = Signal(intbv(0)[16:])
     s_eth_payload_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
-    s_eth_payload_axis_tkeep = Signal(intbv(0)[KEEP_WIDTH:])
+    s_eth_payload_axis_tkeep = Signal(intbv(1)[KEEP_WIDTH:])
     s_eth_payload_axis_tvalid = Signal(bool(0))
     s_eth_payload_axis_tlast = Signal(bool(0))
     s_eth_payload_axis_tuser = Signal(bool(0))
