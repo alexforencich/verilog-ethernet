@@ -289,7 +289,7 @@ reg store_eth_payload_int_to_temp;
 reg store_eth_payload_axis_temp_to_output;
 
 assign m_eth_payload_axis_tdata = m_eth_payload_axis_tdata_reg;
-assign m_eth_payload_axis_tkeep = m_eth_payload_axis_tkeep_reg;
+assign m_eth_payload_axis_tkeep = KEEP_ENABLE ? m_eth_payload_axis_tkeep_reg : {KEEP_WIDTH{1'b1}};
 assign m_eth_payload_axis_tvalid = m_eth_payload_axis_tvalid_reg;
 assign m_eth_payload_axis_tlast = m_eth_payload_axis_tlast_reg;
 assign m_eth_payload_axis_tuser = m_eth_payload_axis_tuser_reg;
