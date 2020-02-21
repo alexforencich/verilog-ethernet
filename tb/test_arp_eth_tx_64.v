@@ -27,9 +27,14 @@ THE SOFTWARE.
 `timescale 1ns / 1ps
 
 /*
- * Testbench for arp_eth_tx_64
+ * Testbench for arp_eth_tx
  */
 module test_arp_eth_tx_64;
+
+// Parameters
+parameter DATA_WIDTH = 64;
+parameter KEEP_ENABLE = (DATA_WIDTH>8);
+parameter KEEP_WIDTH = (DATA_WIDTH/8);
 
 // Inputs
 reg clk = 0;
@@ -56,8 +61,8 @@ wire m_eth_hdr_valid;
 wire [47:0] m_eth_dest_mac;
 wire [47:0] m_eth_src_mac;
 wire [15:0] m_eth_type;
-wire [63:0] m_eth_payload_axis_tdata;
-wire [7:0] m_eth_payload_axis_tkeep;
+wire [DATA_WIDTH-1:0] m_eth_payload_axis_tdata;
+wire [KEEP_WIDTH-1:0] m_eth_payload_axis_tkeep;
 wire m_eth_payload_axis_tvalid;
 wire m_eth_payload_axis_tlast;
 wire m_eth_payload_axis_tuser;
@@ -102,7 +107,11 @@ initial begin
     $dumpvars(0, test_arp_eth_tx_64);
 end
 
-arp_eth_tx_64
+arp_eth_tx #(
+    .DATA_WIDTH(DATA_WIDTH),
+    .KEEP_ENABLE(KEEP_ENABLE),
+    .KEEP_WIDTH(KEEP_WIDTH)
+)
 UUT (
     .clk(clk),
     .rst(rst),

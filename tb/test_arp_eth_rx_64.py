@@ -29,8 +29,8 @@ import os
 import arp_ep
 import eth_ep
 
-module = 'arp_eth_rx_64'
-testbench = 'test_%s' % module
+module = 'arp_eth_rx'
+testbench = 'test_%s_64' % module
 
 srcs = []
 
@@ -43,6 +43,11 @@ build_cmd = "iverilog -o %s.vvp %s" % (testbench, src)
 
 def bench():
 
+    # Parameters
+    DATA_WIDTH = 64
+    KEEP_ENABLE = (DATA_WIDTH>8)
+    KEEP_WIDTH = (DATA_WIDTH/8)
+
     # Inputs
     clk = Signal(bool(0))
     rst = Signal(bool(0))
@@ -52,8 +57,8 @@ def bench():
     s_eth_dest_mac = Signal(intbv(0)[48:])
     s_eth_src_mac = Signal(intbv(0)[48:])
     s_eth_type = Signal(intbv(0)[16:])
-    s_eth_payload_axis_tdata = Signal(intbv(0)[64:])
-    s_eth_payload_axis_tkeep = Signal(intbv(0)[8:])
+    s_eth_payload_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
+    s_eth_payload_axis_tkeep = Signal(intbv(0)[KEEP_WIDTH:])
     s_eth_payload_axis_tvalid = Signal(bool(0))
     s_eth_payload_axis_tlast = Signal(bool(0))
     s_eth_payload_axis_tuser = Signal(bool(0))
@@ -259,14 +264,14 @@ def bench():
         source.send(test_frame.build_eth())
         yield clk.posedge
 
-        yield delay(16)
+        yield delay(64)
         yield clk.posedge
         source_pause.next = True
         yield delay(32)
         yield clk.posedge
         source_pause.next = False
 
-        yield delay(16)
+        yield delay(64)
         yield clk.posedge
         sink_pause.next = True
         yield delay(32)

@@ -31,6 +31,11 @@ THE SOFTWARE.
  */
 module test_arp_eth_rx;
 
+// Parameters
+parameter DATA_WIDTH = 8;
+parameter KEEP_ENABLE = (DATA_WIDTH>8);
+parameter KEEP_WIDTH = (DATA_WIDTH/8);
+
 // Inputs
 reg clk = 0;
 reg rst = 0;
@@ -40,7 +45,8 @@ reg s_eth_hdr_valid = 0;
 reg [47:0] s_eth_dest_mac = 0;
 reg [47:0] s_eth_src_mac = 0;
 reg [15:0] s_eth_type = 0;
-reg [7:0] s_eth_payload_axis_tdata = 0;
+reg [DATA_WIDTH-1:0] s_eth_payload_axis_tdata = 0;
+reg [KEEP_WIDTH-1:0] s_eth_payload_axis_tkeep = 0;
 reg s_eth_payload_axis_tvalid = 0;
 reg s_eth_payload_axis_tlast = 0;
 reg s_eth_payload_axis_tuser = 0;
@@ -77,6 +83,7 @@ initial begin
         s_eth_src_mac,
         s_eth_type,
         s_eth_payload_axis_tdata,
+        s_eth_payload_axis_tkeep,
         s_eth_payload_axis_tvalid,
         s_eth_payload_axis_tlast,
         s_eth_payload_axis_tuser,
@@ -108,7 +115,11 @@ initial begin
     $dumpvars(0, test_arp_eth_rx);
 end
 
-arp_eth_rx
+arp_eth_rx #(
+    .DATA_WIDTH(DATA_WIDTH),
+    .KEEP_ENABLE(KEEP_ENABLE),
+    .KEEP_WIDTH(KEEP_WIDTH)
+)
 UUT (
     .clk(clk),
     .rst(rst),
@@ -119,6 +130,7 @@ UUT (
     .s_eth_src_mac(s_eth_src_mac),
     .s_eth_type(s_eth_type),
     .s_eth_payload_axis_tdata(s_eth_payload_axis_tdata),
+    .s_eth_payload_axis_tkeep(s_eth_payload_axis_tkeep),
     .s_eth_payload_axis_tvalid(s_eth_payload_axis_tvalid),
     .s_eth_payload_axis_tready(s_eth_payload_axis_tready),
     .s_eth_payload_axis_tlast(s_eth_payload_axis_tlast),

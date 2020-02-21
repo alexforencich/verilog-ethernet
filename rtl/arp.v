@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014-2018 Alex Forencich
+Copyright (c) 2014-2020 Alex Forencich
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -29,63 +29,77 @@ THE SOFTWARE.
 /*
  * ARP block for IPv4, ethernet frame interface
  */
-module arp #(
+module arp #
+(
+    // Width of AXI stream interfaces in bits
+    parameter DATA_WIDTH = 8,
+    // Propagate tkeep signal
+    // If disabled, tkeep assumed to be 1'b1
+    parameter KEEP_ENABLE = (DATA_WIDTH>8),
+    // tkeep signal width (words per cycle)
+    parameter KEEP_WIDTH = (DATA_WIDTH/8),
+    // Log2 of ARP cache size
     parameter CACHE_ADDR_WIDTH = 9,
+    // ARP request retry count
     parameter REQUEST_RETRY_COUNT = 4,
+    // ARP request retry interval (in cycles)
     parameter REQUEST_RETRY_INTERVAL = 125000000*2,
+    // ARP request timeout (in cycles)
     parameter REQUEST_TIMEOUT = 125000000*30
 )
 (
-    input  wire        clk,
-    input  wire        rst,
+    input  wire                   clk,
+    input  wire                   rst,
 
     /*
      * Ethernet frame input
      */
-    input  wire        s_eth_hdr_valid,
-    output wire        s_eth_hdr_ready,
-    input  wire [47:0] s_eth_dest_mac,
-    input  wire [47:0] s_eth_src_mac,
-    input  wire [15:0] s_eth_type,
-    input  wire [7:0]  s_eth_payload_axis_tdata,
-    input  wire        s_eth_payload_axis_tvalid,
-    output wire        s_eth_payload_axis_tready,
-    input  wire        s_eth_payload_axis_tlast,
-    input  wire        s_eth_payload_axis_tuser,
+    input  wire                   s_eth_hdr_valid,
+    output wire                   s_eth_hdr_ready,
+    input  wire [47:0]            s_eth_dest_mac,
+    input  wire [47:0]            s_eth_src_mac,
+    input  wire [15:0]            s_eth_type,
+    input  wire [DATA_WIDTH-1:0]  s_eth_payload_axis_tdata,
+    input  wire [KEEP_WIDTH-1:0]  s_eth_payload_axis_tkeep,
+    input  wire                   s_eth_payload_axis_tvalid,
+    output wire                   s_eth_payload_axis_tready,
+    input  wire                   s_eth_payload_axis_tlast,
+    input  wire                   s_eth_payload_axis_tuser,
 
     /*
      * Ethernet frame output
      */
-    output wire        m_eth_hdr_valid,
-    input  wire        m_eth_hdr_ready,
-    output wire [47:0] m_eth_dest_mac,
-    output wire [47:0] m_eth_src_mac,
-    output wire [15:0] m_eth_type,
-    output wire [7:0]  m_eth_payload_axis_tdata,
-    output wire        m_eth_payload_axis_tvalid,
-    input  wire        m_eth_payload_axis_tready,
-    output wire        m_eth_payload_axis_tlast,
-    output wire        m_eth_payload_axis_tuser,
+    output wire                   m_eth_hdr_valid,
+    input  wire                   m_eth_hdr_ready,
+    output wire [47:0]            m_eth_dest_mac,
+    output wire [47:0]            m_eth_src_mac,
+    output wire [15:0]            m_eth_type,
+    output wire [DATA_WIDTH-1:0]  m_eth_payload_axis_tdata,
+    output wire [KEEP_WIDTH-1:0]  m_eth_payload_axis_tkeep,
+    output wire                   m_eth_payload_axis_tvalid,
+    input  wire                   m_eth_payload_axis_tready,
+    output wire                   m_eth_payload_axis_tlast,
+    output wire                   m_eth_payload_axis_tuser,
 
     /*
      * ARP requests
      */
-    input  wire        arp_request_valid,
-    output wire        arp_request_ready,
-    input  wire [31:0] arp_request_ip,
-    output wire        arp_response_valid,
-    input  wire        arp_response_ready,
-    output wire        arp_response_error,
-    output wire [47:0] arp_response_mac,
+    input  wire                   arp_request_valid,
+    output wire                   arp_request_ready,
+    input  wire [31:0]            arp_request_ip,
+    output wire                   arp_response_valid,
+    input  wire                   arp_response_ready,
+    output wire                   arp_response_error,
+    output wire [47:0]            arp_response_mac,
 
     /*
      * Configuration
      */
-    input  wire [47:0] local_mac,
-    input  wire [31:0] local_ip,
-    input  wire [31:0] gateway_ip,
-    input  wire [31:0] subnet_mask,
-    input  wire        clear_cache
+    input  wire [47:0]            local_mac,
+    input  wire [31:0]            local_ip,
+    input  wire [31:0]            gateway_ip,
+    input  wire [31:0]            subnet_mask,
+    input  wire                   clear_cache
 );
 
 localparam [15:0]
@@ -112,7 +126,11 @@ wire [31:0] incoming_arp_tpa;
 /*
  * ARP frame processing
  */
-arp_eth_rx
+arp_eth_rx #(
+    .DATA_WIDTH(DATA_WIDTH),
+    .KEEP_ENABLE(KEEP_ENABLE),
+    .KEEP_WIDTH(KEEP_WIDTH)
+)
 arp_eth_rx_inst (
     .clk(clk),
     .rst(rst),
@@ -123,6 +141,7 @@ arp_eth_rx_inst (
     .s_eth_src_mac(s_eth_src_mac),
     .s_eth_type(s_eth_type),
     .s_eth_payload_axis_tdata(s_eth_payload_axis_tdata),
+    .s_eth_payload_axis_tkeep(s_eth_payload_axis_tkeep),
     .s_eth_payload_axis_tvalid(s_eth_payload_axis_tvalid),
     .s_eth_payload_axis_tready(s_eth_payload_axis_tready),
     .s_eth_payload_axis_tlast(s_eth_payload_axis_tlast),
@@ -155,7 +174,11 @@ reg [15:0] outgoing_arp_oper_reg = 16'd0, outgoing_arp_oper_next;
 reg [47:0] outgoing_arp_tha_reg = 48'd0, outgoing_arp_tha_next;
 reg [31:0] outgoing_arp_tpa_reg = 32'd0, outgoing_arp_tpa_next;
 
-arp_eth_tx
+arp_eth_tx #(
+    .DATA_WIDTH(DATA_WIDTH),
+    .KEEP_ENABLE(KEEP_ENABLE),
+    .KEEP_WIDTH(KEEP_WIDTH)
+)
 arp_eth_tx_inst (
     .clk(clk),
     .rst(rst),
@@ -179,6 +202,7 @@ arp_eth_tx_inst (
     .m_eth_src_mac(m_eth_src_mac),
     .m_eth_type(m_eth_type),
     .m_eth_payload_axis_tdata(m_eth_payload_axis_tdata),
+    .m_eth_payload_axis_tkeep(m_eth_payload_axis_tkeep),
     .m_eth_payload_axis_tvalid(m_eth_payload_axis_tvalid),
     .m_eth_payload_axis_tready(m_eth_payload_axis_tready),
     .m_eth_payload_axis_tlast(m_eth_payload_axis_tlast),

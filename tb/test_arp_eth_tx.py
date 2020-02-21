@@ -43,6 +43,11 @@ build_cmd = "iverilog -o %s.vvp %s" % (testbench, src)
 
 def bench():
 
+    # Parameters
+    DATA_WIDTH = 8
+    KEEP_ENABLE = (DATA_WIDTH>8)
+    KEEP_WIDTH = (DATA_WIDTH/8)
+
     # Inputs
     clk = Signal(bool(0))
     rst = Signal(bool(0))
@@ -68,7 +73,8 @@ def bench():
     m_eth_dest_mac = Signal(intbv(0)[48:])
     m_eth_src_mac = Signal(intbv(0)[48:])
     m_eth_type = Signal(intbv(0)[16:])
-    m_eth_payload_axis_tdata = Signal(intbv(0)[8:])
+    m_eth_payload_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
+    m_eth_payload_axis_tkeep = Signal(intbv(0)[KEEP_WIDTH:])
     m_eth_payload_axis_tvalid = Signal(bool(0))
     m_eth_payload_axis_tlast = Signal(bool(0))
     m_eth_payload_axis_tuser = Signal(bool(0))
@@ -110,6 +116,7 @@ def bench():
         eth_src_mac=m_eth_src_mac,
         eth_type=m_eth_type,
         eth_payload_tdata=m_eth_payload_axis_tdata,
+        eth_payload_tkeep=m_eth_payload_axis_tkeep,
         eth_payload_tvalid=m_eth_payload_axis_tvalid,
         eth_payload_tready=m_eth_payload_axis_tready,
         eth_payload_tlast=m_eth_payload_axis_tlast,
@@ -147,6 +154,7 @@ def bench():
         m_eth_src_mac=m_eth_src_mac,
         m_eth_type=m_eth_type,
         m_eth_payload_axis_tdata=m_eth_payload_axis_tdata,
+        m_eth_payload_axis_tkeep=m_eth_payload_axis_tkeep,
         m_eth_payload_axis_tvalid=m_eth_payload_axis_tvalid,
         m_eth_payload_axis_tready=m_eth_payload_axis_tready,
         m_eth_payload_axis_tlast=m_eth_payload_axis_tlast,

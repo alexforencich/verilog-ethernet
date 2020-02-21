@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014-2018 Alex Forencich
+Copyright (c) 2014-2020 Alex Forencich
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -29,50 +29,74 @@ THE SOFTWARE.
 /*
  * ARP ethernet frame receiver (Ethernet frame in, ARP frame out)
  */
-module arp_eth_rx
+module arp_eth_rx #
 (
-    input  wire        clk,
-    input  wire        rst,
+    // Width of AXI stream interfaces in bits
+    parameter DATA_WIDTH = 8,
+    // Propagate tkeep signal
+    // If disabled, tkeep assumed to be 1'b1
+    parameter KEEP_ENABLE = (DATA_WIDTH>8),
+    // tkeep signal width (words per cycle)
+    parameter KEEP_WIDTH = (DATA_WIDTH/8)
+)
+(
+    input  wire                   clk,
+    input  wire                   rst,
 
     /*
      * Ethernet frame input
      */
-    input  wire        s_eth_hdr_valid,
-    output wire        s_eth_hdr_ready,
-    input  wire [47:0] s_eth_dest_mac,
-    input  wire [47:0] s_eth_src_mac,
-    input  wire [15:0] s_eth_type,
-    input  wire [7:0]  s_eth_payload_axis_tdata,
-    input  wire        s_eth_payload_axis_tvalid,
-    output wire        s_eth_payload_axis_tready,
-    input  wire        s_eth_payload_axis_tlast,
-    input  wire        s_eth_payload_axis_tuser,
+    input  wire                   s_eth_hdr_valid,
+    output wire                   s_eth_hdr_ready,
+    input  wire [47:0]            s_eth_dest_mac,
+    input  wire [47:0]            s_eth_src_mac,
+    input  wire [15:0]            s_eth_type,
+    input  wire [DATA_WIDTH-1:0]  s_eth_payload_axis_tdata,
+    input  wire [KEEP_WIDTH-1:0]  s_eth_payload_axis_tkeep,
+    input  wire                   s_eth_payload_axis_tvalid,
+    output wire                   s_eth_payload_axis_tready,
+    input  wire                   s_eth_payload_axis_tlast,
+    input  wire                   s_eth_payload_axis_tuser,
 
     /*
      * ARP frame output
      */
-    output wire        m_frame_valid,
-    input  wire        m_frame_ready,
-    output wire [47:0] m_eth_dest_mac,
-    output wire [47:0] m_eth_src_mac,
-    output wire [15:0] m_eth_type,
-    output wire [15:0] m_arp_htype,
-    output wire [15:0] m_arp_ptype,
-    output wire [7:0]  m_arp_hlen,
-    output wire [7:0]  m_arp_plen,
-    output wire [15:0] m_arp_oper,
-    output wire [47:0] m_arp_sha,
-    output wire [31:0] m_arp_spa,
-    output wire [47:0] m_arp_tha,
-    output wire [31:0] m_arp_tpa,
+    output wire                   m_frame_valid,
+    input  wire                   m_frame_ready,
+    output wire [47:0]            m_eth_dest_mac,
+    output wire [47:0]            m_eth_src_mac,
+    output wire [15:0]            m_eth_type,
+    output wire [15:0]            m_arp_htype,
+    output wire [15:0]            m_arp_ptype,
+    output wire [7:0]             m_arp_hlen,
+    output wire [7:0]             m_arp_plen,
+    output wire [15:0]            m_arp_oper,
+    output wire [47:0]            m_arp_sha,
+    output wire [31:0]            m_arp_spa,
+    output wire [47:0]            m_arp_tha,
+    output wire [31:0]            m_arp_tpa,
 
     /*
      * Status signals
      */
-    output wire        busy,
-    output wire        error_header_early_termination,
-    output wire        error_invalid_header
+    output wire                   busy,
+    output wire                   error_header_early_termination,
+    output wire                   error_invalid_header
 );
+
+parameter CYCLE_COUNT = (28+KEEP_WIDTH-1)/KEEP_WIDTH;
+
+parameter PTR_WIDTH = $clog2(CYCLE_COUNT);
+
+parameter OFFSET = 28 % KEEP_WIDTH;
+
+// bus width assertions
+initial begin
+    if (KEEP_WIDTH * 8 != DATA_WIDTH) begin
+        $error("Error: AXI stream interface requires byte (8-bit) granularity (instance %m)");
+        $finish;
+    end
+end
 
 /*
 
@@ -98,45 +122,12 @@ produces the frame fields in parallel.
 
 */
 
-localparam [2:0]
-    STATE_IDLE = 3'd0,
-    STATE_READ_HEADER = 3'd1,
-    STATE_WAIT_LAST = 3'd2;
-
-reg [2:0] state_reg = STATE_IDLE, state_next;
-
 // datapath control signals
 reg store_eth_hdr;
-reg store_arp_htype_0;
-reg store_arp_htype_1;
-reg store_arp_ptype_0;
-reg store_arp_ptype_1;
-reg store_arp_hlen;
-reg store_arp_plen;
-reg store_arp_oper_0;
-reg store_arp_oper_1;
-reg store_arp_sha_0;
-reg store_arp_sha_1;
-reg store_arp_sha_2;
-reg store_arp_sha_3;
-reg store_arp_sha_4;
-reg store_arp_sha_5;
-reg store_arp_spa_0;
-reg store_arp_spa_1;
-reg store_arp_spa_2;
-reg store_arp_spa_3;
-reg store_arp_tha_0;
-reg store_arp_tha_1;
-reg store_arp_tha_2;
-reg store_arp_tha_3;
-reg store_arp_tha_4;
-reg store_arp_tha_5;
-reg store_arp_tpa_0;
-reg store_arp_tpa_1;
-reg store_arp_tpa_2;
-reg store_arp_tpa_3;
 
-reg [7:0] frame_ptr_reg = 8'd0, frame_ptr_next;
+reg read_eth_header_reg = 1'b1, read_eth_header_next;
+reg read_arp_header_reg = 1'b0, read_arp_header_next;
+reg [PTR_WIDTH-1:0] ptr_reg = 0, ptr_next;
 
 reg s_eth_hdr_ready_reg = 1'b0, s_eth_hdr_ready_next;
 reg s_eth_payload_axis_tready_reg = 1'b0, s_eth_payload_axis_tready_next;
@@ -145,15 +136,15 @@ reg m_frame_valid_reg = 1'b0, m_frame_valid_next;
 reg [47:0] m_eth_dest_mac_reg = 48'd0;
 reg [47:0] m_eth_src_mac_reg = 48'd0;
 reg [15:0] m_eth_type_reg = 16'd0;
-reg [15:0] m_arp_htype_reg = 16'd0;
-reg [15:0] m_arp_ptype_reg = 16'd0;
-reg [7:0]  m_arp_hlen_reg = 8'd0;
-reg [7:0]  m_arp_plen_reg = 8'd0;
-reg [15:0] m_arp_oper_reg = 16'd0;
-reg [47:0] m_arp_sha_reg = 48'd0;
-reg [31:0] m_arp_spa_reg = 32'd0;
-reg [47:0] m_arp_tha_reg = 48'd0;
-reg [31:0] m_arp_tpa_reg = 32'd0;
+reg [15:0] m_arp_htype_reg = 16'd0, m_arp_htype_next;
+reg [15:0] m_arp_ptype_reg = 16'd0, m_arp_ptype_next;
+reg [7:0]  m_arp_hlen_reg = 8'd0, m_arp_hlen_next;
+reg [7:0]  m_arp_plen_reg = 8'd0, m_arp_plen_next;
+reg [15:0] m_arp_oper_reg = 16'd0, m_arp_oper_next;
+reg [47:0] m_arp_sha_reg = 48'd0, m_arp_sha_next;
+reg [31:0] m_arp_spa_reg = 32'd0, m_arp_spa_next;
+reg [47:0] m_arp_tha_reg = 48'd0, m_arp_tha_next;
+reg [31:0] m_arp_tpa_reg = 32'd0, m_arp_tpa_next;
 
 reg busy_reg = 1'b0;
 reg error_header_early_termination_reg = 1'b0, error_header_early_termination_next;
@@ -181,175 +172,134 @@ assign error_header_early_termination = error_header_early_termination_reg;
 assign error_invalid_header = error_invalid_header_reg;
 
 always @* begin
-    state_next = STATE_IDLE;
+    read_eth_header_next = read_eth_header_reg;
+    read_arp_header_next = read_arp_header_reg;
+    ptr_next = ptr_reg;
 
     s_eth_hdr_ready_next = 1'b0;
     s_eth_payload_axis_tready_next = 1'b0;
 
     store_eth_hdr = 1'b0;
-    store_arp_htype_0 = 1'b0;
-    store_arp_htype_1 = 1'b0;
-    store_arp_ptype_0 = 1'b0;
-    store_arp_ptype_1 = 1'b0;
-    store_arp_hlen = 1'b0;
-    store_arp_plen = 1'b0;
-    store_arp_oper_0 = 1'b0;
-    store_arp_oper_1 = 1'b0;
-    store_arp_sha_0 = 1'b0;
-    store_arp_sha_1 = 1'b0;
-    store_arp_sha_2 = 1'b0;
-    store_arp_sha_3 = 1'b0;
-    store_arp_sha_4 = 1'b0;
-    store_arp_sha_5 = 1'b0;
-    store_arp_spa_0 = 1'b0;
-    store_arp_spa_1 = 1'b0;
-    store_arp_spa_2 = 1'b0;
-    store_arp_spa_3 = 1'b0;
-    store_arp_tha_0 = 1'b0;
-    store_arp_tha_1 = 1'b0;
-    store_arp_tha_2 = 1'b0;
-    store_arp_tha_3 = 1'b0;
-    store_arp_tha_4 = 1'b0;
-    store_arp_tha_5 = 1'b0;
-    store_arp_tpa_0 = 1'b0;
-    store_arp_tpa_1 = 1'b0;
-    store_arp_tpa_2 = 1'b0;
-    store_arp_tpa_3 = 1'b0;
-
-    frame_ptr_next = frame_ptr_reg;
 
     m_frame_valid_next = m_frame_valid_reg && !m_frame_ready;
+
+    m_arp_htype_next = m_arp_htype_reg;
+    m_arp_ptype_next = m_arp_ptype_reg;
+    m_arp_hlen_next = m_arp_hlen_reg;
+    m_arp_plen_next = m_arp_plen_reg;
+    m_arp_oper_next = m_arp_oper_reg;
+    m_arp_sha_next = m_arp_sha_reg;
+    m_arp_spa_next = m_arp_spa_reg;
+    m_arp_tha_next = m_arp_tha_reg;
+    m_arp_tpa_next = m_arp_tpa_reg;
 
     error_header_early_termination_next = 1'b0;
     error_invalid_header_next = 1'b0;
 
-    case (state_reg)
-        STATE_IDLE: begin
-            // idle state - wait for data
-            frame_ptr_next = 8'd0;
-            s_eth_hdr_ready_next = !m_frame_valid_next;
-
-            if (s_eth_hdr_ready && s_eth_hdr_valid) begin
-                s_eth_hdr_ready_next = 1'b0;
-                s_eth_payload_axis_tready_next = 1'b1;
-                store_eth_hdr = 1'b1;
-                state_next = STATE_READ_HEADER;
-            end else begin
-                state_next = STATE_IDLE;
-            end
+    if (s_eth_hdr_ready && s_eth_hdr_valid) begin
+        if (read_eth_header_reg) begin
+            store_eth_hdr = 1'b1;
+            ptr_next = 0;
+            read_eth_header_next = 1'b0;
+            read_arp_header_next = 1'b1;
         end
-        STATE_READ_HEADER: begin
-            // read header state
-            s_eth_payload_axis_tready_next = 1'b1;
+    end
 
-            if (s_eth_payload_axis_tvalid) begin
-                // word transfer in - store it
-                frame_ptr_next = frame_ptr_reg + 8'd1;
-                state_next = STATE_READ_HEADER;
-                case (frame_ptr_reg)
-                    8'h00: store_arp_htype_1 = 1'b1;
-                    8'h01: store_arp_htype_0 = 1'b1;
-                    8'h02: store_arp_ptype_1 = 1'b1;
-                    8'h03: store_arp_ptype_0 = 1'b1;
-                    8'h04: store_arp_hlen = 1'b1;
-                    8'h05: store_arp_plen = 1'b1;
-                    8'h06: store_arp_oper_1 = 1'b1;
-                    8'h07: store_arp_oper_0 = 1'b1;
-                    8'h08: store_arp_sha_5 = 1'b1;
-                    8'h09: store_arp_sha_4 = 1'b1;
-                    8'h0A: store_arp_sha_3 = 1'b1;
-                    8'h0B: store_arp_sha_2 = 1'b1;
-                    8'h0C: store_arp_sha_1 = 1'b1;
-                    8'h0D: store_arp_sha_0 = 1'b1;
-                    8'h0E: store_arp_spa_3 = 1'b1;
-                    8'h0F: store_arp_spa_2 = 1'b1;
-                    8'h10: store_arp_spa_1 = 1'b1;
-                    8'h11: store_arp_spa_0 = 1'b1;
-                    8'h12: store_arp_tha_5 = 1'b1;
-                    8'h13: store_arp_tha_4 = 1'b1;
-                    8'h14: store_arp_tha_3 = 1'b1;
-                    8'h15: store_arp_tha_2 = 1'b1;
-                    8'h16: store_arp_tha_1 = 1'b1;
-                    8'h17: store_arp_tha_0 = 1'b1;
-                    8'h18: store_arp_tpa_3 = 1'b1;
-                    8'h19: store_arp_tpa_2 = 1'b1;
-                    8'h1A: store_arp_tpa_1 = 1'b1;
-                    8'h1B: begin
-                        store_arp_tpa_0 = 1'b1;
-                        state_next = STATE_WAIT_LAST;
-                    end
-                endcase
-                if (s_eth_payload_axis_tlast) begin
-                    // end of frame
-                    if (frame_ptr_reg != 8'h1B) begin
-                        // don't have the whole header
-                        error_header_early_termination_next = 1'b1;
-                    end else if (m_arp_hlen != 4'd6 || m_arp_plen != 4'd4) begin
-                        // lengths not valid
-                        error_invalid_header_next = 1'b1;
-                    end else begin
-                        // otherwise, transfer tuser
-                        m_frame_valid_next = !s_eth_payload_axis_tuser;
-                    end
-                    s_eth_hdr_ready_next = !m_frame_valid_next;
-                    s_eth_payload_axis_tready_next = 1'b0;
-                    state_next = STATE_IDLE;
+    if (s_eth_payload_axis_tready && s_eth_payload_axis_tvalid) begin
+        if (read_arp_header_reg) begin
+            // word transfer in - store it
+            ptr_next = ptr_reg + 1;
+
+            `define _HEADER_FIELD_(offset, field) \
+                if (ptr_reg == offset/KEEP_WIDTH && (!KEEP_ENABLE || s_eth_payload_axis_tkeep[offset%KEEP_WIDTH])) begin \
+                    field = s_eth_payload_axis_tdata[(offset%KEEP_WIDTH)*8 +: 8]; \
                 end
-            end else begin
-                state_next = STATE_READ_HEADER;
-            end
-        end
-        STATE_WAIT_LAST: begin
-            // wait for end of frame; read and discard
-            s_eth_payload_axis_tready_next = 1'b1;
 
-            if (s_eth_payload_axis_tvalid) begin
-                if (s_eth_payload_axis_tlast) begin
-                    if (m_arp_hlen != 4'd6 || m_arp_plen != 4'd4) begin
-                        // lengths not valid
-                        error_invalid_header_next = 1'b1;
-                    end else begin
-                        // otherwise, transfer tuser
-                        m_frame_valid_next = !s_eth_payload_axis_tuser;
-                    end
-                    s_eth_hdr_ready_next = !m_frame_valid_next;
-                    s_eth_payload_axis_tready_next = 1'b0;
-                    state_next = STATE_IDLE;
-                end else begin
-                    state_next = STATE_WAIT_LAST;
-                end
-            end else begin
-                // wait for end of frame; read and discard
-                state_next = STATE_WAIT_LAST;
+            `_HEADER_FIELD_(0,  m_arp_htype_next[1*8 +: 8])
+            `_HEADER_FIELD_(1,  m_arp_htype_next[0*8 +: 8])
+            `_HEADER_FIELD_(2,  m_arp_ptype_next[1*8 +: 8])
+            `_HEADER_FIELD_(3,  m_arp_ptype_next[0*8 +: 8])
+            `_HEADER_FIELD_(4,  m_arp_hlen_next[0*8 +: 8])
+            `_HEADER_FIELD_(5,  m_arp_plen_next[0*8 +: 8])
+            `_HEADER_FIELD_(6,  m_arp_oper_next[1*8 +: 8])
+            `_HEADER_FIELD_(7,  m_arp_oper_next[0*8 +: 8])
+            `_HEADER_FIELD_(8,  m_arp_sha_next[5*8 +: 8])
+            `_HEADER_FIELD_(9,  m_arp_sha_next[4*8 +: 8])
+            `_HEADER_FIELD_(10, m_arp_sha_next[3*8 +: 8])
+            `_HEADER_FIELD_(11, m_arp_sha_next[2*8 +: 8])
+            `_HEADER_FIELD_(12, m_arp_sha_next[1*8 +: 8])
+            `_HEADER_FIELD_(13, m_arp_sha_next[0*8 +: 8])
+            `_HEADER_FIELD_(14, m_arp_spa_next[3*8 +: 8])
+            `_HEADER_FIELD_(15, m_arp_spa_next[2*8 +: 8])
+            `_HEADER_FIELD_(16, m_arp_spa_next[1*8 +: 8])
+            `_HEADER_FIELD_(17, m_arp_spa_next[0*8 +: 8])
+            `_HEADER_FIELD_(18, m_arp_tha_next[5*8 +: 8])
+            `_HEADER_FIELD_(19, m_arp_tha_next[4*8 +: 8])
+            `_HEADER_FIELD_(20, m_arp_tha_next[3*8 +: 8])
+            `_HEADER_FIELD_(21, m_arp_tha_next[2*8 +: 8])
+            `_HEADER_FIELD_(22, m_arp_tha_next[1*8 +: 8])
+            `_HEADER_FIELD_(23, m_arp_tha_next[0*8 +: 8])
+            `_HEADER_FIELD_(24, m_arp_tpa_next[3*8 +: 8])
+            `_HEADER_FIELD_(25, m_arp_tpa_next[2*8 +: 8])
+            `_HEADER_FIELD_(26, m_arp_tpa_next[1*8 +: 8])
+            `_HEADER_FIELD_(27, m_arp_tpa_next[0*8 +: 8])
+
+            if (ptr_reg == 27/KEEP_WIDTH && (!KEEP_ENABLE || s_eth_payload_axis_tkeep[27%KEEP_WIDTH])) begin
+                read_arp_header_next = 1'b0;
             end
+
+            `undef _HEADER_FIELD_
         end
-    endcase
+
+        if (s_eth_payload_axis_tlast) begin
+            if (read_arp_header_next) begin
+                // don't have the whole header
+                error_header_early_termination_next = 1'b1;
+            end else if (m_arp_hlen_next != 4'd6 || m_arp_plen_next != 4'd4) begin
+                // lengths not valid
+                error_invalid_header_next = 1'b1;
+            end else begin
+                // otherwise, transfer tuser
+                m_frame_valid_next = !s_eth_payload_axis_tuser;
+            end
+
+            ptr_next = 1'b0;
+            read_eth_header_next = 1'b1;
+            read_arp_header_next = 1'b0;
+        end
+    end
+
+    if (read_eth_header_next) begin
+        s_eth_hdr_ready_next = !m_frame_valid_next;
+    end else begin
+        s_eth_payload_axis_tready_next = 1'b1;
+    end
 end
 
 always @(posedge clk) begin
-    if (rst) begin
-        state_reg <= STATE_IDLE;
-        frame_ptr_reg <= 8'd0;
-        s_eth_payload_axis_tready_reg <= 1'b0;
-        m_frame_valid_reg <= 1'b0;
-        busy_reg <= 1'b0;
-        error_header_early_termination_reg <= 1'b0;
-        error_invalid_header_reg <= 1'b0;
-    end else begin
-        state_reg <= state_next;
+    read_eth_header_reg <= read_eth_header_next;
+    read_arp_header_reg <= read_arp_header_next;
+    ptr_reg <= ptr_next;
 
-        s_eth_hdr_ready_reg <= s_eth_hdr_ready_next;
-        s_eth_payload_axis_tready_reg <= s_eth_payload_axis_tready_next;
+    s_eth_hdr_ready_reg <= s_eth_hdr_ready_next;
+    s_eth_payload_axis_tready_reg <= s_eth_payload_axis_tready_next;
 
-        frame_ptr_reg <= frame_ptr_next;
+    m_frame_valid_reg <= m_frame_valid_next;
 
-        m_frame_valid_reg <= m_frame_valid_next;
+    m_arp_htype_reg <= m_arp_htype_next;
+    m_arp_ptype_reg <= m_arp_ptype_next;
+    m_arp_hlen_reg <= m_arp_hlen_next;
+    m_arp_plen_reg <= m_arp_plen_next;
+    m_arp_oper_reg <= m_arp_oper_next;
+    m_arp_sha_reg <= m_arp_sha_next;
+    m_arp_spa_reg <= m_arp_spa_next;
+    m_arp_tha_reg <= m_arp_tha_next;
+    m_arp_tpa_reg <= m_arp_tpa_next;
 
-        error_header_early_termination_reg <= error_header_early_termination_next;
-        error_invalid_header_reg <= error_invalid_header_next;
+    error_header_early_termination_reg <= error_header_early_termination_next;
+    error_invalid_header_reg <= error_invalid_header_next;
 
-        busy_reg <= state_next != STATE_IDLE;
-    end
+    busy_reg <= read_arp_header_next;
 
     // datapath
     if (store_eth_hdr) begin
@@ -358,34 +308,16 @@ always @(posedge clk) begin
         m_eth_type_reg <= s_eth_type;
     end
 
-    if (store_arp_htype_0) m_arp_htype_reg[ 7: 0] <= s_eth_payload_axis_tdata;
-    if (store_arp_htype_1) m_arp_htype_reg[15: 8] <= s_eth_payload_axis_tdata;
-    if (store_arp_ptype_0) m_arp_ptype_reg[ 7: 0] <= s_eth_payload_axis_tdata;
-    if (store_arp_ptype_1) m_arp_ptype_reg[15: 8] <= s_eth_payload_axis_tdata;
-    if (store_arp_hlen) m_arp_hlen_reg <= s_eth_payload_axis_tdata;
-    if (store_arp_plen) m_arp_plen_reg <= s_eth_payload_axis_tdata;
-    if (store_arp_oper_0) m_arp_oper_reg[ 7: 0] <= s_eth_payload_axis_tdata;
-    if (store_arp_oper_1) m_arp_oper_reg[15: 8] <= s_eth_payload_axis_tdata;
-    if (store_arp_sha_0) m_arp_sha_reg[ 7: 0] <= s_eth_payload_axis_tdata;
-    if (store_arp_sha_1) m_arp_sha_reg[15: 8] <= s_eth_payload_axis_tdata;
-    if (store_arp_sha_2) m_arp_sha_reg[23:16] <= s_eth_payload_axis_tdata;
-    if (store_arp_sha_3) m_arp_sha_reg[31:24] <= s_eth_payload_axis_tdata;
-    if (store_arp_sha_4) m_arp_sha_reg[39:32] <= s_eth_payload_axis_tdata;
-    if (store_arp_sha_5) m_arp_sha_reg[47:40] <= s_eth_payload_axis_tdata;
-    if (store_arp_spa_0) m_arp_spa_reg[ 7: 0] <= s_eth_payload_axis_tdata;
-    if (store_arp_spa_1) m_arp_spa_reg[15: 8] <= s_eth_payload_axis_tdata;
-    if (store_arp_spa_2) m_arp_spa_reg[23:16] <= s_eth_payload_axis_tdata;
-    if (store_arp_spa_3) m_arp_spa_reg[31:24] <= s_eth_payload_axis_tdata;
-    if (store_arp_tha_0) m_arp_tha_reg[ 7: 0] <= s_eth_payload_axis_tdata;
-    if (store_arp_tha_1) m_arp_tha_reg[15: 8] <= s_eth_payload_axis_tdata;
-    if (store_arp_tha_2) m_arp_tha_reg[23:16] <= s_eth_payload_axis_tdata;
-    if (store_arp_tha_3) m_arp_tha_reg[31:24] <= s_eth_payload_axis_tdata;
-    if (store_arp_tha_4) m_arp_tha_reg[39:32] <= s_eth_payload_axis_tdata;
-    if (store_arp_tha_5) m_arp_tha_reg[47:40] <= s_eth_payload_axis_tdata;
-    if (store_arp_tpa_0) m_arp_tpa_reg[ 7: 0] <= s_eth_payload_axis_tdata;
-    if (store_arp_tpa_1) m_arp_tpa_reg[15: 8] <= s_eth_payload_axis_tdata;
-    if (store_arp_tpa_2) m_arp_tpa_reg[23:16] <= s_eth_payload_axis_tdata;
-    if (store_arp_tpa_3) m_arp_tpa_reg[31:24] <= s_eth_payload_axis_tdata;
+    if (rst) begin
+        read_eth_header_reg <= 1'b1;
+        read_arp_header_reg <= 1'b0;
+        ptr_reg <= 0;
+        s_eth_payload_axis_tready_reg <= 1'b0;
+        m_frame_valid_reg <= 1'b0;
+        busy_reg <= 1'b0;
+        error_header_early_termination_reg <= 1'b0;
+        error_invalid_header_reg <= 1'b0;
+    end 
 end
 
 endmodule

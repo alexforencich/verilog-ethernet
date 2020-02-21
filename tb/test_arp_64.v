@@ -27,9 +27,18 @@ THE SOFTWARE.
 `timescale 1ns / 1ps
 
 /*
- * Testbench for arp_64
+ * Testbench for arp
  */
 module test_arp_64;
+
+// Parameters
+parameter DATA_WIDTH = 64;
+parameter KEEP_ENABLE = (DATA_WIDTH>8);
+parameter KEEP_WIDTH = (DATA_WIDTH/8);
+parameter CACHE_ADDR_WIDTH = 2;
+parameter REQUEST_RETRY_COUNT = 4;
+parameter REQUEST_RETRY_INTERVAL = 150;
+parameter REQUEST_TIMEOUT = 400;
 
 // Inputs
 reg clk = 0;
@@ -40,8 +49,8 @@ reg s_eth_hdr_valid = 0;
 reg [47:0] s_eth_dest_mac = 0;
 reg [47:0] s_eth_src_mac = 0;
 reg [15:0] s_eth_type = 0;
-reg [63:0] s_eth_payload_axis_tdata = 0;
-reg [7:0] s_eth_payload_axis_tkeep = 0;
+reg [DATA_WIDTH-1:0] s_eth_payload_axis_tdata = 0;
+reg [KEEP_WIDTH-1:0] s_eth_payload_axis_tkeep = 0;
 reg s_eth_payload_axis_tvalid = 0;
 reg s_eth_payload_axis_tlast = 0;
 reg s_eth_payload_axis_tuser = 0;
@@ -67,8 +76,8 @@ wire m_eth_hdr_valid;
 wire [47:0] m_eth_dest_mac;
 wire [47:0] m_eth_src_mac;
 wire [15:0] m_eth_type;
-wire [63:0] m_eth_payload_axis_tdata;
-wire [7:0] m_eth_payload_axis_tkeep;
+wire [DATA_WIDTH-1:0] m_eth_payload_axis_tdata;
+wire [KEEP_WIDTH-1:0] m_eth_payload_axis_tkeep;
 wire m_eth_payload_axis_tvalid;
 wire m_eth_payload_axis_tlast;
 wire m_eth_payload_axis_tuser;
@@ -127,11 +136,14 @@ initial begin
     $dumpvars(0, test_arp_64);
 end
 
-arp_64 #(
-    .CACHE_ADDR_WIDTH(2),
-    .REQUEST_RETRY_COUNT(4),
-    .REQUEST_RETRY_INTERVAL(150),
-    .REQUEST_TIMEOUT(400)
+arp #(
+    .DATA_WIDTH(DATA_WIDTH),
+    .KEEP_ENABLE(KEEP_ENABLE),
+    .KEEP_WIDTH(KEEP_WIDTH),
+    .CACHE_ADDR_WIDTH(CACHE_ADDR_WIDTH),
+    .REQUEST_RETRY_COUNT(REQUEST_RETRY_COUNT),
+    .REQUEST_RETRY_INTERVAL(REQUEST_RETRY_INTERVAL),
+    .REQUEST_TIMEOUT(REQUEST_TIMEOUT)
 )
 UUT (
     .clk(clk),

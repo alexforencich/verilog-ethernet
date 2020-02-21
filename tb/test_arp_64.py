@@ -30,16 +30,16 @@ import axis_ep
 import eth_ep
 import arp_ep
 
-module = 'arp_64'
-testbench = 'test_%s' % module
+module = 'arp'
+testbench = 'test_%s_64' % module
 
 srcs = []
 
 srcs.append("../rtl/%s.v" % module)
 srcs.append("../rtl/lfsr.v")
 srcs.append("../rtl/arp_cache.v")
-srcs.append("../rtl/arp_eth_rx_64.v")
-srcs.append("../rtl/arp_eth_tx_64.v")
+srcs.append("../rtl/arp_eth_rx.v")
+srcs.append("../rtl/arp_eth_tx.v")
 srcs.append("%s.v" % testbench)
 
 src = ' '.join(srcs)
@@ -47,6 +47,15 @@ src = ' '.join(srcs)
 build_cmd = "iverilog -o %s.vvp %s" % (testbench, src)
 
 def bench():
+
+    # Parameters
+    DATA_WIDTH = 64
+    KEEP_ENABLE = (DATA_WIDTH>8)
+    KEEP_WIDTH = (DATA_WIDTH/8)
+    CACHE_ADDR_WIDTH = 2
+    REQUEST_RETRY_COUNT = 4
+    REQUEST_RETRY_INTERVAL = 150
+    REQUEST_TIMEOUT = 400
 
     # Inputs
     clk = Signal(bool(0))
@@ -57,8 +66,8 @@ def bench():
     s_eth_dest_mac = Signal(intbv(0)[48:])
     s_eth_src_mac = Signal(intbv(0)[48:])
     s_eth_type = Signal(intbv(0)[16:])
-    s_eth_payload_axis_tdata = Signal(intbv(0)[64:])
-    s_eth_payload_axis_tkeep = Signal(intbv(0)[8:])
+    s_eth_payload_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
+    s_eth_payload_axis_tkeep = Signal(intbv(0)[KEEP_WIDTH:])
     s_eth_payload_axis_tvalid = Signal(bool(0))
     s_eth_payload_axis_tlast = Signal(bool(0))
     s_eth_payload_axis_tuser = Signal(bool(0))
@@ -84,8 +93,8 @@ def bench():
     m_eth_dest_mac = Signal(intbv(0)[48:])
     m_eth_src_mac = Signal(intbv(0)[48:])
     m_eth_type = Signal(intbv(0)[16:])
-    m_eth_payload_axis_tdata = Signal(intbv(0)[64:])
-    m_eth_payload_axis_tkeep = Signal(intbv(0)[8:])
+    m_eth_payload_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
+    m_eth_payload_axis_tkeep = Signal(intbv(0)[KEEP_WIDTH:])
     m_eth_payload_axis_tvalid = Signal(bool(0))
     m_eth_payload_axis_tlast = Signal(bool(0))
     m_eth_payload_axis_tuser = Signal(bool(0))
