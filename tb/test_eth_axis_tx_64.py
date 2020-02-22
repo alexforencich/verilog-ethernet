@@ -29,8 +29,8 @@ import os
 import axis_ep
 import eth_ep
 
-module = 'eth_axis_tx_64'
-testbench = 'test_%s' % module
+module = 'eth_axis_tx'
+testbench = 'test_%s_64' % module
 
 srcs = []
 
@@ -43,6 +43,11 @@ build_cmd = "iverilog -o %s.vvp %s" % (testbench, src)
 
 def bench():
 
+    # Parameters
+    DATA_WIDTH = 64
+    KEEP_ENABLE = (DATA_WIDTH>8)
+    KEEP_WIDTH = int(DATA_WIDTH/8)
+
     # Inputs
     clk = Signal(bool(0))
     rst = Signal(bool(0))
@@ -52,20 +57,20 @@ def bench():
     s_eth_dest_mac = Signal(intbv(0)[48:])
     s_eth_src_mac = Signal(intbv(0)[48:])
     s_eth_type = Signal(intbv(0)[16:])
-    s_eth_payload_axis_tdata = Signal(intbv(0)[64:])
-    s_eth_payload_axis_tkeep = Signal(intbv(0)[8:])
+    s_eth_payload_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
+    s_eth_payload_axis_tkeep = Signal(intbv(1)[KEEP_WIDTH:])
     s_eth_payload_axis_tvalid = Signal(bool(0))
     s_eth_payload_axis_tlast = Signal(bool(0))
     s_eth_payload_axis_tuser = Signal(bool(0))
     m_axis_tready = Signal(bool(0))
 
     # Outputs
-    m_axis_tdata = Signal(intbv(0)[64:])
-    m_axis_tkeep = Signal(intbv(0)[8:])
+    m_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
+    m_axis_tkeep = Signal(intbv(1)[KEEP_WIDTH:])
     m_axis_tvalid = Signal(bool(0))
     m_axis_tlast = Signal(bool(0))
     m_axis_tuser = Signal(bool(0))
-    s_eth_hdr_ready = Signal(bool(1))
+    s_eth_hdr_ready = Signal(bool(0))
     s_eth_payload_axis_tready = Signal(bool(0))
     busy = Signal(bool(0))
 
@@ -179,7 +184,7 @@ def bench():
         yield delay(100)
         yield clk.posedge
 
-        for payload_len in range(1,18):
+        for payload_len in range(1,KEEP_WIDTH*2+2):
             yield clk.posedge
             print("test 1: test packet, length %d" % payload_len)
             current_test.next = 1

@@ -43,12 +43,18 @@ build_cmd = "iverilog -o %s.vvp %s" % (testbench, src)
 
 def bench():
 
+    # Parameters
+    DATA_WIDTH = 8
+    KEEP_ENABLE = (DATA_WIDTH>8)
+    KEEP_WIDTH = int(DATA_WIDTH/8)
+
     # Inputs
     clk = Signal(bool(0))
     rst = Signal(bool(0))
     current_test = Signal(intbv(0)[8:])
 
-    s_axis_tdata = Signal(intbv(0)[8:])
+    s_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
+    s_axis_tkeep = Signal(intbv(1)[KEEP_WIDTH:])
     s_axis_tvalid = Signal(bool(0))
     s_axis_tlast = Signal(bool(0))
     s_axis_tuser = Signal(bool(0))
@@ -61,7 +67,8 @@ def bench():
     m_eth_dest_mac = Signal(intbv(0)[48:])
     m_eth_src_mac = Signal(intbv(0)[48:])
     m_eth_type = Signal(intbv(0)[16:])
-    m_eth_payload_axis_tdata = Signal(intbv(0)[8:])
+    m_eth_payload_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
+    m_eth_payload_axis_tkeep = Signal(intbv(1)[KEEP_WIDTH:])
     m_eth_payload_axis_tvalid = Signal(bool(0))
     m_eth_payload_axis_tlast = Signal(bool(0))
     m_eth_payload_axis_tuser = Signal(bool(0))
@@ -78,6 +85,7 @@ def bench():
         clk,
         rst,
         tdata=s_axis_tdata,
+        tkeep=s_axis_tkeep,
         tvalid=s_axis_tvalid,
         tready=s_axis_tready,
         tlast=s_axis_tlast,
@@ -97,6 +105,7 @@ def bench():
         eth_src_mac=m_eth_src_mac,
         eth_type=m_eth_type,
         eth_payload_tdata=m_eth_payload_axis_tdata,
+        eth_payload_tkeep=m_eth_payload_axis_tkeep,
         eth_payload_tvalid=m_eth_payload_axis_tvalid,
         eth_payload_tready=m_eth_payload_axis_tready,
         eth_payload_tlast=m_eth_payload_axis_tlast,
@@ -116,6 +125,7 @@ def bench():
         current_test=current_test,
 
         s_axis_tdata=s_axis_tdata,
+        s_axis_tkeep=s_axis_tkeep,
         s_axis_tvalid=s_axis_tvalid,
         s_axis_tready=s_axis_tready,
         s_axis_tlast=s_axis_tlast,
@@ -127,6 +137,7 @@ def bench():
         m_eth_src_mac=m_eth_src_mac,
         m_eth_type=m_eth_type,
         m_eth_payload_axis_tdata=m_eth_payload_axis_tdata,
+        m_eth_payload_axis_tkeep=m_eth_payload_axis_tkeep,
         m_eth_payload_axis_tvalid=m_eth_payload_axis_tvalid,
         m_eth_payload_axis_tready=m_eth_payload_axis_tready,
         m_eth_payload_axis_tlast=m_eth_payload_axis_tlast,
@@ -182,7 +193,7 @@ def bench():
         yield delay(100)
         yield clk.posedge
 
-        for payload_len in range(1,18):
+        for payload_len in range(1,KEEP_WIDTH*2+2):
             yield clk.posedge
             print("test 1: test packet, length %d" % payload_len)
             current_test.next = 1

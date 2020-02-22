@@ -27,17 +27,22 @@ THE SOFTWARE.
 `timescale 1ns / 1ps
 
 /*
- * Testbench for eth_axis_rx_64
+ * Testbench for eth_axis_rx
  */
 module test_eth_axis_rx_64;
+
+// Parameters
+parameter DATA_WIDTH = 64;
+parameter KEEP_ENABLE = (DATA_WIDTH>8);
+parameter KEEP_WIDTH = (DATA_WIDTH/8);
 
 // Inputs
 reg clk = 0;
 reg rst = 0;
 reg [7:0] current_test = 0;
 
-reg [63:0] s_axis_tdata = 0;
-reg [7:0] s_axis_tkeep = 0;
+reg [DATA_WIDTH-1:0] s_axis_tdata = 0;
+reg [KEEP_WIDTH-1:0] s_axis_tkeep = 0;
 reg s_axis_tvalid = 0;
 reg s_axis_tlast = 0;
 reg s_axis_tuser = 0;
@@ -50,8 +55,8 @@ wire m_eth_hdr_valid;
 wire [47:0] m_eth_dest_mac;
 wire [47:0] m_eth_src_mac;
 wire [15:0] m_eth_type;
-wire [63:0] m_eth_payload_axis_tdata;
-wire [7:0] m_eth_payload_axis_tkeep;
+wire [DATA_WIDTH-1:0] m_eth_payload_axis_tdata;
+wire [KEEP_WIDTH-1:0] m_eth_payload_axis_tkeep;
 wire m_eth_payload_axis_tvalid;
 wire m_eth_payload_axis_tlast;
 wire m_eth_payload_axis_tuser;
@@ -92,7 +97,11 @@ initial begin
     $dumpvars(0, test_eth_axis_rx_64);
 end
 
-eth_axis_rx_64
+eth_axis_rx #(
+    .DATA_WIDTH(DATA_WIDTH),
+    .KEEP_ENABLE(KEEP_ENABLE),
+    .KEEP_WIDTH(KEEP_WIDTH)
+)
 UUT (
     .clk(clk),
     .rst(rst),

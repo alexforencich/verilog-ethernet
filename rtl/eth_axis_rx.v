@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014-2018 Alex Forencich
+Copyright (c) 2014-2020 Alex Forencich
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -29,40 +29,65 @@ THE SOFTWARE.
 /*
  * AXI4-Stream ethernet frame receiver (AXI in, Ethernet frame out)
  */
-module eth_axis_rx
+module eth_axis_rx #
 (
-    input  wire        clk,
-    input  wire        rst,
+    // Width of AXI stream interfaces in bits
+    parameter DATA_WIDTH = 8,
+    // Propagate tkeep signal
+    // If disabled, tkeep assumed to be 1'b1
+    parameter KEEP_ENABLE = (DATA_WIDTH>8),
+    // tkeep signal width (words per cycle)
+    parameter KEEP_WIDTH = (DATA_WIDTH/8)
+)
+(
+    input  wire                  clk,
+    input  wire                  rst,
 
     /*
      * AXI input
      */
-    input  wire [7:0]  s_axis_tdata,
-    input  wire        s_axis_tvalid,
-    output wire        s_axis_tready,
-    input  wire        s_axis_tlast,
-    input  wire        s_axis_tuser,
+    input  wire [DATA_WIDTH-1:0] s_axis_tdata,
+    input  wire [KEEP_WIDTH-1:0] s_axis_tkeep,
+    input  wire                  s_axis_tvalid,
+    output wire                  s_axis_tready,
+    input  wire                  s_axis_tlast,
+    input  wire                  s_axis_tuser,
 
     /*
      * Ethernet frame output
      */
-    output wire        m_eth_hdr_valid,
-    input  wire        m_eth_hdr_ready,
-    output wire [47:0] m_eth_dest_mac,
-    output wire [47:0] m_eth_src_mac,
-    output wire [15:0] m_eth_type,
-    output wire [7:0]  m_eth_payload_axis_tdata,
-    output wire        m_eth_payload_axis_tvalid,
-    input  wire        m_eth_payload_axis_tready,
-    output wire        m_eth_payload_axis_tlast,
-    output wire        m_eth_payload_axis_tuser,
+    output wire                  m_eth_hdr_valid,
+    input  wire                  m_eth_hdr_ready,
+    output wire [47:0]           m_eth_dest_mac,
+    output wire [47:0]           m_eth_src_mac,
+    output wire [15:0]           m_eth_type,
+    output wire [DATA_WIDTH-1:0] m_eth_payload_axis_tdata,
+    output wire [KEEP_WIDTH-1:0] m_eth_payload_axis_tkeep,
+    output wire                  m_eth_payload_axis_tvalid,
+    input  wire                  m_eth_payload_axis_tready,
+    output wire                  m_eth_payload_axis_tlast,
+    output wire                  m_eth_payload_axis_tuser,
 
     /*
      * Status signals
      */
-    output wire        busy,
-    output wire        error_header_early_termination
+    output wire                  busy,
+    output wire                  error_header_early_termination
 );
+
+parameter CYCLE_COUNT = (14+KEEP_WIDTH-1)/KEEP_WIDTH;
+
+parameter PTR_WIDTH = $clog2(CYCLE_COUNT);
+
+parameter OFFSET = 14 % KEEP_WIDTH;
+
+// bus width assertions
+initial begin
+    if (KEEP_WIDTH * 8 != DATA_WIDTH) begin
+        $error("Error: AXI stream interface requires byte (8-bit) granularity (instance %m)");
+        $finish;
+    end
+end
 
 /*
 
@@ -79,48 +104,44 @@ with the payload in a separate AXI stream.
 
 */
 
-localparam [1:0]
-    STATE_IDLE = 2'd0,
-    STATE_READ_HEADER = 2'd1,
-    STATE_READ_PAYLOAD = 2'd2;
+reg read_eth_header_reg = 1'b1, read_eth_header_next;
+reg read_eth_payload_reg = 1'b0, read_eth_payload_next;
+reg [PTR_WIDTH-1:0] ptr_reg = 0, ptr_next;
 
-reg [1:0] state_reg = STATE_IDLE, state_next;
-
-// datapath control signals
-reg store_eth_dest_mac_0;
-reg store_eth_dest_mac_1;
-reg store_eth_dest_mac_2;
-reg store_eth_dest_mac_3;
-reg store_eth_dest_mac_4;
-reg store_eth_dest_mac_5;
-reg store_eth_src_mac_0;
-reg store_eth_src_mac_1;
-reg store_eth_src_mac_2;
-reg store_eth_src_mac_3;
-reg store_eth_src_mac_4;
-reg store_eth_src_mac_5;
-reg store_eth_type_0;
-reg store_eth_type_1;
-
-reg [7:0] frame_ptr_reg = 8'd0, frame_ptr_next;
+reg flush_save;
+reg transfer_in_save;
 
 reg s_axis_tready_reg = 1'b0, s_axis_tready_next;
 
 reg m_eth_hdr_valid_reg = 1'b0, m_eth_hdr_valid_next;
-reg [47:0] m_eth_dest_mac_reg = 48'd0;
-reg [47:0] m_eth_src_mac_reg = 48'd0;
-reg [15:0] m_eth_type_reg = 16'd0;
+reg [47:0] m_eth_dest_mac_reg = 48'd0, m_eth_dest_mac_next;
+reg [47:0] m_eth_src_mac_reg = 48'd0, m_eth_src_mac_next;
+reg [15:0] m_eth_type_reg = 16'd0, m_eth_type_next;
 
 reg busy_reg = 1'b0;
 reg error_header_early_termination_reg = 1'b0, error_header_early_termination_next;
 
+reg [DATA_WIDTH-1:0] save_axis_tdata_reg = 64'd0;
+reg [KEEP_WIDTH-1:0] save_axis_tkeep_reg = 8'd0;
+reg save_axis_tlast_reg = 1'b0;
+reg save_axis_tuser_reg = 1'b0;
+
+reg [DATA_WIDTH-1:0] shift_axis_tdata;
+reg [KEEP_WIDTH-1:0] shift_axis_tkeep;
+reg shift_axis_tvalid;
+reg shift_axis_tlast;
+reg shift_axis_tuser;
+reg shift_axis_input_tready;
+reg shift_axis_extra_cycle_reg = 1'b0;
+
 // internal datapath
-reg [7:0] m_eth_payload_axis_tdata_int;
-reg       m_eth_payload_axis_tvalid_int;
-reg       m_eth_payload_axis_tready_int_reg = 1'b0;
-reg       m_eth_payload_axis_tlast_int;
-reg       m_eth_payload_axis_tuser_int;
-wire      m_eth_payload_axis_tready_int_early;
+reg [DATA_WIDTH-1:0] m_eth_payload_axis_tdata_int;
+reg [KEEP_WIDTH-1:0] m_eth_payload_axis_tkeep_int;
+reg                  m_eth_payload_axis_tvalid_int;
+reg                  m_eth_payload_axis_tready_int_reg = 1'b0;
+reg                  m_eth_payload_axis_tlast_int;
+reg                  m_eth_payload_axis_tuser_int;
+wire                 m_eth_payload_axis_tready_int_early;
 
 assign s_axis_tready = s_axis_tready_reg;
 
@@ -133,169 +154,170 @@ assign busy = busy_reg;
 assign error_header_early_termination = error_header_early_termination_reg;
 
 always @* begin
-    state_next = STATE_IDLE;
+    if (OFFSET == 0) begin
+        // passthrough if no overlap
+        shift_axis_tdata = s_axis_tdata;
+        shift_axis_tkeep = s_axis_tkeep;
+        shift_axis_tvalid = s_axis_tvalid;
+        shift_axis_tlast = s_axis_tlast;
+        shift_axis_tuser = s_axis_tuser;
+        shift_axis_input_tready = 1'b1;
+    end else if (shift_axis_extra_cycle_reg) begin
+        shift_axis_tdata = {s_axis_tdata, save_axis_tdata_reg} >> (OFFSET*8);
+        shift_axis_tkeep = {{KEEP_WIDTH{1'b0}}, save_axis_tkeep_reg} >> OFFSET;
+        shift_axis_tvalid = 1'b1;
+        shift_axis_tlast = save_axis_tlast_reg;
+        shift_axis_tuser = save_axis_tuser_reg;
+        shift_axis_input_tready = flush_save;
+    end else begin
+        shift_axis_tdata = {s_axis_tdata, save_axis_tdata_reg} >> (OFFSET*8);
+        shift_axis_tkeep = {s_axis_tkeep, save_axis_tkeep_reg} >> OFFSET;
+        shift_axis_tvalid = s_axis_tvalid;
+        shift_axis_tlast = (s_axis_tlast && ((s_axis_tkeep & ({KEEP_WIDTH{1'b1}} << OFFSET)) == 0));
+        shift_axis_tuser = (s_axis_tuser && ((s_axis_tkeep & ({KEEP_WIDTH{1'b1}} << OFFSET)) == 0));
+        shift_axis_input_tready = !(s_axis_tlast && s_axis_tready && s_axis_tvalid);
+    end
+end
 
-    s_axis_tready_next = 1'b0;
+always @* begin
+    read_eth_header_next = read_eth_header_reg;
+    read_eth_payload_next = read_eth_payload_reg;
+    ptr_next = ptr_reg;
 
-    store_eth_dest_mac_0 = 1'b0;
-    store_eth_dest_mac_1 = 1'b0;
-    store_eth_dest_mac_2 = 1'b0;
-    store_eth_dest_mac_3 = 1'b0;
-    store_eth_dest_mac_4 = 1'b0;
-    store_eth_dest_mac_5 = 1'b0;
-    store_eth_src_mac_0 = 1'b0;
-    store_eth_src_mac_1 = 1'b0;
-    store_eth_src_mac_2 = 1'b0;
-    store_eth_src_mac_3 = 1'b0;
-    store_eth_src_mac_4 = 1'b0;
-    store_eth_src_mac_5 = 1'b0;
-    store_eth_type_0 = 1'b0;
-    store_eth_type_1 = 1'b0;
+    s_axis_tready_next = m_eth_payload_axis_tready_int_early && shift_axis_input_tready && (!m_eth_hdr_valid || m_eth_hdr_ready);
 
-    frame_ptr_next = frame_ptr_reg;
+    flush_save = 1'b0;
+    transfer_in_save = 1'b0;
 
     m_eth_hdr_valid_next = m_eth_hdr_valid_reg && !m_eth_hdr_ready;
 
+    m_eth_dest_mac_next = m_eth_dest_mac_reg;
+    m_eth_src_mac_next = m_eth_src_mac_reg;
+    m_eth_type_next = m_eth_type_reg;
+
     error_header_early_termination_next = 1'b0;
 
-    m_eth_payload_axis_tdata_int = 8'd0;
+    m_eth_payload_axis_tdata_int = shift_axis_tdata;
+    m_eth_payload_axis_tkeep_int = shift_axis_tkeep;
     m_eth_payload_axis_tvalid_int = 1'b0;
-    m_eth_payload_axis_tlast_int = 1'b0;
-    m_eth_payload_axis_tuser_int = 1'b0;
+    m_eth_payload_axis_tlast_int = shift_axis_tlast;
+    m_eth_payload_axis_tuser_int = shift_axis_tuser;
 
-    case (state_reg)
-        STATE_IDLE: begin
-            // idle state - wait for data
-            frame_ptr_next = 8'd0;
-            s_axis_tready_next = !m_eth_hdr_valid_reg;
+    if ((s_axis_tready && s_axis_tvalid) || (m_eth_payload_axis_tready_int_reg && shift_axis_extra_cycle_reg)) begin
+        transfer_in_save = 1'b1;
 
-            if (s_axis_tready && s_axis_tvalid) begin
-                // got first word of packet
-                if (s_axis_tlast) begin
-                    // tlast asserted on first word
-                    error_header_early_termination_next = 1'b1;
-                    state_next = STATE_IDLE;
-                end else begin
-                    // move to read header state
-                    frame_ptr_next = 1'b1;
-                    store_eth_dest_mac_5 = 1'b1;
-                    state_next = STATE_READ_HEADER;
+        if (read_eth_header_reg) begin
+            // word transfer in - store it
+            ptr_next = ptr_reg + 1;
+
+            `define _HEADER_FIELD_(offset, field) \
+                if (ptr_reg == offset/KEEP_WIDTH && (!KEEP_ENABLE || s_axis_tkeep[offset%KEEP_WIDTH])) begin \
+                    field = s_axis_tdata[(offset%KEEP_WIDTH)*8 +: 8]; \
                 end
-            end else begin
-                state_next = STATE_IDLE;
-            end
-        end
-        STATE_READ_HEADER: begin
-            // read header
-            s_axis_tready_next = 1'b1;
 
-            if (s_axis_tready && s_axis_tvalid) begin
-                // word transfer in - store it
-                frame_ptr_next = frame_ptr_reg + 8'd1;
-                state_next = STATE_READ_HEADER;
-                case (frame_ptr_reg)
-                    8'h00: store_eth_dest_mac_5 = 1'b1;
-                    8'h01: store_eth_dest_mac_4 = 1'b1;
-                    8'h02: store_eth_dest_mac_3 = 1'b1;
-                    8'h03: store_eth_dest_mac_2 = 1'b1;
-                    8'h04: store_eth_dest_mac_1 = 1'b1;
-                    8'h05: store_eth_dest_mac_0 = 1'b1;
-                    8'h06: store_eth_src_mac_5 = 1'b1;
-                    8'h07: store_eth_src_mac_4 = 1'b1;
-                    8'h08: store_eth_src_mac_3 = 1'b1;
-                    8'h09: store_eth_src_mac_2 = 1'b1;
-                    8'h0A: store_eth_src_mac_1 = 1'b1;
-                    8'h0B: store_eth_src_mac_0 = 1'b1;
-                    8'h0C: store_eth_type_1 = 1'b1;
-                    8'h0D: begin
-                        store_eth_type_0 = 1'b1;
-                        m_eth_hdr_valid_next = 1'b1;
-                        s_axis_tready_next = m_eth_payload_axis_tready_int_early;
-                        state_next = STATE_READ_PAYLOAD;
-                    end
-                endcase
-                if (s_axis_tlast) begin
-                    error_header_early_termination_next = 1'b1;
-                    s_axis_tready_next = !m_eth_hdr_valid_reg;
-                    state_next = STATE_IDLE;
+            `_HEADER_FIELD_(0,  m_eth_dest_mac_next[5*8 +: 8])
+            `_HEADER_FIELD_(1,  m_eth_dest_mac_next[4*8 +: 8])
+            `_HEADER_FIELD_(2,  m_eth_dest_mac_next[3*8 +: 8])
+            `_HEADER_FIELD_(3,  m_eth_dest_mac_next[2*8 +: 8])
+            `_HEADER_FIELD_(4,  m_eth_dest_mac_next[1*8 +: 8])
+            `_HEADER_FIELD_(5,  m_eth_dest_mac_next[0*8 +: 8])
+            `_HEADER_FIELD_(6,  m_eth_src_mac_next[5*8 +: 8])
+            `_HEADER_FIELD_(7,  m_eth_src_mac_next[4*8 +: 8])
+            `_HEADER_FIELD_(8,  m_eth_src_mac_next[3*8 +: 8])
+            `_HEADER_FIELD_(9,  m_eth_src_mac_next[2*8 +: 8])
+            `_HEADER_FIELD_(10, m_eth_src_mac_next[1*8 +: 8])
+            `_HEADER_FIELD_(11, m_eth_src_mac_next[0*8 +: 8])
+            `_HEADER_FIELD_(12, m_eth_type_next[1*8 +: 8])
+            `_HEADER_FIELD_(13, m_eth_type_next[0*8 +: 8])
+
+            if (ptr_reg == 13/KEEP_WIDTH && (!KEEP_ENABLE || s_axis_tkeep[13%KEEP_WIDTH])) begin
+                if (!shift_axis_tlast) begin
+                    m_eth_hdr_valid_next = 1'b1;
+                    read_eth_header_next = 1'b0;
+                    read_eth_payload_next = 1'b1;
                 end
-            end else begin
-                state_next = STATE_READ_HEADER;
             end
+
+            `undef _HEADER_FIELD_
         end
-        STATE_READ_PAYLOAD: begin
-            // read payload
-            s_axis_tready_next = m_eth_payload_axis_tready_int_early;
 
-            m_eth_payload_axis_tdata_int = s_axis_tdata;
-            m_eth_payload_axis_tvalid_int = s_axis_tvalid;
-            m_eth_payload_axis_tlast_int = s_axis_tlast;
-            m_eth_payload_axis_tuser_int = s_axis_tuser;
+        if (read_eth_payload_reg) begin
+            // transfer payload
+            m_eth_payload_axis_tdata_int = shift_axis_tdata;
+            m_eth_payload_axis_tkeep_int = shift_axis_tkeep;
+            m_eth_payload_axis_tvalid_int = 1'b1;
+            m_eth_payload_axis_tlast_int = shift_axis_tlast;
+            m_eth_payload_axis_tuser_int = shift_axis_tuser;
+        end
 
-            if (s_axis_tready && s_axis_tvalid) begin
-                // word transfer through
-                if (s_axis_tlast) begin
-                    s_axis_tready_next = !m_eth_hdr_valid_reg;
-                    state_next = STATE_IDLE;
-                end else begin
-                    state_next = STATE_READ_PAYLOAD;
-                end
-            end else begin
-                state_next = STATE_READ_PAYLOAD;
+        if (shift_axis_tlast) begin
+            if (read_eth_header_next) begin
+                // don't have the whole header
+                error_header_early_termination_next = 1'b1;
             end
+
+            flush_save = 1'b1;
+            ptr_next = 1'b0;
+            read_eth_header_next = 1'b1;
+            read_eth_payload_next = 1'b0;
         end
-    endcase
+    end
 end
 
 always @(posedge clk) begin
-    if (rst) begin
-        state_reg <= STATE_IDLE;
-        frame_ptr_reg <= 8'd0;
-        s_axis_tready_reg <= 1'b0;
-        m_eth_hdr_valid_reg <= 1'b0;
-        busy_reg <= 1'b0;
-        error_header_early_termination_reg <= 1'b0;
-    end else begin
-        state_reg <= state_next;
+    read_eth_header_reg <= read_eth_header_next;
+    read_eth_payload_reg <= read_eth_payload_next;
+    ptr_reg <= ptr_next;
 
-        frame_ptr_reg <= frame_ptr_next;
+    s_axis_tready_reg <= s_axis_tready_next;
 
-        s_axis_tready_reg <= s_axis_tready_next;
+    m_eth_hdr_valid_reg <= m_eth_hdr_valid_next;
+    m_eth_dest_mac_reg <= m_eth_dest_mac_next;
+    m_eth_src_mac_reg <= m_eth_src_mac_next;
+    m_eth_type_reg <= m_eth_type_next;
 
-        m_eth_hdr_valid_reg <= m_eth_hdr_valid_next;
+    error_header_early_termination_reg <= error_header_early_termination_next;
 
-        error_header_early_termination_reg <= error_header_early_termination_next;
+    busy_reg <= (read_eth_payload_next || ptr_next != 0);
 
-        busy_reg <= state_next != STATE_IDLE;
+    if (transfer_in_save) begin
+        save_axis_tdata_reg <= s_axis_tdata;
+        save_axis_tkeep_reg <= s_axis_tkeep;
+        save_axis_tuser_reg <= s_axis_tuser;
     end
 
-    // datapath
-    if (store_eth_dest_mac_0) m_eth_dest_mac_reg[ 7: 0] <= s_axis_tdata;
-    if (store_eth_dest_mac_1) m_eth_dest_mac_reg[15: 8] <= s_axis_tdata;
-    if (store_eth_dest_mac_2) m_eth_dest_mac_reg[23:16] <= s_axis_tdata;
-    if (store_eth_dest_mac_3) m_eth_dest_mac_reg[31:24] <= s_axis_tdata;
-    if (store_eth_dest_mac_4) m_eth_dest_mac_reg[39:32] <= s_axis_tdata;
-    if (store_eth_dest_mac_5) m_eth_dest_mac_reg[47:40] <= s_axis_tdata;
-    if (store_eth_src_mac_0) m_eth_src_mac_reg[ 7: 0] <= s_axis_tdata;
-    if (store_eth_src_mac_1) m_eth_src_mac_reg[15: 8] <= s_axis_tdata;
-    if (store_eth_src_mac_2) m_eth_src_mac_reg[23:16] <= s_axis_tdata;
-    if (store_eth_src_mac_3) m_eth_src_mac_reg[31:24] <= s_axis_tdata;
-    if (store_eth_src_mac_4) m_eth_src_mac_reg[39:32] <= s_axis_tdata;
-    if (store_eth_src_mac_5) m_eth_src_mac_reg[47:40] <= s_axis_tdata;
-    if (store_eth_type_0) m_eth_type_reg[ 7: 0] <= s_axis_tdata;
-    if (store_eth_type_1) m_eth_type_reg[15: 8] <= s_axis_tdata;
+    if (flush_save) begin
+        save_axis_tlast_reg <= 1'b0;
+        shift_axis_extra_cycle_reg <= 1'b0;
+    end else if (transfer_in_save) begin
+        save_axis_tlast_reg <= s_axis_tlast;
+        shift_axis_extra_cycle_reg <= OFFSET ? s_axis_tlast && ((s_axis_tkeep & ({KEEP_WIDTH{1'b1}} << OFFSET)) != 0) : 1'b0;
+    end
+
+    if (rst) begin
+        read_eth_header_reg <= 1'b1;
+        read_eth_payload_reg <= 1'b0;
+        ptr_reg <= 0;
+        m_eth_hdr_valid_reg <= 1'b0;
+        save_axis_tlast_reg <= 1'b0;
+        shift_axis_extra_cycle_reg <= 1'b0;
+        busy_reg <= 1'b0;
+        error_header_early_termination_reg <= 1'b0;
+    end
 end
 
 // output datapath logic
-reg [7:0] m_eth_payload_axis_tdata_reg = 8'd0;
-reg       m_eth_payload_axis_tvalid_reg = 1'b0, m_eth_payload_axis_tvalid_next;
-reg       m_eth_payload_axis_tlast_reg = 1'b0;
-reg       m_eth_payload_axis_tuser_reg = 1'b0;
+reg [DATA_WIDTH-1:0] m_eth_payload_axis_tdata_reg = {DATA_WIDTH{1'b0}};
+reg [KEEP_WIDTH-1:0] m_eth_payload_axis_tkeep_reg = {KEEP_WIDTH{1'b0}};
+reg                  m_eth_payload_axis_tvalid_reg = 1'b0, m_eth_payload_axis_tvalid_next;
+reg                  m_eth_payload_axis_tlast_reg = 1'b0;
+reg                  m_eth_payload_axis_tuser_reg = 1'b0;
 
-reg [7:0] temp_m_eth_payload_axis_tdata_reg = 8'd0;
-reg       temp_m_eth_payload_axis_tvalid_reg = 1'b0, temp_m_eth_payload_axis_tvalid_next;
-reg       temp_m_eth_payload_axis_tlast_reg = 1'b0;
-reg       temp_m_eth_payload_axis_tuser_reg = 1'b0;
+reg [DATA_WIDTH-1:0] temp_m_eth_payload_axis_tdata_reg = {DATA_WIDTH{1'b0}};
+reg [KEEP_WIDTH-1:0] temp_m_eth_payload_axis_tkeep_reg = {KEEP_WIDTH{1'b0}};
+reg                  temp_m_eth_payload_axis_tvalid_reg = 1'b0, temp_m_eth_payload_axis_tvalid_next;
+reg                  temp_m_eth_payload_axis_tlast_reg = 1'b0;
+reg                  temp_m_eth_payload_axis_tuser_reg = 1'b0;
 
 // datapath control
 reg store_eth_payload_int_to_output;
@@ -303,6 +325,7 @@ reg store_eth_payload_int_to_temp;
 reg store_eth_payload_axis_temp_to_output;
 
 assign m_eth_payload_axis_tdata = m_eth_payload_axis_tdata_reg;
+assign m_eth_payload_axis_tkeep = KEEP_ENABLE ? m_eth_payload_axis_tkeep_reg : {KEEP_WIDTH{1'b1}};
 assign m_eth_payload_axis_tvalid = m_eth_payload_axis_tvalid_reg;
 assign m_eth_payload_axis_tlast = m_eth_payload_axis_tlast_reg;
 assign m_eth_payload_axis_tuser = m_eth_payload_axis_tuser_reg;
@@ -352,16 +375,19 @@ always @(posedge clk) begin
     // datapath
     if (store_eth_payload_int_to_output) begin
         m_eth_payload_axis_tdata_reg <= m_eth_payload_axis_tdata_int;
+        m_eth_payload_axis_tkeep_reg <= m_eth_payload_axis_tkeep_int;
         m_eth_payload_axis_tlast_reg <= m_eth_payload_axis_tlast_int;
         m_eth_payload_axis_tuser_reg <= m_eth_payload_axis_tuser_int;
     end else if (store_eth_payload_axis_temp_to_output) begin
         m_eth_payload_axis_tdata_reg <= temp_m_eth_payload_axis_tdata_reg;
+        m_eth_payload_axis_tkeep_reg <= temp_m_eth_payload_axis_tkeep_reg;
         m_eth_payload_axis_tlast_reg <= temp_m_eth_payload_axis_tlast_reg;
         m_eth_payload_axis_tuser_reg <= temp_m_eth_payload_axis_tuser_reg;
     end
 
     if (store_eth_payload_int_to_temp) begin
         temp_m_eth_payload_axis_tdata_reg <= m_eth_payload_axis_tdata_int;
+        temp_m_eth_payload_axis_tkeep_reg <= m_eth_payload_axis_tkeep_int;
         temp_m_eth_payload_axis_tlast_reg <= m_eth_payload_axis_tlast_int;
         temp_m_eth_payload_axis_tuser_reg <= m_eth_payload_axis_tuser_int;
     end

@@ -422,7 +422,9 @@ eth_mac_10g_fifo_inst (
     .ifg_delay(8'd12)
 );
 
-eth_axis_rx_64
+eth_axis_rx #(
+    .DATA_WIDTH(64)
+)
 eth_axis_rx_inst (
     .clk(clk),
     .rst(rst),
@@ -450,7 +452,9 @@ eth_axis_rx_inst (
     .error_header_early_termination()
 );
 
-eth_axis_tx_64
+eth_axis_tx #(
+    .DATA_WIDTH(64)
+)
 eth_axis_tx_inst (
     .clk(clk),
     .rst(rst),

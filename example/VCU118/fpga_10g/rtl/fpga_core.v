@@ -671,7 +671,9 @@ axis_switch_inst (
     .m_axis_tuser({ gig_tx_axis_tuser_64,  rx_axis_tuser,  mac_tx_axis_tuser})
 );
 
-eth_axis_rx_64
+eth_axis_rx #(
+    .DATA_WIDTH(64)
+)
 eth_axis_rx_inst (
     .clk(clk),
     .rst(rst),
@@ -699,7 +701,9 @@ eth_axis_rx_inst (
     .error_header_early_termination()
 );
 
-eth_axis_tx_64
+eth_axis_tx #(
+    .DATA_WIDTH(64)
+)
 eth_axis_tx_inst (
     .clk(clk),
     .rst(rst),

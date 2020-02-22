@@ -29,8 +29,8 @@ import os
 import axis_ep
 import eth_ep
 
-module = 'eth_axis_rx_64'
-testbench = 'test_%s' % module
+module = 'eth_axis_rx'
+testbench = 'test_%s_64' % module
 
 srcs = []
 
@@ -43,13 +43,18 @@ build_cmd = "iverilog -o %s.vvp %s" % (testbench, src)
 
 def bench():
 
+    # Parameters
+    DATA_WIDTH = 64
+    KEEP_ENABLE = (DATA_WIDTH>8)
+    KEEP_WIDTH = int(DATA_WIDTH/8)
+
     # Inputs
     clk = Signal(bool(0))
     rst = Signal(bool(0))
     current_test = Signal(intbv(0)[8:])
 
-    s_axis_tdata = Signal(intbv(0)[64:])
-    s_axis_tkeep = Signal(intbv(0)[8:])
+    s_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
+    s_axis_tkeep = Signal(intbv(1)[KEEP_WIDTH:])
     s_axis_tvalid = Signal(bool(0))
     s_axis_tlast = Signal(bool(0))
     s_axis_tuser = Signal(bool(0))
@@ -62,8 +67,8 @@ def bench():
     m_eth_dest_mac = Signal(intbv(0)[48:])
     m_eth_src_mac = Signal(intbv(0)[48:])
     m_eth_type = Signal(intbv(0)[16:])
-    m_eth_payload_axis_tdata = Signal(intbv(0)[64:])
-    m_eth_payload_axis_tkeep = Signal(intbv(0)[8:])
+    m_eth_payload_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
+    m_eth_payload_axis_tkeep = Signal(intbv(1)[KEEP_WIDTH:])
     m_eth_payload_axis_tvalid = Signal(bool(0))
     m_eth_payload_axis_tlast = Signal(bool(0))
     m_eth_payload_axis_tuser = Signal(bool(0))
@@ -188,7 +193,7 @@ def bench():
         yield delay(100)
         yield clk.posedge
 
-        for payload_len in range(1,18):
+        for payload_len in range(1,KEEP_WIDTH*2+2):
             yield clk.posedge
             print("test 1: test packet, length %d" % payload_len)
             current_test.next = 1
@@ -208,7 +213,6 @@ def bench():
 
                 yield wait()
 
-                yield clk.posedge
                 yield sink.wait()
                 rx_frame = sink.recv()
 
@@ -244,13 +248,11 @@ def bench():
 
                 yield wait()
 
-                yield clk.posedge
                 yield sink.wait()
                 rx_frame = sink.recv()
 
                 assert rx_frame == test_frame1
 
-                yield clk.posedge
                 yield sink.wait()
                 rx_frame = sink.recv()
 
@@ -288,14 +290,12 @@ def bench():
 
                 yield wait()
 
-                yield clk.posedge
                 yield sink.wait()
                 rx_frame = sink.recv()
 
                 assert rx_frame == test_frame1
                 assert rx_frame.payload.user[-1]
 
-                yield clk.posedge
                 yield sink.wait()
                 rx_frame = sink.recv()
 
@@ -336,7 +336,6 @@ def bench():
 
                 yield wait()
 
-                yield clk.posedge
                 yield sink.wait()
                 rx_frame = sink.recv()
 
