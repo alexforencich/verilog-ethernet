@@ -298,6 +298,7 @@ always @(posedge clk) begin
         read_eth_header_reg <= 1'b1;
         read_eth_payload_reg <= 1'b0;
         ptr_reg <= 0;
+        s_axis_tready_reg <= 1'b0;
         m_eth_hdr_valid_reg <= 1'b0;
         save_axis_tlast_reg <= 1'b0;
         shift_axis_extra_cycle_reg <= 1'b0;
