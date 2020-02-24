@@ -34,12 +34,8 @@ frequencies from PTP time.
 
 ### arp module
 
-ARP handling logic with parametrizable retry timeout parameters.
-
-### arp_64 module
-
-ARP handling logic with parametrizable retry timeout parameters and 64 bit
-datapath for 10G/25G Ethernet.
+ARP handling logic with parametrizable retry timeout parameters and
+parametrizable datapath.
 
 ### arp_cache module
 
@@ -47,19 +43,11 @@ Basic hash-based cache for ARP entries.  Parametrizable depth.
 
 ### arp_eth_rx module
 
-ARP frame receiver.
-
-### arp_eth_rx_64 module
-
-ARP frame receiver with 64 bit datapath for 10G/25G Ethernet.
+ARP frame receiver with parametrizable datapath.
 
 ### arp_eth_tx module
 
-ARP frame transmitter.
-
-### arp_eth_tx_64 module
-
-ARP frame transmitter with 64 bit datapath for 10G/25G Ethernet.
+ARP frame transmitter with parametrizable datapath.
 
 ### axis_eth_fcs module
 
@@ -109,19 +97,11 @@ count.  Supports priority and round-robin arbitration.
 
 ### eth_axis_rx module
 
-Ethernet frame receiver.
-
-### eth_axis_rx_64 module
-
-Ethernet frame receiver with 64 bit datapath for 10G/25G Ethernet.
+Ethernet frame receiver with parametrizable datapath.
 
 ### eth_axis_tx module
 
-Ethernet frame transmitter.
-
-### eth_axis_tx_64 module
-
-Ethernet frame transmitter with 64 bit datapath for 10G/25G Ethernet.
+Ethernet frame transmitter with parametrizable datapath.
 
 ### eth_demux module
 
@@ -400,12 +380,9 @@ and data lines.
 ### Source Files
 
     rtl/arp.v                       : ARP handling logic
-    rtl/arp_64.v                    : ARP handling logic (64 bit)
     rtl/arp_cache.v                 : ARP LRU cache
     rtl/arp_eth_rx.v                : ARP frame receiver
-    rtl/arp_eth_rx_64.v             : ARP frame receiver (64 bit)
     rtl/arp_eth_tx.v                : ARP frame transmitter
-    rtl/arp_eth_tx_64.v             : ARP frame transmitter (64 bit)
     rtl/eth_arb_mux.py              : Ethernet frame arbitrated multiplexer generator
     rtl/axis_eth_fcs.v              : Ethernet FCS calculator
     rtl/axis_eth_fcs_64.v           : Ethernet FCS calculator (64 bit)
@@ -419,9 +396,7 @@ and data lines.
     rtl/axis_xgmii_tx_64.v          : AXI stream XGMII transmitter (64 bit)
     rtl/eth_arb_mux.v               : Ethernet frame arbitrated multiplexer
     rtl/eth_axis_rx.v               : Ethernet frame receiver
-    rtl/eth_axis_rx_64.v            : Ethernet frame receiver (64 bit)
     rtl/eth_axis_tx.v               : Ethernet frame transmitter
-    rtl/eth_axis_tx_64.v            : Ethernet frame transmitter (64 bit)
     rtl/eth_demux.v                 : Ethernet frame demultiplexer
     rtl/eth_mac_1g.v                : Gigabit Ethernet GMII MAC
     rtl/eth_mac_1g_fifo.v           : Gigabit Ethernet GMII MAC with FIFO
