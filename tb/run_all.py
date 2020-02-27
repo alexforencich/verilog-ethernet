@@ -37,16 +37,24 @@ class colors:
 
 def run_test_sub(test_path):
     args = ["python3", test_path]
-    res = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.PIPE)
     with open(test_path.rsplit(".",1)[0]+".log", "wb") as log:
-        log.write(res.stdout)
+        try:
+            outs, errs = process.communicate()
+        except KeyboardInterrupt:
+            print ("Interrupted {}".format(test_path))
+        log.write(outs)
     
-    return "{} -> {}{}{}".format(test_path, colors.GREEN if not res.returncode else colors.RED, "SUCCESS" if not res.returncode else "FAILED", colors.ENDC)
+    return "{} -> {}{}{}".format(test_path, colors.GREEN if not process.returncode else colors.RED, "SUCCESS" if not process.returncode else "FAILED", colors.ENDC)
 
 
 if __name__ == '__main__':
     test_list = glob.glob("./test_*.py")
     with Pool(4) as pool:
-        bar = tqdm.tqdm(pool.imap_unordered(run_test_sub,test_list), total=len(test_list))
-        for res in bar:
-            bar.write(res)
+        try:
+            bar = tqdm.tqdm(pool.imap_unordered(run_test_sub,test_list), total=len(test_list))
+            for res in bar:
+                bar.write(res)
+        except KeyboardInterrupt:
+            print("Caught Interrupt, terminating")
+            pool.terminate()
