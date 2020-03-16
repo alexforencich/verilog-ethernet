@@ -619,7 +619,11 @@ qsfp1_phy_1_inst (
     .serdes_rx_hdr(qsfp1_gt_rxheader_1),
     .serdes_rx_bitslip(qsfp1_gt_rxgearboxslip_1),
     .rx_block_lock(qsfp1_rx_block_lock_1),
-    .rx_high_ber()
+	.rx_error_count(),
+	.rx_bad_block(),
+	.rx_high_ber(),
+	.tx_prbs31_enable(),
+	.rx_prbs31_enable()
 );
 
 assign qsfp1_tx_clk_2_int = clk_156mhz_int;
