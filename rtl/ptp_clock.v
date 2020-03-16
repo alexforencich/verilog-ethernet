@@ -91,7 +91,7 @@ module ptp_clock #
     output wire                       output_pps
 );
 
-localparam INC_NS_WIDTH = $clog2(2**PERIOD_NS_WIDTH + 2**OFFSET_NS_WIDTH + 2**DRIFT_NS_WIDTH);
+parameter INC_NS_WIDTH = $clog2(2**PERIOD_NS_WIDTH + 2**OFFSET_NS_WIDTH + 2**DRIFT_NS_WIDTH);
 
 reg [PERIOD_NS_WIDTH-1:0] period_ns_reg = PERIOD_NS;
 reg [FNS_WIDTH-1:0] period_fns_reg = PERIOD_FNS;

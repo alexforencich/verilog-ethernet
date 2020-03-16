@@ -82,7 +82,7 @@ module arp_eth_tx #
 
 localparam CYCLE_COUNT = (28+KEEP_WIDTH-1)/KEEP_WIDTH;
 
-localparam PTR_WIDTH = $clog2(CYCLE_COUNT);
+parameter PTR_WIDTH = $clog2(CYCLE_COUNT);
 
 localparam OFFSET = 28 % KEEP_WIDTH;
 

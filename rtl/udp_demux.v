@@ -122,7 +122,7 @@ module udp_demux #
     input  wire [$clog2(M_COUNT)-1:0]    select
 );
 
-localparam CL_M_COUNT = $clog2(M_COUNT);
+parameter CL_M_COUNT = $clog2(M_COUNT);
 
 reg [CL_M_COUNT-1:0] select_reg = {CL_M_COUNT{1'b0}}, select_ctl, select_next;
 reg drop_reg = 1'b0, drop_ctl, drop_next;
