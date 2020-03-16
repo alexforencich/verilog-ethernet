@@ -143,7 +143,7 @@ module eth_mac_10g_fifo #
     input  wire [7:0]                 ifg_delay
 );
 
-parameter KEEP_WIDTH = DATA_WIDTH/8;
+localparam KEEP_WIDTH = DATA_WIDTH/8;
 
 localparam TX_USER_WIDTH = (TX_PTP_TS_ENABLE && TX_PTP_TAG_ENABLE ? PTP_TAG_WIDTH : 0) + 1;
 localparam RX_USER_WIDTH = (RX_PTP_TS_ENABLE ? PTP_TS_WIDTH : 0) + 1;

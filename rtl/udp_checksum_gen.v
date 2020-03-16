@@ -138,7 +138,7 @@ header fields in parallel along with the UDP payload in a separate AXI stream.
 
 */
 
-parameter HEADER_FIFO_ADDR_WIDTH = $clog2(HEADER_FIFO_DEPTH);
+localparam HEADER_FIFO_ADDR_WIDTH = $clog2(HEADER_FIFO_DEPTH);
 
 localparam [2:0]
     STATE_IDLE = 3'd0,
