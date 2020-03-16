@@ -572,6 +572,9 @@ eth_mac_10g_inst (
     .rx_error_bad_frame(rx_error_bad_frame_int),
     .rx_error_bad_fcs(rx_error_bad_fcs_int),
 
+    .tx_start_packet(),
+    .rx_start_packet(),
+
     .ifg_delay(ifg_delay)
 );
 
