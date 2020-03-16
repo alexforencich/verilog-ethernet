@@ -568,7 +568,9 @@ eth_mac_10g_inst (
     .tx_axis_ptp_ts_tag(tx_axis_ptp_ts_tag),
     .tx_axis_ptp_ts_valid(tx_axis_ptp_ts_valid),
 
+    .tx_start_packet(),
     .tx_error_underflow(tx_error_underflow_int),
+    .rx_start_packet(),
     .rx_error_bad_frame(rx_error_bad_frame_int),
     .rx_error_bad_fcs(rx_error_bad_fcs_int),
 
