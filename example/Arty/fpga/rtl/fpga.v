@@ -182,7 +182,7 @@ sync_reset #(
 sync_reset_inst (
     .clk(clk_int),
     .rst(~mmcm_locked),
-    .sync_reset_out(rst_int)
+    .out(rst_int)
 );
 
 // GPIO

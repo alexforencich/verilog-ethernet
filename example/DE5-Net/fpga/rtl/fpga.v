@@ -121,7 +121,7 @@ sync_reset #(
 sync_reset_50mhz_inst (
     .clk(clk_50mhz),
     .rst(~CPU_RESET_n),
-    .sync_reset_out(rst_50mhz)
+    .out(rst_50mhz)
 );
 
 wire clk_156mhz;
@@ -135,7 +135,7 @@ sync_reset #(
 sync_reset_156mhz_inst (
     .clk(clk_156mhz),
     .rst(rst_50mhz | ~phy_pll_locked),
-    .sync_reset_out(rst_156mhz)
+    .out(rst_156mhz)
 );
 
 // GPIO

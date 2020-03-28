@@ -8,7 +8,6 @@ FPGA_ARCH = VirtexUltrascale
 SYN_FILES = rtl/fpga.v
 SYN_FILES += rtl/fpga_core.v
 SYN_FILES += rtl/debounce_switch.v
-SYN_FILES += rtl/sync_reset.v
 SYN_FILES += rtl/sync_signal.v
 SYN_FILES += lib/eth/rtl/eth_mac_1g_fifo.v
 SYN_FILES += lib/eth/rtl/eth_mac_1g.v
@@ -37,12 +36,14 @@ SYN_FILES += lib/eth/lib/axis/rtl/priority_encoder.v
 SYN_FILES += lib/eth/lib/axis/rtl/axis_fifo.v
 SYN_FILES += lib/eth/lib/axis/rtl/axis_async_fifo.v
 SYN_FILES += lib/eth/lib/axis/rtl/axis_async_fifo_adapter.v
+SYN_FILES += lib/eth/lib/axis/rtl/sync_reset.v
 
 # XDC files
 XDC_FILES = fpga.xdc
 XDC_FILES += eth.xdc
 XDC_FILES += lib/eth/syn/eth_mac_fifo.tcl
 XDC_FILES += lib/eth/lib/axis/syn/axis_async_fifo.tcl
+XDC_FILES += lib/eth/lib/axis/syn/sync_reset.tcl
 
 # IP
 XCI_FILES = ip/gig_ethernet_pcs_pma_0.xci

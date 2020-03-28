@@ -8,7 +8,6 @@ FPGA_ARCH = kintex7
 SYN_FILES = rtl/fpga.v
 SYN_FILES += rtl/fpga_core.v
 SYN_FILES += rtl/debounce_switch.v
-SYN_FILES += rtl/sync_reset.v
 SYN_FILES += rtl/sync_signal.v
 SYN_FILES += lib/eth/rtl/oddr.v
 SYN_FILES += lib/eth/rtl/ssio_sdr_in.v
@@ -42,6 +41,7 @@ SYN_FILES += lib/eth/lib/axis/rtl/priority_encoder.v
 SYN_FILES += lib/eth/lib/axis/rtl/axis_fifo.v
 SYN_FILES += lib/eth/lib/axis/rtl/axis_async_fifo.v
 SYN_FILES += lib/eth/lib/axis/rtl/axis_async_fifo_adapter.v
+SYN_FILES += lib/eth/lib/axis/rtl/sync_reset.v
 
 # XDC files
 XDC_FILES = fpga.xdc
@@ -50,6 +50,7 @@ XDC_FILES += lib/eth/syn/gmii_phy_if.tcl
 XDC_FILES += lib/eth/syn/eth_mac_1g_gmii.tcl
 XDC_FILES += lib/eth/syn/eth_mac_fifo.tcl
 XDC_FILES += lib/eth/lib/axis/syn/axis_async_fifo.tcl
+XDC_FILES += lib/eth/lib/axis/syn/sync_reset.tcl
 
 include ../common/vivado.mk
 

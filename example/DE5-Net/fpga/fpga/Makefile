@@ -8,7 +8,6 @@ FPGA_DEVICE = 5SGXEA7N2F45C2
 SYN_FILES = rtl/fpga.v
 SYN_FILES += rtl/fpga_core.v
 SYN_FILES += rtl/debounce_switch.v
-SYN_FILES += rtl/sync_reset.v
 SYN_FILES += rtl/sync_signal.v
 SYN_FILES += rtl/i2c_master.v
 SYN_FILES += rtl/si570_i2c_init.v
@@ -41,6 +40,7 @@ SYN_FILES += lib/eth/lib/axis/rtl/priority_encoder.v
 SYN_FILES += lib/eth/lib/axis/rtl/axis_fifo.v
 SYN_FILES += lib/eth/lib/axis/rtl/axis_async_fifo.v
 SYN_FILES += lib/eth/lib/axis/rtl/axis_async_fifo_adapter.v
+SYN_FILES += lib/eth/lib/axis/rtl/sync_reset.v
 SYN_FILES += cores/phy/phy.qip
 SYN_FILES += cores/phy_reconfig/phy_reconfig.qip
 

@@ -385,7 +385,7 @@ sync_reset #(
 sync_reset_inst (
     .clk(sys_clk_int),
     .rst(~reset_n),
-    .sync_reset_out(sys_rst)
+    .out(sys_rst)
 );
 
 sync_signal #(
@@ -539,7 +539,7 @@ sync_reset #(
 sync_reset_gth_inst (
     .clk(sys_clk_int),
     .rst(sys_rst | ~clk_gth_ready),
-    .sync_reset_out(gth_reset)
+    .out(gth_reset)
 );
 
 sync_reset #(
@@ -548,7 +548,7 @@ sync_reset #(
 sync_reset_156mhz_inst (
     .clk(clk_156mhz),
     .rst(gth_reset | ~gth_reset_done),
-    .sync_reset_out(rst_156mhz)
+    .out(rst_156mhz)
 );
 
 assign amh_right_phy_rst_n = ~rst_156mhz;

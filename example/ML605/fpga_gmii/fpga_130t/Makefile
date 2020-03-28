@@ -12,7 +12,6 @@ FPGA_ARCH = spartan6
 SYN_FILES = rtl/fpga.v
 SYN_FILES += rtl/fpga_core.v
 SYN_FILES += rtl/debounce_switch.v
-SYN_FILES += rtl/sync_reset.v
 SYN_FILES += rtl/sync_signal.v
 SYN_FILES += lib/eth/rtl/iddr.v
 SYN_FILES += lib/eth/rtl/oddr.v
@@ -47,6 +46,7 @@ SYN_FILES += lib/eth/lib/axis/rtl/priority_encoder.v
 SYN_FILES += lib/eth/lib/axis/rtl/axis_fifo.v
 SYN_FILES += lib/eth/lib/axis/rtl/axis_async_fifo.v
 SYN_FILES += lib/eth/lib/axis/rtl/axis_async_fifo_adapter.v
+SYN_FILES += lib/eth/lib/axis/rtl/sync_reset.v
 #SYN_FILES += coregen/dcm_i100_o125/dcm_i100_o125.v
 
 # UCF files

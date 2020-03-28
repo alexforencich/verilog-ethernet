@@ -163,7 +163,7 @@ sync_reset #(
 sync_reset_125mhz_inst (
     .clk(clk_125mhz_int),
     .rst(~mmcm_locked),
-    .sync_reset_out(rst_125mhz_int)
+    .out(rst_125mhz_int)
 );
 
 // GPIO

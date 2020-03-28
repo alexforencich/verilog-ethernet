@@ -148,7 +148,7 @@ sync_reset #(
 sync_reset_125mhz_inst (
     .clk(clk_125mhz_int),
     .rst(~mmcm_locked),
-    .sync_reset_out(rst_125mhz_int)
+    .out(rst_125mhz_int)
 );
 
 // GPIO
@@ -283,7 +283,7 @@ sync_reset #(
 sync_reset_156mhz_inst (
     .clk(clk_156mhz_int),
     .rst(~gt_reset_tx_done),
-    .sync_reset_out(rst_156mhz_int)
+    .out(rst_156mhz_int)
 );
 
 wire [5:0] sfp_1_gt_txheader;
@@ -375,7 +375,7 @@ sync_reset #(
 sfp_1_rx_rst_reset_sync_inst (
     .clk(sfp_1_rx_clk_int),
     .rst(~gt_reset_rx_done),
-    .sync_reset_out(sfp_1_rx_rst_int)
+    .out(sfp_1_rx_rst_int)
 );
 
 eth_phy_10g #(
@@ -410,7 +410,7 @@ sync_reset #(
 sfp_2_rx_rst_reset_sync_inst (
     .clk(sfp_2_rx_clk_int),
     .rst(~gt_reset_rx_done),
-    .sync_reset_out(sfp_2_rx_rst_int)
+    .out(sfp_2_rx_rst_int)
 );
 
 eth_phy_10g #(
