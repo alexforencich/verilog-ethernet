@@ -32,13 +32,17 @@ THE SOFTWARE.
 module test_axis_eth_fcs;
 
 // Parameters
+parameter DATA_WIDTH = 8;
+parameter KEEP_ENABLE = (DATA_WIDTH>8);
+parameter KEEP_WIDTH = (DATA_WIDTH/8);
 
 // Inputs
 reg clk = 0;
 reg rst = 0;
 reg [7:0] current_test = 0;
 
-reg [7:0] s_axis_tdata = 0;
+reg [DATA_WIDTH-1:0] s_axis_tdata = 0;
+reg [KEEP_WIDTH-1:0] s_axis_tkeep = 0;
 reg s_axis_tvalid = 0;
 reg s_axis_tlast = 0;
 reg s_axis_tuser = 0;
@@ -55,6 +59,7 @@ initial begin
         rst,
         current_test,
         s_axis_tdata,
+        s_axis_tkeep,
         s_axis_tvalid,
         s_axis_tlast,
         s_axis_tuser
@@ -70,11 +75,16 @@ initial begin
     $dumpvars(0, test_axis_eth_fcs);
 end
 
-axis_eth_fcs
+axis_eth_fcs #(
+    .DATA_WIDTH(DATA_WIDTH),
+    .KEEP_ENABLE(KEEP_ENABLE),
+    .KEEP_WIDTH(KEEP_WIDTH)
+)
 UUT (
     .clk(clk),
     .rst(rst),
     .s_axis_tdata(s_axis_tdata),
+    .s_axis_tkeep(s_axis_tkeep),
     .s_axis_tvalid(s_axis_tvalid),
     .s_axis_tready(s_axis_tready),
     .s_axis_tlast(s_axis_tlast),

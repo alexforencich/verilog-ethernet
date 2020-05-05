@@ -27,11 +27,14 @@ THE SOFTWARE.
 `timescale 1ns / 1ps
 
 /*
- * Testbench for axis_eth_fcs_64
+ * Testbench for axis_eth_fcs
  */
 module test_axis_eth_fcs_64;
 
 // Parameters
+parameter DATA_WIDTH = 64;
+parameter KEEP_ENABLE = (DATA_WIDTH>8);
+parameter KEEP_WIDTH = (DATA_WIDTH/8);
 
 // Inputs
 reg clk = 0;
@@ -72,7 +75,11 @@ initial begin
     $dumpvars(0, test_axis_eth_fcs_64);
 end
 
-axis_eth_fcs_64
+axis_eth_fcs #(
+    .DATA_WIDTH(DATA_WIDTH),
+    .KEEP_ENABLE(KEEP_ENABLE),
+    .KEEP_WIDTH(KEEP_WIDTH)
+)
 UUT (
     .clk(clk),
     .rst(rst),

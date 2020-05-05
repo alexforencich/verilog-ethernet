@@ -29,8 +29,8 @@ import os
 import axis_ep
 import eth_ep
 
-module = 'axis_eth_fcs_64'
-testbench = 'test_%s' % module
+module = 'axis_eth_fcs'
+testbench = 'test_%s_64' % module
 
 srcs = []
 
@@ -45,15 +45,17 @@ build_cmd = "iverilog -o %s.vvp %s" % (testbench, src)
 def bench():
 
     # Parameters
-
+    DATA_WIDTH = 64
+    KEEP_ENABLE = (DATA_WIDTH>8)
+    KEEP_WIDTH = int(DATA_WIDTH/8)
 
     # Inputs
     clk = Signal(bool(0))
     rst = Signal(bool(0))
     current_test = Signal(intbv(0)[8:])
 
-    s_axis_tdata = Signal(intbv(0)[64:])
-    s_axis_tkeep = Signal(intbv(0)[8:])
+    s_axis_tdata = Signal(intbv(0)[DATA_WIDTH:])
+    s_axis_tkeep = Signal(intbv(1)[KEEP_WIDTH:])
     s_axis_tvalid = Signal(bool(0))
     s_axis_tlast = Signal(bool(0))
     s_axis_tuser = Signal(bool(0))
