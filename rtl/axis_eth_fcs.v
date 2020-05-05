@@ -115,6 +115,7 @@ always @(posedge clk) begin
         if (s_axis_tlast) begin
             crc_state <= 32'hFFFFFFFF;
             if (KEEP_ENABLE) begin
+                fcs_reg <= ~crc_next[0];
                 for (i = 0; i < KEEP_WIDTH; i = i + 1) begin
                     if (s_axis_tkeep[i]) begin
                         fcs_reg <= ~crc_next[i];
