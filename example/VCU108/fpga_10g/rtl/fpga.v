@@ -395,35 +395,35 @@ sync_reset_156mhz_inst (
 );
 
 wire [5:0] qsfp_gt_txheader_1;
-wire [127:0] qsfp_gt_txdata_1;
+wire [63:0] qsfp_gt_txdata_1;
 wire qsfp_gt_rxgearboxslip_1;
 wire [5:0] qsfp_gt_rxheader_1;
 wire [1:0] qsfp_gt_rxheadervalid_1;
-wire [127:0] qsfp_gt_rxdata_1;
+wire [63:0] qsfp_gt_rxdata_1;
 wire [1:0] qsfp_gt_rxdatavalid_1;
 
 wire [5:0] qsfp_gt_txheader_2;
-wire [127:0] qsfp_gt_txdata_2;
+wire [63:0] qsfp_gt_txdata_2;
 wire qsfp_gt_rxgearboxslip_2;
 wire [5:0] qsfp_gt_rxheader_2;
 wire [1:0] qsfp_gt_rxheadervalid_2;
-wire [127:0] qsfp_gt_rxdata_2;
+wire [63:0] qsfp_gt_rxdata_2;
 wire [1:0] qsfp_gt_rxdatavalid_2;
 
 wire [5:0] qsfp_gt_txheader_3;
-wire [127:0] qsfp_gt_txdata_3;
+wire [63:0] qsfp_gt_txdata_3;
 wire qsfp_gt_rxgearboxslip_3;
 wire [5:0] qsfp_gt_rxheader_3;
 wire [1:0] qsfp_gt_rxheadervalid_3;
-wire [127:0] qsfp_gt_rxdata_3;
+wire [63:0] qsfp_gt_rxdata_3;
 wire [1:0] qsfp_gt_rxdatavalid_3;
 
 wire [5:0] qsfp_gt_txheader_4;
-wire [127:0] qsfp_gt_txdata_4;
+wire [63:0] qsfp_gt_txdata_4;
 wire qsfp_gt_rxgearboxslip_4;
 wire [5:0] qsfp_gt_rxheader_4;
 wire [1:0] qsfp_gt_rxheadervalid_4;
-wire [127:0] qsfp_gt_rxdata_4;
+wire [63:0] qsfp_gt_rxdata_4;
 wire [1:0] qsfp_gt_rxdatavalid_4;
 
 gtwizard_ultrascale_0
@@ -456,7 +456,7 @@ qsfp_gty_inst (
     .rxusrclk_in(gt_rxusrclk),
     .rxusrclk2_in(gt_rxusrclk),
 
-    .txdata_in({qsfp_gt_txdata_4, qsfp_gt_txdata_3, qsfp_gt_txdata_2, qsfp_gt_txdata_1}),
+    .gtwiz_userdata_tx_in({qsfp_gt_txdata_4, qsfp_gt_txdata_3, qsfp_gt_txdata_2, qsfp_gt_txdata_1}),
     .txheader_in({qsfp_gt_txheader_4, qsfp_gt_txheader_3, qsfp_gt_txheader_2, qsfp_gt_txheader_1}),
     .txsequence_in({4{1'b0}}),
 
@@ -469,7 +469,7 @@ qsfp_gty_inst (
     .gtytxp_out({qsfp_tx4_p, qsfp_tx3_p, qsfp_tx2_p, qsfp_tx1_p}),
 
     .rxgearboxslip_in({qsfp_gt_rxgearboxslip_4, qsfp_gt_rxgearboxslip_3, qsfp_gt_rxgearboxslip_2, qsfp_gt_rxgearboxslip_1}),
-    .rxdata_out({qsfp_gt_rxdata_4, qsfp_gt_rxdata_3, qsfp_gt_rxdata_2, qsfp_gt_rxdata_1}),
+    .gtwiz_userdata_rx_out({qsfp_gt_rxdata_4, qsfp_gt_rxdata_3, qsfp_gt_rxdata_2, qsfp_gt_rxdata_1}),
     .rxdatavalid_out({qsfp_gt_rxdatavalid_4, qsfp_gt_rxdatavalid_3, qsfp_gt_rxdatavalid_2, qsfp_gt_rxdatavalid_1}),
     .rxheader_out({qsfp_gt_rxheader_4, qsfp_gt_rxheader_3, qsfp_gt_rxheader_2, qsfp_gt_rxheader_1}),
     .rxheadervalid_out({qsfp_gt_rxheadervalid_4, qsfp_gt_rxheadervalid_3, qsfp_gt_rxheadervalid_2, qsfp_gt_rxheadervalid_1}),
@@ -622,139 +622,6 @@ qsfp_phy_4_inst (
     .rx_block_lock(qsfp_rx_block_lock_4),
     .rx_high_ber()
 );
-
-// // XGMII 10G PHY
-// assign qsfp_modsell = 1'b0;
-// assign qsfp_resetl = 1'b1;
-// assign qsfp_lpmode = 1'b0;
-
-// wire [63:0] qsfp_txd_1_int;
-// wire [7:0]  qsfp_txc_1_int;
-// wire [63:0] qsfp_rxd_1_int;
-// wire [7:0]  qsfp_rxc_1_int;
-// wire [63:0] qsfp_txd_2_int;
-// wire [7:0]  qsfp_txc_2_int;
-// wire [63:0] qsfp_rxd_2_int = 64'h0707070707070707;
-// wire [7:0]  qsfp_rxc_2_int = 8'hff;
-// wire [63:0] qsfp_txd_3_int;
-// wire [7:0]  qsfp_txc_3_int;
-// wire [63:0] qsfp_rxd_3_int = 64'h0707070707070707;
-// wire [7:0]  qsfp_rxc_3_int = 8'hff;
-// wire [63:0] qsfp_txd_4_int;
-// wire [7:0]  qsfp_txc_4_int;
-// wire [63:0] qsfp_rxd_4_int = 64'h0707070707070707;
-// wire [7:0]  qsfp_rxc_4_int = 8'hff;
-
-// wire [535:0] configuration_vector;
-// wire [447:0] status_vector;
-// wire [7:0] core_status;
-
-// assign configuration_vector[0]       = 1'b0; // PMA Loopback Enable
-// assign configuration_vector[14:1]    = 0;
-// assign configuration_vector[15]      = 1'b0; // PMA Reset
-// assign configuration_vector[16]      = 1'b0; // Global PMD TX Disable
-// assign configuration_vector[109:17]  = 0;
-// assign configuration_vector[110]     = 1'b0; // PCS Loopback Enable
-// assign configuration_vector[111]     = 1'b0; // PCS Reset
-// assign configuration_vector[169:112] = 58'd0; // 10GBASE-R Test Pattern Seed A0-3
-// assign configuration_vector[175:170] = 0;
-// assign configuration_vector[233:176] = 58'd0; // 10GBASE-R Test Pattern Seed B0-3
-// assign configuration_vector[239:234] = 0;
-// assign configuration_vector[240]     = 1'b0; // Data Pattern Select
-// assign configuration_vector[241]     = 1'b0; // Test Pattern Select
-// assign configuration_vector[242]     = 1'b0; // RX Test Pattern Checking Enable
-// assign configuration_vector[243]     = 1'b0; // TX Test Pattern Enable
-// assign configuration_vector[244]     = 1'b0; // PRBS31 TX Test Pattern Enable
-// assign configuration_vector[245]     = 1'b0; // PRBS31 RX Test Pattern Checking Enable
-// assign configuration_vector[383:246] = 0;
-// assign configuration_vector[399:384] = 16'h4C4B; // 125 us timer control
-// assign configuration_vector[511:400] = 0;
-// assign configuration_vector[512]     = 1'b0; // Set PMA Link Status
-// assign configuration_vector[513]     = 1'b0; // Clear PMA/PMD Link Faults
-// assign configuration_vector[515:514] = 0;
-// assign configuration_vector[516]     = 1'b0; // Set PCS Link Status
-// assign configuration_vector[517]     = 1'b0; // Clear PCS Link Faults
-// assign configuration_vector[518]     = 1'b0; // Clear 10GBASE-R Status 2
-// assign configuration_vector[519]     = 1'b0; // Clear 10GBASE-R Test Pattern Error Counter
-// assign configuration_vector[535:520] = 0;
-
-// wire        drp_gnt;
-// wire        gt_drprdy;
-// wire [15:0] gt_drpdo;
-// wire        gt_drpen;
-// wire        gt_drpwe;
-// wire [15:0] gt_drpaddr;
-// wire [15:0] gt_drpdi;
-
-// ten_gig_eth_pcs_pma_0
-// ten_gig_eth_pcs_pma_inst (
-//     .refclk_p(qsfp_mgt_refclk_0_p),
-//     .refclk_n(qsfp_mgt_refclk_0_n),
-
-//     .dclk(clk_125mhz_int),
-
-//     .coreclk_out(),
-
-//     //.reset(rst_125mhz_int | si570_i2c_init_busy),
-//     .reset(rst_125mhz_int),
-
-//     .sim_speedup_control(1'b0),
-
-//     .qpll0outclk_out(),
-//     .qpll0outrefclk_out(),
-//     .qpll0lock_out(),
-
-//     .rxrecclk_out(),
-
-//     .txusrclk_out(),
-//     .txusrclk2_out(clk_156mhz_int),
-
-//     .gttxreset_out(),
-//     .gtrxreset_out(),
-
-//     .txuserrdy_out(),
-
-//     .areset_datapathclk_out(rst_156mhz_int),
-//     .areset_coreclk_out(),
-//     .reset_counter_done_out(),
-
-//     .xgmii_txd(qsfp_txd_1_int),
-//     .xgmii_txc(qsfp_txc_1_int),
-//     .xgmii_rxd(qsfp_rxd_1_int),
-//     .xgmii_rxc(qsfp_rxc_1_int),
-
-//     .txp(qsfp_tx1_p),
-//     .txn(qsfp_tx1_n),
-//     .rxp(qsfp_rx1_p),
-//     .rxn(qsfp_rx1_n),
-
-//     .resetdone_out(),
-//     .signal_detect(1'b1),
-//     .tx_fault(1'b0),
-
-//     .drp_req(drp_gnt),
-//     .drp_gnt(drp_gnt),
-
-//     .core_to_gt_drprdy(gt_drprdy),
-//     .core_to_gt_drpdo(gt_drpdo),
-//     .core_to_gt_drpen(gt_drpen),
-//     .core_to_gt_drpwe(gt_drpwe),
-//     .core_to_gt_drpaddr(gt_drpaddr),
-//     .core_to_gt_drpdi(gt_drpdi),
-
-//     .gt_drprdy(gt_drprdy),
-//     .gt_drpdo(gt_drpdo),
-//     .gt_drpen(gt_drpen),
-//     .gt_drpwe(gt_drpwe),
-//     .gt_drpaddr(gt_drpaddr),
-//     .gt_drpdi(gt_drpdi),
-
-//     .tx_disable(),
-//     .configuration_vector(configuration_vector),
-//     .status_vector(status_vector),
-//     .pma_pmd_type(3'b101),
-//     .core_status(core_status)
-// );
 
 // SGMII interface to PHY
 wire phy_gmii_clk_int;

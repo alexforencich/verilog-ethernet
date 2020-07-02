@@ -146,9 +146,9 @@ wire clk_125mhz_mmcm_out;
 wire clk_125mhz_int;
 wire rst_125mhz_int;
 
-// Internal 156.25 MHz clock
-wire clk_156mhz_int;
-wire rst_156mhz_int;
+// Internal 390.625 MHz clock
+wire clk_390mhz_int;
+wire rst_390mhz_int;
 
 wire mmcm_rst = reset;
 wire mmcm_locked;
@@ -251,8 +251,8 @@ debounce_switch #(
     .RATE(156000)
 )
 debounce_switch_inst (
-    .clk(clk_156mhz_int),
-    .rst(rst_156mhz_int),
+    .clk(clk_390mhz_int),
+    .rst(rst_390mhz_int),
     .in({btnu,
         btnl,
         btnd,
@@ -275,7 +275,7 @@ sync_signal #(
     .N(2)
 )
 sync_signal_inst (
-    .clk(clk_156mhz_int),
+    .clk(clk_390mhz_int),
     .in({uart_rxd, uart_cts}),
     .out({uart_rxd_int, uart_cts_int})
 );
@@ -419,7 +419,7 @@ BUFG_GT bufg_gt_tx_usrclk_inst (
     .O       (gt_txusrclk)
 );
 
-assign clk_156mhz_int = gt_txusrclk;
+assign clk_390mhz_int = gt_txusrclk;
 
 always @(posedge gt_txusrclk, posedge gt_tx_reset) begin
     if (gt_tx_reset) begin
@@ -460,74 +460,74 @@ endgenerate
 sync_reset #(
     .N(4)
 )
-sync_reset_156mhz_inst (
-    .clk(clk_156mhz_int),
+sync_reset_390mhz_inst (
+    .clk(clk_390mhz_int),
     .rst(~gt_reset_tx_done),
-    .out(rst_156mhz_int)
+    .out(rst_390mhz_int)
 );
 
 wire [5:0] qsfp1_gt_txheader_1;
-wire [127:0] qsfp1_gt_txdata_1;
+wire [63:0] qsfp1_gt_txdata_1;
 wire qsfp1_gt_rxgearboxslip_1;
 wire [5:0] qsfp1_gt_rxheader_1;
 wire [1:0] qsfp1_gt_rxheadervalid_1;
-wire [127:0] qsfp1_gt_rxdata_1;
+wire [63:0] qsfp1_gt_rxdata_1;
 wire [1:0] qsfp1_gt_rxdatavalid_1;
 
 wire [5:0] qsfp1_gt_txheader_2;
-wire [127:0] qsfp1_gt_txdata_2;
+wire [63:0] qsfp1_gt_txdata_2;
 wire qsfp1_gt_rxgearboxslip_2;
 wire [5:0] qsfp1_gt_rxheader_2;
 wire [1:0] qsfp1_gt_rxheadervalid_2;
-wire [127:0] qsfp1_gt_rxdata_2;
+wire [63:0] qsfp1_gt_rxdata_2;
 wire [1:0] qsfp1_gt_rxdatavalid_2;
 
 wire [5:0] qsfp1_gt_txheader_3;
-wire [127:0] qsfp1_gt_txdata_3;
+wire [63:0] qsfp1_gt_txdata_3;
 wire qsfp1_gt_rxgearboxslip_3;
 wire [5:0] qsfp1_gt_rxheader_3;
 wire [1:0] qsfp1_gt_rxheadervalid_3;
-wire [127:0] qsfp1_gt_rxdata_3;
+wire [63:0] qsfp1_gt_rxdata_3;
 wire [1:0] qsfp1_gt_rxdatavalid_3;
 
 wire [5:0] qsfp1_gt_txheader_4;
-wire [127:0] qsfp1_gt_txdata_4;
+wire [63:0] qsfp1_gt_txdata_4;
 wire qsfp1_gt_rxgearboxslip_4;
 wire [5:0] qsfp1_gt_rxheader_4;
 wire [1:0] qsfp1_gt_rxheadervalid_4;
-wire [127:0] qsfp1_gt_rxdata_4;
+wire [63:0] qsfp1_gt_rxdata_4;
 wire [1:0] qsfp1_gt_rxdatavalid_4;
 
 wire [5:0] qsfp2_gt_txheader_1;
-wire [127:0] qsfp2_gt_txdata_1;
+wire [63:0] qsfp2_gt_txdata_1;
 wire qsfp2_gt_rxgearboxslip_1;
 wire [5:0] qsfp2_gt_rxheader_1;
 wire [1:0] qsfp2_gt_rxheadervalid_1;
-wire [127:0] qsfp2_gt_rxdata_1;
+wire [63:0] qsfp2_gt_rxdata_1;
 wire [1:0] qsfp2_gt_rxdatavalid_1;
 
 wire [5:0] qsfp2_gt_txheader_2;
-wire [127:0] qsfp2_gt_txdata_2;
+wire [63:0] qsfp2_gt_txdata_2;
 wire qsfp2_gt_rxgearboxslip_2;
 wire [5:0] qsfp2_gt_rxheader_2;
 wire [1:0] qsfp2_gt_rxheadervalid_2;
-wire [127:0] qsfp2_gt_rxdata_2;
+wire [63:0] qsfp2_gt_rxdata_2;
 wire [1:0] qsfp2_gt_rxdatavalid_2;
 
 wire [5:0] qsfp2_gt_txheader_3;
-wire [127:0] qsfp2_gt_txdata_3;
+wire [63:0] qsfp2_gt_txdata_3;
 wire qsfp2_gt_rxgearboxslip_3;
 wire [5:0] qsfp2_gt_rxheader_3;
 wire [1:0] qsfp2_gt_rxheadervalid_3;
-wire [127:0] qsfp2_gt_rxdata_3;
+wire [63:0] qsfp2_gt_rxdata_3;
 wire [1:0] qsfp2_gt_rxdatavalid_3;
 
 wire [5:0] qsfp2_gt_txheader_4;
-wire [127:0] qsfp2_gt_txdata_4;
+wire [63:0] qsfp2_gt_txdata_4;
 wire qsfp2_gt_rxgearboxslip_4;
 wire [5:0] qsfp2_gt_rxheader_4;
 wire [1:0] qsfp2_gt_rxheadervalid_4;
-wire [127:0] qsfp2_gt_rxdata_4;
+wire [63:0] qsfp2_gt_rxdata_4;
 wire [1:0] qsfp2_gt_rxdatavalid_4;
 
 gtwizard_ultrascale_0
@@ -560,7 +560,7 @@ qsfp_gty_inst (
     .rxusrclk_in(gt_rxusrclk),
     .rxusrclk2_in(gt_rxusrclk),
 
-    .txdata_in({qsfp2_gt_txdata_4, qsfp2_gt_txdata_3, qsfp2_gt_txdata_2, qsfp2_gt_txdata_1, qsfp1_gt_txdata_4, qsfp1_gt_txdata_3, qsfp1_gt_txdata_2, qsfp1_gt_txdata_1}),
+    .gtwiz_userdata_tx_in({qsfp2_gt_txdata_4, qsfp2_gt_txdata_3, qsfp2_gt_txdata_2, qsfp2_gt_txdata_1, qsfp1_gt_txdata_4, qsfp1_gt_txdata_3, qsfp1_gt_txdata_2, qsfp1_gt_txdata_1}),
     .txheader_in({qsfp2_gt_txheader_4, qsfp2_gt_txheader_3, qsfp2_gt_txheader_2, qsfp2_gt_txheader_1, qsfp1_gt_txheader_4, qsfp1_gt_txheader_3, qsfp1_gt_txheader_2, qsfp1_gt_txheader_1}),
     .txsequence_in({8{1'b0}}),
 
@@ -573,7 +573,7 @@ qsfp_gty_inst (
     .gtytxp_out({qsfp2_tx4_p, qsfp2_tx3_p, qsfp2_tx2_p, qsfp2_tx1_p, qsfp1_tx4_p, qsfp1_tx3_p, qsfp1_tx2_p, qsfp1_tx1_p}),
 
     .rxgearboxslip_in({qsfp2_gt_rxgearboxslip_4, qsfp2_gt_rxgearboxslip_3, qsfp2_gt_rxgearboxslip_2, qsfp2_gt_rxgearboxslip_1, qsfp1_gt_rxgearboxslip_4, qsfp1_gt_rxgearboxslip_3, qsfp1_gt_rxgearboxslip_2, qsfp1_gt_rxgearboxslip_1}),
-    .rxdata_out({qsfp2_gt_rxdata_4, qsfp2_gt_rxdata_3, qsfp2_gt_rxdata_2, qsfp2_gt_rxdata_1, qsfp1_gt_rxdata_4, qsfp1_gt_rxdata_3, qsfp1_gt_rxdata_2, qsfp1_gt_rxdata_1}),
+    .gtwiz_userdata_rx_out({qsfp2_gt_rxdata_4, qsfp2_gt_rxdata_3, qsfp2_gt_rxdata_2, qsfp2_gt_rxdata_1, qsfp1_gt_rxdata_4, qsfp1_gt_rxdata_3, qsfp1_gt_rxdata_2, qsfp1_gt_rxdata_1}),
     .rxdatavalid_out({qsfp2_gt_rxdatavalid_4, qsfp2_gt_rxdatavalid_3, qsfp2_gt_rxdatavalid_2, qsfp2_gt_rxdatavalid_1, qsfp1_gt_rxdatavalid_4, qsfp1_gt_rxdatavalid_3, qsfp1_gt_rxdatavalid_2, qsfp1_gt_rxdatavalid_1}),
     .rxheader_out({qsfp2_gt_rxheader_4, qsfp2_gt_rxheader_3, qsfp2_gt_rxheader_2, qsfp2_gt_rxheader_1, qsfp1_gt_rxheader_4, qsfp1_gt_rxheader_3, qsfp1_gt_rxheader_2, qsfp1_gt_rxheader_1}),
     .rxheadervalid_out({qsfp2_gt_rxheadervalid_4, qsfp2_gt_rxheadervalid_3, qsfp2_gt_rxheadervalid_2, qsfp2_gt_rxheadervalid_1, qsfp1_gt_rxheadervalid_4, qsfp1_gt_rxheadervalid_3, qsfp1_gt_rxheadervalid_2, qsfp1_gt_rxheadervalid_1}),
@@ -587,8 +587,8 @@ qsfp_gty_inst (
     .txprgdivresetdone_out(gt_txprgdivresetdone)
 );
 
-assign qsfp1_tx_clk_1_int = clk_156mhz_int;
-assign qsfp1_tx_rst_1_int = rst_156mhz_int;
+assign qsfp1_tx_clk_1_int = clk_390mhz_int;
+assign qsfp1_tx_rst_1_int = rst_390mhz_int;
 
 assign qsfp1_rx_clk_1_int = gt_rxusrclk[0];
 
@@ -625,8 +625,8 @@ qsfp1_phy_1_inst (
     .rx_high_ber()
 );
 
-assign qsfp1_tx_clk_2_int = clk_156mhz_int;
-assign qsfp1_tx_rst_2_int = rst_156mhz_int;
+assign qsfp1_tx_clk_2_int = clk_390mhz_int;
+assign qsfp1_tx_rst_2_int = rst_390mhz_int;
 
 assign qsfp1_rx_clk_2_int = gt_rxusrclk[1];
 
@@ -663,8 +663,8 @@ qsfp1_phy_2_inst (
     .rx_high_ber()
 );
 
-assign qsfp1_tx_clk_3_int = clk_156mhz_int;
-assign qsfp1_tx_rst_3_int = rst_156mhz_int;
+assign qsfp1_tx_clk_3_int = clk_390mhz_int;
+assign qsfp1_tx_rst_3_int = rst_390mhz_int;
 
 assign qsfp1_rx_clk_3_int = gt_rxusrclk[2];
 
@@ -701,8 +701,8 @@ qsfp1_phy_3_inst (
     .rx_high_ber()
 );
 
-assign qsfp1_tx_clk_4_int = clk_156mhz_int;
-assign qsfp1_tx_rst_4_int = rst_156mhz_int;
+assign qsfp1_tx_clk_4_int = clk_390mhz_int;
+assign qsfp1_tx_rst_4_int = rst_390mhz_int;
 
 assign qsfp1_rx_clk_4_int = gt_rxusrclk[3];
 
@@ -739,8 +739,8 @@ qsfp1_phy_4_inst (
     .rx_high_ber()
 );
 
-assign qsfp2_tx_clk_1_int = clk_156mhz_int;
-assign qsfp2_tx_rst_1_int = rst_156mhz_int;
+assign qsfp2_tx_clk_1_int = clk_390mhz_int;
+assign qsfp2_tx_rst_1_int = rst_390mhz_int;
 
 assign qsfp2_rx_clk_1_int = gt_rxusrclk[4];
 
@@ -777,8 +777,8 @@ qsfp2_phy_1_inst (
     .rx_high_ber()
 );
 
-assign qsfp2_tx_clk_2_int = clk_156mhz_int;
-assign qsfp2_tx_rst_2_int = rst_156mhz_int;
+assign qsfp2_tx_clk_2_int = clk_390mhz_int;
+assign qsfp2_tx_rst_2_int = rst_390mhz_int;
 
 assign qsfp2_rx_clk_2_int = gt_rxusrclk[5];
 
@@ -815,8 +815,8 @@ qsfp2_phy_2_inst (
     .rx_high_ber()
 );
 
-assign qsfp2_tx_clk_3_int = clk_156mhz_int;
-assign qsfp2_tx_rst_3_int = rst_156mhz_int;
+assign qsfp2_tx_clk_3_int = clk_390mhz_int;
+assign qsfp2_tx_rst_3_int = rst_390mhz_int;
 
 assign qsfp2_rx_clk_3_int = gt_rxusrclk[6];
 
@@ -853,8 +853,8 @@ qsfp2_phy_3_inst (
     .rx_high_ber()
 );
 
-assign qsfp2_tx_clk_4_int = clk_156mhz_int;
-assign qsfp2_tx_rst_4_int = rst_156mhz_int;
+assign qsfp2_tx_clk_4_int = clk_390mhz_int;
+assign qsfp2_tx_rst_4_int = rst_390mhz_int;
 
 assign qsfp2_rx_clk_4_int = gt_rxusrclk[7];
 
@@ -1206,11 +1206,11 @@ assign led = sw[0] ? {qsfp2_rx_block_lock_4, qsfp2_rx_block_lock_3, qsfp2_rx_blo
 fpga_core
 core_inst (
     /*
-     * Clock: 156.25 MHz
+     * Clock: 390.625 MHz
      * Synchronous reset
      */
-    .clk(clk_156mhz_int),
-    .rst(rst_156mhz_int),
+    .clk(clk_390mhz_int),
+    .rst(rst_390mhz_int),
     /*
      * GPIO
      */

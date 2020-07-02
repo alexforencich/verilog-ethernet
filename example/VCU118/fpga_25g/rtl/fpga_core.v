@@ -35,7 +35,7 @@ module fpga_core #
 )
 (
     /*
-     * Clock: 156.25MHz
+     * Clock: 390.625 MHz
      * Synchronous reset
      */
     input  wire       clk,

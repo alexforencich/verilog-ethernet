@@ -467,67 +467,67 @@ sync_reset_156mhz_inst (
 );
 
 wire [5:0] qsfp1_gt_txheader_1;
-wire [127:0] qsfp1_gt_txdata_1;
+wire [63:0] qsfp1_gt_txdata_1;
 wire qsfp1_gt_rxgearboxslip_1;
 wire [5:0] qsfp1_gt_rxheader_1;
 wire [1:0] qsfp1_gt_rxheadervalid_1;
-wire [127:0] qsfp1_gt_rxdata_1;
+wire [63:0] qsfp1_gt_rxdata_1;
 wire [1:0] qsfp1_gt_rxdatavalid_1;
 
 wire [5:0] qsfp1_gt_txheader_2;
-wire [127:0] qsfp1_gt_txdata_2;
+wire [63:0] qsfp1_gt_txdata_2;
 wire qsfp1_gt_rxgearboxslip_2;
 wire [5:0] qsfp1_gt_rxheader_2;
 wire [1:0] qsfp1_gt_rxheadervalid_2;
-wire [127:0] qsfp1_gt_rxdata_2;
+wire [63:0] qsfp1_gt_rxdata_2;
 wire [1:0] qsfp1_gt_rxdatavalid_2;
 
 wire [5:0] qsfp1_gt_txheader_3;
-wire [127:0] qsfp1_gt_txdata_3;
+wire [63:0] qsfp1_gt_txdata_3;
 wire qsfp1_gt_rxgearboxslip_3;
 wire [5:0] qsfp1_gt_rxheader_3;
 wire [1:0] qsfp1_gt_rxheadervalid_3;
-wire [127:0] qsfp1_gt_rxdata_3;
+wire [63:0] qsfp1_gt_rxdata_3;
 wire [1:0] qsfp1_gt_rxdatavalid_3;
 
 wire [5:0] qsfp1_gt_txheader_4;
-wire [127:0] qsfp1_gt_txdata_4;
+wire [63:0] qsfp1_gt_txdata_4;
 wire qsfp1_gt_rxgearboxslip_4;
 wire [5:0] qsfp1_gt_rxheader_4;
 wire [1:0] qsfp1_gt_rxheadervalid_4;
-wire [127:0] qsfp1_gt_rxdata_4;
+wire [63:0] qsfp1_gt_rxdata_4;
 wire [1:0] qsfp1_gt_rxdatavalid_4;
 
 wire [5:0] qsfp2_gt_txheader_1;
-wire [127:0] qsfp2_gt_txdata_1;
+wire [63:0] qsfp2_gt_txdata_1;
 wire qsfp2_gt_rxgearboxslip_1;
 wire [5:0] qsfp2_gt_rxheader_1;
 wire [1:0] qsfp2_gt_rxheadervalid_1;
-wire [127:0] qsfp2_gt_rxdata_1;
+wire [63:0] qsfp2_gt_rxdata_1;
 wire [1:0] qsfp2_gt_rxdatavalid_1;
 
 wire [5:0] qsfp2_gt_txheader_2;
-wire [127:0] qsfp2_gt_txdata_2;
+wire [63:0] qsfp2_gt_txdata_2;
 wire qsfp2_gt_rxgearboxslip_2;
 wire [5:0] qsfp2_gt_rxheader_2;
 wire [1:0] qsfp2_gt_rxheadervalid_2;
-wire [127:0] qsfp2_gt_rxdata_2;
+wire [63:0] qsfp2_gt_rxdata_2;
 wire [1:0] qsfp2_gt_rxdatavalid_2;
 
 wire [5:0] qsfp2_gt_txheader_3;
-wire [127:0] qsfp2_gt_txdata_3;
+wire [63:0] qsfp2_gt_txdata_3;
 wire qsfp2_gt_rxgearboxslip_3;
 wire [5:0] qsfp2_gt_rxheader_3;
 wire [1:0] qsfp2_gt_rxheadervalid_3;
-wire [127:0] qsfp2_gt_rxdata_3;
+wire [63:0] qsfp2_gt_rxdata_3;
 wire [1:0] qsfp2_gt_rxdatavalid_3;
 
 wire [5:0] qsfp2_gt_txheader_4;
-wire [127:0] qsfp2_gt_txdata_4;
+wire [63:0] qsfp2_gt_txdata_4;
 wire qsfp2_gt_rxgearboxslip_4;
 wire [5:0] qsfp2_gt_rxheader_4;
 wire [1:0] qsfp2_gt_rxheadervalid_4;
-wire [127:0] qsfp2_gt_rxdata_4;
+wire [63:0] qsfp2_gt_rxdata_4;
 wire [1:0] qsfp2_gt_rxdatavalid_4;
 
 gtwizard_ultrascale_0
@@ -560,7 +560,7 @@ qsfp_gty_inst (
     .rxusrclk_in(gt_rxusrclk),
     .rxusrclk2_in(gt_rxusrclk),
 
-    .txdata_in({qsfp2_gt_txdata_4, qsfp2_gt_txdata_3, qsfp2_gt_txdata_2, qsfp2_gt_txdata_1, qsfp1_gt_txdata_4, qsfp1_gt_txdata_3, qsfp1_gt_txdata_2, qsfp1_gt_txdata_1}),
+    .gtwiz_userdata_tx_in({qsfp2_gt_txdata_4, qsfp2_gt_txdata_3, qsfp2_gt_txdata_2, qsfp2_gt_txdata_1, qsfp1_gt_txdata_4, qsfp1_gt_txdata_3, qsfp1_gt_txdata_2, qsfp1_gt_txdata_1}),
     .txheader_in({qsfp2_gt_txheader_4, qsfp2_gt_txheader_3, qsfp2_gt_txheader_2, qsfp2_gt_txheader_1, qsfp1_gt_txheader_4, qsfp1_gt_txheader_3, qsfp1_gt_txheader_2, qsfp1_gt_txheader_1}),
     .txsequence_in({8{1'b0}}),
 
@@ -573,7 +573,7 @@ qsfp_gty_inst (
     .gtytxp_out({qsfp2_tx4_p, qsfp2_tx3_p, qsfp2_tx2_p, qsfp2_tx1_p, qsfp1_tx4_p, qsfp1_tx3_p, qsfp1_tx2_p, qsfp1_tx1_p}),
 
     .rxgearboxslip_in({qsfp2_gt_rxgearboxslip_4, qsfp2_gt_rxgearboxslip_3, qsfp2_gt_rxgearboxslip_2, qsfp2_gt_rxgearboxslip_1, qsfp1_gt_rxgearboxslip_4, qsfp1_gt_rxgearboxslip_3, qsfp1_gt_rxgearboxslip_2, qsfp1_gt_rxgearboxslip_1}),
-    .rxdata_out({qsfp2_gt_rxdata_4, qsfp2_gt_rxdata_3, qsfp2_gt_rxdata_2, qsfp2_gt_rxdata_1, qsfp1_gt_rxdata_4, qsfp1_gt_rxdata_3, qsfp1_gt_rxdata_2, qsfp1_gt_rxdata_1}),
+    .gtwiz_userdata_rx_out({qsfp2_gt_rxdata_4, qsfp2_gt_rxdata_3, qsfp2_gt_rxdata_2, qsfp2_gt_rxdata_1, qsfp1_gt_rxdata_4, qsfp1_gt_rxdata_3, qsfp1_gt_rxdata_2, qsfp1_gt_rxdata_1}),
     .rxdatavalid_out({qsfp2_gt_rxdatavalid_4, qsfp2_gt_rxdatavalid_3, qsfp2_gt_rxdatavalid_2, qsfp2_gt_rxdatavalid_1, qsfp1_gt_rxdatavalid_4, qsfp1_gt_rxdatavalid_3, qsfp1_gt_rxdatavalid_2, qsfp1_gt_rxdatavalid_1}),
     .rxheader_out({qsfp2_gt_rxheader_4, qsfp2_gt_rxheader_3, qsfp2_gt_rxheader_2, qsfp2_gt_rxheader_1, qsfp1_gt_rxheader_4, qsfp1_gt_rxheader_3, qsfp1_gt_rxheader_2, qsfp1_gt_rxheader_1}),
     .rxheadervalid_out({qsfp2_gt_rxheadervalid_4, qsfp2_gt_rxheadervalid_3, qsfp2_gt_rxheadervalid_2, qsfp2_gt_rxheadervalid_1, qsfp1_gt_rxheadervalid_4, qsfp1_gt_rxheadervalid_3, qsfp1_gt_rxheadervalid_2, qsfp1_gt_rxheadervalid_1}),

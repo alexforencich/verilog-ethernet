@@ -55,7 +55,7 @@ XDC_FILES += lib/eth/lib/axis/syn/axis_async_fifo.tcl
 XDC_FILES += lib/eth/lib/axis/syn/sync_reset.tcl
 
 # IP
-XCI_FILES = ip/gtwizard_ultrascale_0.xci
+IP_TCL_FILES = ip/gtwizard_ultrascale_0.tcl
 
 include ../common/vivado.mk
 

@@ -59,9 +59,9 @@ set_property -dict {LOC AC16 IOSTANDARD LVCMOS18 PULLUP true} [get_ports sfp_1_l
 set_property -dict {LOC Y17  IOSTANDARD LVCMOS18 PULLUP true} [get_ports sfp_2_los]
 set_property -dict {LOC G14  IOSTANDARD LVCMOS33 SLEW SLOW DRIVE 12} [get_ports sfp_1_rs]
 set_property -dict {LOC H14  IOSTANDARD LVCMOS33 SLEW SLOW DRIVE 12} [get_ports sfp_2_rs]
-set_property -dict {LOC A10  IOSTANDARD LVCMOS33 SLEW SLOW DRIVE 12 PULLUP true} [get_ports sfp_i2c_scl]
-set_property -dict {LOC C11  IOSTANDARD LVCMOS33 SLEW SLOW DRIVE 12 PULLUP true} [get_ports sfp_1_i2c_sda]
-set_property -dict {LOC B11  IOSTANDARD LVCMOS33 SLEW SLOW DRIVE 12 PULLUP true} [get_ports sfp_2_i2c_sda]
+#set_property -dict {LOC A10  IOSTANDARD LVCMOS33 SLEW SLOW DRIVE 12 PULLUP true} [get_ports sfp_i2c_scl]
+#set_property -dict {LOC C11  IOSTANDARD LVCMOS33 SLEW SLOW DRIVE 12 PULLUP true} [get_ports sfp_1_i2c_sda]
+#set_property -dict {LOC B11  IOSTANDARD LVCMOS33 SLEW SLOW DRIVE 12 PULLUP true} [get_ports sfp_2_i2c_sda]
 
 # 161.1328125 MHz MGT reference clock
 create_clock -period 6.206 -name sfp_mgt_refclk [get_ports sfp_mgt_refclk_p]
