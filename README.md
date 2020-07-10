@@ -30,6 +30,26 @@ module (ptp_clock_cdc) for transferring PTP time across clock domains, and a
 configurable PTP period output module for precisely generating arbitrary
 frequencies from PTP time.
 
+Example designs implementing a simple UDP echo server are included for the
+following boards:
+
+*  Alpha Data ADM-PCIE-9V3 (Xilinx Virtex UltraScale+ XCVU3P)
+*  Digilent Arty A7 (Xilinx Artix 7 XC7A35T)
+*  Digilent Atlys (Xilinx Spartan 6 XC6SLX45)
+*  Intel Cyclone 10 LP (Intel Cyclone 10 10CL025YU256I7G)
+*  Terasic DE2-115 (Intel Cyclone IV E EP4CE115F29C7)
+*  Terasic DE5-Net (Intel Stratix V 5SGXEA7N2F45C2)
+*  Exablaze ExaNIC X10 (Xilinx Kintex UltraScale XCKU035)
+*  Exablaze ExaNIC X25 (Xilinx Kintex UltraScale+ XCKU3P)
+*  HiTech Global HTG-V6HXT-100GIG-565 (Xilinx Virtex 6 XC6VHX565T)
+*  Xilinx KC705 (Xilinx Kintex 7 XC7K325T)
+*  Xilinx ML605 (Xilinx Virtex 6 XC6VLX240T)
+*  NetFPGA SUME (Xilinx Virtex 7 XC7V690T)
+*  Digilent Nexys Video (Xilinx Artix 7 XC7XC7A200T)
+*  Xilinx VCU108 (Xilinx Virtex UltraScale XCVU095)
+*  Xilinx VCU118 (Xilinx Virtex UltraScale+ XCVU9P)
+*  Xilinx VCU1525 (Xilinx Virtex UltraScale+ XCVU9P)
+
 ## Documentation
 
 ### arp module
