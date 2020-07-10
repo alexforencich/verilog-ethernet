@@ -922,7 +922,7 @@ generate
             end
 
             // process commands and issue memory reads
-            if (cmd_valid_reg && (!ram_rd_en_reg || ram_rd_ack) && ($unsigned(out_fifo_ctrl_wr_ptr_reg - out_fifo_rd_ptr_reg) < 32)) begin
+            if (cmd_valid_reg && !cmd_status_valid_next && (!ram_rd_en_reg || ram_rd_ack) && ($unsigned(out_fifo_ctrl_wr_ptr_reg - out_fifo_rd_ptr_reg) < 32)) begin
                 // update counters
                 rd_ptr_next[ADDR_WIDTH-1:0] = rd_ptr_reg[ADDR_WIDTH-1:0] + 1;
                 len_next = len_reg - 1;
