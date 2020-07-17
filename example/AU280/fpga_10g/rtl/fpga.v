@@ -182,44 +182,7 @@ sync_reset_125mhz_inst (
 );
 
 // GPIO
-wire [3:0] sw_int;
-
-debounce_switch #(
-    .WIDTH(4),
-    .N(4),
-    .RATE(156000)
-)
-debounce_switch_inst (
-    .clk(clk_156mhz_int),
-    .rst(rst_156mhz_int),
-    .in({sw}),
-    .out({sw_int})
-);
-
-wire uart_txd_int;
-
-sync_signal #(
-    .WIDTH(1),
-    .N(2)
-)
-sync_signal_inst (
-    .clk(clk_156mhz_int),
-    .in({uart_txd}),
-    .out({uart_txd_int})
-);
-
-// SI570 I2C
-wire i2c_scl_i;
-wire i2c_scl_o = 1'b1;
-wire i2c_scl_t = 1'b1;
-wire i2c_sda_i;
-wire i2c_sda_o = 1'b1;
-wire i2c_sda_t = 1'b1;
-
-assign i2c_scl_i = i2c_scl;
-assign i2c_scl = i2c_scl_t ? 1'bz : i2c_scl_o;
-assign i2c_sda_i = i2c_sda;
-assign i2c_sda = i2c_sda_t ? 1'bz : i2c_sda_o;
+assign hbm_cattrip = 1'b0;
 
 // XGMII 10G PHY
 assign qsfp0_refclk_oe_b = 1'b0;
