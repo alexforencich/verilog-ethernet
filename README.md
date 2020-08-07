@@ -51,6 +51,7 @@ following boards:
 *  Xilinx VCU108 (Xilinx Virtex UltraScale XCVU095)
 *  Xilinx VCU118 (Xilinx Virtex UltraScale+ XCVU9P)
 *  Xilinx VCU1525 (Xilinx Virtex UltraScale+ XCVU9P)
+*  Xilinx ZCU106 (Xilinx Zynq UltraScale+ XCZU7EV)
 
 ## Documentation
 
