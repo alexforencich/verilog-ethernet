@@ -72,10 +72,9 @@ module fpga (
 // Clock and reset
 
 wire clk_ibufg;
-wire clk_bufg;
-wire clk_dcm_out;
 
 // Internal 125 MHz clock
+wire clk_dcm_out;
 wire clk_int;
 wire rst_int;
 

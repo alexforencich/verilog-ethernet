@@ -74,10 +74,9 @@ module fpga (
 // Clock and reset
 
 wire sys_clk_ibufg;
-wire sys_clk_bufg;
-wire clk_125mhz_mmcm_out;
 
 // Internal 125 MHz clock
+wire clk_125mhz_mmcm_out;
 wire clk_125mhz_int;
 wire rst_125mhz_int;
 
