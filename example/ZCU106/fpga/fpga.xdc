@@ -46,6 +46,12 @@ set_property -dict {LOC AH17 IOSTANDARD LVCMOS12} [get_ports uart_rxd]
 set_property -dict {LOC AM15 IOSTANDARD LVCMOS12} [get_ports uart_rts]
 set_property -dict {LOC AP17 IOSTANDARD LVCMOS12 SLEW SLOW DRIVE 8} [get_ports uart_cts]
 
+# I2C interfaces
+#set_property -dict {LOC AE19 IOSTANDARD LVCMOS12 SLEW SLOW DRIVE 8} [get_ports i2c0_scl]
+#set_property -dict {LOC AH23 IOSTANDARD LVCMOS12 SLEW SLOW DRIVE 8} [get_ports i2c0_sda]
+#set_property -dict {LOC AH19 IOSTANDARD LVCMOS12 SLEW SLOW DRIVE 8} [get_ports i2c1_scl]
+#set_property -dict {LOC AL21 IOSTANDARD LVCMOS12 SLEW SLOW DRIVE 8} [get_ports i2c1_sda]
+
 # SFP+ Interface
 set_property -dict {LOC AA2 } [get_ports sfp0_rx_p] ;# MGTYRXP2_225 GTHE4_CHANNEL_X0Y10 / GTHE4_COMMON_X0Y2
 #set_property -dict {LOC AA1 } [get_ports sfp0_rx_n] ;# MGTYRXN2_225 GTHE4_CHANNEL_X0Y10 / GTHE4_COMMON_X0Y2
