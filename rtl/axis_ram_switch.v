@@ -93,7 +93,9 @@ module axis_ram_switch #
     // arbitration type: "PRIORITY" or "ROUND_ROBIN"
     parameter ARB_TYPE = "ROUND_ROBIN",
     // LSB priority: "LOW", "HIGH"
-    parameter LSB_PRIORITY = "HIGH"
+    parameter LSB_PRIORITY = "HIGH",
+    // RAM read data output pipeline stages
+    parameter RAM_PIPELINE = 2
 )
 (
     input  wire                            clk,
@@ -217,8 +219,8 @@ end
 
 // Shared RAM
 reg [DATA_WIDTH-1:0] mem[(2**RAM_ADDR_WIDTH)-1:0];
-reg [DATA_WIDTH-1:0] mem_read_data_reg;
-reg [M_COUNT-1:0] mem_read_data_valid_reg;
+reg [DATA_WIDTH-1:0] mem_read_data_reg[RAM_PIPELINE-1:0];
+reg [M_COUNT-1:0] mem_read_data_valid_reg[RAM_PIPELINE-1:0];
 
 wire [S_COUNT*DATA_WIDTH-1:0]     port_ram_wr_data;
 wire [S_COUNT*RAM_ADDR_WIDTH-1:0] port_ram_wr_addr;
@@ -231,8 +233,8 @@ wire [M_COUNT-1:0]                port_ram_rd_ack;
 wire [M_COUNT*DATA_WIDTH-1:0]     port_ram_rd_data;
 wire [M_COUNT-1:0]                port_ram_rd_data_valid;
 
-assign port_ram_rd_data = {M_COUNT{mem_read_data_reg}};
-assign port_ram_rd_data_valid = mem_read_data_valid_reg;
+assign port_ram_rd_data = {M_COUNT{mem_read_data_reg[RAM_PIPELINE-1]}};
+assign port_ram_rd_data_valid = mem_read_data_valid_reg[RAM_PIPELINE-1];
 
 wire [CL_S_COUNT-1:0] ram_wr_sel;
 wire ram_wr_en;
@@ -306,16 +308,26 @@ end
 
 endgenerate
 
+integer s;
+
 always @(posedge clk) begin
-    mem_read_data_valid_reg <= 0;
+    mem_read_data_valid_reg[0] <= 0;
+
+    for (s = RAM_PIPELINE-1; s > 0; s = s - 1) begin
+        mem_read_data_reg[s] <= mem_read_data_reg[s-1];
+        mem_read_data_valid_reg[s] <= mem_read_data_valid_reg[s-1];
+    end
 
     if (ram_rd_en) begin
-        mem_read_data_reg <= mem[port_ram_rd_addr[ram_rd_sel*RAM_ADDR_WIDTH +: RAM_ADDR_WIDTH]];
-        mem_read_data_valid_reg <= 1 << ram_rd_sel;
+        mem_read_data_reg[0] <= mem[port_ram_rd_addr[ram_rd_sel*RAM_ADDR_WIDTH +: RAM_ADDR_WIDTH]];
+        mem_read_data_valid_reg[0] <= 1 << ram_rd_sel;
     end
 
     if (rst) begin
-        mem_read_data_valid_reg <= 0;
+        mem_read_data_valid_reg[0] <= 0;
+        for (s = 0; s < RAM_PIPELINE; s = s + 1) begin
+            mem_read_data_valid_reg[s] <= 0;
+        end
     end
 end
 
