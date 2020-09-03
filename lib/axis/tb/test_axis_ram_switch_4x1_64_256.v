@@ -56,6 +56,7 @@ parameter M_TOP = {3'd3, 3'd2, 3'd1, 3'd0};
 parameter M_CONNECT = {M_COUNT{{S_COUNT{1'b1}}}};
 parameter ARB_TYPE = "ROUND_ROBIN";
 parameter LSB_PRIORITY = "HIGH";
+parameter RAM_PIPELINE = 2;
 
 // Inputs
 reg clk = 0;
@@ -142,7 +143,8 @@ axis_ram_switch #(
     .M_TOP(M_TOP),
     .M_CONNECT(M_CONNECT),
     .ARB_TYPE(ARB_TYPE),
-    .LSB_PRIORITY(LSB_PRIORITY)
+    .LSB_PRIORITY(LSB_PRIORITY),
+    .RAM_PIPELINE(RAM_PIPELINE)
 )
 UUT (
     .clk(clk),
