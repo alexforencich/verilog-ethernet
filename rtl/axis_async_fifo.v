@@ -152,10 +152,8 @@ reg [ADDR_WIDTH:0] wr_ptr_cur_reg = {ADDR_WIDTH+1{1'b0}}, wr_ptr_cur_next;
 reg [ADDR_WIDTH:0] wr_ptr_gray_reg = {ADDR_WIDTH+1{1'b0}}, wr_ptr_gray_next;
 reg [ADDR_WIDTH:0] wr_ptr_sync_gray_reg = {ADDR_WIDTH+1{1'b0}}, wr_ptr_sync_gray_next;
 reg [ADDR_WIDTH:0] wr_ptr_cur_gray_reg = {ADDR_WIDTH+1{1'b0}}, wr_ptr_cur_gray_next;
-reg [ADDR_WIDTH:0] wr_addr_reg = {ADDR_WIDTH+1{1'b0}};
 reg [ADDR_WIDTH:0] rd_ptr_reg = {ADDR_WIDTH+1{1'b0}}, rd_ptr_next;
 reg [ADDR_WIDTH:0] rd_ptr_gray_reg = {ADDR_WIDTH+1{1'b0}}, rd_ptr_gray_next;
-reg [ADDR_WIDTH:0] rd_addr_reg = {ADDR_WIDTH+1{1'b0}};
 
 reg [ADDR_WIDTH:0] wr_ptr_gray_sync1_reg = {ADDR_WIDTH+1{1'b0}};
 reg [ADDR_WIDTH:0] wr_ptr_gray_sync2_reg = {ADDR_WIDTH+1{1'b0}};
@@ -386,14 +384,8 @@ always @(posedge s_clk) begin
         good_frame_reg <= good_frame_next;
     end
 
-    if (FRAME_FIFO) begin
-        wr_addr_reg <= wr_ptr_cur_next;
-    end else begin
-        wr_addr_reg <= wr_ptr_next;
-    end
-
     if (write) begin
-        mem[wr_addr_reg[ADDR_WIDTH-1:0]] <= s_axis;
+        mem[FRAME_FIFO ? wr_ptr_cur_reg[ADDR_WIDTH-1:0] : wr_ptr_reg[ADDR_WIDTH-1:0]] <= s_axis;
     end
 end
 
@@ -504,10 +496,8 @@ always @(posedge m_clk) begin
         mem_read_data_valid_reg <= mem_read_data_valid_next;
     end
 
-    rd_addr_reg <= rd_ptr_next;
-
     if (read) begin
-        mem_read_data_reg <= mem[rd_addr_reg[ADDR_WIDTH-1:0]];
+        mem_read_data_reg <= mem[rd_ptr_reg[ADDR_WIDTH-1:0]];
     end
 end
 
