@@ -56,6 +56,8 @@ module axis_async_fifo #
     parameter USER_ENABLE = 1,
     // tuser signal width
     parameter USER_WIDTH = 1,
+    // number of output pipeline registers
+    parameter PIPELINE_OUTPUT = 2,
     // Frame FIFO mode - operate on frames instead of cycles
     // When set, m_axis_tvalid will not be deasserted within a frame
     // Requires LAST_ENABLE set
@@ -119,6 +121,11 @@ parameter ADDR_WIDTH = (KEEP_ENABLE && KEEP_WIDTH > 1) ? $clog2(DEPTH/KEEP_WIDTH
 
 // check configuration
 initial begin
+    if (PIPELINE_OUTPUT < 1) begin
+        $error("Error: PIPELINE_OUTPUT must be at least 1 (instance %m)");
+        $finish;
+    end
+
     if (FRAME_FIFO && !LAST_ENABLE) begin
         $error("Error: FRAME_FIFO set requires LAST_ENABLE set (instance %m)");
         $finish;
@@ -184,8 +191,8 @@ reg mem_read_data_valid_reg = 1'b0;
 
 wire [WIDTH-1:0] s_axis;
 
-reg [WIDTH-1:0] m_axis_reg;
-reg m_axis_tvalid_reg = 1'b0;
+reg [WIDTH-1:0] m_axis_pipe_reg[PIPELINE_OUTPUT-1:0];
+reg [PIPELINE_OUTPUT-1:0] m_axis_tvalid_pipe_reg = 1'b0;
 
 // full when first TWO MSBs do NOT match, but rest matches
 // (gray code equivalent of first MSB different but rest same)
@@ -230,14 +237,14 @@ generate
     if (USER_ENABLE) assign s_axis[USER_OFFSET +: USER_WIDTH] = s_axis_tuser;
 endgenerate
 
-assign m_axis_tvalid = m_axis_tvalid_reg;
+assign m_axis_tvalid = m_axis_tvalid_pipe_reg[PIPELINE_OUTPUT-1];
 
-assign m_axis_tdata = m_axis_reg[DATA_WIDTH-1:0];
-assign m_axis_tkeep = KEEP_ENABLE ? m_axis_reg[KEEP_OFFSET +: KEEP_WIDTH] : {KEEP_WIDTH{1'b1}};
-assign m_axis_tlast = LAST_ENABLE ? m_axis_reg[LAST_OFFSET]               : 1'b1;
-assign m_axis_tid   = ID_ENABLE   ? m_axis_reg[ID_OFFSET   +: ID_WIDTH]   : {ID_WIDTH{1'b0}};
-assign m_axis_tdest = DEST_ENABLE ? m_axis_reg[DEST_OFFSET +: DEST_WIDTH] : {DEST_WIDTH{1'b0}};
-assign m_axis_tuser = USER_ENABLE ? m_axis_reg[USER_OFFSET +: USER_WIDTH] : {USER_WIDTH{1'b0}};
+assign m_axis_tdata = m_axis_pipe_reg[PIPELINE_OUTPUT-1][DATA_WIDTH-1:0];
+assign m_axis_tkeep = KEEP_ENABLE ? m_axis_pipe_reg[PIPELINE_OUTPUT-1][KEEP_OFFSET +: KEEP_WIDTH] : {KEEP_WIDTH{1'b1}};
+assign m_axis_tlast = LAST_ENABLE ? m_axis_pipe_reg[PIPELINE_OUTPUT-1][LAST_OFFSET]               : 1'b1;
+assign m_axis_tid   = ID_ENABLE   ? m_axis_pipe_reg[PIPELINE_OUTPUT-1][ID_OFFSET   +: ID_WIDTH]   : {ID_WIDTH{1'b0}};
+assign m_axis_tdest = DEST_ENABLE ? m_axis_pipe_reg[PIPELINE_OUTPUT-1][DEST_OFFSET +: DEST_WIDTH] : {DEST_WIDTH{1'b0}};
+assign m_axis_tuser = USER_ENABLE ? m_axis_pipe_reg[PIPELINE_OUTPUT-1][USER_OFFSET +: USER_WIDTH] : {USER_WIDTH{1'b0}};
 
 assign s_status_overflow = overflow_reg;
 assign s_status_bad_frame = bad_frame_reg;
@@ -433,14 +440,30 @@ always @(posedge m_clk) begin
 end
 
 // Read logic
+integer j;
+
 always @(posedge m_clk) begin
-    if (m_axis_tready || !m_axis_tvalid || !mem_read_data_valid_reg) begin
-        // output data not valid OR currently being transferred
-        mem_read_data_valid_reg <= 1'b0;
-        mem_read_data_reg <= mem[rd_ptr_reg[ADDR_WIDTH-1:0]];
+    if (m_axis_tready) begin
+        // output ready; invalidate stage
+        m_axis_tvalid_pipe_reg[PIPELINE_OUTPUT-1] <= 1'b0;
+    end
+
+    for (j = PIPELINE_OUTPUT-1; j > 0; j = j - 1) begin
+        if (m_axis_tready || ((~m_axis_tvalid_pipe_reg) >> j)) begin
+            // output ready or bubble in pipeline; transfer down pipeline
+            m_axis_tvalid_pipe_reg[j] <= m_axis_tvalid_pipe_reg[j-1];
+            m_axis_pipe_reg[j] <= m_axis_pipe_reg[j-1];
+            m_axis_tvalid_pipe_reg[j-1] <= 1'b0;
+        end
+    end
+
+    if (m_axis_tready || ~m_axis_tvalid_pipe_reg) begin
+        // output ready or bubble in pipeline; read new data from FIFO
+        m_axis_tvalid_pipe_reg[0] <= 1'b0;
+        m_axis_pipe_reg[0] <= mem[rd_ptr_reg[ADDR_WIDTH-1:0]];
         if (!empty) begin
-            // not empty, perform read
-            mem_read_data_valid_reg <= 1'b1;
+            // not empty, increment pointer
+            m_axis_tvalid_pipe_reg[0] <= 1'b1;
             rd_ptr_temp = rd_ptr_reg + 1;
             rd_ptr_reg <= rd_ptr_temp;
             rd_ptr_gray_reg <= rd_ptr_temp ^ (rd_ptr_temp >> 1);
@@ -450,19 +473,7 @@ always @(posedge m_clk) begin
     if (m_rst_sync3_reg) begin
         rd_ptr_reg <= {ADDR_WIDTH+1{1'b0}};
         rd_ptr_gray_reg <= {ADDR_WIDTH+1{1'b0}};
-        mem_read_data_valid_reg <= 1'b0;
-    end
-end
-
-// Output register
-always @(posedge m_clk) begin
-    if (m_axis_tready || !m_axis_tvalid) begin
-        m_axis_reg <= mem_read_data_reg;
-        m_axis_tvalid_reg <= mem_read_data_valid_reg;
-    end
-
-    if (m_rst_sync3_reg) begin
-        m_axis_tvalid_reg <= 1'b0;
+        m_axis_tvalid_pipe_reg <= {PIPELINE_OUTPUT{1'b0}};
     end
 end
 

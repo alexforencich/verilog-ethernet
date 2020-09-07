@@ -54,6 +54,7 @@ def bench():
     DEST_WIDTH = 8
     USER_ENABLE = 1
     USER_WIDTH = 1
+    PIPELINE_OUTPUT = 2
     FRAME_FIFO = 1
     USER_BAD_FRAME_VALUE = 1
     USER_BAD_FRAME_MASK = 1
