@@ -61,6 +61,8 @@ module axis_async_fifo_adapter #
     parameter USER_ENABLE = 1,
     // tuser signal width
     parameter USER_WIDTH = 1,
+    // number of output pipeline registers
+    parameter PIPELINE_OUTPUT = 2,
     // Frame FIFO mode - operate on frames instead of cycles
     // When set, m_axis_tvalid will not be deasserted within a frame
     // Requires LAST_ENABLE set
@@ -307,6 +309,7 @@ axis_async_fifo #(
     .DEST_WIDTH(DEST_WIDTH),
     .USER_ENABLE(USER_ENABLE),
     .USER_WIDTH(USER_WIDTH),
+    .PIPELINE_OUTPUT(PIPELINE_OUTPUT),
     .FRAME_FIFO(FRAME_FIFO),
     .USER_BAD_FRAME_VALUE(USER_BAD_FRAME_VALUE),
     .USER_BAD_FRAME_MASK(USER_BAD_FRAME_MASK),
