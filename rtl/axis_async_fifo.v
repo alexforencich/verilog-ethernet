@@ -354,6 +354,24 @@ always @* begin
 end
 
 always @(posedge s_clk) begin
+    wr_ptr_reg <= wr_ptr_next;
+    wr_ptr_cur_reg <= wr_ptr_cur_next;
+    wr_ptr_gray_reg <= wr_ptr_gray_next;
+    wr_ptr_sync_gray_reg <= wr_ptr_sync_gray_next;
+    wr_ptr_cur_gray_reg <= wr_ptr_cur_gray_next;
+
+    wr_ptr_update_valid_reg <= wr_ptr_update_valid_next;
+    wr_ptr_update_reg <= wr_ptr_update_next;
+
+    drop_frame_reg <= drop_frame_next;
+    overflow_reg <= overflow_next;
+    bad_frame_reg <= bad_frame_next;
+    good_frame_reg <= good_frame_next;
+
+    if (write) begin
+        mem[FRAME_FIFO ? wr_ptr_cur_reg[ADDR_WIDTH-1:0] : wr_ptr_reg[ADDR_WIDTH-1:0]] <= s_axis;
+    end
+
     if (s_rst_sync3_reg) begin
         wr_ptr_reg <= {ADDR_WIDTH+1{1'b0}};
         wr_ptr_cur_reg <= {ADDR_WIDTH+1{1'b0}};
@@ -368,24 +386,6 @@ always @(posedge s_clk) begin
         overflow_reg <= 1'b0;
         bad_frame_reg <= 1'b0;
         good_frame_reg <= 1'b0;
-    end else begin
-        wr_ptr_reg <= wr_ptr_next;
-        wr_ptr_cur_reg <= wr_ptr_cur_next;
-        wr_ptr_gray_reg <= wr_ptr_gray_next;
-        wr_ptr_sync_gray_reg <= wr_ptr_sync_gray_next;
-        wr_ptr_cur_gray_reg <= wr_ptr_cur_gray_next;
-
-        wr_ptr_update_valid_reg <= wr_ptr_update_valid_next;
-        wr_ptr_update_reg <= wr_ptr_update_next;
-
-        drop_frame_reg <= drop_frame_next;
-        overflow_reg <= overflow_next;
-        bad_frame_reg <= bad_frame_next;
-        good_frame_reg <= good_frame_next;
-    end
-
-    if (write) begin
-        mem[FRAME_FIFO ? wr_ptr_cur_reg[ADDR_WIDTH-1:0] : wr_ptr_reg[ADDR_WIDTH-1:0]] <= s_axis;
     end
 end
 
@@ -486,18 +486,19 @@ always @* begin
 end
 
 always @(posedge m_clk) begin
+    rd_ptr_reg <= rd_ptr_next;
+    rd_ptr_gray_reg <= rd_ptr_gray_next;
+
+    mem_read_data_valid_reg <= mem_read_data_valid_next;
+
+    if (read) begin
+        mem_read_data_reg <= mem[rd_ptr_reg[ADDR_WIDTH-1:0]];
+    end
+
     if (m_rst_sync3_reg) begin
         rd_ptr_reg <= {ADDR_WIDTH+1{1'b0}};
         rd_ptr_gray_reg <= {ADDR_WIDTH+1{1'b0}};
         mem_read_data_valid_reg <= 1'b0;
-    end else begin
-        rd_ptr_reg <= rd_ptr_next;
-        rd_ptr_gray_reg <= rd_ptr_gray_next;
-        mem_read_data_valid_reg <= mem_read_data_valid_next;
-    end
-
-    if (read) begin
-        mem_read_data_reg <= mem[rd_ptr_reg[ADDR_WIDTH-1:0]];
     end
 end
 
@@ -514,14 +515,14 @@ always @* begin
 end
 
 always @(posedge m_clk) begin
-    if (m_rst_sync3_reg) begin
-        m_axis_tvalid_reg <= 1'b0;
-    end else begin
-        m_axis_tvalid_reg <= m_axis_tvalid_next;
-    end
+    m_axis_tvalid_reg <= m_axis_tvalid_next;
 
     if (store_output) begin
         m_axis_reg <= mem_read_data_reg;
+    end
+
+    if (m_rst_sync3_reg) begin
+        m_axis_tvalid_reg <= 1'b0;
     end
 end
 
