@@ -165,24 +165,39 @@ reg [ADDR_WIDTH:0] rd_ptr_gray_reg = {ADDR_WIDTH+1{1'b0}};
 reg [ADDR_WIDTH:0] wr_ptr_temp;
 reg [ADDR_WIDTH:0] rd_ptr_temp;
 
+(* SHREG_EXTRACT = "NO" *)
 reg [ADDR_WIDTH:0] wr_ptr_gray_sync1_reg = {ADDR_WIDTH+1{1'b0}};
+(* SHREG_EXTRACT = "NO" *)
 reg [ADDR_WIDTH:0] wr_ptr_gray_sync2_reg = {ADDR_WIDTH+1{1'b0}};
+(* SHREG_EXTRACT = "NO" *)
 reg [ADDR_WIDTH:0] rd_ptr_gray_sync1_reg = {ADDR_WIDTH+1{1'b0}};
+(* SHREG_EXTRACT = "NO" *)
 reg [ADDR_WIDTH:0] rd_ptr_gray_sync2_reg = {ADDR_WIDTH+1{1'b0}};
 
 reg wr_ptr_update_valid_reg = 1'b0;
 reg wr_ptr_update_reg = 1'b0;
+(* SHREG_EXTRACT = "NO" *)
 reg wr_ptr_update_sync1_reg = 1'b0;
+(* SHREG_EXTRACT = "NO" *)
 reg wr_ptr_update_sync2_reg = 1'b0;
+(* SHREG_EXTRACT = "NO" *)
 reg wr_ptr_update_sync3_reg = 1'b0;
+(* SHREG_EXTRACT = "NO" *)
 reg wr_ptr_update_ack_sync1_reg = 1'b0;
+(* SHREG_EXTRACT = "NO" *)
 reg wr_ptr_update_ack_sync2_reg = 1'b0;
 
+(* SHREG_EXTRACT = "NO" *)
 reg s_rst_sync1_reg = 1'b1;
+(* SHREG_EXTRACT = "NO" *)
 reg s_rst_sync2_reg = 1'b1;
+(* SHREG_EXTRACT = "NO" *)
 reg s_rst_sync3_reg = 1'b1;
+(* SHREG_EXTRACT = "NO" *)
 reg m_rst_sync1_reg = 1'b1;
+(* SHREG_EXTRACT = "NO" *)
 reg m_rst_sync2_reg = 1'b1;
+(* SHREG_EXTRACT = "NO" *)
 reg m_rst_sync3_reg = 1'b1;
 
 reg [WIDTH-1:0] mem[(2**ADDR_WIDTH)-1:0];
@@ -191,7 +206,9 @@ reg mem_read_data_valid_reg = 1'b0;
 
 wire [WIDTH-1:0] s_axis;
 
+(* SHREG_EXTRACT = "NO" *)
 reg [WIDTH-1:0] m_axis_pipe_reg[PIPELINE_OUTPUT-1:0];
+(* SHREG_EXTRACT = "NO" *)
 reg [PIPELINE_OUTPUT-1:0] m_axis_tvalid_pipe_reg = 1'b0;
 
 // full when first TWO MSBs do NOT match, but rest matches
