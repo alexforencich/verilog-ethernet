@@ -6,8 +6,7 @@ This example design targets the Xilinx VCU1525 FPGA board.
 
 The design by default listens to UDP port 1234 at IP address 192.168.1.128 and
 will echo back any packets received.  The design will also respond correctly
-to ARP requests.  The design also enables the gigabit Ethernet interface for
-testing with a QSFP loopback adapter.  
+to ARP requests.  
 
 FPGA: xcvu9p-fsgd2104-2L-e
 PHY: 10G BASE-R PHY IP core and internal GTY transceiver
