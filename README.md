@@ -47,6 +47,8 @@ following boards:
 *  NetFPGA SUME (Xilinx Virtex 7 XC7V690T)
 *  Digilent Nexys Video (Xilinx Artix 7 XC7XC7A200T)
 *  Xilinx Alveo U50 (Xilinx Virtex UltraScale+ XCU50)
+*  Xilinx Alveo U200 (Xilinx Virtex UltraScale+ XCU200)
+*  Xilinx Alveo U250 (Xilinx Virtex UltraScale+ XCU250)
 *  Xilinx Alveo U280 (Xilinx Virtex UltraScale+ XCU280)
 *  Xilinx VCU108 (Xilinx Virtex UltraScale XCVU095)
 *  Xilinx VCU118 (Xilinx Virtex UltraScale+ XCVU9P)
