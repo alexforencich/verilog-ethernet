@@ -49,6 +49,7 @@ SYN_FILES += lib/eth/lib/axis/rtl/sync_reset.v
 
 # XDC files
 XDC_FILES = fpga.xdc
+XDC_FILES += led.tcl
 XDC_FILES += lib/eth/syn/eth_mac_fifo.tcl
 XDC_FILES += lib/eth/lib/axis/syn/axis_async_fifo.tcl
 XDC_FILES += lib/eth/lib/axis/syn/sync_reset.tcl
