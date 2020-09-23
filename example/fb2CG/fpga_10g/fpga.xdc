@@ -14,9 +14,9 @@ set_property CONFIG_MODE SPIx4                         [current_design]
 set_property BITSTREAM.CONFIG.OVERTEMPSHUTDOWN Enable  [current_design]
 
 # System clocks
-# init clock 100 MHz
+# init clock 50 MHz
 set_property -dict {LOC E7   IOSTANDARD LVCMOS18} [get_ports init_clk]
-create_clock -period 10.000 -name init_clk [get_ports init_clk]
+create_clock -period 20.000 -name init_clk [get_ports init_clk]
 
 # E7 is not a global clock capable input, so need to set CLOCK_DEDICATED_ROUTE to satisfy DRC
 #set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets init_clk_ibuf_inst/O]
