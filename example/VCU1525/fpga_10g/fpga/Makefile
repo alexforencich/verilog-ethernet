@@ -70,8 +70,8 @@ program: $(FPGA_TOP).bit
 	echo "exit" >> program.tcl
 	vivado -nojournal -nolog -mode batch -source program.tcl
 
-%_primary.mcs %_secondary.mcs %_primary.prm %_secondary.prm: %.bit
-	echo "write_cfgmem -force -format mcs -size 128 -interface SPIx4 -loadbit {up 0x0000000 $*.bit} -checksum -file $*.mcs" > generate_mcs.tcl
+%.mcs %.prm: %.bit
+	echo "write_cfgmem -force -format mcs -size 128 -interface SPIx4 -loadbit {up 0x04000000 $*.bit} -checksum -file $*.mcs" > generate_mcs.tcl
 	echo "exit" >> generate_mcs.tcl
 	vivado -nojournal -nolog -mode batch -source generate_mcs.tcl
 	mkdir -p rev
@@ -79,11 +79,11 @@ program: $(FPGA_TOP).bit
 	while [ -e rev/$*_rev$$COUNT.bit ]; \
 	do COUNT=$$((COUNT+1)); done; \
 	COUNT=$$((COUNT-1)); \
-	for x in _primary.mcs _secondary.mcs _primary.prm _secondary.prm; \
+	for x in .mcs .prm; \
 	do cp $*$$x rev/$*_rev$$COUNT$$x; \
 	echo "Output: rev/$*_rev$$COUNT$$x"; done;
 
-flash: $(FPGA_TOP)_primary.mcs $(FPGA_TOP)_secondary.mcs $(FPGA_TOP)_primary.prm $(FPGA_TOP)_secondary.prm
+flash: $(FPGA_TOP).mcs $(FPGA_TOP).prm
 	echo "open_hw" > flash.tcl
 	echo "connect_hw_server" >> flash.tcl
 	echo "open_hw_target" >> flash.tcl
@@ -91,8 +91,8 @@ flash: $(FPGA_TOP)_primary.mcs $(FPGA_TOP)_secondary.mcs $(FPGA_TOP)_primary.prm
 	echo "refresh_hw_device -update_hw_probes false [current_hw_device]" >> flash.tcl
 	echo "create_hw_cfgmem -hw_device [current_hw_device] [lindex [get_cfgmem_parts {mt25qu01g-spi-x1_x2_x4}] 0]" >> flash.tcl
 	echo "current_hw_cfgmem -hw_device [current_hw_device] [get_property PROGRAM.HW_CFGMEM [current_hw_device]]" >> flash.tcl
-	echo "set_property PROGRAM.FILES [list \"$(FPGA_TOP)_primary.mcs\" \"$(FPGA_TOP)_secondary.mcs\"] [current_hw_cfgmem]" >> flash.tcl
-	echo "set_property PROGRAM.PRM_FILES [list \"$(FPGA_TOP)_primary.prm\" \"$(FPGA_TOP)_secondary.prm\"] [current_hw_cfgmem]" >> flash.tcl
+	echo "set_property PROGRAM.FILES [list \"$(FPGA_TOP).mcs\"] [current_hw_cfgmem]" >> flash.tcl
+	echo "set_property PROGRAM.PRM_FILES [list \"$(FPGA_TOP).prm\"] [current_hw_cfgmem]" >> flash.tcl
 	echo "set_property PROGRAM.ERASE 1 [current_hw_cfgmem]" >> flash.tcl
 	echo "set_property PROGRAM.CFG_PROGRAM 1 [current_hw_cfgmem]" >> flash.tcl
 	echo "set_property PROGRAM.VERIFY 1 [current_hw_cfgmem]" >> flash.tcl

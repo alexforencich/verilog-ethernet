@@ -70,7 +70,7 @@ program: $(FPGA_TOP).bit
 	vivado -nojournal -nolog -mode batch -source program.tcl
 
 %.mcs %.prm: %.bit
-	echo "write_cfgmem -force -format mcs -size 128 -interface SPIx4 -loadbit {up 0x0000000 $*.bit} -checksum -file $*.mcs" > generate_mcs.tcl
+	echo "write_cfgmem -force -format mcs -size 128 -interface SPIx4 -loadbit {up 0x01002000 $*.bit} -checksum -file $*.mcs" > generate_mcs.tcl
 	echo "exit" >> generate_mcs.tcl
 	vivado -nojournal -nolog -mode batch -source generate_mcs.tcl
 	mkdir -p rev
@@ -78,7 +78,7 @@ program: $(FPGA_TOP).bit
 	while [ -e rev/$*_rev$$COUNT.bit ]; \
 	do COUNT=$$((COUNT+1)); done; \
 	COUNT=$$((COUNT-1)); \
-	for x in _primary.mcs _secondary.mcs _primary.prm _secondary.prm; \
+	for x in .mcs .prm; \
 	do cp $*$$x rev/$*_rev$$COUNT$$x; \
 	echo "Output: rev/$*_rev$$COUNT$$x"; done;
 
