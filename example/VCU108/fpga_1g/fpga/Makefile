@@ -89,7 +89,7 @@ flash: $(FPGA_TOP).mcs $(FPGA_TOP).prm
 	echo "set_property PROGRAM.VERIFY 1 [current_hw_cfgmem]" >> flash.tcl
 	echo "set_property PROGRAM.CHECKSUM 0 [current_hw_cfgmem]" >> flash.tcl
 	echo "set_property PROGRAM.ADDRESS_RANGE {use_file} [current_hw_cfgmem]" >> flash.tcl
-	echo "set_property PROGRAM.BPI_RS_PINS {none} [current_hw_cfgmem]" >> flash.tcl
+	echo "set_property PROGRAM.BPI_RS_PINS {25:24} [current_hw_cfgmem]" >> flash.tcl
 	echo "set_property PROGRAM.UNUSED_PIN_TERMINATION {pull-none} [current_hw_cfgmem]" >> flash.tcl
 	echo "create_hw_bitstream -hw_device [current_hw_device] [get_property PROGRAM.HW_CFGMEM_BITFILE [current_hw_device]]" >> flash.tcl
 	echo "program_hw_devices [current_hw_device]" >> flash.tcl
