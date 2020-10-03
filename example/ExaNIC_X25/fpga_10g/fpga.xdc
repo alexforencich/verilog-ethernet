@@ -9,7 +9,6 @@ set_property BITSTREAM.CONFIG.UNUSEDPIN Pullup               [current_design]
 set_property BITSTREAM.CONFIG.CONFIGRATE 31.9                [current_design]
 set_property BITSTREAM.CONFIG.BPI_PAGE_SIZE 8                [current_design]
 set_property BITSTREAM.CONFIG.BPI_1ST_READ_CYCLE 4           [current_design]
-set_property BITSTREAM.CONFIG.REVISIONSELECT_TRISTATE Enable [current_design]
 set_property CONFIG_MODE BPI16                               [current_design]
 set_property BITSTREAM.CONFIG.OVERTEMPSHUTDOWN Enable        [current_design]
 

@@ -69,7 +69,7 @@ program: $(FPGA_TOP).bit
 	vivado -nojournal -nolog -mode batch -source program.tcl
 
 %.mcs %.prm: %.bit
-	echo "write_cfgmem -force -format mcs -size 32 -interface BPIx16 -loadbit {up 0x0000000 $*.bit} -checksum -file $*.mcs" > generate_mcs.tcl
+	echo "write_cfgmem -force -format mcs -size 32 -interface BPIx16 -loadbit {up 0x00800000 $*.bit} -checksum -file $*.mcs" > generate_mcs.tcl
 	echo "exit" >> generate_mcs.tcl
 	vivado -nojournal -nolog -mode batch -source generate_mcs.tcl
 	mkdir -p rev
@@ -87,7 +87,7 @@ flash: $(FPGA_TOP).mcs $(FPGA_TOP).prm
 	echo "open_hw_target" >> flash.tcl
 	echo "current_hw_device [lindex [get_hw_devices] 0]" >> flash.tcl
 	echo "refresh_hw_device -update_hw_probes false [current_hw_device]" >> flash.tcl
-	echo "create_hw_cfgmem -hw_device [current_hw_device] [lindex [get_cfgmem_parts {28f256p30t-bpi-x16}] 0]" >> flash.tcl
+	echo "create_hw_cfgmem -hw_device [current_hw_device] [lindex [get_cfgmem_parts {s29gl256p-bpi-x16}] 0]" >> flash.tcl
 	echo "current_hw_cfgmem -hw_device [current_hw_device] [get_property PROGRAM.HW_CFGMEM [current_hw_device]]" >> flash.tcl
 	echo "set_property PROGRAM.FILES [list \"$(FPGA_TOP).mcs\"] [current_hw_cfgmem]" >> flash.tcl
 	echo "set_property PROGRAM.PRM_FILES [list \"$(FPGA_TOP).prm\"] [current_hw_cfgmem]" >> flash.tcl
@@ -96,7 +96,7 @@ flash: $(FPGA_TOP).mcs $(FPGA_TOP).prm
 	echo "set_property PROGRAM.VERIFY 1 [current_hw_cfgmem]" >> flash.tcl
 	echo "set_property PROGRAM.CHECKSUM 0 [current_hw_cfgmem]" >> flash.tcl
 	echo "set_property PROGRAM.ADDRESS_RANGE {use_file} [current_hw_cfgmem]" >> flash.tcl
-	echo "set_property PROGRAM.BPI_RS_PINS {none} [current_hw_cfgmem]" >> flash.tcl
+	echo "set_property PROGRAM.BPI_RS_PINS {24:23} [current_hw_cfgmem]" >> flash.tcl
 	echo "set_property PROGRAM.UNUSED_PIN_TERMINATION {pull-none} [current_hw_cfgmem]" >> flash.tcl
 	echo "create_hw_bitstream -hw_device [current_hw_device] [get_property PROGRAM.HW_CFGMEM_BITFILE [current_hw_device]]" >> flash.tcl
 	echo "program_hw_devices [current_hw_device]" >> flash.tcl
