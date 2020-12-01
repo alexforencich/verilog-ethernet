@@ -243,7 +243,7 @@ always @(posedge rx_clk or posedge rx_rst) begin
     if (rx_rst) begin
         rx_sync_reg_1 <= 5'd0;
     end else begin
-        rx_sync_reg_1 <= rx_sync_reg_1 ^ {rx_high_ber_int, rx_block_lock_int, rx_bad_block_int, rx_error_bad_frame_int, rx_error_bad_frame_int};
+        rx_sync_reg_1 <= rx_sync_reg_1 ^ {rx_high_ber_int, rx_block_lock_int, rx_bad_block_int, rx_error_bad_fcs_int, rx_error_bad_frame_int};
     end
 end
 
