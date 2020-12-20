@@ -603,7 +603,7 @@ axis_switch #(
     .M_TOP({2'd2, 2'd1, 2'd0}),
     .M_CONNECT({3{3'b111}}),
     .S_REG_TYPE(0),
-    .M_REG_TYPE(1),
+    .M_REG_TYPE(2),
     .ARB_TYPE("PRIORITY"),
     .LSB_PRIORITY("HIGH")
 )
