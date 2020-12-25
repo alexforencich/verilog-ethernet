@@ -31,7 +31,7 @@ THE SOFTWARE.
  */
 module fpga_core #
 (
-    parameter TARGET = "ALTERA"
+    parameter TARGET = "GENERIC"
 )
 (
     /*

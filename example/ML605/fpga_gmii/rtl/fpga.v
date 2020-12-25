@@ -231,7 +231,9 @@ assign led = led_int;
 assign uart_rxd = uart_rxd_int;
 assign uart_cts = uart_cts_int;
 
-fpga_core
+fpga_core #(
+    .TARGET("XILINX")
+)
 core_inst (
     /*
      * Clock: 125MHz

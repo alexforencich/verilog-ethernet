@@ -328,7 +328,9 @@ phy_rx_ctl_idelay
     .REGRST(1'b0)
 );
 
-fpga_core
+fpga_core #(
+    .TARGET("XILINX")
+)
 core_inst (
     /*
      * Clock: 125MHz

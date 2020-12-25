@@ -209,7 +209,9 @@ sync_signal_inst (
     .out({uart_rxd_int, uart_cts_int})
 );
 
-fpga_core
+fpga_core #(
+    .TARGET("XILINX")
+)
 core_inst (
     /*
      * Clock: 125MHz

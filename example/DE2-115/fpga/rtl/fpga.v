@@ -211,7 +211,9 @@ debounce_switch_inst (
         sw_int})
 );
 
-fpga_core
+fpga_core #(
+    .TARGET("ALTERA")
+)
 core_inst (
     /*
      * Clock: 125MHz

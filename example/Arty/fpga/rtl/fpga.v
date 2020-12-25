@@ -214,7 +214,9 @@ sync_signal_inst (
 
 assign phy_ref_clk = clk_25mhz_int;
 
-fpga_core
+fpga_core #(
+    .TARGET("XILINX")
+)
 core_inst (
     /*
      * Clock: 125MHz

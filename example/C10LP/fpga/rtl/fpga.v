@@ -197,7 +197,9 @@ debounce_switch_inst (
 
 assign user_led = ~led_int;
 
-fpga_core
+fpga_core #(
+    .TARGET("ALTERA")
+)
 core_inst (
     /*
      * Clock: 125MHz
