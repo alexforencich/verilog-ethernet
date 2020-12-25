@@ -309,8 +309,11 @@ eth_mac_fifo_inst (
     .ifg_delay(12)
 );
 
-eth_axis_rx_64
-eth_axis_rx_inst (
+eth_axis_rx #(
+    .DATA_WIDTH(64),
+    .KEEP_WIDTH(8)
+)
+eth_axis_rxinst (
     .clk(clk),
     .rst(rst),
     // AXI input
