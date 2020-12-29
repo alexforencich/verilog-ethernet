@@ -1,5 +1,7 @@
 # Verilog Ethernet Components Readme
 
+[![Build Status](https://github.com/alexforencich/verilog-ethernet/workflows/Regression%20Tests/badge.svg?branch=master)](https://github.com/alexforencich/verilog-ethernet/actions/)
+
 For more information and updates: http://alexforencich.com/wiki/en/verilog/ethernet/start
 
 GitHub repository: https://github.com/alexforencich/verilog-ethernet
@@ -12,8 +14,8 @@ Ethernet frames as well as IP, UDP, and ARP and the components for
 constructing a complete UDP/IP stack.  Includes MAC modules for gigabit and
 10G/25G, a 10G/25G PCS/PMA PHY module, and a 10G/25G combination MAC/PCS/PMA
 module.  Includes various PTP related components for implementing systems that
-require precise time synchronization.  Also includes full MyHDL testbench with
-intelligent bus cosimulation endpoints.
+require precise time synchronization.  Also includes full cocotb testbenches
+that utilize [cocotbext-eth](https://github.com/alexforencich/cocotbext-eth).
 
 For IP and ARP support only, use ip_complete (1G) or ip_complete_64 (10G/25G).
 
@@ -569,21 +571,4 @@ bad frame
 
 ## Testing
 
-Running the included testbenches requires MyHDL and Icarus Verilog.  Make sure
-that myhdl.vpi is installed properly for cosimulation to work correctly.  The
-testbenches can be run with a Python test runner like nose or py.test, or the
-individual test scripts can be run with python directly.
-
-### Testbench Files
-
-    tb/arp_ep.py         : MyHDL ARP frame endpoints
-    tb/axis_ep.py        : MyHDL AXI Stream endpoints
-    tb/baser_serdes.py   : MyHDL 10GBASE-R SERDES endpoints
-    tb/eth_ep.py         : MyHDL Ethernet frame endpoints
-    tb/gmii_ep.py        : MyHDL GMII endpoints
-    tb/ip_ep.py          : MyHDL IP frame endpoints
-    tb/mii_ep.py         : MyHDL MII endpoints
-    tb/ptp.py            : MyHDL PTP clock model
-    tb/rgmii_ep.py       : MyHDL RGMII endpoints
-    tb/udp_ep.py         : MyHDL UDP frame endpoints
-    tb/xgmii_ep.py       : MyHDL XGMII endpoints
+Running the included testbenches requires [cocotb](https://github.com/cocotb/cocotb), [cocotbext-axi](https://github.com/alexforencich/cocotbext-axi), [cocotbext-eth](https://github.com/alexforencich/cocotbext-eth), and [Icarus Verilog](http://iverilog.icarus.com/).  The testbenches can be run with pytest directly (requires [cocotb-test](https://github.com/themperek/cocotb-test)), pytest via tox, or via cocotb makefiles.
