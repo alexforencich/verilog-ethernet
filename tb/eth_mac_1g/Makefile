@@ -49,8 +49,6 @@ export PARAM_TX_USER_WIDTH ?= 1
 # export PARAM_RX_USER_WIDTH ?= (RX_PTP_TS_WIDTH if RX_PTP_TS_ENABLE else 0) + 1
 export PARAM_RX_USER_WIDTH ?= 1
 
-SIM_BUILD ?= sim_build_$(MODULE)
-
 ifeq ($(SIM), icarus)
 	PLUSARGS += -fst
 
@@ -90,6 +88,8 @@ else ifeq ($(SIM), verilator)
 	endif
 endif
 
+include $(shell cocotb-config --makefiles)/Makefile.sim
+
 iverilog_dump.v:
 	echo 'module iverilog_dump();' > $@
 	echo 'initial begin' >> $@
@@ -99,9 +99,5 @@ iverilog_dump.v:
 	echo 'endmodule' >> $@
 
 clean::
-	@rm -rf sim_build_*
 	@rm -rf iverilog_dump.v
 	@rm -rf dump.fst $(TOPLEVEL).fst
-
-include $(shell cocotb-config --makefiles)/Makefile.sim
-

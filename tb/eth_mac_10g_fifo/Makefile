@@ -72,8 +72,6 @@ export PARAM_PTP_TS_WIDTH ?= 96
 export PARAM_TX_PTP_TAG_ENABLE ?= 0
 export PARAM_PTP_TAG_WIDTH ?= 16
 
-SIM_BUILD ?= sim_build_$(MODULE)-$(PARAM_DATA_WIDTH)-$(PARAM_ENABLE_DIC)
-
 ifeq ($(SIM), icarus)
 	PLUSARGS += -fst
 
@@ -151,6 +149,8 @@ else ifeq ($(SIM), verilator)
 	endif
 endif
 
+include $(shell cocotb-config --makefiles)/Makefile.sim
+
 iverilog_dump.v:
 	echo 'module iverilog_dump();' > $@
 	echo 'initial begin' >> $@
@@ -160,9 +160,5 @@ iverilog_dump.v:
 	echo 'endmodule' >> $@
 
 clean::
-	@rm -rf sim_build_*
 	@rm -rf iverilog_dump.v
 	@rm -rf dump.fst $(TOPLEVEL).fst
-
-include $(shell cocotb-config --makefiles)/Makefile.sim
-

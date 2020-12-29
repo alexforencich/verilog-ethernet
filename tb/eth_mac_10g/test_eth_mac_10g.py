@@ -273,8 +273,8 @@ def test_eth_mac_10g(request, data_width, enable_dic):
 
     extra_env = {f'PARAM_{k}': str(v) for k, v in parameters.items()}
 
-    sim_build = os.path.join(tests_dir,
-        "sim_build_"+request.node.name.replace('[', '-').replace(']', ''))
+    sim_build = os.path.join(tests_dir, "sim_build",
+        request.node.name.replace('[', '-').replace(']', ''))
 
     cocotb_test.simulator.run(
         python_search=[tests_dir],
