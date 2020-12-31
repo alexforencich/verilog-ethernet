@@ -11,7 +11,7 @@ to ARP requests.
 Configure the PHY for GMII by placing J66 and J67 across pins 1 and 2 and
 opening J68.
 
-FPGA: XC6SlX45-2CSG324
+FPGA: XC6VLX130T-1FF1156 or XC6VLX240T-1FF1156
 PHY: Marvell M88E1111
 
 ## How to build
