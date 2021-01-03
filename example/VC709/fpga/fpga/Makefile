@@ -1,6 +1,5 @@
-
 # FPGA settings
-FPGA_PART = xc7vx690tffg1761-3
+FPGA_PART = xc7vx690tffg1761-2
 FPGA_TOP = fpga
 FPGA_ARCH = virtex7
 

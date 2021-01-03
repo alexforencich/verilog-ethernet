@@ -140,7 +140,7 @@ reg [8:0] init_data [INIT_DATA_LEN-1:0];
 initial begin
     // init Si5324 registers
     init_data[0]  = {2'b01, 7'h74}; // start write to 0x74 (I2C mux)
-    init_data[1]  = {1'b1,  8'h10}; // select Si5324
+    init_data[1]  = {1'b1,  8'h80}; // select Si5324
     init_data[2]  = {2'b00, 7'b1000001}; // I2C stop
     init_data[3]  = {2'b01, 7'h68}; // start write to 0x68 (Si5324)
     init_data[4]  = {1'b1,  8'd0};  // register 0

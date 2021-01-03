@@ -25,6 +25,7 @@ THE SOFTWARE.
 // Language: Verilog 2001
 
 `timescale 1ns / 1ps
+`default_nettype none
 
 /*
  * FPGA top-level module
@@ -39,19 +40,14 @@ module fpga (
     /*
      * GPIO
      */
-    input  wire [1:0] btn,
-    output wire [1:0] sfp_1_led,
-    output wire [1:0] sfp_2_led,
-    output wire [1:0] sfp_3_led,
-    output wire [1:0] sfp_4_led,
-    output wire [1:0] led,
+    output wire [7:0] led,
 
     /*
      * I2C
      */
     inout  wire       i2c_scl,
     inout  wire       i2c_sda,
-    output wire       i2c_mux_reset,
+    output wire       i2c_mux_reset_n,
 
     /*
      * Ethernet: SFP+
@@ -74,7 +70,7 @@ module fpga (
     output wire       sfp_4_tx_n,
     input  wire       sfp_mgt_refclk_p,
     input  wire       sfp_mgt_refclk_n,
-    output wire       sfp_clk_rst,
+    output wire       sfp_clk_rst_n,
     input  wire       sfp_1_mod_detect,
     input  wire       sfp_2_mod_detect,
     input  wire       sfp_3_mod_detect,
@@ -116,12 +112,12 @@ wire mmcm_clkfb;
 
 IBUFGDS #(
    .DIFF_TERM("FALSE"),
-   .IBUF_LOW_PWR("FALSE")   
+   .IBUF_LOW_PWR("FALSE")
 )
 clk_200mhz_ibufg_inst (
    .O   (clk_200mhz_ibufg),
    .I   (clk_200mhz_p),
-   .IB  (clk_200mhz_n) 
+   .IB  (clk_200mhz_n)
 );
 
 // MMCM instance
@@ -197,27 +193,10 @@ sync_reset_125mhz_inst (
     .out(rst_125mhz_int)
 );
 
-// GPIO
-wire [1:0] btn_int;
-wire [1:0] sfp_1_led_int;
-wire [1:0] sfp_2_led_int;
-wire [1:0] sfp_3_led_int;
-wire [1:0] sfp_4_led_int;
-wire [1:0] led_int;
-
-debounce_switch #(
-    .WIDTH(2),
-    .N(4),
-    .RATE(156250)
-)
-debounce_switch_inst (
-    .clk(clk_156mhz_int),
-    .rst(rst_156mhz_int),
-    .in({btn}),
-    .out({btn_int})
-);
-
 // I2C
+wire i2c_scl_i, i2c_scl_o, i2c_scl_t;
+wire i2c_sda_i, i2c_sda_o, i2c_sda_t;
+
 assign i2c_scl_i = i2c_scl;
 assign i2c_scl = i2c_scl_t ? 1'bz : i2c_scl_o;
 assign i2c_sda_i = i2c_sda;
@@ -239,8 +218,8 @@ wire si5324_i2c_data_last;
 
 wire si5324_i2c_init_busy;
 
-assign i2c_mux_reset = rst_125mhz_int;
-assign sfp_clk_rst = rst_125mhz_int;
+assign i2c_mux_reset_n = !rst_125mhz_int;
+assign sfp_clk_rst_n = !rst_125mhz_int;
 
 // delay start by ~10 ms
 reg [20:0] si5324_i2c_init_start_delay = 21'd0;
@@ -640,15 +619,14 @@ sfp_4_pcs_pma_inst (
     .tx_disable()
 );
 
-assign sfp_1_led[0] = sfp_1_rx_block_lock;
-assign sfp_1_led[1] = 1'b0;
-assign sfp_2_led[0] = sfp_2_rx_block_lock;
-assign sfp_2_led[1] = 1'b0;
-assign sfp_3_led[0] = sfp_3_rx_block_lock;
-assign sfp_3_led[1] = 1'b0;
-assign sfp_4_led[0] = sfp_4_rx_block_lock;
-assign sfp_4_led[1] = 1'b0;
-assign led = led_int;
+assign led[0] = sfp_1_rx_block_lock;
+assign led[1] = 1'b0;
+assign led[2] = sfp_2_rx_block_lock;
+assign led[3] = 1'b0;
+assign led[4] = sfp_3_rx_block_lock;
+assign led[5] = 1'b0;
+assign led[6] = sfp_4_rx_block_lock;
+assign led[7] = 1'b0;
 
 fpga_core
 core_inst (
@@ -661,12 +639,12 @@ core_inst (
     /*
      * GPIO
      */
-    .btn(btn_int),
-    .sfp_1_led(sfp_1_led_int),
-    .sfp_2_led(sfp_2_led_int),
-    .sfp_3_led(sfp_3_led_int),
-    .sfp_4_led(sfp_4_led_int),
-    .led(led_int),
+    .btn(),
+    .sfp_1_led(),
+    .sfp_2_led(),
+    .sfp_3_led(),
+    .sfp_4_led(),
+    .led(),
     /*
      * Ethernet: SFP+
      */
@@ -705,3 +683,5 @@ core_inst (
 );
 
 endmodule
+
+`default_nettype wire
