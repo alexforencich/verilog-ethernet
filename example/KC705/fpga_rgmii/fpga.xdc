@@ -22,8 +22,14 @@ set_property -dict {LOC G19  IOSTANDARD LVCMOS25 SLEW SLOW DRIVE 12} [get_ports 
 set_property -dict {LOC E18  IOSTANDARD LVCMOS25 SLEW SLOW DRIVE 12} [get_ports {led[6]}]
 set_property -dict {LOC F16  IOSTANDARD LVCMOS25 SLEW SLOW DRIVE 12} [get_ports {led[7]}]
 
+set_false_path -to [get_ports {led[*]}]
+set_output_delay 0 [get_ports {led[*]}]
+
 # Reset button
 set_property -dict {LOC AB7  IOSTANDARD LVCMOS15} [get_ports reset]
+
+set_false_path -from [get_ports {reset}]
+set_input_delay 0 [get_ports {reset}]
 
 # Push buttons
 set_property -dict {LOC AA12 IOSTANDARD LVCMOS15} [get_ports btnu]
@@ -32,17 +38,28 @@ set_property -dict {LOC AB12 IOSTANDARD LVCMOS15} [get_ports btnd]
 set_property -dict {LOC AG5  IOSTANDARD LVCMOS15} [get_ports btnr]
 set_property -dict {LOC G12  IOSTANDARD LVCMOS25} [get_ports btnc]
 
+set_false_path -from [get_ports {btnu btnl btnd btnr btnc}]
+set_input_delay 0 [get_ports {btnu btnl btnd btnr btnc}]
+
 # Toggle switches
 set_property -dict {LOC Y29  IOSTANDARD LVCMOS25} [get_ports {sw[0]}]
 set_property -dict {LOC W29  IOSTANDARD LVCMOS25} [get_ports {sw[1]}]
 set_property -dict {LOC AA28 IOSTANDARD LVCMOS25} [get_ports {sw[2]}]
 set_property -dict {LOC Y28  IOSTANDARD LVCMOS25} [get_ports {sw[3]}]
 
+set_false_path -from [get_ports {sw[*]}]
+set_input_delay 0 [get_ports {sw[*]}]
+
 # UART
 set_property -dict {LOC K24  IOSTANDARD LVCMOS25 SLEW SLOW DRIVE 12} [get_ports uart_txd]
 set_property -dict {LOC M19  IOSTANDARD LVCMOS25} [get_ports uart_rxd]
 set_property -dict {LOC L27  IOSTANDARD LVCMOS25 SLEW SLOW DRIVE 12} [get_ports uart_rts]
 set_property -dict {LOC K23  IOSTANDARD LVCMOS25} [get_ports uart_cts]
+
+set_false_path -to [get_ports {uart_txd uart_rts}]
+set_output_delay 0 [get_ports {uart_txd uart_rts}]
+set_false_path -from [get_ports {uart_rxd uart_cts}]
+set_input_delay 0 [get_ports {uart_rxd uart_cts}]
 
 # Gigabit Ethernet GMII PHY
 set_property -dict {LOC U27  IOSTANDARD LVCMOS25} [get_ports phy_rx_clk] ;# from U37.C1 RXCLK
@@ -83,3 +100,12 @@ set_property -dict {LOC N30  IOSTANDARD LVCMOS25} [get_ports phy_int_n] ;# from 
 create_clock -period 8.000 -name phy_rx_clk [get_ports phy_rx_clk]
 #create_clock -period 8.000 -name phy_sgmii_clk [get_ports phy_sgmii_clk_p]
 
+set_false_path -to [get_ports {phy_reset_n}]
+set_output_delay 0 [get_ports {phy_reset_n}]
+set_false_path -from [get_ports {phy_int_n}]
+set_input_delay 0 [get_ports {phy_int_n}]
+
+#set_false_path -to [get_ports {phy_mdio phy_mdc}]
+#set_output_delay 0 [get_ports {phy_mdio phy_mdc}]
+#set_false_path -from [get_ports {phy_mdio}]
+#set_input_delay 0 [get_ports {phy_mdio}]

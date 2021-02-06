@@ -39,32 +39,38 @@ set_property -dict {LOC K32  IOSTANDARD LVCMOS15 SLEW SLOW DRIVE 12} [get_ports 
 set_property -dict {LOC AR22 IOSTANDARD LVCMOS15 SLEW SLOW DRIVE 12} [get_ports {led[0]}]
 set_property -dict {LOC AR23 IOSTANDARD LVCMOS15 SLEW SLOW DRIVE 12} [get_ports {led[1]}]
 
+set_false_path -to [get_ports {sfp_1_led[*] sfp_2_led[*] sfp_3_led[*] sfp_4_led[*] led[*]}]
+set_output_delay 0 [get_ports {sfp_1_led[*] sfp_2_led[*] sfp_3_led[*] sfp_4_led[*] led[*]}]
+
 # Push buttons
 set_property -dict {LOC AR13 IOSTANDARD LVCMOS15} [get_ports {btn[0]}]
 set_property -dict {LOC BB12 IOSTANDARD LVCMOS15} [get_ports {btn[1]}]
 
+set_false_path -from [get_ports {btn[*]}]
+set_input_delay 0 [get_ports {btn[*]}]
+
 # SFP+ Interfaces
-set_property -dict {LOC A6   } [get_ports sfp_1_rx_p] ;# MGTHRXN3_119 GTHE2_CHANNEL_X1Y39 / GTHE2_COMMON_X1Y9
-#set_property -dict {LOC A5   } [get_ports sfp_1_rx_n] ;# MGTHRXP3_119 GTHE2_CHANNEL_X1Y39 / GTHE2_COMMON_X1Y9
-set_property -dict {LOC B4   } [get_ports sfp_1_tx_p] ;# MGTHTXN3_119 GTHE2_CHANNEL_X1Y39 / GTHE2_COMMON_X1Y9
-#set_property -dict {LOC B3   } [get_ports sfp_1_tx_n] ;# MGTHTXP3_119 GTHE2_CHANNEL_X1Y39 / GTHE2_COMMON_X1Y9
-set_property -dict {LOC B8   } [get_ports sfp_2_rx_p] ;# MGTHRXN2_119 GTHE2_CHANNEL_X1Y38 / GTHE2_COMMON_X1Y9
-#set_property -dict {LOC B7   } [get_ports sfp_2_rx_n] ;# MGTHRXP2_119 GTHE2_CHANNEL_X1Y38 / GTHE2_COMMON_X1Y9
-set_property -dict {LOC C2   } [get_ports sfp_2_tx_p] ;# MGTHTXN2_119 GTHE2_CHANNEL_X1Y38 / GTHE2_COMMON_X1Y9
-#set_property -dict {LOC C1   } [get_ports sfp_2_tx_n] ;# MGTHTXP2_119 GTHE2_CHANNEL_X1Y38 / GTHE2_COMMON_X1Y9
-set_property -dict {LOC C6   } [get_ports sfp_3_rx_p] ;# MGTHRXN1_119 GTHE2_CHANNEL_X1Y37 / GTHE2_COMMON_X1Y9
-#set_property -dict {LOC C5   } [get_ports sfp_3_rx_n] ;# MGTHRXP1_119 GTHE2_CHANNEL_X1Y37 / GTHE2_COMMON_X1Y9
-set_property -dict {LOC D4   } [get_ports sfp_3_tx_p] ;# MGTHTXN1_119 GTHE2_CHANNEL_X1Y37 / GTHE2_COMMON_X1Y9
-#set_property -dict {LOC D3   } [get_ports sfp_3_tx_n] ;# MGTHTXP1_119 GTHE2_CHANNEL_X1Y37 / GTHE2_COMMON_X1Y9
-set_property -dict {LOC D8   } [get_ports sfp_4_rx_p] ;# MGTHRXN0_119 GTHE2_CHANNEL_X1Y36 / GTHE2_COMMON_X1Y9
-#set_property -dict {LOC D7   } [get_ports sfp_4_rx_n] ;# MGTHRXP0_119 GTHE2_CHANNEL_X1Y36 / GTHE2_COMMON_X1Y9
-set_property -dict {LOC E2   } [get_ports sfp_4_tx_p] ;# MGTHTXN0_119 GTHE2_CHANNEL_X1Y36 / GTHE2_COMMON_X1Y9
-#set_property -dict {LOC E1   } [get_ports sfp_4_tx_n] ;# MGTHTXP0_119 GTHE2_CHANNEL_X1Y36 / GTHE2_COMMON_X1Y9
+set_property -dict {LOC A6   } [get_ports sfp_1_rx_p] ;# MGTHRXP3_119 GTHE2_CHANNEL_X1Y39 / GTHE2_COMMON_X1Y9
+set_property -dict {LOC A5   } [get_ports sfp_1_rx_n] ;# MGTHRXN3_119 GTHE2_CHANNEL_X1Y39 / GTHE2_COMMON_X1Y9
+set_property -dict {LOC B4   } [get_ports sfp_1_tx_p] ;# MGTHTXP3_119 GTHE2_CHANNEL_X1Y39 / GTHE2_COMMON_X1Y9
+set_property -dict {LOC B3   } [get_ports sfp_1_tx_n] ;# MGTHTXN3_119 GTHE2_CHANNEL_X1Y39 / GTHE2_COMMON_X1Y9
+set_property -dict {LOC B8   } [get_ports sfp_2_rx_p] ;# MGTHRXP2_119 GTHE2_CHANNEL_X1Y38 / GTHE2_COMMON_X1Y9
+set_property -dict {LOC B7   } [get_ports sfp_2_rx_n] ;# MGTHRXN2_119 GTHE2_CHANNEL_X1Y38 / GTHE2_COMMON_X1Y9
+set_property -dict {LOC C2   } [get_ports sfp_2_tx_p] ;# MGTHTXP2_119 GTHE2_CHANNEL_X1Y38 / GTHE2_COMMON_X1Y9
+set_property -dict {LOC C1   } [get_ports sfp_2_tx_n] ;# MGTHTXN2_119 GTHE2_CHANNEL_X1Y38 / GTHE2_COMMON_X1Y9
+set_property -dict {LOC C6   } [get_ports sfp_3_rx_p] ;# MGTHRXP1_119 GTHE2_CHANNEL_X1Y37 / GTHE2_COMMON_X1Y9
+set_property -dict {LOC C5   } [get_ports sfp_3_rx_n] ;# MGTHRXN1_119 GTHE2_CHANNEL_X1Y37 / GTHE2_COMMON_X1Y9
+set_property -dict {LOC D4   } [get_ports sfp_3_tx_p] ;# MGTHTXP1_119 GTHE2_CHANNEL_X1Y37 / GTHE2_COMMON_X1Y9
+set_property -dict {LOC D3   } [get_ports sfp_3_tx_n] ;# MGTHTXN1_119 GTHE2_CHANNEL_X1Y37 / GTHE2_COMMON_X1Y9
+set_property -dict {LOC D8   } [get_ports sfp_4_rx_p] ;# MGTHRXP0_119 GTHE2_CHANNEL_X1Y36 / GTHE2_COMMON_X1Y9
+set_property -dict {LOC D7   } [get_ports sfp_4_rx_n] ;# MGTHRXN0_119 GTHE2_CHANNEL_X1Y36 / GTHE2_COMMON_X1Y9
+set_property -dict {LOC E2   } [get_ports sfp_4_tx_p] ;# MGTHTXP0_119 GTHE2_CHANNEL_X1Y36 / GTHE2_COMMON_X1Y9
+set_property -dict {LOC E1   } [get_ports sfp_4_tx_n] ;# MGTHTXN0_119 GTHE2_CHANNEL_X1Y36 / GTHE2_COMMON_X1Y9
 set_property -dict {LOC E10  } [get_ports sfp_mgt_refclk_p] ;# MGTREFCLK0P_118 from IC20.28
 set_property -dict {LOC E9   } [get_ports sfp_mgt_refclk_n] ;# MGTREFCLK0N_118 from IC20.29
 #set_property -dict {LOC AW32 IOSTANDARD LVDS} [get_ports sfp_recclk_p] ;# to IC20.16
 #set_property -dict {LOC AW33 IOSTANDARD LVDS} [get_ports sfp_recclk_n] ;# to IC20.17
-set_property -dict {LOC BA29 IOSTANDARD LVCMOS18} [get_ports sfp_clk_rst]
+set_property -dict {LOC BA29 IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 12} [get_ports sfp_clk_rst]
 #set_property -dict {LOC AM29 IOSTANDARD LVCMOS18 PULLUP true} [get_ports sfp_clk_alarm_b]
 set_property -dict {LOC N18  IOSTANDARD LVCMOS15 PULLUP true} [get_ports sfp_1_mod_detect]
 set_property -dict {LOC L19  IOSTANDARD LVCMOS15 PULLUP true} [get_ports sfp_2_mod_detect]
@@ -94,10 +100,30 @@ set_property -dict {LOC J26  IOSTANDARD LVCMOS15 PULLUP true} [get_ports sfp_4_t
 # 156.25 MHz MGT reference clock
 #create_clock -period 6.4 -name sfp_mgt_refclk [get_ports sfp_mgt_refclk_p]
 
+set_false_path -to [get_ports {sfp_clk_rst}]
+set_output_delay 0 [get_ports {sfp_clk_rst}]
+#set_false_path -from [get_ports {sfp_clk_alarm_b}]
+#set_input_delay 0 [get_ports {sfp_clk_alarm_b}]
+set_false_path -from [get_ports {sfp_1_mod_detect sfp_2_mod_detect sfp_3_mod_detect sfp_4_mod_detect}]
+set_input_delay 0 [get_ports {sfp_1_mod_detect sfp_2_mod_detect sfp_3_mod_detect sfp_4_mod_detect}]
+set_false_path -to [get_ports {sfp_1_rs[*] sfp_2_rs[*] sfp_3_rs[*] sfp_4_rs[*]}]
+set_output_delay 0 [get_ports {sfp_1_rs[*] sfp_2_rs[*] sfp_3_rs[*] sfp_4_rs[*]}]
+set_false_path -from [get_ports {get_ports sfp_1_los sfp_2_los sfp_3_los sfp_4_los}]
+set_input_delay 0 [get_ports {get_ports sfp_1_los sfp_2_los sfp_3_los sfp_4_los}]
+set_false_path -to [get_ports {get_ports sfp_1_tx_disable sfp_2_tx_disable sfp_3_tx_disable sfp_4_tx_disable}]
+set_output_delay 0 [get_ports {get_ports sfp_1_tx_disable sfp_2_tx_disable sfp_3_tx_disable sfp_4_tx_disable}]
+set_false_path -from [get_ports {get_ports sfp_1_tx_fault sfp_2_tx_fault sfp_3_tx_fault get_ports sfp_4_tx_fault}]
+set_input_delay 0 [get_ports {get_ports sfp_1_tx_fault sfp_2_tx_fault sfp_3_tx_fault get_ports sfp_4_tx_fault}]
+
 # I2C interface
 set_property -dict {LOC AK24 IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 12 PULLUP true} [get_ports i2c_scl]
 set_property -dict {LOC AK25 IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 12 PULLUP true} [get_ports i2c_sda]
 set_property -dict {LOC AM39 IOSTANDARD LVCMOS15 SLEW SLOW DRIVE 12} [get_ports i2c_mux_reset]
+
+set_false_path -to [get_ports {i2c_sda i2c_scl i2c_mux_reset}]
+set_output_delay 0 [get_ports {i2c_sda i2c_scl i2c_mux_reset}]
+set_false_path -from [get_ports {i2c_sda i2c_scl}]
+set_input_delay 0 [get_ports {i2c_sda i2c_scl}]
 
 # PCIe Interface
 #set_property -dict {LOC Y4   } [get_ports {pcie_rx_p[0]}] ;# MGTHTXP3_115 GTHE2_CHANNEL_X1Y23 / GTHE2_COMMON_X1Y5
@@ -138,4 +164,7 @@ set_property -dict {LOC AM39 IOSTANDARD LVCMOS15 SLEW SLOW DRIVE 12} [get_ports 
 
 # 100 MHz MGT reference clock
 #create_clock -period 10 -name pcie_mgt_refclk [get_ports pcie_mgt_refclk_p]
+
+#set_false_path -from [get_ports {pcie_reset_n}]
+#set_input_delay 0 [get_ports {pcie_reset_n}]
 
