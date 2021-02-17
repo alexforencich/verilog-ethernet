@@ -27,7 +27,7 @@ THE SOFTWARE.
 `timescale 1 ns / 1 ps
 
 /*
- * Synchronizes an asyncronous signal to a given clock by using a pipeline of
+ * Synchronizes an asynchronous signal to a given clock by using a pipeline of
  * two registers.
  */
 module sync_signal #(

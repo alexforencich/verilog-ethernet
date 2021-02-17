@@ -74,13 +74,13 @@ initial begin
     end
 end
 
-parameter TS_NS_WIDTH = TS_WIDTH == 96 ? 30 : 48;
+localparam TS_NS_WIDTH = TS_WIDTH == 96 ? 30 : 48;
 
-parameter FIFO_ADDR_WIDTH = LOG_FIFO_DEPTH+1;
-parameter LOG_AVG = 6;
-parameter LOG_AVG_SCALE = LOG_AVG+8;
-parameter LOG_AVG_SYNC_RATE = LOG_RATE;
-parameter WR_PERIOD = ((((INPUT_PERIOD_NS << 16) + INPUT_PERIOD_FNS) + 64'd0) << 16) / ((OUTPUT_PERIOD_NS << 16) + OUTPUT_PERIOD_FNS) / 2**(LOG_RATE+1);
+localparam FIFO_ADDR_WIDTH = LOG_FIFO_DEPTH+1;
+localparam LOG_AVG = 6;
+localparam LOG_AVG_SCALE = LOG_AVG+8;
+localparam LOG_AVG_SYNC_RATE = LOG_RATE;
+localparam WR_PERIOD = ((((INPUT_PERIOD_NS << 16) + INPUT_PERIOD_FNS) + 64'd0) << 16) / ((OUTPUT_PERIOD_NS << 16) + OUTPUT_PERIOD_FNS) / 2**(LOG_RATE+1);
 
 reg [NS_WIDTH-1:0] period_ns_reg = OUTPUT_PERIOD_NS;
 reg [FNS_WIDTH-1:0] period_fns_reg = OUTPUT_PERIOD_FNS;

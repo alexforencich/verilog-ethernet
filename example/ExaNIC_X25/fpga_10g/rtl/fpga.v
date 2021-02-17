@@ -180,7 +180,12 @@ wire [63:0] sfp_2_rxd_int;
 wire [7:0]  sfp_2_rxc_int;
 
 wire sfp_1_rx_block_lock;
+reg sfp_1_tx_prbs31_enable = 1'b0;
+reg sfp_1_rx_prbs31_enable = 1'b0;
+
 wire sfp_2_rx_block_lock;
+reg sfp_2_tx_prbs31_enable = 1'b0;
+reg sfp_2_rx_prbs31_enable = 1'b0;
 
 wire sfp_gtpowergood;
 
@@ -385,17 +390,25 @@ sfp_1_phy_inst (
     .tx_rst(sfp_1_tx_rst_int),
     .rx_clk(sfp_1_rx_clk_int),
     .rx_rst(sfp_1_rx_rst_int),
+    // XGMII interface
     .xgmii_txd(sfp_1_txd_int),
     .xgmii_txc(sfp_1_txc_int),
     .xgmii_rxd(sfp_1_rxd_int),
     .xgmii_rxc(sfp_1_rxc_int),
+    // SERDES interface
     .serdes_tx_data(sfp_1_gt_txdata),
     .serdes_tx_hdr(sfp_1_gt_txheader),
     .serdes_rx_data(sfp_1_gt_rxdata),
     .serdes_rx_hdr(sfp_1_gt_rxheader),
     .serdes_rx_bitslip(sfp_1_gt_rxgearboxslip),
+    // Status
+    .rx_error_count(),
+    .rx_bad_block(),
     .rx_block_lock(sfp_1_rx_block_lock),
-    .rx_high_ber()
+    .rx_high_ber(),
+    // Configuration
+    .tx_prbs31_enable(sfp_1_tx_prbs31_enable),
+    .rx_prbs31_enable(sfp_1_rx_prbs31_enable)
 );
 
 assign sfp_2_tx_clk_int = clk_156mhz_int;
@@ -420,17 +433,25 @@ sfp_2_phy_inst (
     .tx_rst(sfp_2_tx_rst_int),
     .rx_clk(sfp_2_rx_clk_int),
     .rx_rst(sfp_2_rx_rst_int),
+    // XGMII interface
     .xgmii_txd(sfp_2_txd_int),
     .xgmii_txc(sfp_2_txc_int),
     .xgmii_rxd(sfp_2_rxd_int),
     .xgmii_rxc(sfp_2_rxc_int),
+    // SERDES interface
     .serdes_tx_data(sfp_2_gt_txdata),
     .serdes_tx_hdr(sfp_2_gt_txheader),
     .serdes_rx_data(sfp_2_gt_rxdata),
     .serdes_rx_hdr(sfp_2_gt_rxheader),
     .serdes_rx_bitslip(sfp_2_gt_rxgearboxslip),
+    // Status
+    .rx_error_count(),
+    .rx_bad_block(),
     .rx_block_lock(sfp_2_rx_block_lock),
-    .rx_high_ber()
+    .rx_high_ber(),
+    // Configuration
+    .tx_prbs31_enable(sfp_2_tx_prbs31_enable),
+    .rx_prbs31_enable(sfp_2_rx_prbs31_enable)
 );
 
 assign sfp_1_led[0] = sfp_1_rx_block_lock;

@@ -309,6 +309,7 @@ if (CHECKSUM_GEN_ENABLE) begin
         .m_ip_flags(tx_udp_ip_flags),
         .m_ip_fragment_offset(tx_udp_ip_fragment_offset),
         .m_ip_ttl(tx_udp_ip_ttl),
+        .m_ip_protocol(),
         .m_ip_header_checksum(tx_udp_ip_header_checksum),
         .m_ip_source_ip(tx_udp_ip_source_ip),
         .m_ip_dest_ip(tx_udp_ip_dest_ip),

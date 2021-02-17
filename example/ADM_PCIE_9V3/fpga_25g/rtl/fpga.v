@@ -285,11 +285,27 @@ wire qsfp_0_rx_block_lock_0;
 wire qsfp_0_rx_block_lock_1;
 wire qsfp_0_rx_block_lock_2;
 wire qsfp_0_rx_block_lock_3;
+reg qsfp0_rx_prbs31_enable_0 = 1'b0;
+reg qsfp0_rx_prbs31_enable_1 = 1'b0;
+reg qsfp0_rx_prbs31_enable_2 = 1'b0;
+reg qsfp0_rx_prbs31_enable_3 = 1'b0;
+reg qsfp0_tx_prbs31_enable_0 = 1'b0;
+reg qsfp0_tx_prbs31_enable_1 = 1'b0;
+reg qsfp0_tx_prbs31_enable_2 = 1'b0;
+reg qsfp0_tx_prbs31_enable_3 = 1'b0;
 
 wire qsfp_1_rx_block_lock_0;
 wire qsfp_1_rx_block_lock_1;
 wire qsfp_1_rx_block_lock_2;
 wire qsfp_1_rx_block_lock_3;
+reg qsfp1_rx_prbs31_enable_0 = 1'b0;
+reg qsfp1_rx_prbs31_enable_1 = 1'b0;
+reg qsfp1_rx_prbs31_enable_2 = 1'b0;
+reg qsfp1_rx_prbs31_enable_3 = 1'b0;
+reg qsfp1_tx_prbs31_enable_0 = 1'b0;
+reg qsfp1_tx_prbs31_enable_1 = 1'b0;
+reg qsfp1_tx_prbs31_enable_2 = 1'b0;
+reg qsfp1_tx_prbs31_enable_3 = 1'b0;
 
 wire qsfp_0_mgt_refclk;
 wire qsfp_1_mgt_refclk;
@@ -534,17 +550,25 @@ qsfp_0_phy_0_inst (
     .tx_rst(qsfp_0_tx_rst_0_int),
     .rx_clk(qsfp_0_rx_clk_0_int),
     .rx_rst(qsfp_0_rx_rst_0_int),
+    // XGMII interface
     .xgmii_txd(qsfp_0_txd_0_int),
     .xgmii_txc(qsfp_0_txc_0_int),
     .xgmii_rxd(qsfp_0_rxd_0_int),
     .xgmii_rxc(qsfp_0_rxc_0_int),
+    // SERDES interface
     .serdes_tx_data(qsfp_0_gt_txdata_0),
     .serdes_tx_hdr(qsfp_0_gt_txheader_0),
     .serdes_rx_data(qsfp_0_gt_rxdata_0),
     .serdes_rx_hdr(qsfp_0_gt_rxheader_0),
     .serdes_rx_bitslip(qsfp_0_gt_rxgearboxslip_0),
+    // Status
+    .rx_error_count(),
+    .rx_bad_block(),
     .rx_block_lock(qsfp_0_rx_block_lock_0),
-    .rx_high_ber()
+    .rx_high_ber(),
+    // Configuration
+    .tx_prbs31_enable(qsfp_0_tx_prbs31_enable_0),
+    .rx_prbs31_enable(qsfp_0_rx_prbs31_enable_0)
 );
 
 assign qsfp_0_tx_clk_1_int = clk_390mhz_int;
@@ -572,17 +596,25 @@ qsfp_0_phy_1_inst (
     .tx_rst(qsfp_0_tx_rst_1_int),
     .rx_clk(qsfp_0_rx_clk_1_int),
     .rx_rst(qsfp_0_rx_rst_1_int),
+    // XGMII interface
     .xgmii_txd(qsfp_0_txd_1_int),
     .xgmii_txc(qsfp_0_txc_1_int),
     .xgmii_rxd(qsfp_0_rxd_1_int),
     .xgmii_rxc(qsfp_0_rxc_1_int),
+    // SERDES interface
     .serdes_tx_data(qsfp_0_gt_txdata_1),
     .serdes_tx_hdr(qsfp_0_gt_txheader_1),
     .serdes_rx_data(qsfp_0_gt_rxdata_1),
     .serdes_rx_hdr(qsfp_0_gt_rxheader_1),
     .serdes_rx_bitslip(qsfp_0_gt_rxgearboxslip_1),
+    // Status
+    .rx_error_count(),
+    .rx_bad_block(),
     .rx_block_lock(qsfp_0_rx_block_lock_1),
-    .rx_high_ber()
+    .rx_high_ber(),
+    // Configuration
+    .tx_prbs31_enable(qsfp_0_tx_prbs31_enable_1),
+    .rx_prbs31_enable(qsfp_0_rx_prbs31_enable_1)
 );
 
 assign qsfp_0_tx_clk_2_int = clk_390mhz_int;
@@ -610,17 +642,25 @@ qsfp_0_phy_2_inst (
     .tx_rst(qsfp_0_tx_rst_2_int),
     .rx_clk(qsfp_0_rx_clk_2_int),
     .rx_rst(qsfp_0_rx_rst_2_int),
+    // XGMII interface
     .xgmii_txd(qsfp_0_txd_2_int),
     .xgmii_txc(qsfp_0_txc_2_int),
     .xgmii_rxd(qsfp_0_rxd_2_int),
     .xgmii_rxc(qsfp_0_rxc_2_int),
+    // SERDES interface
     .serdes_tx_data(qsfp_0_gt_txdata_2),
     .serdes_tx_hdr(qsfp_0_gt_txheader_2),
     .serdes_rx_data(qsfp_0_gt_rxdata_2),
     .serdes_rx_hdr(qsfp_0_gt_rxheader_2),
     .serdes_rx_bitslip(qsfp_0_gt_rxgearboxslip_2),
+    // Status
+    .rx_error_count(),
+    .rx_bad_block(),
     .rx_block_lock(qsfp_0_rx_block_lock_2),
-    .rx_high_ber()
+    .rx_high_ber(),
+    // Configuration
+    .tx_prbs31_enable(qsfp_0_tx_prbs31_enable_2),
+    .rx_prbs31_enable(qsfp_0_rx_prbs31_enable_2)
 );
 
 assign qsfp_0_tx_clk_3_int = clk_390mhz_int;
@@ -648,17 +688,25 @@ qsfp_0_phy_3_inst (
     .tx_rst(qsfp_0_tx_rst_3_int),
     .rx_clk(qsfp_0_rx_clk_3_int),
     .rx_rst(qsfp_0_rx_rst_3_int),
+    // XGMII interface
     .xgmii_txd(qsfp_0_txd_3_int),
     .xgmii_txc(qsfp_0_txc_3_int),
     .xgmii_rxd(qsfp_0_rxd_3_int),
     .xgmii_rxc(qsfp_0_rxc_3_int),
+    // SERDES interface
     .serdes_tx_data(qsfp_0_gt_txdata_3),
     .serdes_tx_hdr(qsfp_0_gt_txheader_3),
     .serdes_rx_data(qsfp_0_gt_rxdata_3),
     .serdes_rx_hdr(qsfp_0_gt_rxheader_3),
     .serdes_rx_bitslip(qsfp_0_gt_rxgearboxslip_3),
+    // Status
+    .rx_error_count(),
+    .rx_bad_block(),
     .rx_block_lock(qsfp_0_rx_block_lock_3),
-    .rx_high_ber()
+    .rx_high_ber(),
+    // Configuration
+    .tx_prbs31_enable(qsfp_0_tx_prbs31_enable_3),
+    .rx_prbs31_enable(qsfp_0_rx_prbs31_enable_3)
 );
 
 assign qsfp_1_tx_clk_0_int = clk_390mhz_int;
@@ -686,17 +734,25 @@ qsfp_1_phy_0_inst (
     .tx_rst(qsfp_1_tx_rst_0_int),
     .rx_clk(qsfp_1_rx_clk_0_int),
     .rx_rst(qsfp_1_rx_rst_0_int),
+    // XGMII interface
     .xgmii_txd(qsfp_1_txd_0_int),
     .xgmii_txc(qsfp_1_txc_0_int),
     .xgmii_rxd(qsfp_1_rxd_0_int),
     .xgmii_rxc(qsfp_1_rxc_0_int),
+    // SERDES interface
     .serdes_tx_data(qsfp_1_gt_txdata_0),
     .serdes_tx_hdr(qsfp_1_gt_txheader_0),
     .serdes_rx_data(qsfp_1_gt_rxdata_0),
     .serdes_rx_hdr(qsfp_1_gt_rxheader_0),
     .serdes_rx_bitslip(qsfp_1_gt_rxgearboxslip_0),
+    // Status
+    .rx_error_count(),
+    .rx_bad_block(),
     .rx_block_lock(qsfp_1_rx_block_lock_0),
-    .rx_high_ber()
+    .rx_high_ber(),
+    // Configuration
+    .tx_prbs31_enable(qsfp_1_tx_prbs31_enable_0),
+    .rx_prbs31_enable(qsfp_1_rx_prbs31_enable_0)
 );
 
 assign qsfp_1_tx_clk_1_int = clk_390mhz_int;
@@ -724,17 +780,25 @@ qsfp_1_phy_1_inst (
     .tx_rst(qsfp_1_tx_rst_1_int),
     .rx_clk(qsfp_1_rx_clk_1_int),
     .rx_rst(qsfp_1_rx_rst_1_int),
+    // XGMII interface
     .xgmii_txd(qsfp_1_txd_1_int),
     .xgmii_txc(qsfp_1_txc_1_int),
     .xgmii_rxd(qsfp_1_rxd_1_int),
     .xgmii_rxc(qsfp_1_rxc_1_int),
+    // SERDES interface
     .serdes_tx_data(qsfp_1_gt_txdata_1),
     .serdes_tx_hdr(qsfp_1_gt_txheader_1),
     .serdes_rx_data(qsfp_1_gt_rxdata_1),
     .serdes_rx_hdr(qsfp_1_gt_rxheader_1),
     .serdes_rx_bitslip(qsfp_1_gt_rxgearboxslip_1),
+    // Status
+    .rx_error_count(),
+    .rx_bad_block(),
     .rx_block_lock(qsfp_1_rx_block_lock_1),
-    .rx_high_ber()
+    .rx_high_ber(),
+    // Configuration
+    .tx_prbs31_enable(qsfp_1_tx_prbs31_enable_1),
+    .rx_prbs31_enable(qsfp_1_rx_prbs31_enable_1)
 );
 
 assign qsfp_1_tx_clk_2_int = clk_390mhz_int;
@@ -762,17 +826,25 @@ qsfp_1_phy_2_inst (
     .tx_rst(qsfp_1_tx_rst_2_int),
     .rx_clk(qsfp_1_rx_clk_2_int),
     .rx_rst(qsfp_1_rx_rst_2_int),
+    // XGMII interface
     .xgmii_txd(qsfp_1_txd_2_int),
     .xgmii_txc(qsfp_1_txc_2_int),
     .xgmii_rxd(qsfp_1_rxd_2_int),
     .xgmii_rxc(qsfp_1_rxc_2_int),
+    // SERDES interface
     .serdes_tx_data(qsfp_1_gt_txdata_2),
     .serdes_tx_hdr(qsfp_1_gt_txheader_2),
     .serdes_rx_data(qsfp_1_gt_rxdata_2),
     .serdes_rx_hdr(qsfp_1_gt_rxheader_2),
     .serdes_rx_bitslip(qsfp_1_gt_rxgearboxslip_2),
+    // Status
+    .rx_error_count(),
+    .rx_bad_block(),
     .rx_block_lock(qsfp_1_rx_block_lock_2),
-    .rx_high_ber()
+    .rx_high_ber(),
+    // Configuration
+    .tx_prbs31_enable(qsfp_1_tx_prbs31_enable_2),
+    .rx_prbs31_enable(qsfp_1_rx_prbs31_enable_2)
 );
 
 assign qsfp_1_tx_clk_3_int = clk_390mhz_int;
@@ -800,17 +872,25 @@ qsfp_1_phy_3_inst (
     .tx_rst(qsfp_1_tx_rst_3_int),
     .rx_clk(qsfp_1_rx_clk_3_int),
     .rx_rst(qsfp_1_rx_rst_3_int),
+    // XGMII interface
     .xgmii_txd(qsfp_1_txd_3_int),
     .xgmii_txc(qsfp_1_txc_3_int),
     .xgmii_rxd(qsfp_1_rxd_3_int),
     .xgmii_rxc(qsfp_1_rxc_3_int),
+    // SERDES interface
     .serdes_tx_data(qsfp_1_gt_txdata_3),
     .serdes_tx_hdr(qsfp_1_gt_txheader_3),
     .serdes_rx_data(qsfp_1_gt_rxdata_3),
     .serdes_rx_hdr(qsfp_1_gt_rxheader_3),
     .serdes_rx_bitslip(qsfp_1_gt_rxgearboxslip_3),
+    // Status
+    .rx_error_count(),
+    .rx_bad_block(),
     .rx_block_lock(qsfp_1_rx_block_lock_3),
-    .rx_high_ber()
+    .rx_high_ber(),
+    // Configuration
+    .tx_prbs31_enable(qsfp_1_tx_prbs31_enable_3),
+    .rx_prbs31_enable(qsfp_1_rx_prbs31_enable_3)
 );
 
 //assign led = sw[0] ? {qsfp_1_rx_block_lock_4, qsfp_1_rx_block_lock_3, qsfp_1_rx_block_lock_2, qsfp_1_rx_block_lock_1, qsfp_0_rx_block_lock_4, qsfp_0_rx_block_lock_3, qsfp_0_rx_block_lock_2, qsfp_0_rx_block_lock_1} : led_int;
