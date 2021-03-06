@@ -118,7 +118,7 @@ async def run_test_alignment(dut, payload_data=None, ifg=12):
             assert rx_frame.check_fcs()
             assert rx_frame.ctrl is None
 
-            start_lane.append(rx_frame.rx_start_lane)
+            start_lane.append(rx_frame.start_lane)
 
         tb.log.info("length: %d", length)
         tb.log.info("start_lane: %s", start_lane)
