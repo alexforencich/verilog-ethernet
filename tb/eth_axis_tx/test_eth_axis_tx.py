@@ -37,11 +37,11 @@ from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge
 from cocotb.regression import TestFactory
 
-from cocotbext.axi import AxiStreamFrame, AxiStreamSource, AxiStreamSink
+from cocotbext.axi import AxiStreamBus, AxiStreamFrame, AxiStreamSource, AxiStreamSink
 from cocotbext.axi.stream import define_stream
 
 
-EthHdrTransaction, EthHdrSource, EthHdrSink, EthHdrMonitor = define_stream("EthHdr",
+EthHdrBus, EthHdrTransaction, EthHdrSource, EthHdrSink, EthHdrMonitor = define_stream("EthHdr",
     signals=["hdr_valid", "hdr_ready", "dest_mac", "src_mac", "type"]
 )
 
@@ -55,10 +55,10 @@ class TB:
 
         cocotb.fork(Clock(dut.clk, 8, units="ns").start())
 
-        self.header_source = EthHdrSource(dut, "s_eth", dut.clk, dut.rst)
-        self.payload_source = AxiStreamSource(dut, "s_eth_payload_axis", dut.clk, dut.rst)
+        self.header_source = EthHdrSource(EthHdrBus.from_prefix(dut, "s_eth"), dut.clk, dut.rst)
+        self.payload_source = AxiStreamSource(AxiStreamBus.from_prefix(dut, "s_eth_payload_axis"), dut.clk, dut.rst)
 
-        self.sink = AxiStreamSink(dut, "m_axis", dut.clk, dut.rst)
+        self.sink = AxiStreamSink(AxiStreamBus.from_prefix(dut, "m_axis"), dut.clk, dut.rst)
 
     def set_idle_generator(self, generator=None):
         if generator:

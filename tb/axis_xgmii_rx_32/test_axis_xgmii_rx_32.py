@@ -35,7 +35,7 @@ from cocotb.triggers import RisingEdge
 from cocotb.regression import TestFactory
 
 from cocotbext.eth import XgmiiFrame, XgmiiSource
-from cocotbext.axi import AxiStreamSink
+from cocotbext.axi import AxiStreamBus, AxiStreamSink
 
 
 class TB:
@@ -48,7 +48,7 @@ class TB:
         cocotb.fork(Clock(dut.clk, 3.2, units="ns").start())
 
         self.source = XgmiiSource(dut.xgmii_rxd, dut.xgmii_rxc, dut.clk, dut.rst)
-        self.sink = AxiStreamSink(dut, "m_axis", dut.clk, dut.rst)
+        self.sink = AxiStreamSink(AxiStreamBus.from_prefix(dut, "m_axis"), dut.clk, dut.rst)
 
         dut.ptp_ts.setimmediatevalue(0)
 

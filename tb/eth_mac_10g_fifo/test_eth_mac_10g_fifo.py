@@ -36,7 +36,7 @@ from cocotb.triggers import RisingEdge
 from cocotb.regression import TestFactory
 
 from cocotbext.eth import XgmiiFrame, XgmiiSource, XgmiiSink
-from cocotbext.axi import AxiStreamSource, AxiStreamSink
+from cocotbext.axi import AxiStreamBus, AxiStreamSource, AxiStreamSink
 
 
 class TB:
@@ -58,8 +58,8 @@ class TB:
         self.xgmii_source = XgmiiSource(dut.xgmii_rxd, dut.xgmii_rxc, dut.rx_clk, dut.rx_rst)
         self.xgmii_sink = XgmiiSink(dut.xgmii_txd, dut.xgmii_txc, dut.tx_clk, dut.tx_rst)
 
-        self.axis_source = AxiStreamSource(dut, "tx_axis", dut.logic_clk, dut.logic_rst)
-        self.axis_sink = AxiStreamSink(dut, "rx_axis", dut.logic_clk, dut.logic_rst)
+        self.axis_source = AxiStreamSource(AxiStreamBus.from_prefix(dut, "tx_axis"), dut.logic_clk, dut.logic_rst)
+        self.axis_sink = AxiStreamSink(AxiStreamBus.from_prefix(dut, "rx_axis"), dut.logic_clk, dut.logic_rst)
 
         dut.ptp_sample_clk.setimmediatevalue(0)
         dut.ptp_ts_96.setimmediatevalue(0)
