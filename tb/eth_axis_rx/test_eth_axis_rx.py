@@ -37,7 +37,7 @@ from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge
 from cocotb.regression import TestFactory
 
-from cocotbext.axi import AxiStreamBus, AxiStreamFrame, AxiStreamSource, AxiStreamSink
+from cocotbext.axi import AxiStreamBus, AxiStreamSource, AxiStreamSink
 from cocotbext.axi.stream import define_stream
 
 
@@ -80,6 +80,23 @@ class TB:
         await RisingEdge(self.dut.clk)
         await RisingEdge(self.dut.clk)
 
+    async def send(self, pkt):
+        await self.source.send(bytes(pkt))
+
+    async def recv(self):
+        rx_header = await self.header_sink.recv()
+        rx_payload = await self.payload_sink.recv()
+
+        assert not rx_payload.tuser
+
+        eth = Ether()
+        eth.dst = rx_header.dest_mac.integer.to_bytes(6, 'big')
+        eth.src = rx_header.src_mac.integer.to_bytes(6, 'big')
+        eth.type = rx_header.type.integer
+        rx_pkt = eth / bytes(rx_payload.tdata)
+
+        return Ether(bytes(rx_pkt))
+
 
 async def run_test(dut, payload_lengths=None, payload_data=None, idle_inserter=None, backpressure_inserter=None):
 
@@ -91,32 +108,21 @@ async def run_test(dut, payload_lengths=None, payload_data=None, idle_inserter=N
     tb.set_backpressure_generator(backpressure_inserter)
 
     test_pkts = []
-    test_frames = []
 
     for payload in [payload_data(x) for x in payload_lengths()]:
         eth = Ether(src='5A:51:52:53:54:55', dst='DA:D1:D2:D3:D4:D5', type=0x8000)
         test_pkt = eth / payload
 
         test_pkts.append(test_pkt.copy())
-        test_frame = AxiStreamFrame(test_pkt.build())
-        test_frames.append(test_frame)
 
-        await tb.source.send(test_frame)
+        await tb.send(test_pkt)
 
-    for test_pkt, test_frame in zip(test_pkts, test_frames):
-        rx_header = await tb.header_sink.recv()
-        rx_payload = await tb.payload_sink.recv()
-
-        eth = Ether()
-        eth.dst = rx_header.dest_mac.integer.to_bytes(6, 'big')
-        eth.src = rx_header.src_mac.integer.to_bytes(6, 'big')
-        eth.type = rx_header.type.integer
-        rx_pkt = eth / bytes(rx_payload.tdata)
+    for test_pkt in test_pkts:
+        rx_pkt = await tb.recv()
 
         tb.log.info("RX packet: %s", repr(rx_pkt))
 
-        assert rx_pkt.build() == test_pkt.build()
-        assert not rx_payload.tuser
+        assert bytes(rx_pkt) == bytes(test_pkt)
 
     assert tb.header_sink.empty()
     assert tb.payload_sink.empty()

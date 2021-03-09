@@ -28,6 +28,7 @@ import logging
 import os
 
 from scapy.layers.l2 import Ether
+from scapy.utils import mac2str
 
 import pytest
 import cocotb_test.simulator
@@ -37,7 +38,7 @@ from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge
 from cocotb.regression import TestFactory
 
-from cocotbext.axi import AxiStreamBus, AxiStreamFrame, AxiStreamSource, AxiStreamSink
+from cocotbext.axi import AxiStreamBus, AxiStreamSource, AxiStreamSink
 from cocotbext.axi.stream import define_stream
 
 
@@ -80,6 +81,22 @@ class TB:
         await RisingEdge(self.dut.clk)
         await RisingEdge(self.dut.clk)
 
+    async def send(self, pkt):
+        hdr = EthHdrTransaction()
+        hdr.dest_mac = int.from_bytes(mac2str(pkt[Ether].dst), 'big')
+        hdr.src_mac = int.from_bytes(mac2str(pkt[Ether].src), 'big')
+        hdr.type = pkt[Ether].type
+
+        await self.header_source.send(hdr)
+        await self.payload_source.send(bytes(pkt[Ether].payload))
+
+    async def recv(self):
+        rx_frame = await self.sink.recv()
+
+        assert not rx_frame.tuser
+
+        return Ether(bytes(rx_frame))
+
 
 async def run_test(dut, payload_lengths=None, payload_data=None, idle_inserter=None, backpressure_inserter=None):
 
@@ -97,25 +114,14 @@ async def run_test(dut, payload_lengths=None, payload_data=None, idle_inserter=N
         test_pkt = eth / payload
         test_pkts.append(test_pkt.copy())
 
-        test_frame = test_pkt.build()
-
-        hdr = EthHdrTransaction()
-        hdr.dest_mac = int.from_bytes(test_frame[0:6], "big")
-        hdr.src_mac = int.from_bytes(test_frame[6:12], "big")
-        hdr.type = int.from_bytes(test_frame[12:14], "big")
-
-        await tb.header_source.send(hdr)
-        await tb.payload_source.send(AxiStreamFrame(payload))
+        await tb.send(test_pkt)
 
     for test_pkt in test_pkts:
-        rx_frame = await tb.sink.recv()
-
-        rx_pkt = Ether(bytes(rx_frame))
+        rx_pkt = await tb.recv()
 
         tb.log.info("RX packet: %s", repr(rx_pkt))
 
-        assert rx_pkt.build() == test_pkt.build()
-        assert not rx_frame.tuser
+        assert bytes(rx_pkt) == bytes(test_pkt)
 
     assert tb.sink.empty()
 
