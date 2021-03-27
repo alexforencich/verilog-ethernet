@@ -216,8 +216,9 @@ lib_dir = os.path.abspath(os.path.join(rtl_dir, '..', 'lib'))
 axis_rtl_dir = os.path.abspath(os.path.join(lib_dir, 'axis', 'rtl'))
 
 
+@pytest.mark.parametrize("sample_clock", [1, 0])
 @pytest.mark.parametrize("ts_width", [96, 64])
-def test_ptp_clock_cdc(request, ts_width):
+def test_ptp_clock_cdc(request, ts_width, sample_clock):
     dut = "ptp_clock_cdc"
     module = os.path.splitext(os.path.basename(__file__))[0]
     toplevel = dut
@@ -235,7 +236,7 @@ def test_ptp_clock_cdc(request, ts_width):
     parameters['INPUT_PERIOD_FNS'] = 0x6666
     parameters['OUTPUT_PERIOD_NS'] = 0x6
     parameters['OUTPUT_PERIOD_FNS'] = 0x6666
-    parameters['USE_SAMPLE_CLOCK'] = 1
+    parameters['USE_SAMPLE_CLOCK'] = sample_clock
     parameters['LOG_FIFO_DEPTH'] = 3
     parameters['LOG_RATE'] = 3
 
