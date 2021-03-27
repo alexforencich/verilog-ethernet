@@ -134,11 +134,11 @@ async def run_test(dut):
     for i in range(20000):
         await RisingEdge(dut.input_clk)
 
-    diff = await tb.measure_ts_diff()
+    diff = await tb.measure_ts_diff()*1e9
 
-    tb.log.info(f"Difference: {diff} s")
+    tb.log.info(f"Difference: {diff} ns")
 
-    assert abs(diff) < 1e-8
+    assert abs(diff) < 10
 
     await RisingEdge(dut.input_clk)
     tb.log.info("Slightly faster")
@@ -150,11 +150,11 @@ async def run_test(dut):
     for i in range(20000):
         await RisingEdge(dut.input_clk)
 
-    diff = await tb.measure_ts_diff()
+    diff = await tb.measure_ts_diff()*1e9
 
-    tb.log.info(f"Difference: {diff} s")
+    tb.log.info(f"Difference: {diff} ns")
 
-    assert abs(diff) < 1e-8
+    assert abs(diff) < 10
 
     await RisingEdge(dut.input_clk)
     tb.log.info("Slightly slower")
@@ -166,11 +166,11 @@ async def run_test(dut):
     for i in range(20000):
         await RisingEdge(dut.input_clk)
 
-    diff = await tb.measure_ts_diff()
+    diff = await tb.measure_ts_diff()*1e9
 
-    tb.log.info(f"Difference: {diff} s")
+    tb.log.info(f"Difference: {diff} ns")
 
-    assert abs(diff) < 1e-8
+    assert abs(diff) < 10
 
     await RisingEdge(dut.input_clk)
     tb.log.info("Significantly faster")
@@ -182,11 +182,11 @@ async def run_test(dut):
     for i in range(20000):
         await RisingEdge(dut.input_clk)
 
-    diff = await tb.measure_ts_diff()
+    diff = await tb.measure_ts_diff()*1e9
 
-    tb.log.info(f"Difference: {diff} s")
+    tb.log.info(f"Difference: {diff} ns")
 
-    assert abs(diff) < 1e-7
+    assert abs(diff) < 10
 
     await RisingEdge(dut.input_clk)
     tb.log.info("Significantly slower")
@@ -198,11 +198,11 @@ async def run_test(dut):
     for i in range(30000):
         await RisingEdge(dut.input_clk)
 
-    diff = await tb.measure_ts_diff()
+    diff = await tb.measure_ts_diff()*1e9
 
-    tb.log.info(f"Difference: {diff} s")
+    tb.log.info(f"Difference: {diff} ns")
 
-    assert abs(diff) < 1e-7
+    assert abs(diff) < 10
 
     await RisingEdge(dut.input_clk)
     await RisingEdge(dut.input_clk)
