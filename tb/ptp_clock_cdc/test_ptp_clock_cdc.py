@@ -109,6 +109,15 @@ class TB:
         else:
             return (ts >> 48) + ((ts & 0xffffffffffff)/2**16*1e-9)
 
+    async def measure_ts_diff(self, N=1000):
+        total = 0
+        for k in range(N):
+            input_ts_ns = self.get_input_ts_ns()
+            output_ts_ns = self.get_output_ts_ns()
+            total += input_ts_ns-output_ts_ns
+            await Timer(100, 'ps')
+        return total/N
+
 
 @cocotb.test()
 async def run_test(dut):
@@ -125,10 +134,7 @@ async def run_test(dut):
     for i in range(20000):
         await RisingEdge(dut.input_clk)
 
-    input_stop_ts = tb.get_input_ts_ns()
-    output_stop_ts = tb.get_output_ts_ns()
-
-    diff = input_stop_ts-output_stop_ts
+    diff = await tb.measure_ts_diff()
 
     tb.log.info(f"Difference: {diff} s")
 
@@ -144,10 +150,7 @@ async def run_test(dut):
     for i in range(20000):
         await RisingEdge(dut.input_clk)
 
-    input_stop_ts = tb.get_input_ts_ns()
-    output_stop_ts = tb.get_output_ts_ns()
-
-    diff = input_stop_ts-output_stop_ts
+    diff = await tb.measure_ts_diff()
 
     tb.log.info(f"Difference: {diff} s")
 
@@ -163,10 +166,7 @@ async def run_test(dut):
     for i in range(20000):
         await RisingEdge(dut.input_clk)
 
-    input_stop_ts = tb.get_input_ts_ns()
-    output_stop_ts = tb.get_output_ts_ns()
-
-    diff = input_stop_ts-output_stop_ts
+    diff = await tb.measure_ts_diff()
 
     tb.log.info(f"Difference: {diff} s")
 
@@ -182,10 +182,7 @@ async def run_test(dut):
     for i in range(20000):
         await RisingEdge(dut.input_clk)
 
-    input_stop_ts = tb.get_input_ts_ns()
-    output_stop_ts = tb.get_output_ts_ns()
-
-    diff = input_stop_ts-output_stop_ts
+    diff = await tb.measure_ts_diff()
 
     tb.log.info(f"Difference: {diff} s")
 
@@ -201,10 +198,7 @@ async def run_test(dut):
     for i in range(30000):
         await RisingEdge(dut.input_clk)
 
-    input_stop_ts = tb.get_input_ts_ns()
-    output_stop_ts = tb.get_output_ts_ns()
-
-    diff = input_stop_ts-output_stop_ts
+    diff = await tb.measure_ts_diff()
 
     tb.log.info(f"Difference: {diff} s")
 
