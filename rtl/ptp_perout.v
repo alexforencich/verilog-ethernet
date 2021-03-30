@@ -115,7 +115,7 @@ reg [30:0] ts_96_ns_ovf_reg = 0, ts_96_ns_ovf_next;
 reg [15:0] ts_96_fns_ovf_reg = 0, ts_96_fns_ovf_next;
 
 reg locked_reg = 1'b0, locked_next;
-reg error_reg = 1'b0;
+reg error_reg = 1'b0, error_next;
 reg level_reg = 1'b0, level_next;
 reg output_reg = 1'b0, output_next;
 
@@ -141,109 +141,89 @@ always @* begin
     ts_96_fns_ovf_next = ts_96_fns_ovf_reg;
 
     locked_next = locked_reg;
+    error_next = error_reg;
     level_next = level_reg;
     output_next = output_reg;
 
-    case (state_reg)
-        STATE_IDLE: begin
-            // set next rise to start time
-            next_rise_s_next = start_s_reg;
-            next_rise_ns_next = start_ns_reg;
-            if (FNS_ENABLE) begin
-                next_rise_fns_next = start_fns_reg;
-            end
-            locked_next = 1'b0;
-            level_next = 1'b0;
-            output_next = 1'b0;
-            if (input_start_valid || input_period_valid) begin
-                state_next = STATE_IDLE;
-            end else begin
-                state_next = STATE_UPDATE_FALL_1;
-            end
-        end
-        STATE_UPDATE_RISE_1: begin
-            // set next rise time to next rise time plus period
-            {ts_96_ns_inc_next, ts_96_fns_inc_next} = {next_rise_ns_reg, next_rise_fns_reg} + {period_ns_reg, period_fns_reg};
-            {ts_96_ns_ovf_next, ts_96_fns_ovf_next} = {next_rise_ns_reg, next_rise_fns_reg} + {period_ns_reg, period_fns_reg} - {31'd1_000_000_000, 16'd0};
-            if (input_start_valid || input_period_valid) begin
+    if (input_start_valid || input_period_valid || input_ts_step) begin
+        locked_next = 1'b0;
+        level_next = 1'b0;
+        output_next = 1'b0;
+        error_next = input_ts_step;
+        state_next = STATE_IDLE;
+    end else begin
+        case (state_reg)
+            STATE_IDLE: begin
+                // set next rise to start time
+                next_rise_s_next = start_s_reg;
+                next_rise_ns_next = start_ns_reg;
+                if (FNS_ENABLE) begin
+                    next_rise_fns_next = start_fns_reg;
+                end
+                locked_next = 1'b0;
                 level_next = 1'b0;
                 output_next = 1'b0;
-                state_next = STATE_IDLE;
-            end else begin
+                state_next = STATE_UPDATE_FALL_1;
+            end
+            STATE_UPDATE_RISE_1: begin
+                // set next rise time to next rise time plus period
+                {ts_96_ns_inc_next, ts_96_fns_inc_next} = {next_rise_ns_reg, next_rise_fns_reg} + {period_ns_reg, period_fns_reg};
+                {ts_96_ns_ovf_next, ts_96_fns_ovf_next} = {next_rise_ns_reg, next_rise_fns_reg} + {period_ns_reg, period_fns_reg} - {31'd1_000_000_000, 16'd0};
                 state_next = STATE_UPDATE_RISE_2;
             end
-        end
-        STATE_UPDATE_RISE_2: begin
-            if (!ts_96_ns_ovf_reg[30]) begin
-                // if the overflow lookahead did not borrow, one second has elapsed
-                next_rise_s_next = next_rise_s_reg + period_s_reg + 1;
-                next_rise_ns_next = ts_96_ns_ovf_reg;
-                next_rise_fns_next = ts_96_fns_ovf_reg;
-            end else begin
-                // no increment seconds field
-                next_rise_s_next = next_rise_s_reg + period_s_reg;
-                next_rise_ns_next = ts_96_ns_inc_reg;
-                next_rise_fns_next = ts_96_fns_inc_reg;
-            end
-            if (input_start_valid || input_period_valid) begin
-                level_next = 1'b0;
-                output_next = 1'b0;
-                state_next = STATE_IDLE;
-            end else begin
+            STATE_UPDATE_RISE_2: begin
+                if (!ts_96_ns_ovf_reg[30]) begin
+                    // if the overflow lookahead did not borrow, one second has elapsed
+                    next_rise_s_next = next_rise_s_reg + period_s_reg + 1;
+                    next_rise_ns_next = ts_96_ns_ovf_reg;
+                    next_rise_fns_next = ts_96_fns_ovf_reg;
+                end else begin
+                    // no increment seconds field
+                    next_rise_s_next = next_rise_s_reg + period_s_reg;
+                    next_rise_ns_next = ts_96_ns_inc_reg;
+                    next_rise_fns_next = ts_96_fns_inc_reg;
+                end
                 state_next = STATE_WAIT_EDGE;
             end
-        end
-        STATE_UPDATE_FALL_1: begin
-            // set next fall time to next rise time plus width
-            {ts_96_ns_inc_next, ts_96_fns_inc_next} = {next_rise_ns_reg, next_rise_fns_reg} + {width_ns_reg, width_fns_reg};
-            {ts_96_ns_ovf_next, ts_96_fns_ovf_next} = {next_rise_ns_reg, next_rise_fns_reg} + {width_ns_reg, width_fns_reg} - {31'd1_000_000_000, 16'd0};
-            if (input_start_valid || input_period_valid) begin
-                level_next = 1'b0;
-                output_next = 1'b0;
-                state_next = STATE_IDLE;
-            end else begin
+            STATE_UPDATE_FALL_1: begin
+                // set next fall time to next rise time plus width
+                {ts_96_ns_inc_next, ts_96_fns_inc_next} = {next_rise_ns_reg, next_rise_fns_reg} + {width_ns_reg, width_fns_reg};
+                {ts_96_ns_ovf_next, ts_96_fns_ovf_next} = {next_rise_ns_reg, next_rise_fns_reg} + {width_ns_reg, width_fns_reg} - {31'd1_000_000_000, 16'd0};
                 state_next = STATE_UPDATE_FALL_2;
             end
-        end
-        STATE_UPDATE_FALL_2: begin
-            if (!ts_96_ns_ovf_reg[30]) begin
-                // if the overflow lookahead did not borrow, one second has elapsed
-                next_fall_s_next = next_rise_s_reg + width_s_reg + 1;
-                next_fall_ns_next = ts_96_ns_ovf_reg;
-                next_fall_fns_next = ts_96_fns_ovf_reg;
-            end else begin
-                // no increment seconds field
-                next_fall_s_next = next_rise_s_reg + width_s_reg;
-                next_fall_ns_next = ts_96_ns_inc_reg;
-                next_fall_fns_next = ts_96_fns_inc_reg;
-            end
-            if (input_start_valid || input_period_valid) begin
-                level_next = 1'b0;
-                output_next = 1'b0;
-                state_next = STATE_IDLE;
-            end else begin
+            STATE_UPDATE_FALL_2: begin
+                if (!ts_96_ns_ovf_reg[30]) begin
+                    // if the overflow lookahead did not borrow, one second has elapsed
+                    next_fall_s_next = next_rise_s_reg + width_s_reg + 1;
+                    next_fall_ns_next = ts_96_ns_ovf_reg;
+                    next_fall_fns_next = ts_96_fns_ovf_reg;
+                end else begin
+                    // no increment seconds field
+                    next_fall_s_next = next_rise_s_reg + width_s_reg;
+                    next_fall_ns_next = ts_96_ns_inc_reg;
+                    next_fall_fns_next = ts_96_fns_inc_reg;
+                end
                 state_next = STATE_WAIT_EDGE;
             end
-        end
-        STATE_WAIT_EDGE: begin
-            if (input_start_valid || input_period_valid) begin
-                state_next = STATE_IDLE;
-            end else if ((time_s_reg > next_rise_s_reg) || (time_s_reg == next_rise_s_reg && {time_ns_reg, time_fns_reg} > {next_rise_ns_reg, next_rise_fns_reg})) begin
-                // rising edge
-                level_next = 1'b1;
-                output_next = enable && locked_reg;
-                state_next = STATE_UPDATE_RISE_1;
-            end else if ((time_s_reg > next_fall_s_reg) || (time_s_reg == next_fall_s_reg && {time_ns_reg, time_fns_reg} > {next_fall_ns_reg, next_fall_fns_reg})) begin
-                // falling edge
-                level_next = 1'b0;
-                output_next = 1'b0;
-                state_next = STATE_UPDATE_FALL_1;
-            end else begin
-                locked_next = locked_reg || level_reg;
-                state_next = STATE_WAIT_EDGE;
+            STATE_WAIT_EDGE: begin
+                if ((time_s_reg > next_rise_s_reg) || (time_s_reg == next_rise_s_reg && {time_ns_reg, time_fns_reg} > {next_rise_ns_reg, next_rise_fns_reg})) begin
+                    // rising edge
+                    level_next = 1'b1;
+                    output_next = enable && locked_reg;
+                    state_next = STATE_UPDATE_RISE_1;
+                end else if ((time_s_reg > next_fall_s_reg) || (time_s_reg == next_fall_s_reg && {time_ns_reg, time_fns_reg} > {next_fall_ns_reg, next_fall_fns_reg})) begin
+                    // falling edge
+                    level_next = 1'b0;
+                    output_next = 1'b0;
+                    state_next = STATE_UPDATE_FALL_1;
+                end else begin
+                    locked_next = locked_reg || level_reg;
+                    error_next = error_reg && !(locked_reg || level_reg);
+                    state_next = STATE_WAIT_EDGE;
+                end
             end
-        end
-    endcase
+        endcase
+    end
 end
 
 always @(posedge clk) begin
@@ -302,6 +282,7 @@ always @(posedge clk) begin
     end
 
     locked_reg <= locked_next;
+    error_reg <= error_next;
     level_reg <= level_next;
     output_reg <= output_next;
 
