@@ -51,6 +51,7 @@ class TB:
         if len(dut.input_ts) == 64:
             self.ptp_clock = PtpClock(
                 ts_64=dut.input_ts,
+                ts_step=dut.input_ts_step,
                 clock=dut.input_clk,
                 reset=dut.input_rst,
                 period_ns=6.4
@@ -58,6 +59,7 @@ class TB:
         else:
             self.ptp_clock = PtpClock(
                 ts_96=dut.input_ts,
+                ts_step=dut.input_ts_step,
                 clock=dut.input_clk,
                 reset=dut.input_rst,
                 period_ns=6.4
@@ -69,6 +71,7 @@ class TB:
     async def reset(self):
         self.dut.input_rst.setimmediatevalue(0)
         self.dut.output_rst.setimmediatevalue(0)
+        await RisingEdge(self.dut.input_clk)
         await RisingEdge(self.dut.input_clk)
         self.dut.input_rst <= 1
         self.dut.output_rst <= 1
@@ -131,8 +134,10 @@ async def run_test(dut):
 
     await RisingEdge(dut.input_clk)
 
-    for i in range(20000):
+    for i in range(40000):
         await RisingEdge(dut.input_clk)
+
+    assert tb.dut.locked.value.integer
 
     diff = await tb.measure_ts_diff()*1e9
 
@@ -147,8 +152,10 @@ async def run_test(dut):
 
     await RisingEdge(dut.input_clk)
 
-    for i in range(20000):
+    for i in range(40000):
         await RisingEdge(dut.input_clk)
+
+    assert tb.dut.locked.value.integer
 
     diff = await tb.measure_ts_diff()*1e9
 
@@ -163,8 +170,10 @@ async def run_test(dut):
 
     await RisingEdge(dut.input_clk)
 
-    for i in range(20000):
+    for i in range(40000):
         await RisingEdge(dut.input_clk)
+
+    assert tb.dut.locked.value.integer
 
     diff = await tb.measure_ts_diff()*1e9
 
@@ -179,8 +188,10 @@ async def run_test(dut):
 
     await RisingEdge(dut.input_clk)
 
-    for i in range(20000):
+    for i in range(40000):
         await RisingEdge(dut.input_clk)
+
+    assert tb.dut.locked.value.integer
 
     diff = await tb.measure_ts_diff()*1e9
 
@@ -197,6 +208,8 @@ async def run_test(dut):
 
     for i in range(30000):
         await RisingEdge(dut.input_clk)
+
+    assert tb.dut.locked.value.integer
 
     diff = await tb.measure_ts_diff()*1e9
 
@@ -232,12 +245,7 @@ def test_ptp_clock_cdc(request, ts_width, sample_clock):
     parameters['TS_WIDTH'] = ts_width
     parameters['NS_WIDTH'] = 4
     parameters['FNS_WIDTH'] = 16
-    parameters['INPUT_PERIOD_NS'] = 0x6
-    parameters['INPUT_PERIOD_FNS'] = 0x6666
-    parameters['OUTPUT_PERIOD_NS'] = 0x6
-    parameters['OUTPUT_PERIOD_FNS'] = 0x6666
     parameters['USE_SAMPLE_CLOCK'] = sample_clock
-    parameters['LOG_FIFO_DEPTH'] = 3
     parameters['LOG_RATE'] = 3
 
     extra_env = {f'PARAM_{k}': str(v) for k, v in parameters.items()}

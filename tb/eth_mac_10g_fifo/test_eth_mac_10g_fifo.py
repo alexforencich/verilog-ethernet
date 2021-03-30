@@ -63,6 +63,7 @@ class TB:
 
         dut.ptp_sample_clk.setimmediatevalue(0)
         dut.ptp_ts_96.setimmediatevalue(0)
+        dut.ptp_ts_step.setimmediatevalue(0)
 
     async def reset(self):
         self.dut.logic_rst.setimmediatevalue(0)
@@ -281,8 +282,6 @@ def test_eth_mac_10g_fifo(request, data_width, enable_dic):
     parameters['RX_FRAME_FIFO'] = 1
     parameters['RX_DROP_BAD_FRAME'] = parameters['RX_FRAME_FIFO']
     parameters['RX_DROP_WHEN_FULL'] = parameters['RX_FRAME_FIFO']
-    parameters['LOGIC_PTP_PERIOD_NS'] = 0x6 if parameters['AXIS_DATA_WIDTH'] == 64 else 0x3
-    parameters['LOGIC_PTP_PERIOD_FNS'] = 0x6666 if parameters['AXIS_DATA_WIDTH'] == 64 else 0x3333
     parameters['PTP_PERIOD_NS'] = 0x6 if parameters['DATA_WIDTH'] == 64 else 0x3
     parameters['PTP_PERIOD_FNS'] = 0x6666 if parameters['DATA_WIDTH'] == 64 else 0x3333
     parameters['PTP_USE_SAMPLE_CLOCK'] = 0

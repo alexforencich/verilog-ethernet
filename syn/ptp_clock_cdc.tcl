@@ -1,4 +1,4 @@
-# Copyright (c) 2019 Alex Forencich
+# Copyright (c) 2019-2021 Alex Forencich
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,50 +24,52 @@ foreach inst [get_cells -hier -filter {(ORIG_REF_NAME == ptp_clock_cdc || REF_NA
     puts "Inserting timing constraints for ptp_clock_cdc instance $inst"
 
     # get clock periods
-    set input_clk [get_clocks -of_objects [get_pins $inst/wr_ptr_reg_reg[0]/C]]
-    set output_clk [get_clocks -of_objects [get_pins $inst/rd_ptr_reg_reg[0]/C]]
+    set input_clk [get_clocks -of_objects [get_pins "$inst/src_sync_reg_reg/C"]]
+    set output_clk [get_clocks -of_objects [get_pins "$inst/dest_sync_reg_reg/C"]]
 
     set input_clk_period [get_property -min PERIOD $input_clk]
     set output_clk_period [get_property -min PERIOD $output_clk]
 
-    # pointer synchronization
-    set_property ASYNC_REG TRUE [get_cells -hier -regexp ".*/(wr|rd)_ptr_gray_sync\[12\]_reg_reg\\\[\\d+\\\]" -filter "PARENT == $inst"]
+    # timestamp synchronization
+    set_property ASYNC_REG TRUE [get_cells -hier -regexp ".*/ts_(s|ns|fns|step)_sync_reg_reg(\\\[\\d+\\\])?" -filter "PARENT == $inst"]
 
-    set_max_delay -from [get_cells "$inst/rd_ptr_reg_reg[*] $inst/rd_ptr_gray_reg_reg[*]"] -to [get_cells $inst/rd_ptr_gray_sync1_reg_reg[*]] -datapath_only $output_clk_period
-    set_bus_skew  -from [get_cells "$inst/rd_ptr_reg_reg[*] $inst/rd_ptr_gray_reg_reg[*]"] -to [get_cells $inst/rd_ptr_gray_sync1_reg_reg[*]] $input_clk_period
-    set_max_delay -from [get_cells "$inst/wr_ptr_reg_reg[*] $inst/wr_ptr_gray_reg_reg[*]"] -to [get_cells $inst/wr_ptr_gray_sync1_reg_reg[*]] -datapath_only $input_clk_period
-    set_bus_skew  -from [get_cells "$inst/wr_ptr_reg_reg[*] $inst/wr_ptr_gray_reg_reg[*]"] -to [get_cells $inst/wr_ptr_gray_sync1_reg_reg[*]] $output_clk_period
-
-    # output register (needed for distributed RAM sync write/async read)
-    set output_reg_ffs [get_cells -quiet "$inst/mem_read_data_reg_reg[*]"]
-
-    if {[llength $output_reg_ffs]} {
-        set_false_path -from $input_clk -to $output_reg_ffs
+    if {[llength [get_cells "$inst/src_ts_s_capt_reg_reg[*]"]]} {
+        set_max_delay -from [get_cells "$inst/src_ts_s_capt_reg_reg[*]"] -to [get_cells "$inst/ts_s_sync_reg_reg[*]"] -datapath_only $output_clk_period
+        set_bus_skew  -from [get_cells "$inst/src_ts_s_capt_reg_reg[*]"] -to [get_cells "$inst/ts_s_sync_reg_reg[*]"] $input_clk_period
     }
 
-    # pointer synchronization (depth measurement)
-    set sync_ffs [get_cells -quiet -hier -regexp ".*/rd_ptr_gray_sample_sync\[12\]_reg_reg\\\[\\d+\\\]" -filter "PARENT == $inst"]
+    set_max_delay -from [get_cells "$inst/src_ts_ns_capt_reg_reg[*]"] -to [get_cells "$inst/ts_ns_sync_reg_reg[*]"] -datapath_only $output_clk_period
+    set_bus_skew  -from [get_cells "$inst/src_ts_ns_capt_reg_reg[*]"] -to [get_cells "$inst/ts_ns_sync_reg_reg[*]"] $input_clk_period
+
+    set_max_delay -from [get_cells "$inst/src_ts_fns_capt_reg_reg[*]"] -to [get_cells "$inst/ts_fns_sync_reg_reg[*]"] -datapath_only $output_clk_period
+    set_bus_skew  -from [get_cells "$inst/src_ts_fns_capt_reg_reg[*]"] -to [get_cells "$inst/ts_fns_sync_reg_reg[*]"] $input_clk_period
+
+    if {[llength [get_cells "$inst/src_ts_step_capt_reg_reg"]]} {
+        set_max_delay -from [get_cells "$inst/src_ts_step_capt_reg_reg"] -to [get_cells "$inst/ts_step_sync_reg_reg"] -datapath_only $output_clk_period
+        set_bus_skew  -from [get_cells "$inst/src_ts_step_capt_reg_reg"] -to [get_cells "$inst/ts_step_sync_reg_reg"] $input_clk_period
+    }
+
+    # sample clock
+    set sync_ffs [get_cells -quiet -hier -regexp ".*/src_sample_sync\[12\]_reg_reg" -filter "PARENT == $inst"]
 
     if {[llength $sync_ffs]} {
         set_property ASYNC_REG TRUE $sync_ffs
 
-        set src_clk [get_clocks -of_objects [get_pins $inst/rd_ptr_gray_reg_reg[0]/C]]
-        set dest_clk [get_clocks -of_objects [get_pins $inst/rd_ptr_gray_sample_sync1_reg_reg[0]/C]]
+        set src_clk [get_clocks -of_objects [get_pins "$inst/src_sync_reg_reg/C"]]
+        set dest_clk [get_clocks -of_objects [get_pins "$inst/src_sample_sync1_reg_reg/C"]]
 
-        set_max_delay -from [get_cells "$inst/rd_ptr_reg_reg[*] $inst/rd_ptr_gray_reg_reg[*]"] -to [get_cells $inst/rd_ptr_gray_sample_sync1_reg_reg[*]] -datapath_only [get_property -min PERIOD $src_clk]
-        set_bus_skew  -from [get_cells "$inst/rd_ptr_reg_reg[*] $inst/rd_ptr_gray_reg_reg[*]"] -to [get_cells $inst/rd_ptr_gray_sample_sync1_reg_reg[*]] [get_property -min PERIOD $dest_clk]
+        set_max_delay -from [get_cells "$inst/src_sync_reg_reg"] -to [get_cells "$inst/src_sample_sync1_reg_reg"] -datapath_only [get_property -min PERIOD $src_clk]
     }
 
-    set sync_ffs [get_cells -quiet -hier -regexp ".*/wr_ptr_gray_sample_sync\[12\]_reg_reg\\\[\\d+\\\]" -filter "PARENT == $inst"]
+    set sync_ffs [get_cells -quiet -hier -regexp ".*/dest_sample_sync\[12\]_reg_reg" -filter "PARENT == $inst"]
 
     if {[llength $sync_ffs]} {
         set_property ASYNC_REG TRUE $sync_ffs
 
-        set src_clk [get_clocks -of_objects [get_pins $inst/wr_ptr_gray_reg_reg[0]/C]]
-        set dest_clk [get_clocks -of_objects [get_pins $inst/wr_ptr_gray_sample_sync1_reg_reg[0]/C]]
+        set src_clk [get_clocks -of_objects [get_pins "$inst/dest_sync_reg_reg/C"]]
+        set dest_clk [get_clocks -of_objects [get_pins "$inst/dest_sample_sync1_reg_reg/C"]]
 
-        set_max_delay -from [get_cells "$inst/wr_ptr_reg_reg[*] $inst/wr_ptr_gray_reg_reg[*]"] -to [get_cells $inst/wr_ptr_gray_sample_sync1_reg_reg[*]] -datapath_only [get_property -min PERIOD $src_clk]
-        set_bus_skew  -from [get_cells "$inst/wr_ptr_reg_reg[*] $inst/wr_ptr_gray_reg_reg[*]"] -to [get_cells $inst/wr_ptr_gray_sample_sync1_reg_reg[*]] [get_property -min PERIOD $dest_clk]
+        set_max_delay -from [get_cells "$inst/dest_sync_reg_reg"] -to [get_cells "$inst/dest_sample_sync1_reg_reg"] -datapath_only [get_property -min PERIOD $src_clk]
     }
 
     # sample update sync
@@ -76,12 +78,24 @@ foreach inst [get_cells -hier -filter {(ORIG_REF_NAME == ptp_clock_cdc || REF_NA
     if {[llength $sync_ffs]} {
         set_property ASYNC_REG TRUE $sync_ffs
 
-        set src_clk [get_clocks -of_objects [get_pins $inst/sample_update_reg_reg/C]]
-        set dest_clk [get_clocks -of_objects [get_pins $inst/sample_update_sync1_reg_reg/C]]
+        set src_clk [get_clocks -of_objects [get_pins "$inst/sample_update_reg_reg/C"]]
+        set dest_clk [get_clocks -of_objects [get_pins "$inst/sample_update_sync1_reg_reg/C"]]
 
-        set_max_delay -from [get_cells $inst/sample_update_reg_reg] -to [get_cells $inst/sample_update_sync1_reg_reg] -datapath_only [get_property -min PERIOD $src_clk]
+        set_max_delay -from [get_cells "$inst/sample_update_reg_reg"] -to [get_cells "$inst/sample_update_sync1_reg_reg"] -datapath_only [get_property -min PERIOD $src_clk]
 
-        set_max_delay -from [get_cells "$inst/sample_avg_reg_reg[*]"] -to [get_cells $inst/sample_avg_sync_reg_reg[*]] -datapath_only [get_property -min PERIOD $src_clk]
-        set_bus_skew  -from [get_cells "$inst/sample_avg_reg_reg[*]"] -to [get_cells $inst/sample_avg_sync_reg_reg[*]] [get_property -min PERIOD $dest_clk]
+        set_max_delay -from [get_cells "$inst/sample_acc_out_reg_reg[*]"] -to [get_cells $inst/sample_acc_sync_reg_reg[*]] -datapath_only [get_property -min PERIOD $src_clk]
+        set_bus_skew  -from [get_cells "$inst/sample_acc_out_reg_reg[*]"] -to [get_cells $inst/sample_acc_sync_reg_reg[*]] [get_property -min PERIOD $dest_clk]
+    }
+
+    # no sample clock
+    set sync_ffs [get_cells -quiet -hier -regexp ".*/src_sync_sync\[12\]_reg_reg" -filter "PARENT == $inst"]
+
+    if {[llength $sync_ffs]} {
+        set_property ASYNC_REG TRUE $sync_ffs
+
+        set src_clk [get_clocks -of_objects [get_pins "$inst/src_sync_reg_reg/C"]]
+        set dest_clk [get_clocks -of_objects [get_pins "$inst/src_sync_sync1_reg_reg/C"]]
+
+        set_max_delay -from [get_cells "$inst/src_sync_reg_reg"] -to [get_cells "$inst/src_sync_sync1_reg_reg"] -datapath_only [get_property -min PERIOD $src_clk]
     }
 }
