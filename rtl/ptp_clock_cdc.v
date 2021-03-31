@@ -475,6 +475,9 @@ always @* begin
     
     time_err_int_next = time_err_int_reg;
 
+    ptp_lock_count_next = ptp_lock_count_reg;
+    ptp_locked_next = ptp_locked_reg;
+
     // PTP clock
     if (TS_WIDTH == 96) begin
         // 96 bit timestamp
@@ -668,8 +671,10 @@ always @(posedge output_clk) begin
         ts_step_reg <= 0;
         pps_reg <= 0;
 
+        sec_mismatch_reg <= 1'b0;
         diff_valid_reg <= 1'b0;
         diff_corr_valid_reg <= 1'b0;
+
         time_err_int_reg <= 0;
 
         ptp_lock_count_reg <= 0;
