@@ -3,11 +3,9 @@
 Generates an AXI Stream switch wrapper with the specified number of ports
 """
 
-from __future__ import print_function
-
 import argparse
-import math
 from jinja2 import Template
+
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__.strip())
@@ -23,6 +21,7 @@ def main():
         print(ex)
         exit(1)
 
+
 def generate(ports=4, name=None, output=None):
     if type(ports) is int:
         m = n = ports
@@ -37,18 +36,14 @@ def generate(ports=4, name=None, output=None):
     if output is None:
         output = name + ".v"
 
-    print("Opening file '{0}'...".format(output))
-
-    output_file = open(output, 'w')
-
     print("Generating {0}x{1} port AXI stream switch wrapper {2}...".format(m, n, name))
 
-    cm = int(math.ceil(math.log(m, 2)))
-    cn = int(math.ceil(math.log(n, 2)))
+    cm = (m-1).bit_length()
+    cn = (n-1).bit_length()
 
     t = Template(u"""/*
 
-Copyright (c) 2018 Alex Forencich
+Copyright (c) 2018-2021 Alex Forencich
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -204,16 +199,20 @@ endmodule
 
 """)
 
-    output_file.write(t.render(
-        m=m,
-        n=n,
-        cm=cm,
-        cn=cn,
-        name=name
-    ))
+    print(f"Writing file '{output}'...")
+
+    with open(output, 'w') as f:
+        f.write(t.render(
+            m=m,
+            n=n,
+            cm=cm,
+            cn=cn,
+            name=name
+        ))
+        f.flush()
 
     print("Done")
 
+
 if __name__ == "__main__":
     main()
-
