@@ -43,9 +43,9 @@ module arp #
     // ARP request retry count
     parameter REQUEST_RETRY_COUNT = 4,
     // ARP request retry interval (in cycles)
-    parameter REQUEST_RETRY_INTERVAL = 125000000*2,
+    parameter [35:0] REQUEST_RETRY_INTERVAL = 36'd125000000*2,
     // ARP request timeout (in cycles)
-    parameter REQUEST_TIMEOUT = 125000000*30
+    parameter [35:0] REQUEST_TIMEOUT = 36'd125000000*30
 )
 (
     input  wire                   clk,
