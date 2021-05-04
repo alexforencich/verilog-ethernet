@@ -9,8 +9,8 @@ will echo back any packets received.  The design will also respond correctly
 to ARP requests.  The design also enables the gigabit Ethernet interface for
 testing with a QSFP loopback adapter.  
 
-FPGA: xcvu9p-flga2104-2L-e
-PHY: 25G BASE-R PHY IP core and internal GTY transceiver
+*  FPGA: xcvu9p-flga2104-2L-e
+*  PHY: 25G BASE-R PHY IP core and internal GTY transceiver
 
 ## How to build
 
@@ -20,8 +20,15 @@ in PATH.
 ## How to test
 
 Run make program to program the VCU118 board with Vivado.  Then run
-netcat -u 192.168.1.128 1234 to open a UDP connection to port 1234.  Any text
-entered into netcat will be echoed back after pressing enter.  
+
+    netcat -u 192.168.1.128 1234
+
+to open a UDP connection to port 1234.  Any text entered into netcat will be
+echoed back after pressing enter.
+
+It is also possible to use hping to test the design by running
+
+    hping 192.168.1.128 -2 -p 1234 -d 1024
 
 Note that the gigabit PHY is also enabled for debugging.  The gigabit port can
 be inserted into the 25G data path between the 25G MAC and 25G PHY so that the

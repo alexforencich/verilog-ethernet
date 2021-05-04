@@ -8,8 +8,8 @@ The design forms a 16x16 crosspoint switch for 10G Ethernet.  It is capable of
 connecting any output port to any input port based on configuration frames
 received over a dedicated configuration interface.
 
-FPGA: XC6VHX565T-2FFG1923
-PHY: 10G BASE-R PHY IP core and internal GTH transceiver
+*  FPGA: XC6VHX565T-2FFG1923
+*  PHY: 10G BASE-R PHY IP core and internal GTH transceiver
 
 ## How to build
 
