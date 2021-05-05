@@ -44,7 +44,8 @@ module eth_mac_phy_10g_fifo #
     parameter PRBS31_ENABLE = 0,
     parameter TX_SERDES_PIPELINE = 0,
     parameter RX_SERDES_PIPELINE = 0,
-    parameter SLIP_COUNT_WIDTH = 3,
+    parameter BITSLIP_HIGH_CYCLES = 1,
+    parameter BITSLIP_LOW_CYCLES = 8,
     parameter COUNT_125US = 125000/6.4,
     parameter TX_FIFO_DEPTH = 4096,
     parameter TX_FIFO_PIPELINE_OUTPUT = 2,
@@ -560,7 +561,8 @@ eth_mac_phy_10g #(
     .PRBS31_ENABLE(PRBS31_ENABLE),
     .TX_SERDES_PIPELINE(TX_SERDES_PIPELINE),
     .RX_SERDES_PIPELINE(RX_SERDES_PIPELINE),
-    .SLIP_COUNT_WIDTH(SLIP_COUNT_WIDTH),
+    .BITSLIP_HIGH_CYCLES(BITSLIP_HIGH_CYCLES),
+    .BITSLIP_LOW_CYCLES(BITSLIP_LOW_CYCLES),
     .COUNT_125US(COUNT_125US)
 )
 eth_mac_phy_10g_inst (

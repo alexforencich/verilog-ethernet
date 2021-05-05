@@ -43,7 +43,8 @@ module eth_mac_phy_10g_rx #
     parameter SCRAMBLER_DISABLE = 0,
     parameter PRBS31_ENABLE = 0,
     parameter SERDES_PIPELINE = 0,
-    parameter SLIP_COUNT_WIDTH = 3,
+    parameter BITSLIP_HIGH_CYCLES = 1,
+    parameter BITSLIP_LOW_CYCLES = 8,
     parameter COUNT_125US = 125000/6.4
 )
 (
@@ -116,7 +117,8 @@ eth_phy_10g_rx_if #(
     .SCRAMBLER_DISABLE(SCRAMBLER_DISABLE),
     .PRBS31_ENABLE(PRBS31_ENABLE),
     .SERDES_PIPELINE(SERDES_PIPELINE),
-    .SLIP_COUNT_WIDTH(SLIP_COUNT_WIDTH),
+    .BITSLIP_HIGH_CYCLES(BITSLIP_HIGH_CYCLES),
+    .BITSLIP_LOW_CYCLES(BITSLIP_LOW_CYCLES),
     .COUNT_125US(COUNT_125US)
 )
 eth_phy_10g_rx_if_inst (

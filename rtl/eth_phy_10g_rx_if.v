@@ -37,7 +37,8 @@ module eth_phy_10g_rx_if #
     parameter SCRAMBLER_DISABLE = 0,
     parameter PRBS31_ENABLE = 0,
     parameter SERDES_PIPELINE = 0,
-    parameter SLIP_COUNT_WIDTH = 3,
+    parameter BITSLIP_HIGH_CYCLES = 1,
+    parameter BITSLIP_LOW_CYCLES = 8,
     parameter COUNT_125US = 125000/6.4
 )
 (
@@ -218,7 +219,8 @@ assign serdes_rx_bitslip = serdes_rx_bitslip_int && !(PRBS31_ENABLE && rx_prbs31
 
 eth_phy_10g_rx_frame_sync #(
     .HDR_WIDTH(HDR_WIDTH),
-    .SLIP_COUNT_WIDTH(SLIP_COUNT_WIDTH)
+    .BITSLIP_HIGH_CYCLES(BITSLIP_HIGH_CYCLES),
+    .BITSLIP_LOW_CYCLES(BITSLIP_LOW_CYCLES)
 )
 eth_phy_10g_rx_frame_sync_inst (
     .clk(clk),

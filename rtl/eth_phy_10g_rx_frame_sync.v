@@ -32,7 +32,8 @@ THE SOFTWARE.
 module eth_phy_10g_rx_frame_sync #
 (
     parameter HDR_WIDTH = 2,
-    parameter SLIP_COUNT_WIDTH = 3
+    parameter BITSLIP_HIGH_CYCLES = 1,
+    parameter BITSLIP_LOW_CYCLES = 8
 )
 (
     input  wire                  clk,
@@ -50,6 +51,9 @@ module eth_phy_10g_rx_frame_sync #
     output wire                  rx_block_lock
 );
 
+parameter BITSLIP_MAX_CYCLES = BITSLIP_HIGH_CYCLES > BITSLIP_LOW_CYCLES ? BITSLIP_HIGH_CYCLES : BITSLIP_LOW_CYCLES;
+parameter BITSLIP_COUNT_WIDTH = $clog2(BITSLIP_MAX_CYCLES);
+
 // bus width assertions
 initial begin
     if (HDR_WIDTH != 2) begin
@@ -64,7 +68,7 @@ localparam [1:0]
 
 reg [5:0] sh_count_reg = 6'd0, sh_count_next;
 reg [3:0] sh_invalid_count_reg = 4'd0, sh_invalid_count_next;
-reg [SLIP_COUNT_WIDTH-1:0] slip_count_reg = 0, slip_count_next;
+reg [BITSLIP_COUNT_WIDTH-1:0] bitslip_count_reg = 0, bitslip_count_next;
 
 reg serdes_rx_bitslip_reg = 1'b0, serdes_rx_bitslip_next;
 
@@ -76,14 +80,17 @@ assign rx_block_lock = rx_block_lock_reg;
 always @* begin
     sh_count_next = sh_count_reg;
     sh_invalid_count_next = sh_invalid_count_reg;
-    slip_count_next = slip_count_reg;
+    bitslip_count_next = bitslip_count_reg;
 
-    serdes_rx_bitslip_next = 1'b0;
+    serdes_rx_bitslip_next = serdes_rx_bitslip_reg;
 
     rx_block_lock_next = rx_block_lock_reg;
 
-    if (slip_count_reg) begin
-        slip_count_next = slip_count_reg-1;
+    if (bitslip_count_reg) begin
+        bitslip_count_next = bitslip_count_reg-1;
+    end else if (serdes_rx_bitslip_reg) begin
+        serdes_rx_bitslip_next = 1'b0;
+        bitslip_count_next = BITSLIP_LOW_CYCLES > 0 ? BITSLIP_LOW_CYCLES-1 : 0;
     end else if (serdes_rx_hdr == SYNC_CTRL || serdes_rx_hdr == SYNC_DATA) begin
         // valid header
         sh_count_next = sh_count_reg + 1;
@@ -104,8 +111,10 @@ always @* begin
             sh_count_next = 0;
             sh_invalid_count_next = 0;
             rx_block_lock_next = 1'b0;
+
+            // slip one bit
             serdes_rx_bitslip_next = 1'b1;
-            slip_count_next = {SLIP_COUNT_WIDTH{1'b1}};
+            bitslip_count_next = BITSLIP_HIGH_CYCLES > 0 ? BITSLIP_HIGH_CYCLES-1 : 0;
         end else if (&sh_count_reg) begin
             // valid count overflow, reset
             sh_count_next = 0;
@@ -115,19 +124,19 @@ always @* begin
 end
 
 always @(posedge clk) begin
+    sh_count_reg <= sh_count_next;
+    sh_invalid_count_reg <= sh_invalid_count_next;
+    bitslip_count_reg <= bitslip_count_next;
+    serdes_rx_bitslip_reg <= serdes_rx_bitslip_next;
+    rx_block_lock_reg <= rx_block_lock_next;
+
     if (rst) begin
         sh_count_reg <= 6'd0;
         sh_invalid_count_reg <= 4'd0;
-        slip_count_reg <= 0;
+        bitslip_count_reg <= 0;
+        serdes_rx_bitslip_reg <= 1'b0;
         rx_block_lock_reg <= 1'b0;
-    end else begin
-        sh_count_reg <= sh_count_next;
-        sh_invalid_count_reg <= sh_invalid_count_next;
-        slip_count_reg <= slip_count_next;
-        rx_block_lock_reg <= rx_block_lock_next;
     end
-    
-    serdes_rx_bitslip_reg <= serdes_rx_bitslip_next;
 end
 
 endmodule
