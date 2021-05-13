@@ -39,6 +39,8 @@ module axis_arb_mux #
     parameter KEEP_ENABLE = (DATA_WIDTH>8),
     // tkeep signal width (words per cycle)
     parameter KEEP_WIDTH = (DATA_WIDTH/8),
+    // Propagate tlast signal
+    parameter LAST_ENABLE = 1,
     // Propagate tid signal
     parameter ID_ENABLE = 0,
     // tid signal width
@@ -111,7 +113,7 @@ wire [DATA_WIDTH-1:0] current_s_tdata  = s_axis_tdata[grant_encoded*DATA_WIDTH +
 wire [KEEP_WIDTH-1:0] current_s_tkeep  = s_axis_tkeep[grant_encoded*KEEP_WIDTH +: KEEP_WIDTH];
 wire                  current_s_tvalid = s_axis_tvalid[grant_encoded];
 wire                  current_s_tready = s_axis_tready[grant_encoded];
-wire                  current_s_tlast  = s_axis_tlast[grant_encoded];
+wire                  current_s_tlast  = LAST_ENABLE ? 1'b1 : s_axis_tlast[grant_encoded];
 wire [ID_WIDTH-1:0]   current_s_tid    = s_axis_tid[grant_encoded*ID_WIDTH +: ID_WIDTH];
 wire [DEST_WIDTH-1:0] current_s_tdest  = s_axis_tdest[grant_encoded*DEST_WIDTH +: DEST_WIDTH];
 wire [USER_WIDTH-1:0] current_s_tuser  = s_axis_tuser[grant_encoded*USER_WIDTH +: USER_WIDTH];
@@ -172,7 +174,7 @@ reg store_axis_temp_to_output;
 assign m_axis_tdata  = m_axis_tdata_reg;
 assign m_axis_tkeep  = KEEP_ENABLE ? m_axis_tkeep_reg : {KEEP_WIDTH{1'b1}};
 assign m_axis_tvalid = m_axis_tvalid_reg;
-assign m_axis_tlast  = m_axis_tlast_reg;
+assign m_axis_tlast  = LAST_ENABLE ? m_axis_tlast_reg : 1'b1;
 assign m_axis_tid    = ID_ENABLE   ? m_axis_tid_reg   : {ID_WIDTH{1'b0}};
 assign m_axis_tdest  = DEST_ENABLE ? m_axis_tdest_reg : {DEST_WIDTH{1'b0}};
 assign m_axis_tuser  = USER_ENABLE ? m_axis_tuser_reg : {USER_WIDTH{1'b0}};
