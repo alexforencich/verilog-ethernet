@@ -126,7 +126,7 @@ always @(posedge clk) begin
     end else begin
         s_axis_tvalid_reg <= s_axis_tvalid;
         for (i = 0; i < M_COUNT; i = i + 1) begin
-            m_axis_tvalid_reg[i] = s_axis_tvalid_reg[select_reg[i*CL_S_COUNT +: CL_S_COUNT]];
+            m_axis_tvalid_reg[i] <= s_axis_tvalid_reg[select_reg[i*CL_S_COUNT +: CL_S_COUNT]];
         end
         select_reg <= select;
     end

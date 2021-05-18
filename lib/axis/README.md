@@ -1,5 +1,7 @@
 # Verilog AXI Stream Components Readme
 
+[![Build Status](https://github.com/alexforencich/verilog-axis/workflows/Regression%20Tests/badge.svg?branch=master)](https://github.com/alexforencich/verilog-axis/actions/)
+
 For more information and updates: http://alexforencich.com/wiki/en/verilog/axis/start
 
 GitHub repository: https://github.com/alexforencich/verilog-axis
@@ -7,8 +9,8 @@ GitHub repository: https://github.com/alexforencich/verilog-axis
 ## Introduction
 
 Collection of AXI Stream bus components.  Most components are fully
-parametrizable in interface widths.  Includes full MyHDL testbench with
-intelligent bus cosimulation endpoints.
+parametrizable in interface widths.  Includes full cocotb testbenches that
+utilize [cocotbext-axi](https://github.com/alexforencich/cocotbext-axi).
 
 ## Documentation
 
@@ -294,12 +296,4 @@ bad frame
 
 ## Testing
 
-Running the included testbenches requires MyHDL and Icarus Verilog.  Make sure
-that myhdl.vpi is installed properly for cosimulation to work correctly.  The
-testbenches can be run with a Python test runner like nose or py.test, or the
-individual test scripts can be run with python directly.
-
-### Testbench Files
-
-    tb/axis_ep.py        : MyHDL AXI Stream endpoints
-    tb/ll_ep.py          : MyHDL LocalLink endpoints
+Running the included testbenches requires [cocotb](https://github.com/cocotb/cocotb), [cocotbext-axi](https://github.com/alexforencich/cocotbext-axi), and [Icarus Verilog](http://iverilog.icarus.com/).  The testbenches can be run with pytest directly (requires [cocotb-test](https://github.com/themperek/cocotb-test)), pytest via tox, or via cocotb makefiles.

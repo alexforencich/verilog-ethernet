@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Generates an AXI Stream mux wrapper with the specified number of ports
+Generates an AXI Stream broadcast wrapper with the specified number of ports
 """
 
 import argparse
@@ -26,12 +26,12 @@ def generate(ports=4, name=None, output=None):
     n = ports
 
     if name is None:
-        name = "axis_mux_wrap_{0}".format(n)
+        name = "axis_broadcast_wrap_{0}".format(n)
 
     if output is None:
         output = name + ".v"
 
-    print("Generating {0} port AXI stream mux wrapper {1}...".format(n, name))
+    print("Generating {0} port AXI stream broadcast wrapper {1}...".format(n, name))
 
     cn = (n-1).bit_length()
 
@@ -64,7 +64,7 @@ THE SOFTWARE.
 `timescale 1ns / 1ps
 
 /*
- * AXI4-Stream {{n}} port mux (wrapper)
+ * AXI4-Stream {{n}} port broadcast (wrapper)
  */
 module {{name}} #
 (
@@ -74,6 +74,8 @@ module {{name}} #
     parameter KEEP_ENABLE = (DATA_WIDTH>8),
     // tkeep signal width (words per cycle)
     parameter KEEP_WIDTH = (DATA_WIDTH/8),
+    // Propagate tlast signal
+    parameter LAST_ENABLE = 1,
     // Propagate tid signal
     parameter ID_ENABLE = 0,
     // tid signal width
@@ -92,42 +94,38 @@ module {{name}} #
     input  wire                  rst,
 
     /*
-     * AXI Stream inputs
+     * AXI Stream input
+     */
+    input  wire [DATA_WIDTH-1:0] s_axis_tdata,
+    input  wire [KEEP_WIDTH-1:0] s_axis_tkeep,
+    input  wire                  s_axis_tvalid,
+    output wire                  s_axis_tready,
+    input  wire                  s_axis_tlast,
+    input  wire [ID_WIDTH-1:0]   s_axis_tid,
+    input  wire [DEST_WIDTH-1:0] s_axis_tdest,
+    input  wire [USER_WIDTH-1:0] s_axis_tuser,
+
+    /*
+     * AXI Stream outputs
      */
 {%- for p in range(n) %}
-    input  wire [DATA_WIDTH-1:0] s{{'%02d'%p}}_axis_tdata,
-    input  wire [KEEP_WIDTH-1:0] s{{'%02d'%p}}_axis_tkeep,
-    input  wire                  s{{'%02d'%p}}_axis_tvalid,
-    output wire                  s{{'%02d'%p}}_axis_tready,
-    input  wire                  s{{'%02d'%p}}_axis_tlast,
-    input  wire [ID_WIDTH-1:0]   s{{'%02d'%p}}_axis_tid,
-    input  wire [DEST_WIDTH-1:0] s{{'%02d'%p}}_axis_tdest,
-    input  wire [USER_WIDTH-1:0] s{{'%02d'%p}}_axis_tuser,
-{% endfor %}
-    /*
-     * AXI Stream output
-     */
-    output wire [DATA_WIDTH-1:0] m_axis_tdata,
-    output wire [KEEP_WIDTH-1:0] m_axis_tkeep,
-    output wire                  m_axis_tvalid,
-    input  wire                  m_axis_tready,
-    output wire                  m_axis_tlast,
-    output wire [ID_WIDTH-1:0]   m_axis_tid,
-    output wire [DEST_WIDTH-1:0] m_axis_tdest,
-    output wire [USER_WIDTH-1:0] m_axis_tuser,
-
-    /*
-     * Control
-     */
-    input  wire                  enable,
-    input  wire [{{cn-1}}:0]            select
+    output wire [DATA_WIDTH-1:0] m{{'%02d'%p}}_axis_tdata,
+    output wire [KEEP_WIDTH-1:0] m{{'%02d'%p}}_axis_tkeep,
+    output wire                  m{{'%02d'%p}}_axis_tvalid,
+    input  wire                  m{{'%02d'%p}}_axis_tready,
+    output wire                  m{{'%02d'%p}}_axis_tlast,
+    output wire [ID_WIDTH-1:0]   m{{'%02d'%p}}_axis_tid,
+    output wire [DEST_WIDTH-1:0] m{{'%02d'%p}}_axis_tdest,
+    output wire [USER_WIDTH-1:0] m{{'%02d'%p}}_axis_tuser{% if not loop.last %},{% endif %}
+{% endfor -%}
 );
 
-axis_mux #(
-    .S_COUNT({{n}}),
+axis_broadcast #(
+    .M_COUNT({{n}}),
     .DATA_WIDTH(DATA_WIDTH),
     .KEEP_ENABLE(KEEP_ENABLE),
     .KEEP_WIDTH(KEEP_WIDTH),
+    .LAST_ENABLE(LAST_ENABLE),
     .ID_ENABLE(ID_ENABLE),
     .ID_WIDTH(ID_WIDTH),
     .DEST_ENABLE(DEST_ENABLE),
@@ -135,30 +133,27 @@ axis_mux #(
     .USER_ENABLE(USER_ENABLE),
     .USER_WIDTH(USER_WIDTH)
 )
-axis_mux_inst (
+axis_broadcast_inst (
     .clk(clk),
     .rst(rst),
-    // AXI inputs
-    .s_axis_tdata({ {% for p in range(n-1,-1,-1) %}s{{'%02d'%p}}_axis_tdata{% if not loop.last %}, {% endif %}{% endfor %} }),
-    .s_axis_tkeep({ {% for p in range(n-1,-1,-1) %}s{{'%02d'%p}}_axis_tkeep{% if not loop.last %}, {% endif %}{% endfor %} }),
-    .s_axis_tvalid({ {% for p in range(n-1,-1,-1) %}s{{'%02d'%p}}_axis_tvalid{% if not loop.last %}, {% endif %}{% endfor %} }),
-    .s_axis_tready({ {% for p in range(n-1,-1,-1) %}s{{'%02d'%p}}_axis_tready{% if not loop.last %}, {% endif %}{% endfor %} }),
-    .s_axis_tlast({ {% for p in range(n-1,-1,-1) %}s{{'%02d'%p}}_axis_tlast{% if not loop.last %}, {% endif %}{% endfor %} }),
-    .s_axis_tid({ {% for p in range(n-1,-1,-1) %}s{{'%02d'%p}}_axis_tid{% if not loop.last %}, {% endif %}{% endfor %} }),
-    .s_axis_tdest({ {% for p in range(n-1,-1,-1) %}s{{'%02d'%p}}_axis_tdest{% if not loop.last %}, {% endif %}{% endfor %} }),
-    .s_axis_tuser({ {% for p in range(n-1,-1,-1) %}s{{'%02d'%p}}_axis_tuser{% if not loop.last %}, {% endif %}{% endfor %} }),
-    // AXI output
-    .m_axis_tdata(m_axis_tdata),
-    .m_axis_tkeep(m_axis_tkeep),
-    .m_axis_tvalid(m_axis_tvalid),
-    .m_axis_tready(m_axis_tready),
-    .m_axis_tlast(m_axis_tlast),
-    .m_axis_tid(m_axis_tid),
-    .m_axis_tdest(m_axis_tdest),
-    .m_axis_tuser(m_axis_tuser),
-    // Control
-    .enable(enable),
-    .select(select)
+    // AXI input
+    .s_axis_tdata(s_axis_tdata),
+    .s_axis_tkeep(s_axis_tkeep),
+    .s_axis_tvalid(s_axis_tvalid),
+    .s_axis_tready(s_axis_tready),
+    .s_axis_tlast(s_axis_tlast),
+    .s_axis_tid(s_axis_tid),
+    .s_axis_tdest(s_axis_tdest),
+    .s_axis_tuser(s_axis_tuser),
+    // AXI outputs
+    .m_axis_tdata({ {% for p in range(n-1,-1,-1) %}m{{'%02d'%p}}_axis_tdata{% if not loop.last %}, {% endif %}{% endfor %} }),
+    .m_axis_tkeep({ {% for p in range(n-1,-1,-1) %}m{{'%02d'%p}}_axis_tkeep{% if not loop.last %}, {% endif %}{% endfor %} }),
+    .m_axis_tvalid({ {% for p in range(n-1,-1,-1) %}m{{'%02d'%p}}_axis_tvalid{% if not loop.last %}, {% endif %}{% endfor %} }),
+    .m_axis_tready({ {% for p in range(n-1,-1,-1) %}m{{'%02d'%p}}_axis_tready{% if not loop.last %}, {% endif %}{% endfor %} }),
+    .m_axis_tlast({ {% for p in range(n-1,-1,-1) %}m{{'%02d'%p}}_axis_tlast{% if not loop.last %}, {% endif %}{% endfor %} }),
+    .m_axis_tid({ {% for p in range(n-1,-1,-1) %}m{{'%02d'%p}}_axis_tid{% if not loop.last %}, {% endif %}{% endfor %} }),
+    .m_axis_tdest({ {% for p in range(n-1,-1,-1) %}m{{'%02d'%p}}_axis_tdest{% if not loop.last %}, {% endif %}{% endfor %} }),
+    .m_axis_tuser({ {% for p in range(n-1,-1,-1) %}m{{'%02d'%p}}_axis_tuser{% if not loop.last %}, {% endif %}{% endfor %} })
 );
 
 endmodule
