@@ -57,9 +57,9 @@ SYN_FILES += lib/eth/lib/axis/rtl/sync_reset.v
 
 # XDC files
 XDC_FILES = fpga.xdc
-XDC_FILES += lib/eth/syn/eth_mac_fifo.tcl
-XDC_FILES += lib/eth/lib/axis/syn/axis_async_fifo.tcl
-XDC_FILES += lib/eth/lib/axis/syn/sync_reset.tcl
+XDC_FILES += lib/eth/syn/vivado/eth_mac_fifo.tcl
+XDC_FILES += lib/eth/lib/axis/syn/vivado/axis_async_fifo.tcl
+XDC_FILES += lib/eth/lib/axis/syn/vivado/sync_reset.tcl
 
 # IP
 IP_TCL_FILES = ip/gig_ethernet_pcs_pma_0.tcl

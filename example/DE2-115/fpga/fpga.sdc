@@ -51,11 +51,11 @@ derive_pll_clocks
 derive_clock_uncertainty
 
 
-source ../lib/eth/syn/eth_mac_1g_rgmii.sdc
-source ../lib/eth/syn/rgmii_phy_if.sdc
-source ../lib/eth/syn/rgmii_io.sdc
-source ../lib/eth/lib/axis/syn/sync_reset.sdc
-source ../lib/eth/lib/axis/syn/axis_async_fifo.sdc
+source ../lib/eth/syn/quartus/eth_mac_1g_rgmii.sdc
+source ../lib/eth/syn/quartus/rgmii_phy_if.sdc
+source ../lib/eth/syn/quartus/rgmii_io.sdc
+source ../lib/eth/lib/axis/syn/quartus/sync_reset.sdc
+source ../lib/eth/lib/axis/syn/quartus/axis_async_fifo.sdc
 
 # clocking infrastructure
 constrain_sync_reset_inst "sync_reset_inst"
