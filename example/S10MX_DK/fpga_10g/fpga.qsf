@@ -24,7 +24,6 @@ set_global_assignment -name PWRMGT_PAGE_COMMAND_ENABLE ON
 set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
 set_global_assignment -name MAX_CORE_JUNCTION_TEMP 100
 set_global_assignment -name ON_CHIP_BITSTREAM_DECOMPRESSION ON
-set_global_assignment -name USE_CONFIGURATION_DEVICE ON
 set_global_assignment -name DEVICE_INITIALIZATION_CLOCK OSC_CLK_1_125MHZ
 set_global_assignment -name STRATIXV_CONFIGURATION_SCHEME "ACTIVE SERIAL X4"
 set_global_assignment -name ACTIVE_SERIAL_CLOCK AS_FREQ_100MHZ
@@ -33,7 +32,6 @@ set_global_assignment -name ENABLE_CONFIGURATION_PINS OFF
 set_global_assignment -name ENABLE_NCE_PIN OFF
 set_global_assignment -name ENABLE_BOOT_SEL_PIN OFF
 set_global_assignment -name USE_CHECKSUM_AS_USERCODE ON
-set_global_assignment -name GENERATE_RBF_FILE ON
 set_global_assignment -name GENERATE_PR_RBF_FILE ON
 set_global_assignment -name ENABLE_ED_CRC_CHECK ON
 set_global_assignment -name ERROR_CHECK_FREQUENCY_DIVISOR 256
