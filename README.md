@@ -17,18 +17,19 @@ module.  Includes various PTP related components for implementing systems that
 require precise time synchronization.  Also includes full cocotb testbenches
 that utilize [cocotbext-eth](https://github.com/alexforencich/cocotbext-eth).
 
-For IP and ARP support only, use ip_complete (1G) or ip_complete_64 (10G/25G).
-
-For UDP, IP, and ARP support, use udp_complete (1G) or udp_complete_64
+For IP and ARP support only, use `ip_complete` (1G) or `ip_complete_64`
 (10G/25G).
 
-Top level gigabit and 10G/25G MAC modules are eth_mac_*, with various
-interfaces and with/without FIFOs.  Top level 10G/25G PCS/PMA PHY module is
-eth_phy_10g.  Top level 10G/25G MAC/PCS/PMA combination module is
-eth_mac_phy_10g.
+For UDP, IP, and ARP support, use `udp_complete` (1G) or `udp_complete_64`
+(10G/25G).
 
-PTP components include a configurable PTP clock (ptp_clock), a PTP clock CDC
-module (ptp_clock_cdc) for transferring PTP time across clock domains, and a
+Top level gigabit and 10G/25G MAC modules are `eth_mac_*`, with various
+interfaces and with/without FIFOs.  Top level 10G/25G PCS/PMA PHY module is
+`eth_phy_10g`.  Top level 10G/25G MAC/PCS/PMA combination module is
+`eth_mac_phy_10g`.
+
+PTP components include a configurable PTP clock (`ptp_clock`), a PTP clock CDC
+module (`ptp_clock_cdc`) for transferring PTP time across clock domains, and a
 configurable PTP period output module for precisely generating arbitrary
 frequencies from PTP time.
 
@@ -48,7 +49,7 @@ following boards:
 *  Xilinx KC705 (Xilinx Kintex 7 XC7K325T)
 *  Xilinx ML605 (Xilinx Virtex 6 XC6VLX240T)
 *  NetFPGA SUME (Xilinx Virtex 7 XC7V690T)
-*  Digilent Nexys Video (Xilinx Artix 7 XC7XC7A200T)
+*  Digilent Nexys Video (Xilinx Artix 7 XC7A200T)
 *  Intel Stratix 10 MX dev kit (Intel Stratix 10 MX 1SM21CHU1F53E1VG)
 *  Xilinx Alveo U50 (Xilinx Virtex UltraScale+ XCU50)
 *  Xilinx Alveo U200 (Xilinx Virtex UltraScale+ XCU200)
@@ -62,338 +63,338 @@ following boards:
 
 ## Documentation
 
-### arp module
+### `arp` module
 
 ARP handling logic with parametrizable retry timeout parameters and
 parametrizable datapath.
 
-### arp_cache module
+### `arp_cache` module
 
 Basic hash-based cache for ARP entries.  Parametrizable depth.  
 
-### arp_eth_rx module
+### `arp_eth_rx` module
 
 ARP frame receiver with parametrizable datapath.
 
-### arp_eth_tx module
+### `arp_eth_tx` module
 
 ARP frame transmitter with parametrizable datapath.
 
-### axis_eth_fcs module
+### `axis_eth_fcs` module
 
 Ethernet frame check sequence calculator.
 
-### axis_eth_fcs_64 module
+### `axis_eth_fcs_64` module
 
 Ethernet frame check sequence calculator with 64 bit datapath for 10G/25G
 Ethernet.
 
-### axis_eth_fcs_check module
+### `axis_eth_fcs_check` module
 
 Ethernet frame check sequence checker.
 
-### axis_eth_fcs_insert module
+### `axis_eth_fcs_insert` module
 
 Ethernet frame check sequence inserter.
 
-### axis_gmii_rx module
+### `axis_gmii_rx` module
 
 AXI stream GMII/MII frame receiver with clock enable and MII select.
 
-### axis_gmii_tx module
+### `axis_gmii_tx` module
 
 AXI stream GMII/MII frame transmitter with clock enable and MII select.
 
-### axis_xgmii_rx_32 module
+### `axis_xgmii_rx_32` module
 
 AXI stream XGMII frame receiver with 32 bit datapath.
 
-### axis_xgmii_rx_64 module
+### `axis_xgmii_rx_64` module
 
 AXI stream XGMII frame receiver with 64 bit datapath.
 
-### axis_xgmii_tx_32 module
+### `axis_xgmii_tx_32` module
 
 AXI stream XGMII frame transmitter with 32 bit datapath.
 
-### axis_xgmii_tx_64 module
+### `axis_xgmii_tx_64` module
 
 AXI stream XGMII frame transmitter with 64 bit datapath.
 
-### eth_arb_mux module
+### `eth_arb_mux` module
 
-Ethernet frame arbitrated muliplexer with parametrizable data width and port
+Ethernet frame arbitrated multiplexer with parametrizable data width and port
 count.  Supports priority and round-robin arbitration.
 
-### eth_axis_rx module
+### `eth_axis_rx` module
 
 Ethernet frame receiver with parametrizable datapath.
 
-### eth_axis_tx module
+### `eth_axis_tx` module
 
 Ethernet frame transmitter with parametrizable datapath.
 
-### eth_demux module
+### `eth_demux` module
 
-Ethernet frame demuliplexer with parametrizable data width and port count.
+Ethernet frame demultiplexer with parametrizable data width and port count.
 Supports priority and round-robin arbitration.
 
-### eth_mac_1g module
+### `eth_mac_1g` module
 
 Gigabit Ethernet MAC with GMII interface.
 
-### eth_mac_1g_fifo module
+### `eth_mac_1g_fifo` module
 
 Gigabit Ethernet MAC with GMII interface and FIFOs.
 
-### eth_mac_1g_gmii module
+### `eth_mac_1g_gmii` module
 
 Tri-mode Ethernet MAC with GMII/MII interface and automatic PHY rate
 adaptation logic.
 
-### eth_mac_1g_gmii_fifo module
+### `eth_mac_1g_gmii_fifo` module
 
 Tri-mode Ethernet MAC with GMII/MII interface, FIFOs, and automatic PHY rate
 adaptation logic.
 
-### eth_mac_1g_rgmii module
+### `eth_mac_1g_rgmii` module
 
 Tri-mode Ethernet MAC with RGMII interface and automatic PHY rate adaptation
 logic.
 
-### eth_mac_1g_rgmii_fifo module
+### `eth_mac_1g_rgmii_fifo` module
 
 Tri-mode Ethernet MAC with RGMII interface, FIFOs, and automatic PHY rate
 adaptation logic.
 
-### eth_mac_10g module
+### `eth_mac_10g` module
 
 10G/25G Ethernet MAC with XGMII interface.  Datapath selectable between 32 and
 64 bits.
 
-### eth_mac_10g_fifo module
+### `eth_mac_10g_fifo` module
 
 10G/25G Ethernet MAC with XGMII interface and FIFOs.  Datapath selectable
 between 32 and 64 bits.
 
-### eth_mac_mii module
+### `eth_mac_mii` module
 
 Ethernet MAC with MII interface.
 
-### eth_mac_mii_fifo module
+### `eth_mac_mii_fifo` module
 
 Ethernet MAC with MII interface and FIFOs.
 
-### eth_mac_phy_10g module
+### `eth_mac_phy_10g` module
 
 10G/25G Ethernet MAC/PHY combination module with SERDES interface.
 
-### eth_mac_phy_10g_fifo module
+### `eth_mac_phy_10g_fifo` module
 
 10G/25G Ethernet MAC/PHY combination module with SERDES interface and FIFOs.
 
-### eth_mac_phy_10g_rx module
+### `eth_mac_phy_10g_rx` module
 
 10G/25G Ethernet MAC/PHY combination module with SERDES interface, RX path.
 
-### eth_mac_phy_10g_tx module
+### `eth_mac_phy_10g_tx` module
 
 10G/25G Ethernet MAC/PHY combination module with SERDES interface, TX path.
 
-### eth_mux module
+### `eth_mux` module
 
-Ethernet frame muliplexer with parametrizable data width and port count.
+Ethernet frame multiplexer with parametrizable data width and port count.
 Supports priority and round-robin arbitration.
 
-### eth_phy_10g module
+### `eth_phy_10g` module
 
 10G/25G Ethernet PCS/PMA PHY.
 
-### eth_phy_10g_rx module
+### `eth_phy_10g_rx` module
 
 10G/25G Ethernet PCS/PMA PHY receive-side logic.
 
-### eth_phy_10g_rx_ber_mon module
+### `eth_phy_10g_rx_ber_mon` module
 
 10G/25G Ethernet PCS/PMA PHY BER monitor.
 
-### eth_phy_10g_rx_frame_sync module
+### `eth_phy_10g_rx_frame_sync` module
 
 10G/25G Ethernet PCS/PMA PHY frame synchronizer.
 
-### eth_phy_10g_tx module
+### `eth_phy_10g_tx` module
 
 10G/25G Ethernet PCS/PMA PHY transmit-side logic.
 
-### gmii_phy_if module
+### `gmii_phy_if` module
 
 GMII/MII PHY interface and clocking logic.
 
-### ip module
+### `ip` module
 
 IPv4 block with 8 bit data width for gigabit Ethernet.  Manages IPv4 packet
-transmssion and reception.  Interfaces with ARP module for MAC address lookup.
+transmission and reception.  Interfaces with ARP module for MAC address lookup.
 
-### ip_64 module
+### `ip_64` module
 
 IPv4 block with 64 bit data width for 10G/25G Ethernet.  Manages IPv4 packet
-transmssion and reception.  Interfaces with ARP module for MAC address lookup.
+transmission and reception.  Interfaces with ARP module for MAC address lookup.
 
-### ip_arb_mux module
+### `ip_arb_mux` module
 
-IP frame arbitrated muliplexer with parametrizable data width and port count.
+IP frame arbitrated multiplexer with parametrizable data width and port count.
 Supports priority and round-robin arbitration.
 
-### ip_complete module
+### `ip_complete` module
 
 IPv4 module with ARP integration.
 
 Top level for gigabit IP stack.
 
-### ip_complete_64 module
+### `ip_complete_64` module
 
 IPv4 module with ARP integration and 64 bit data width for 10G/25G Ethernet.
 
 Top level for 10G/25G IP stack.
 
-### ip_demux module
+### `ip_demux` module
 
-IP frame demuliplexer with parametrizable data width and port count.
+IP frame demultiplexer with parametrizable data width and port count.
 Supports priority and round-robin arbitration.
 
-### ip_eth_rx module
+### `ip_eth_rx` module
 
 IP frame receiver.
 
-### ip_eth_rx_64 module
+### `ip_eth_rx_64` module
 
 IP frame receiver with 64 bit datapath for 10G/25G Ethernet.
 
-### ip_eth_tx module
+### `ip_eth_tx` module
 
 IP frame transmitter.
 
-### ip_eth_tx_64 module
+### `ip_eth_tx_64` module
 
 IP frame transmitter with 64 bit datapath for 10G/25G Ethernet.
 
-### ip_mux module
+### `ip_mux` module
 
-IP frame muliplexer with parametrizable data width and port count.
+IP frame multiplexer with parametrizable data width and port count.
 Supports priority and round-robin arbitration.
 
-### lfsr module
+### `lfsr` module
 
 Fully parametrizable combinatorial parallel LFSR/CRC module.
 
-### mii_phy_if module
+### `mii_phy_if` module
 
 MII PHY interface and clocking logic.
 
-### ptp_clock module
+### `ptp_clock` module
 
 PTP clock module with PPS output.  Generates both 64 bit and 96 bit timestamp
-formats.  Fine frequeny adjustment supported with configurable fractional
+formats.  Fine frequency adjustment supported with configurable fractional
 nanoseconds field.
 
-### ptp_clock_cdc module
+### `ptp_clock_cdc` module
 
 PTP clock CDC module with PPS output.  Use this module to transfer and deskew a
 free-running PTP clock across clock domains.  Supports both 64 and 96 bit
 timestamp formats.
 
-### ptp_ts_extract module
+### `ptp_ts_extract` module
 
 PTP timestamp extract module.  Use this module to extract a PTP timestamp
-embedded in the tuser sideband signal of an AXI stream interface.
+embedded in the `tuser` sideband signal of an AXI stream interface.
 
-### ptp_perout module
+### `ptp_perout` module
 
 PTP period output module.  Generates a pulse output, configurable in absolute
 start time, period, and width, based on PTP time from a PTP clock.
 
-### rgmii_phy_if module
+### `rgmii_phy_if` module
 
 RGMII PHY interface and clocking logic.
 
-### udp module
+### `udp` module
 
 UDP block with 8 bit data width for gigabit Ethernet.  Manages UDP packet
-transmssion and reception.
+transmission and reception.
 
-### udp_64 module
+### `udp_64` module
 
 UDP block with 64 bit data width for 10G/25G Ethernet.  Manages UDP packet
-transmssion and reception.
+transmission and reception.
 
-### udp_arb_mux module
+### `udp_arb_mux` module
 
-UDP frame arbitrated muliplexer with parametrizable data width and port
+UDP frame arbitrated multiplexer with parametrizable data width and port
 count.  Supports priority and round-robin arbitration.
 
-### udp_checksum_gen module
+### `udp_checksum_gen` module
 
 UDP checksum generator module.  Calculates UDP length, IP length, and
 UDP checksum fields.
 
-### udp_checksum_gen_64 module
+### `udp_checksum_gen_64` module
 
 UDP checksum generator module with 64 bit datapath.  Calculates UDP
 length, IP length, and UDP checksum fields.
 
-### udp_complete module
+### `udp_complete` module
 
 UDP module with IPv4 and ARP integration.
 
 Top level for gigabit UDP stack.
 
-### udp_complete_64 module
+### `udp_complete_64` module
 
 UDP module with IPv4 and ARP integration and 64 bit data width for 10G
 Ethernet.
 
 Top level for 10G/25G UDP stack.
 
-### udp_demux module
+### `udp_demux` module
 
-UDP frame demuliplexer with parametrizable data width and port count.
+UDP frame demultiplexer with parametrizable data width and port count.
 Supports priority and round-robin arbitration.
 
-### udp_ip_rx module
+### `udp_ip_rx` module
 
 UDP frame receiver.
 
-### udp_ip_rx_64 module
+### `udp_ip_rx_64` module
 
 UDP frame receiver with 64 bit datapath for 10G/25G Ethernet.
 
-### udp_ip_tx module
+### `udp_ip_tx` module
 
 UDP frame transmitter.
 
-### udp_ip_tx_64 module
+### `udp_ip_tx_64` module
 
 UDP frame transmitter with 64 bit datapath for 10G/25G Ethernet.
 
-### udp_mux module
+### `udp_mux` module
 
-UDP frame muliplexer with parametrizable data width and port count.
+UDP frame multiplexer with parametrizable data width and port count.
 Supports priority and round-robin arbitration.
 
-### xgmii_baser_dec_64 module
+### `xgmii_baser_dec_64` module
 
 XGMII 10GBASE-R decoder for 10G PCS/PMA PHY.
 
-### xgmii_baser_enc_64 module
+### `xgmii_baser_enc_64` module
 
 XGMII 10GBASE-R encoder for 10G PCS/PMA PHY.
 
-### xgmii_deinterleave module
+### `xgmii_deinterleave` module
 
 XGMII de-interleaver for interfacing with PHY cores that interleave the
 control and data lines.
 
-### xgmii_interleave module
+### `xgmii_interleave` module
 
 XGMII interleaver for interfacing with PHY cores that interleave the control
 and data lines.
