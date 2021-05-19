@@ -1,0 +1,723 @@
+# I/O constraints for the Intel Stratix 10 MX FPGA development board
+# part: 1SM21BHU2F53E1VG (DK-DEV-1SMX-H-A with 8 GB HBM2)
+# part: 1SM21CHU1F53E1VG (DK-DEV-1SMC-H-A with 16 GB HBM2)
+
+set_global_assignment -name USE_CONF_DONE SDM_IO16
+set_global_assignment -name USE_INIT_DONE SDM_IO0
+set_global_assignment -name USE_CVP_CONFDONE SDM_IO15
+
+set_global_assignment -name USE_PWRMGT_SCL SDM_IO14
+set_global_assignment -name USE_PWRMGT_SDA SDM_IO11
+set_global_assignment -name PWRMGT_BUS_SPEED_MODE "100 KHZ"
+set_global_assignment -name PWRMGT_SLAVE_DEVICE_TYPE OTHER
+set_global_assignment -name PWRMGT_SLAVE_DEVICE0_ADDRESS 47
+set_global_assignment -name PWRMGT_SLAVE_DEVICE1_ADDRESS 00
+set_global_assignment -name PWRMGT_SLAVE_DEVICE2_ADDRESS 00
+set_global_assignment -name PWRMGT_SLAVE_DEVICE3_ADDRESS 00
+set_global_assignment -name PWRMGT_SLAVE_DEVICE4_ADDRESS 00
+set_global_assignment -name PWRMGT_SLAVE_DEVICE5_ADDRESS 00
+set_global_assignment -name PWRMGT_SLAVE_DEVICE6_ADDRESS 00
+set_global_assignment -name PWRMGT_SLAVE_DEVICE7_ADDRESS 00
+set_global_assignment -name PWRMGT_TRANSLATED_VOLTAGE_VALUE_UNIT VOLTS
+set_global_assignment -name PWRMGT_PAGE_COMMAND_ENABLE ON
+
+set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
+set_global_assignment -name MAX_CORE_JUNCTION_TEMP 100
+set_global_assignment -name ON_CHIP_BITSTREAM_DECOMPRESSION ON
+set_global_assignment -name USE_CONFIGURATION_DEVICE ON
+set_global_assignment -name DEVICE_INITIALIZATION_CLOCK OSC_CLK_1_125MHZ
+set_global_assignment -name STRATIXV_CONFIGURATION_SCHEME "ACTIVE SERIAL X4"
+set_global_assignment -name ACTIVE_SERIAL_CLOCK AS_FREQ_100MHZ
+set_global_assignment -name AUTO_RESTART_CONFIGURATION OFF
+set_global_assignment -name ENABLE_CONFIGURATION_PINS OFF
+set_global_assignment -name ENABLE_NCE_PIN OFF
+set_global_assignment -name ENABLE_BOOT_SEL_PIN OFF
+set_global_assignment -name USE_CHECKSUM_AS_USERCODE ON
+set_global_assignment -name GENERATE_RBF_FILE ON
+set_global_assignment -name GENERATE_PR_RBF_FILE ON
+set_global_assignment -name ENABLE_ED_CRC_CHECK ON
+set_global_assignment -name ERROR_CHECK_FREQUENCY_DIVISOR 256
+set_global_assignment -name MINIMUM_SEU_INTERVAL 10969
+
+set_global_assignment -name RESERVE_ALL_UNUSED_PINS_WEAK_PULLUP "AS INPUT TRI-STATED"
+
+set_global_assignment -name PRESERVE_UNUSED_XCVR_CHANNEL ON
+
+# Clock and reset
+set_location_assignment PIN_BE17 -to clk_sys_50m_p
+set_location_assignment PIN_BD17 -to clk_sys_50m_n
+set_location_assignment PIN_AU17 -to clk_sys_100m_p
+set_location_assignment PIN_AU16 -to clk_sys_100m_n
+
+set_location_assignment PIN_AT13 -to clk_core_bak_p
+set_location_assignment PIN_AU13 -to clk_core_bak_n
+
+set_location_assignment PIN_AR26 -to clk_uib0_p
+set_location_assignment PIN_AP26 -to clk_uib0_n
+set_location_assignment PIN_P27  -to clk_uib1_p
+set_location_assignment PIN_R27  -to clk_uib1_n
+
+set_location_assignment PIN_AU31 -to clk_esram0_p
+set_location_assignment PIN_AU32 -to clk_esram0_n
+set_location_assignment PIN_V31  -to clk_esram1_p
+set_location_assignment PIN_U31  -to clk_esram1_n
+
+set_location_assignment PIN_A42  -to clk_ddr4_comp_p
+set_location_assignment PIN_B41  -to clk_ddr4_comp_n
+
+set_location_assignment PIN_B18  -to clk_ddr4_dimm_p
+set_location_assignment PIN_C18  -to clk_ddr4_dimm_n
+
+set_instance_assignment -name IO_STANDARD LVDS -to clk_sys_50m_p
+set_instance_assignment -name IO_STANDARD LVDS -to clk_sys_100m_p
+set_instance_assignment -name IO_STANDARD LVDS -to clk_core_bak_p
+set_instance_assignment -name IO_STANDARD LVDS -to clk_uib0_p
+set_instance_assignment -name IO_STANDARD LVDS -to clk_uib1_p
+set_instance_assignment -name IO_STANDARD LVDS -to clk_esram0_p
+set_instance_assignment -name IO_STANDARD LVDS -to clk_esram1_p
+set_instance_assignment -name IO_STANDARD LVDS -to clk_ddr4_comp_p
+set_instance_assignment -name IO_STANDARD LVDS -to clk_ddr4_dimm_p
+
+# Switches, buttons, LEDs
+set_location_assignment PIN_BL14 -to cpu_resetn
+
+set_location_assignment PIN_BH11 -to user_led[3]
+set_location_assignment PIN_BG11 -to user_led[2]
+set_location_assignment PIN_BF12 -to user_led[1]
+set_location_assignment PIN_BG12 -to user_led[0]
+
+set_instance_assignment -name IO_STANDARD "1.8 V" -to user_led[0]
+set_instance_assignment -name IO_STANDARD "1.8 V" -to user_led[1]
+set_instance_assignment -name IO_STANDARD "1.8 V" -to user_led[2]
+set_instance_assignment -name IO_STANDARD "1.8 V" -to user_led[3]
+
+# I2C
+set_location_assignment PIN_BE14 -to main_i2c_scl
+set_location_assignment PIN_BF13 -to main_i2c_sda
+set_location_assignment PIN_D29  -to ddr4_dimm_sda
+set_location_assignment PIN_H30  -to ddr4_dimm_scl
+set_location_assignment PIN_BH14 -to pcie_ep_i2c_sda
+set_location_assignment PIN_BH15 -to pcie_ep_i2c_scl
+
+set_instance_assignment -name IO_STANDARD "1.8 V" -to main_i2c_scl
+set_instance_assignment -name IO_STANDARD "1.8 V" -to main_i2c_sda
+set_instance_assignment -name IO_STANDARD "1.8 V" -to ddr4_dimm_sda
+set_instance_assignment -name IO_STANDARD "1.8 V" -to ddr4_dimm_scl
+set_instance_assignment -name IO_STANDARD "1.8 V" -to pcie_ep_i2c_sda
+set_instance_assignment -name IO_STANDARD "1.8 V" -to pcie_ep_i2c_scl
+
+# PCIe EP
+set_location_assignment PIN_BH45 -to pcie_ep_tx_p[0]
+set_location_assignment PIN_BH44 -to pcie_ep_tx_n[0]
+set_location_assignment PIN_BL47 -to pcie_ep_rx_p[0]
+set_location_assignment PIN_BL46 -to pcie_ep_rx_n[0]
+set_location_assignment PIN_BJ47 -to pcie_ep_tx_p[1]
+set_location_assignment PIN_BJ46 -to pcie_ep_tx_n[1]
+set_location_assignment PIN_BK49 -to pcie_ep_rx_p[1]
+set_location_assignment PIN_BK48 -to pcie_ep_rx_n[1]
+set_location_assignment PIN_BG47 -to pcie_ep_tx_p[2]
+set_location_assignment PIN_BG46 -to pcie_ep_tx_n[2]
+set_location_assignment PIN_BH49 -to pcie_ep_rx_p[2]
+set_location_assignment PIN_BH48 -to pcie_ep_rx_n[2]
+set_location_assignment PIN_BF45 -to pcie_ep_tx_p[3]
+set_location_assignment PIN_BF44 -to pcie_ep_tx_n[3]
+set_location_assignment PIN_BG51 -to pcie_ep_rx_p[3]
+set_location_assignment PIN_BG50 -to pcie_ep_rx_n[3]
+set_location_assignment PIN_BE47 -to pcie_ep_tx_p[4]
+set_location_assignment PIN_BE46 -to pcie_ep_tx_n[4]
+set_location_assignment PIN_BF49 -to pcie_ep_rx_p[4]
+set_location_assignment PIN_BF48 -to pcie_ep_rx_n[4]
+set_location_assignment PIN_BD45 -to pcie_ep_tx_p[5]
+set_location_assignment PIN_BD44 -to pcie_ep_tx_n[5]
+set_location_assignment PIN_BE51 -to pcie_ep_rx_p[5]
+set_location_assignment PIN_BE50 -to pcie_ep_rx_n[5]
+set_location_assignment PIN_BB45 -to pcie_ep_tx_p[6]
+set_location_assignment PIN_BB44 -to pcie_ep_tx_n[6]
+set_location_assignment PIN_BD49 -to pcie_ep_rx_p[6]
+set_location_assignment PIN_BD48 -to pcie_ep_rx_n[6]
+set_location_assignment PIN_BC47 -to pcie_ep_tx_p[7]
+set_location_assignment PIN_BC46 -to pcie_ep_tx_n[7]
+set_location_assignment PIN_BC51 -to pcie_ep_rx_p[7]
+set_location_assignment PIN_BC50 -to pcie_ep_rx_n[7]
+set_location_assignment PIN_BA47 -to pcie_ep_tx_p[8]
+set_location_assignment PIN_BA46 -to pcie_ep_tx_n[8]
+set_location_assignment PIN_BB49 -to pcie_ep_rx_p[8]
+set_location_assignment PIN_BB48 -to pcie_ep_rx_n[8]
+set_location_assignment PIN_AY45 -to pcie_ep_tx_p[9]
+set_location_assignment PIN_AY44 -to pcie_ep_tx_n[9]
+set_location_assignment PIN_BA51 -to pcie_ep_rx_p[9]
+set_location_assignment PIN_BA50 -to pcie_ep_rx_n[9]
+set_location_assignment PIN_AW47 -to pcie_ep_tx_p[10]
+set_location_assignment PIN_AW46 -to pcie_ep_tx_n[10]
+set_location_assignment PIN_AY49 -to pcie_ep_rx_p[10]
+set_location_assignment PIN_AY48 -to pcie_ep_rx_n[10]
+set_location_assignment PIN_AV45 -to pcie_ep_tx_p[11]
+set_location_assignment PIN_AV44 -to pcie_ep_tx_n[11]
+set_location_assignment PIN_AW51 -to pcie_ep_rx_p[11]
+set_location_assignment PIN_AW50 -to pcie_ep_rx_n[11]
+set_location_assignment PIN_AU47 -to pcie_ep_tx_p[12]
+set_location_assignment PIN_AU46 -to pcie_ep_tx_n[12]
+set_location_assignment PIN_AV49 -to pcie_ep_rx_p[12]
+set_location_assignment PIN_AV48 -to pcie_ep_rx_n[12]
+set_location_assignment PIN_AT45 -to pcie_ep_tx_p[13]
+set_location_assignment PIN_AT44 -to pcie_ep_tx_n[13]
+set_location_assignment PIN_AU51 -to pcie_ep_rx_p[13]
+set_location_assignment PIN_AU50 -to pcie_ep_rx_n[13]
+set_location_assignment PIN_AR47 -to pcie_ep_tx_p[14]
+set_location_assignment PIN_AR46 -to pcie_ep_tx_n[14]
+set_location_assignment PIN_AT49 -to pcie_ep_rx_p[14]
+set_location_assignment PIN_AT48 -to pcie_ep_rx_n[14]
+set_location_assignment PIN_AP45 -to pcie_ep_tx_p[15]
+set_location_assignment PIN_AP44 -to pcie_ep_tx_n[15]
+set_location_assignment PIN_AR51 -to pcie_ep_rx_p[15]
+set_location_assignment PIN_AR50 -to pcie_ep_rx_n[15]
+
+set_location_assignment PIN_AW43 -to refclk_pcie_ep_p
+set_location_assignment PIN_AW42 -to refclk_pcie_ep_n
+
+set_location_assignment PIN_AR43 -to refclk_pcie_ep_edge_p
+set_location_assignment PIN_AR42 -to refclk_pcie_ep_edge_n
+
+set_location_assignment PIN_BA43 -to refclk_pcie_ep1_p
+set_location_assignment PIN_BA42 -to refclk_pcie_ep1_n
+
+set_location_assignment PIN_BH16 -to pcie_ep_waken
+
+set_location_assignment PIN_AH39 -to s10_pcie_perstn0
+set_location_assignment PIN_BL10 -to s10_pcie_perstn1
+
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_ep_tx_p[0]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_ep_rx_p[0]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_ep_tx_p[1]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_ep_rx_p[1]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_ep_tx_p[2]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_ep_rx_p[2]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_ep_tx_p[3]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_ep_rx_p[3]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_ep_tx_p[4]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_ep_rx_p[4]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_ep_tx_p[5]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_ep_rx_p[5]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_ep_tx_p[6]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_ep_rx_p[6]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_ep_tx_p[7]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_ep_rx_p[7]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_ep_tx_p[8]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_ep_rx_p[8]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_ep_tx_p[9]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_ep_rx_p[9]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_ep_tx_p[10]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_ep_rx_p[10]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_ep_tx_p[11]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_ep_rx_p[11]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_ep_tx_p[12]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_ep_rx_p[12]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_ep_tx_p[13]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_ep_rx_p[13]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_ep_tx_p[14]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_ep_rx_p[14]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_ep_tx_p[15]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_ep_rx_p[15]
+
+set_instance_assignment -name IO_STANDARD "HCSL" -to refclk_pcie_ep_p
+set_instance_assignment -name IO_STANDARD "HCSL" -to refclk_pcie_ep_edge_p
+set_instance_assignment -name IO_STANDARD "HCSL" -to refclk_pcie_ep1_p
+
+set_instance_assignment -name IO_STANDARD "1.8 V" -to pcie_ep_waken
+set_instance_assignment -name IO_STANDARD "1.8 V" -to s10_pcie_perstn0
+set_instance_assignment -name IO_STANDARD "1.8 V" -to s10_pcie_perstn1
+
+# PCIe RP
+set_location_assignment PIN_BL5  -to pcie_rp_tx_p[0]
+set_location_assignment PIN_BL6  -to pcie_rp_tx_n[0]
+set_location_assignment PIN_BH7  -to pcie_rp_rx_p[0]
+set_location_assignment PIN_BH8  -to pcie_rp_rx_n[0]
+set_location_assignment PIN_BK3  -to pcie_rp_tx_p[1]
+set_location_assignment PIN_BK4  -to pcie_rp_tx_n[1]
+set_location_assignment PIN_BJ5  -to pcie_rp_rx_p[1]
+set_location_assignment PIN_BJ6  -to pcie_rp_rx_n[1]
+set_location_assignment PIN_BH3  -to pcie_rp_tx_p[2]
+set_location_assignment PIN_BH4  -to pcie_rp_tx_n[2]
+set_location_assignment PIN_BG6  -to pcie_rp_rx_n[2]
+set_location_assignment PIN_BG5  -to pcie_rp_rx_p[2]
+set_location_assignment PIN_BG1  -to pcie_rp_tx_p[3]
+set_location_assignment PIN_BG2  -to pcie_rp_tx_n[3]
+set_location_assignment PIN_BF8  -to pcie_rp_rx_n[3]
+set_location_assignment PIN_BF7  -to pcie_rp_rx_p[3]
+set_location_assignment PIN_BF3  -to pcie_rp_tx_p[4]
+set_location_assignment PIN_BF4  -to pcie_rp_tx_n[4]
+set_location_assignment PIN_BE6  -to pcie_rp_rx_n[4]
+set_location_assignment PIN_BE5  -to pcie_rp_rx_p[4]
+set_location_assignment PIN_BE1  -to pcie_rp_tx_p[5]
+set_location_assignment PIN_BE2  -to pcie_rp_tx_n[5]
+set_location_assignment PIN_BD8  -to pcie_rp_rx_n[5]
+set_location_assignment PIN_BD7  -to pcie_rp_rx_p[5]
+set_location_assignment PIN_BD3  -to pcie_rp_tx_p[6]
+set_location_assignment PIN_BD4  -to pcie_rp_tx_n[6]
+set_location_assignment PIN_BB8  -to pcie_rp_rx_n[6]
+set_location_assignment PIN_BB7  -to pcie_rp_rx_p[6]
+set_location_assignment PIN_BC1  -to pcie_rp_tx_p[7]
+set_location_assignment PIN_BC2  -to pcie_rp_tx_n[7]
+set_location_assignment PIN_BC5  -to pcie_rp_rx_p[7]
+set_location_assignment PIN_BC6  -to pcie_rp_rx_n[7]
+set_location_assignment PIN_BB3  -to pcie_rp_tx_p[8]
+set_location_assignment PIN_BB4  -to pcie_rp_tx_n[8]
+set_location_assignment PIN_BA5  -to pcie_rp_rx_p[8]
+set_location_assignment PIN_BA6  -to pcie_rp_rx_n[8]
+set_location_assignment PIN_BA1  -to pcie_rp_tx_p[9]
+set_location_assignment PIN_BA2  -to pcie_rp_tx_n[9]
+set_location_assignment PIN_AY7  -to pcie_rp_rx_p[9]
+set_location_assignment PIN_AY8  -to pcie_rp_rx_n[9]
+set_location_assignment PIN_AY3  -to pcie_rp_tx_p[10]
+set_location_assignment PIN_AY4  -to pcie_rp_tx_n[10]
+set_location_assignment PIN_AW5  -to pcie_rp_rx_p[10]
+set_location_assignment PIN_AW6  -to pcie_rp_rx_n[10]
+set_location_assignment PIN_AW1  -to pcie_rp_tx_p[11]
+set_location_assignment PIN_AW2  -to pcie_rp_tx_n[11]
+set_location_assignment PIN_AV7  -to pcie_rp_rx_p[11]
+set_location_assignment PIN_AV8  -to pcie_rp_rx_n[11]
+set_location_assignment PIN_AV3  -to pcie_rp_tx_p[12]
+set_location_assignment PIN_AV4  -to pcie_rp_tx_n[12]
+set_location_assignment PIN_AU5  -to pcie_rp_rx_p[12]
+set_location_assignment PIN_AU6  -to pcie_rp_rx_n[12]
+set_location_assignment PIN_AU1  -to pcie_rp_tx_p[13]
+set_location_assignment PIN_AU2  -to pcie_rp_tx_n[13]
+set_location_assignment PIN_AT7  -to pcie_rp_rx_p[13]
+set_location_assignment PIN_AT8  -to pcie_rp_rx_n[13]
+set_location_assignment PIN_AT3  -to pcie_rp_tx_p[14]
+set_location_assignment PIN_AT4  -to pcie_rp_tx_n[14]
+set_location_assignment PIN_AR5  -to pcie_rp_rx_p[14]
+set_location_assignment PIN_AR6  -to pcie_rp_rx_n[14]
+set_location_assignment PIN_AR1  -to pcie_rp_tx_p[15]
+set_location_assignment PIN_AR2  -to pcie_rp_tx_n[15]
+set_location_assignment PIN_AP7  -to pcie_rp_rx_p[15]
+set_location_assignment PIN_AP8  -to pcie_rp_rx_n[15]
+
+set_location_assignment PIN_AW9  -to refclk_pcie_rp_p
+set_location_assignment PIN_AW10 -to refclk_pcie_rp_n
+
+set_location_assignment PIN_BB17 -to pcie_rp_s10_perstn
+set_location_assignment PIN_BG15 -to pcie_rp_s10_waken
+set_location_assignment PIN_BG16 -to pcie_rp_s10_prsnt2n
+
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_rp_tx_p[0]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_rp_rx_p[0]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_rp_tx_p[1]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_rp_rx_p[1]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_rp_tx_p[2]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_rp_rx_p[2]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_rp_tx_p[3]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_rp_rx_p[3]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_rp_tx_p[4]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_rp_rx_p[4]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_rp_tx_p[5]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_rp_rx_p[5]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_rp_tx_p[6]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_rp_rx_p[6]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_rp_tx_p[7]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_rp_rx_p[7]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_rp_tx_p[8]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_rp_rx_p[8]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_rp_tx_p[9]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_rp_rx_p[9]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_rp_tx_p[10]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_rp_rx_p[10]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_rp_tx_p[11]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_rp_rx_p[11]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_rp_tx_p[12]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_rp_rx_p[12]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_rp_tx_p[13]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_rp_rx_p[13]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_rp_tx_p[14]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_rp_rx_p[14]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_rp_tx_p[15]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to pcie_rp_rx_p[15]
+
+set_instance_assignment -name IO_STANDARD "HCSL" -to refclk_pcie_rp_p
+
+set_instance_assignment -name IO_STANDARD "1.8 V" -to pcie_rp_s10_perstn
+set_instance_assignment -name IO_STANDARD "1.8 V" -to pcie_rp_s10_waken
+set_instance_assignment -name IO_STANDARD "1.8 V" -to pcie_rp_s10_prsnt2n
+
+# QSFP
+set_location_assignment PIN_AN51 -to qsfp0_tx_p[0]
+set_location_assignment PIN_AN50 -to qsfp0_tx_n[0]
+set_location_assignment PIN_AM45 -to qsfp0_rx_p[0]
+set_location_assignment PIN_AM44 -to qsfp0_rx_n[0]
+set_location_assignment PIN_AL51 -to qsfp0_tx_p[1]
+set_location_assignment PIN_AL50 -to qsfp0_tx_n[1]
+set_location_assignment PIN_AK45 -to qsfp0_rx_p[1]
+set_location_assignment PIN_AK44 -to qsfp0_rx_n[1]
+set_location_assignment PIN_AG51 -to qsfp0_tx_p[2]
+set_location_assignment PIN_AG50 -to qsfp0_tx_n[2]
+set_location_assignment PIN_AF45 -to qsfp0_rx_p[2]
+set_location_assignment PIN_AF44 -to qsfp0_rx_n[2]
+set_location_assignment PIN_AJ51 -to qsfp0_tx_p[3]
+set_location_assignment PIN_AJ50 -to qsfp0_tx_n[3]
+set_location_assignment PIN_AH45 -to qsfp0_rx_p[3]
+set_location_assignment PIN_AH44 -to qsfp0_rx_n[3]
+set_location_assignment PIN_AJ43 -to refclk_qsfp0_p
+set_location_assignment PIN_AJ42 -to refclk_qsfp0_n
+
+set_location_assignment PIN_AM3  -to qsfp1_tx_p[0]
+set_location_assignment PIN_AM4  -to qsfp1_tx_n[0]
+set_location_assignment PIN_AL5  -to qsfp1_rx_p[0]
+set_location_assignment PIN_AL6  -to qsfp1_rx_n[0]
+set_location_assignment PIN_AL1  -to qsfp1_tx_p[1]
+set_location_assignment PIN_AL2  -to qsfp1_tx_n[1]
+set_location_assignment PIN_AK7  -to qsfp1_rx_p[1]
+set_location_assignment PIN_AK8  -to qsfp1_rx_n[1]
+set_location_assignment PIN_AJ1  -to qsfp1_tx_p[2]
+set_location_assignment PIN_AJ2  -to qsfp1_tx_n[2]
+set_location_assignment PIN_AH7  -to qsfp1_rx_p[2]
+set_location_assignment PIN_AH8  -to qsfp1_rx_n[2]
+set_location_assignment PIN_AH3  -to qsfp1_tx_p[3]
+set_location_assignment PIN_AH4  -to qsfp1_tx_n[3]
+set_location_assignment PIN_AG5  -to qsfp1_rx_p[3]
+set_location_assignment PIN_AG6  -to qsfp1_rx_n[3]
+set_location_assignment PIN_AJ9  -to refclk_qsfp1_p
+set_location_assignment PIN_AJ10 -to refclk_qsfp1_n
+
+set_location_assignment PIN_AW17 -to qsfp0_modsel_l
+set_location_assignment PIN_AV16 -to qsfp0_reset_l
+set_location_assignment PIN_AW16 -to qsfp0_modprs_l
+set_location_assignment PIN_BC16 -to qsfp0_lpmode
+set_location_assignment PIN_BB16 -to qsfp0_int_l
+
+set_location_assignment PIN_BA17 -to qsfp1_modsel_l
+set_location_assignment PIN_AY16 -to qsfp1_reset_l
+set_location_assignment PIN_AY15 -to qsfp1_modprs_l
+set_location_assignment PIN_BE15 -to qsfp1_lpmode
+set_location_assignment PIN_BF15 -to qsfp1_int_l
+
+set_location_assignment PIN_BD16 -to qsfp_s10_i2c_sda
+set_location_assignment PIN_BJ16 -to qsfp_s10_i2c_scl
+
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to qsfp0_tx_p[0]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to qsfp0_rx_p[0]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to qsfp0_tx_p[1]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to qsfp0_rx_p[1]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to qsfp0_tx_p[2]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to qsfp0_rx_p[2]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to qsfp0_tx_p[3]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to qsfp0_rx_p[3]
+
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to qsfp1_tx_p[0]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to qsfp1_rx_p[0]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to qsfp1_tx_p[1]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to qsfp1_rx_p[1]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to qsfp1_tx_p[2]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to qsfp1_rx_p[2]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to qsfp1_tx_p[3]
+set_instance_assignment -name IO_STANDARD "HSSI DIFFERENTIAL I/O" -to qsfp1_rx_p[3]
+
+set_instance_assignment -name IO_STANDARD "1.8 V" -to qsfp0_modsel_l
+set_instance_assignment -name IO_STANDARD "1.8 V" -to qsfp0_reset_l
+set_instance_assignment -name IO_STANDARD "1.8 V" -to qsfp0_modprs_l
+set_instance_assignment -name IO_STANDARD "1.8 V" -to qsfp0_lpmode
+set_instance_assignment -name IO_STANDARD "1.8 V" -to qsfp0_int_l
+
+set_instance_assignment -name IO_STANDARD "1.8 V" -to qsfp1_modsel_l
+set_instance_assignment -name IO_STANDARD "1.8 V" -to qsfp1_reset_l
+set_instance_assignment -name IO_STANDARD "1.8 V" -to qsfp1_modprs_l
+set_instance_assignment -name IO_STANDARD "1.8 V" -to qsfp1_lpmode
+set_instance_assignment -name IO_STANDARD "1.8 V" -to qsfp1_int_l
+
+set_instance_assignment -name IO_STANDARD "1.8 V" -to qsfp_s10_i2c_sda
+set_instance_assignment -name IO_STANDARD "1.8 V" -to qsfp_s10_i2c_scl
+
+set_instance_assignment -name IO_STANDARD "Differential LVPECL" -to refclk_qsfp0_p
+set_instance_assignment -name IO_STANDARD "Differential LVPECL" -to refclk_qsfp1_p
+
+# DDR4 COMP
+set_location_assignment PIN_A40  -to ddr4_comp_rzq
+
+set_location_assignment PIN_A38  -to ddr4_comp_alert_n
+set_location_assignment PIN_F35  -to ddr4_comp_reset_n
+set_location_assignment PIN_A39  -to ddr4_comp_par
+
+set_location_assignment PIN_H34  -to ddr4_comp_a[0]
+set_location_assignment PIN_J34  -to ddr4_comp_a[1]
+set_location_assignment PIN_G35  -to ddr4_comp_a[2]
+set_location_assignment PIN_H35  -to ddr4_comp_a[3]
+set_location_assignment PIN_L35  -to ddr4_comp_a[4]
+set_location_assignment PIN_K35  -to ddr4_comp_a[5]
+set_location_assignment PIN_L34  -to ddr4_comp_a[6]
+set_location_assignment PIN_K34  -to ddr4_comp_a[7]
+set_location_assignment PIN_N34  -to ddr4_comp_a[8]
+set_location_assignment PIN_P34  -to ddr4_comp_a[9]
+set_location_assignment PIN_M35  -to ddr4_comp_a[10]
+set_location_assignment PIN_N35  -to ddr4_comp_a[11]
+set_location_assignment PIN_B40  -to ddr4_comp_a[12]
+set_location_assignment PIN_C39  -to ddr4_comp_a[13]
+set_location_assignment PIN_D39  -to ddr4_comp_a[14]
+set_location_assignment PIN_D38  -to ddr4_comp_a[15]
+set_location_assignment PIN_C38  -to ddr4_comp_a[16]
+set_location_assignment PIN_G37  -to ddr4_comp_bg[0]
+set_location_assignment PIN_F34  -to ddr4_comp_bg[1]
+set_location_assignment PIN_E35  -to ddr4_comp_act_n
+set_location_assignment PIN_C36  -to ddr4_comp_odt
+set_location_assignment PIN_B37  -to ddr4_comp_clk_p
+set_location_assignment PIN_B38  -to ddr4_comp_clk_n
+set_location_assignment PIN_E36  -to ddr4_comp_cs_n
+set_location_assignment PIN_B36  -to ddr4_comp_cke
+set_location_assignment PIN_D37  -to ddr4_comp_ba[0]
+set_location_assignment PIN_F37  -to ddr4_comp_ba[1]
+
+set_location_assignment PIN_R34  -to ddr4_comp_dbi_n[0]
+set_location_assignment PIN_J37  -to ddr4_comp_dbi_n[1]
+set_location_assignment PIN_K39  -to ddr4_comp_dbi_n[2]
+set_location_assignment PIN_F32  -to ddr4_comp_dbi_n[3]
+set_location_assignment PIN_P31  -to ddr4_comp_dbi_n[4]
+set_location_assignment PIN_N39  -to ddr4_comp_dbi_n[5]
+set_location_assignment PIN_C41  -to ddr4_comp_dbi_n[6]
+set_location_assignment PIN_M32  -to ddr4_comp_dbi_n[7]
+set_location_assignment PIN_A33  -to ddr4_comp_dbi_n[8]
+
+set_location_assignment PIN_M36  -to ddr4_comp_dqs_p[0]
+set_location_assignment PIN_N36  -to ddr4_comp_dqs_n[0]
+set_location_assignment PIN_H38  -to ddr4_comp_dqs_p[1]
+set_location_assignment PIN_J38  -to ddr4_comp_dqs_n[1]
+set_location_assignment PIN_E42  -to ddr4_comp_dqs_p[2]
+set_location_assignment PIN_F42  -to ddr4_comp_dqs_n[2]
+set_location_assignment PIN_D32  -to ddr4_comp_dqs_p[3]
+set_location_assignment PIN_E32  -to ddr4_comp_dqs_n[3]
+set_location_assignment PIN_M31  -to ddr4_comp_dqs_p[4]
+set_location_assignment PIN_N31  -to ddr4_comp_dqs_n[4]
+set_location_assignment PIN_U37  -to ddr4_comp_dqs_p[5]
+set_location_assignment PIN_T37  -to ddr4_comp_dqs_n[5]
+set_location_assignment PIN_E41  -to ddr4_comp_dqs_p[6]
+set_location_assignment PIN_E40  -to ddr4_comp_dqs_n[6]
+set_location_assignment PIN_G33  -to ddr4_comp_dqs_p[7]
+set_location_assignment PIN_F33  -to ddr4_comp_dqs_n[7]
+set_location_assignment PIN_B31  -to ddr4_comp_dqs_p[8]
+set_location_assignment PIN_A32  -to ddr4_comp_dqs_n[8]
+
+set_location_assignment PIN_K36  -to ddr4_comp_dq[0]
+set_location_assignment PIN_H36  -to ddr4_comp_dq[1]
+set_location_assignment PIN_P36  -to ddr4_comp_dq[2]
+set_location_assignment PIN_T35  -to ddr4_comp_dq[3]
+set_location_assignment PIN_J36  -to ddr4_comp_dq[4]
+set_location_assignment PIN_G36  -to ddr4_comp_dq[5]
+set_location_assignment PIN_R36  -to ddr4_comp_dq[6]
+set_location_assignment PIN_T34  -to ddr4_comp_dq[7]
+set_location_assignment PIN_K37  -to ddr4_comp_dq[8]
+set_location_assignment PIN_G38  -to ddr4_comp_dq[9]
+set_location_assignment PIN_M37  -to ddr4_comp_dq[10]
+set_location_assignment PIN_P38  -to ddr4_comp_dq[11]
+set_location_assignment PIN_L37  -to ddr4_comp_dq[12]
+set_location_assignment PIN_P37  -to ddr4_comp_dq[13]
+set_location_assignment PIN_N38  -to ddr4_comp_dq[14]
+set_location_assignment PIN_R37  -to ddr4_comp_dq[15]
+set_location_assignment PIN_G42  -to ddr4_comp_dq[16]
+set_location_assignment PIN_J39  -to ddr4_comp_dq[17]
+set_location_assignment PIN_H42  -to ddr4_comp_dq[18]
+set_location_assignment PIN_G40  -to ddr4_comp_dq[19]
+set_location_assignment PIN_H41  -to ddr4_comp_dq[20]
+set_location_assignment PIN_L39  -to ddr4_comp_dq[21]
+set_location_assignment PIN_H40  -to ddr4_comp_dq[22]
+set_location_assignment PIN_G41  -to ddr4_comp_dq[23]
+set_location_assignment PIN_B32  -to ddr4_comp_dq[24]
+set_location_assignment PIN_G32  -to ddr4_comp_dq[25]
+set_location_assignment PIN_C33  -to ddr4_comp_dq[26]
+set_location_assignment PIN_J31  -to ddr4_comp_dq[27]
+set_location_assignment PIN_B33  -to ddr4_comp_dq[28]
+set_location_assignment PIN_H31  -to ddr4_comp_dq[29]
+set_location_assignment PIN_D33  -to ddr4_comp_dq[30]
+set_location_assignment PIN_K31  -to ddr4_comp_dq[31]
+set_location_assignment PIN_M33  -to ddr4_comp_dq[32]
+set_location_assignment PIN_R31  -to ddr4_comp_dq[33]
+set_location_assignment PIN_N33  -to ddr4_comp_dq[34]
+set_location_assignment PIN_R32  -to ddr4_comp_dq[35]
+set_location_assignment PIN_L33  -to ddr4_comp_dq[36]
+set_location_assignment PIN_T32  -to ddr4_comp_dq[37]
+set_location_assignment PIN_P33  -to ddr4_comp_dq[38]
+set_location_assignment PIN_T33  -to ddr4_comp_dq[39]
+set_location_assignment PIN_P39  -to ddr4_comp_dq[40]
+set_location_assignment PIN_T39  -to ddr4_comp_dq[41]
+set_location_assignment PIN_T38  -to ddr4_comp_dq[42]
+set_location_assignment PIN_V39  -to ddr4_comp_dq[43]
+set_location_assignment PIN_M38  -to ddr4_comp_dq[44]
+set_location_assignment PIN_V38  -to ddr4_comp_dq[45]
+set_location_assignment PIN_U38  -to ddr4_comp_dq[46]
+set_location_assignment PIN_W39  -to ddr4_comp_dq[47]
+set_location_assignment PIN_C40  -to ddr4_comp_dq[48]
+set_location_assignment PIN_E39  -to ddr4_comp_dq[49]
+set_location_assignment PIN_B42  -to ddr4_comp_dq[50]
+set_location_assignment PIN_F39  -to ddr4_comp_dq[51]
+set_location_assignment PIN_D41  -to ddr4_comp_dq[52]
+set_location_assignment PIN_F38  -to ddr4_comp_dq[53]
+set_location_assignment PIN_D42  -to ddr4_comp_dq[54]
+set_location_assignment PIN_F40  -to ddr4_comp_dq[55]
+set_location_assignment PIN_C34  -to ddr4_comp_dq[56]
+set_location_assignment PIN_H33  -to ddr4_comp_dq[57]
+set_location_assignment PIN_D34  -to ddr4_comp_dq[58]
+set_location_assignment PIN_J32  -to ddr4_comp_dq[59]
+set_location_assignment PIN_C35  -to ddr4_comp_dq[60]
+set_location_assignment PIN_J33  -to ddr4_comp_dq[61]
+set_location_assignment PIN_E34  -to ddr4_comp_dq[62]
+set_location_assignment PIN_L32  -to ddr4_comp_dq[63]
+set_location_assignment PIN_C31  -to ddr4_comp_dq[64]
+set_location_assignment PIN_C30  -to ddr4_comp_dq[65]
+set_location_assignment PIN_A34  -to ddr4_comp_dq[66]
+set_location_assignment PIN_A30  -to ddr4_comp_dq[67]
+set_location_assignment PIN_D31  -to ddr4_comp_dq[68]
+set_location_assignment PIN_E31  -to ddr4_comp_dq[69]
+set_location_assignment PIN_B35  -to ddr4_comp_dq[70]
+set_location_assignment PIN_B30  -to ddr4_comp_dq[71]
+
+# DDR4 DIMM CH0
+set_location_assignment PIN_B17  -to ddr4_dimm_rzq
+
+set_location_assignment PIN_M30  -to ddr4_dimm_event_n
+set_location_assignment PIN_F30  -to ddr4_dimm_save_n
+set_location_assignment PIN_C21  -to ddr4_dimm_alert_n
+set_location_assignment PIN_P17  -to ddr4_dimm_reset_n
+set_location_assignment PIN_H18  -to ddr4_dimm_par
+
+set_location_assignment PIN_J19  -to ddr4_dimm_a[0]
+set_location_assignment PIN_H19  -to ddr4_dimm_a[1]
+set_location_assignment PIN_L19  -to ddr4_dimm_a[2]
+set_location_assignment PIN_K19  -to ddr4_dimm_a[3]
+set_location_assignment PIN_G18  -to ddr4_dimm_a[4]
+set_location_assignment PIN_F18  -to ddr4_dimm_a[5]
+set_location_assignment PIN_G17  -to ddr4_dimm_a[6]
+set_location_assignment PIN_F17  -to ddr4_dimm_a[7]
+set_location_assignment PIN_E17  -to ddr4_dimm_a[8]
+set_location_assignment PIN_E16  -to ddr4_dimm_a[9]
+set_location_assignment PIN_D17  -to ddr4_dimm_a[10]
+set_location_assignment PIN_D18  -to ddr4_dimm_a[11]
+set_location_assignment PIN_A17  -to ddr4_dimm_a[12]
+set_location_assignment PIN_E19  -to ddr4_dimm_a[13]
+set_location_assignment PIN_F19  -to ddr4_dimm_a[14]
+set_location_assignment PIN_C19  -to ddr4_dimm_a[15]
+set_location_assignment PIN_D19  -to ddr4_dimm_a[16]
+set_location_assignment PIN_A20  -to ddr4_dimm_a[17]
+set_location_assignment PIN_A19  -to ddr4_dimm_bg[0]
+set_location_assignment PIN_R17  -to ddr4_dimm_bg[1]
+set_location_assignment PIN_N18  -to ddr4_dimm_act_n
+set_location_assignment PIN_M18  -to ddr4_dimm_odt[0]
+set_location_assignment PIN_L18  -to ddr4_dimm_odt[1]
+set_location_assignment PIN_K17  -to ddr4_dimm_ck_p[0]
+set_location_assignment PIN_J17  -to ddr4_dimm_ck_n[0]
+set_location_assignment PIN_D22  -to ddr4_dimm_ck_p[1]
+set_location_assignment PIN_E22  -to ddr4_dimm_ck_n[1]
+set_location_assignment PIN_P18  -to ddr4_dimm_cs_n[0]
+set_location_assignment PIN_J18  -to ddr4_dimm_cs_n[1]
+set_location_assignment PIN_E20  -to ddr4_dimm_cs_n[2]
+set_location_assignment PIN_F20  -to ddr4_dimm_cs_n[3]
+set_location_assignment PIN_G20  -to ddr4_dimm_c2
+set_location_assignment PIN_M17  -to ddr4_dimm_cke[0]
+set_location_assignment PIN_L17  -to ddr4_dimm_cke[1]
+set_location_assignment PIN_B20  -to ddr4_dimm_ba[0]
+set_location_assignment PIN_A18  -to ddr4_dimm_ba[1]
+
+set_location_assignment PIN_L14  -to ddr4_dimm_dqs_p[0]
+set_location_assignment PIN_K14  -to ddr4_dimm_dqs_n[0]
+set_location_assignment PIN_M15  -to ddr4_dimm_dqs_p[1]
+set_location_assignment PIN_N15  -to ddr4_dimm_dqs_n[1]
+set_location_assignment PIN_L20  -to ddr4_dimm_dqs_p[2]
+set_location_assignment PIN_K20  -to ddr4_dimm_dqs_n[2]
+set_location_assignment PIN_E10  -to ddr4_dimm_dqs_p[3]
+set_location_assignment PIN_E11  -to ddr4_dimm_dqs_n[3]
+set_location_assignment PIN_A14  -to ddr4_dimm_dqs_p[4]
+set_location_assignment PIN_A15  -to ddr4_dimm_dqs_n[4]
+set_location_assignment PIN_F27  -to ddr4_dimm_dqs_p[5]
+set_location_assignment PIN_E27  -to ddr4_dimm_dqs_n[5]
+set_location_assignment PIN_D24  -to ddr4_dimm_dqs_p[6]
+set_location_assignment PIN_C24  -to ddr4_dimm_dqs_n[6]
+set_location_assignment PIN_B22  -to ddr4_dimm_dqs_p[7]
+set_location_assignment PIN_B21  -to ddr4_dimm_dqs_n[7]
+set_location_assignment PIN_B12  -to ddr4_dimm_dqs_p[8]
+set_location_assignment PIN_B11  -to ddr4_dimm_dqs_n[8]
+set_location_assignment PIN_F13  -to ddr4_dimm_dqs_p[9]
+set_location_assignment PIN_F14  -to ddr4_dimm_dqs_n[9]
+set_location_assignment PIN_J16  -to ddr4_dimm_dqs_p[10]
+set_location_assignment PIN_K16  -to ddr4_dimm_dqs_n[10]
+set_location_assignment PIN_N19  -to ddr4_dimm_dqs_p[11]
+set_location_assignment PIN_P19  -to ddr4_dimm_dqs_n[11]
+set_location_assignment PIN_C10  -to ddr4_dimm_dqs_p[12]
+set_location_assignment PIN_B10  -to ddr4_dimm_dqs_n[12]
+set_location_assignment PIN_B15  -to ddr4_dimm_dqs_p[13]
+set_location_assignment PIN_B16  -to ddr4_dimm_dqs_n[13]
+set_location_assignment PIN_J26  -to ddr4_dimm_dqs_p[14]
+set_location_assignment PIN_H26  -to ddr4_dimm_dqs_n[14]
+set_location_assignment PIN_J24  -to ddr4_dimm_dqs_p[15]
+set_location_assignment PIN_H24  -to ddr4_dimm_dqs_n[15]
+set_location_assignment PIN_G23  -to ddr4_dimm_dqs_p[16]
+set_location_assignment PIN_F23  -to ddr4_dimm_dqs_n[16]
+set_location_assignment PIN_D14  -to ddr4_dimm_dqs_p[17]
+set_location_assignment PIN_E14  -to ddr4_dimm_dqs_n[17]
+
+set_location_assignment PIN_T14  -to ddr4_dimm_dq[0]
+set_location_assignment PIN_R14  -to ddr4_dimm_dq[1]
+set_location_assignment PIN_N14  -to ddr4_dimm_dq[2]
+set_location_assignment PIN_H14  -to ddr4_dimm_dq[3]
+set_location_assignment PIN_T15  -to ddr4_dimm_dq[4]
+set_location_assignment PIN_R15  -to ddr4_dimm_dq[5]
+set_location_assignment PIN_P14  -to ddr4_dimm_dq[6]
+set_location_assignment PIN_J14  -to ddr4_dimm_dq[7]
+set_location_assignment PIN_N16  -to ddr4_dimm_dq[8]
+set_location_assignment PIN_M16  -to ddr4_dimm_dq[9]
+set_location_assignment PIN_H16  -to ddr4_dimm_dq[10]
+set_location_assignment PIN_G16  -to ddr4_dimm_dq[11]
+set_location_assignment PIN_R16  -to ddr4_dimm_dq[12]
+set_location_assignment PIN_P16  -to ddr4_dimm_dq[13]
+set_location_assignment PIN_L15  -to ddr4_dimm_dq[14]
+set_location_assignment PIN_K15  -to ddr4_dimm_dq[15]
+set_location_assignment PIN_K21  -to ddr4_dimm_dq[16]
+set_location_assignment PIN_J22  -to ddr4_dimm_dq[17]
+set_location_assignment PIN_M20  -to ddr4_dimm_dq[18]
+set_location_assignment PIN_K22  -to ddr4_dimm_dq[19]
+set_location_assignment PIN_J23  -to ddr4_dimm_dq[20]
+set_location_assignment PIN_H23  -to ddr4_dimm_dq[21]
+set_location_assignment PIN_N20  -to ddr4_dimm_dq[22]
+set_location_assignment PIN_J21  -to ddr4_dimm_dq[23]
+set_location_assignment PIN_H10  -to ddr4_dimm_dq[24]
+set_location_assignment PIN_A10  -to ddr4_dimm_dq[25]
+set_location_assignment PIN_G10  -to ddr4_dimm_dq[26]
+set_location_assignment PIN_C11  -to ddr4_dimm_dq[27]
+set_location_assignment PIN_F10  -to ddr4_dimm_dq[28]
+set_location_assignment PIN_A9   -to ddr4_dimm_dq[29]
+set_location_assignment PIN_H11  -to ddr4_dimm_dq[30]
+set_location_assignment PIN_D11  -to ddr4_dimm_dq[31]
+set_location_assignment PIN_C14  -to ddr4_dimm_dq[32]
+set_location_assignment PIN_C16  -to ddr4_dimm_dq[33]
+set_location_assignment PIN_F15  -to ddr4_dimm_dq[34]
+set_location_assignment PIN_E15  -to ddr4_dimm_dq[35]
+set_location_assignment PIN_G15  -to ddr4_dimm_dq[36]
+set_location_assignment PIN_C15  -to ddr4_dimm_dq[37]
+set_location_assignment PIN_D16  -to ddr4_dimm_dq[38]
+set_location_assignment PIN_H15  -to ddr4_dimm_dq[39]
+set_location_assignment PIN_C26  -to ddr4_dimm_dq[40]
+set_location_assignment PIN_C25  -to ddr4_dimm_dq[41]
+set_location_assignment PIN_B27  -to ddr4_dimm_dq[42]
+set_location_assignment PIN_G26  -to ddr4_dimm_dq[43]
+set_location_assignment PIN_E26  -to ddr4_dimm_dq[44]
+set_location_assignment PIN_D26  -to ddr4_dimm_dq[45]
+set_location_assignment PIN_B26  -to ddr4_dimm_dq[46]
+set_location_assignment PIN_G27  -to ddr4_dimm_dq[47]
+set_location_assignment PIN_B25  -to ddr4_dimm_dq[48]
+set_location_assignment PIN_F24  -to ddr4_dimm_dq[49]
+set_location_assignment PIN_F25  -to ddr4_dimm_dq[50]
+set_location_assignment PIN_H25  -to ddr4_dimm_dq[51]
+set_location_assignment PIN_A25  -to ddr4_dimm_dq[52]
+set_location_assignment PIN_E24  -to ddr4_dimm_dq[53]
+set_location_assignment PIN_E25  -to ddr4_dimm_dq[54]
+set_location_assignment PIN_G25  -to ddr4_dimm_dq[55]
+set_location_assignment PIN_A22  -to ddr4_dimm_dq[56]
+set_location_assignment PIN_F22  -to ddr4_dimm_dq[57]
+set_location_assignment PIN_A24  -to ddr4_dimm_dq[58]
+set_location_assignment PIN_B23  -to ddr4_dimm_dq[59]
+set_location_assignment PIN_C23  -to ddr4_dimm_dq[60]
+set_location_assignment PIN_G22  -to ddr4_dimm_dq[61]
+set_location_assignment PIN_A23  -to ddr4_dimm_dq[62]
+set_location_assignment PIN_D23  -to ddr4_dimm_dq[63]
+set_location_assignment PIN_D12  -to ddr4_dimm_dq[64]
+set_location_assignment PIN_E12  -to ddr4_dimm_dq[65]
+set_location_assignment PIN_A12  -to ddr4_dimm_dq[66]
+set_location_assignment PIN_A13  -to ddr4_dimm_dq[67]
+set_location_assignment PIN_D13  -to ddr4_dimm_dq[68]
+set_location_assignment PIN_F12  -to ddr4_dimm_dq[69]
+set_location_assignment PIN_C13  -to ddr4_dimm_dq[70]
+set_location_assignment PIN_B13  -to ddr4_dimm_dq[71]
