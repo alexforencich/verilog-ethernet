@@ -57,7 +57,7 @@ source ../lib/eth/lib/axis/syn/quartus_pro/axis_async_fifo.sdc
 # clocking infrastructure
 constrain_sync_reset_inst "sync_reset_100mhz_inst"
 
-# PHY RX clocks
+# PHY clocks
 set_clock_groups -asynchronous -group [ get_clocks {qsfp0_eth_xcvr_phy_quad|eth_xcvr_phy_1|eth_xcvr_inst|tx_clkout|ch0} ]
 set_clock_groups -asynchronous -group [ get_clocks {qsfp0_eth_xcvr_phy_quad|eth_xcvr_phy_1|eth_xcvr_inst|rx_clkout|ch0} ]
 set_clock_groups -asynchronous -group [ get_clocks {qsfp0_eth_xcvr_phy_quad|eth_xcvr_phy_2|eth_xcvr_inst|tx_clkout|ch0} ]
