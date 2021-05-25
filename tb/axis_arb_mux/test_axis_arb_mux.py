@@ -33,7 +33,7 @@ import pytest
 
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import RisingEdge
+from cocotb.triggers import RisingEdge, Event
 from cocotb.regression import TestFactory
 
 from cocotbext.axi import AxiStreamBus, AxiStreamFrame, AxiStreamSource, AxiStreamSink
@@ -113,6 +113,56 @@ async def run_test(dut, payload_lengths=None, payload_data=None, idle_inserter=N
     await RisingEdge(dut.clk)
 
 
+async def run_arb_test(dut):
+
+    tb = TB(dut)
+
+    byte_lanes = tb.source[0].byte_lanes
+    id_count = 2**len(tb.source[0].bus.tid)
+
+    cur_id = 1
+
+    await tb.reset()
+
+    test_frames = []
+
+    length = byte_lanes*16
+    test_data = bytearray(itertools.islice(itertools.cycle(range(256)), length))
+
+    for k in range(5):
+        test_frame = AxiStreamFrame(test_data, tx_complete=Event())
+        test_frame.tid = cur_id
+
+        if k == 0:
+            test_frame.tdest = 0
+        elif k == 4:
+            await test_frames[1].tx_complete.wait()
+            for j in range(8):
+                await RisingEdge(dut.clk)
+            test_frame.tdest = 0
+        else:
+            test_frame.tdest = 1
+
+        test_frames.append(test_frame)
+        await tb.source[test_frame.tdest].send(test_frame)
+
+        cur_id = (cur_id + 1) % id_count
+
+    for k in [0, 1, 2, 4, 3]:
+        test_frame = test_frames[k]
+        rx_frame = await tb.sink.recv()
+
+        assert rx_frame.tdata == test_frame.tdata
+        assert rx_frame.tid == test_frame.tid
+        assert rx_frame.tdest == test_frame.tdest
+        assert not rx_frame.tuser
+
+    assert tb.sink.empty()
+
+    await RisingEdge(dut.clk)
+    await RisingEdge(dut.clk)
+
+
 def cycle_pause():
     return itertools.cycle([1, 1, 1, 0])
 
@@ -138,6 +188,10 @@ if cocotb.SIM_NAME:
     factory.add_option("backpressure_inserter", [None, cycle_pause])
     factory.add_option("port", list(range(ports)))
     factory.generate_tests()
+
+    if ports > 1:
+        factory = TestFactory(run_arb_test)
+        factory.generate_tests()
 
 
 # cocotb-test
