@@ -26,6 +26,7 @@ THE SOFTWARE.
 import itertools
 import logging
 import os
+import random
 import subprocess
 
 import cocotb_test.simulator
@@ -163,6 +164,58 @@ async def run_arb_test(dut):
     await RisingEdge(dut.clk)
 
 
+async def run_stress_test(dut, idle_inserter=None, backpressure_inserter=None):
+
+    tb = TB(dut)
+
+    byte_lanes = tb.source[0].byte_lanes
+    id_count = 2**len(tb.source[0].bus.tid)
+
+    cur_id = 1
+
+    await tb.reset()
+
+    tb.set_idle_generator(idle_inserter)
+    tb.set_backpressure_generator(backpressure_inserter)
+
+    test_frames = [list() for x in tb.source]
+
+    for p in range(len(tb.source)):
+        for k in range(128):
+            length = random.randint(1, byte_lanes*16)
+            test_data = bytearray(itertools.islice(itertools.cycle(range(256)), length))
+            test_frame = AxiStreamFrame(test_data)
+            test_frame.tid = p
+            test_frame.tdest = cur_id
+
+            test_frames[p].append(test_frame)
+            await tb.source[p].send(test_frame)
+
+            cur_id = (cur_id + 1) % id_count
+
+    while any(test_frames):
+        rx_frame = await tb.sink.recv()
+
+        test_frame = None
+
+        for lst in test_frames:
+            if lst and lst[0].tid == rx_frame.tid:
+                test_frame = lst.pop(0)
+                break
+
+        assert test_frame is not None
+
+        assert rx_frame.tdata == test_frame.tdata
+        assert rx_frame.tid == test_frame.tid
+        assert rx_frame.tdest == test_frame.tdest
+        assert not rx_frame.tuser
+
+    assert tb.sink.empty()
+
+    await RisingEdge(dut.clk)
+    await RisingEdge(dut.clk)
+
+
 def cycle_pause():
     return itertools.cycle([1, 1, 1, 0])
 
@@ -192,6 +245,11 @@ if cocotb.SIM_NAME:
     if ports > 1:
         factory = TestFactory(run_arb_test)
         factory.generate_tests()
+
+    factory = TestFactory(run_stress_test)
+    factory.add_option("idle_inserter", [None, cycle_pause])
+    factory.add_option("backpressure_inserter", [None, cycle_pause])
+    factory.generate_tests()
 
 
 # cocotb-test
