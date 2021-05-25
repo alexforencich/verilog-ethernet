@@ -114,6 +114,27 @@ async def run_test(dut, payload_lengths=None, payload_data=None, idle_inserter=N
     await RisingEdge(dut.clk)
 
 
+async def run_test_tuser_assert(dut, port=0):
+
+    tb = TB(dut)
+
+    await tb.reset()
+
+    test_data = bytearray(itertools.islice(itertools.cycle(range(256)), 32))
+    test_frame = AxiStreamFrame(test_data, tuser=1)
+    await tb.source[port].send(test_frame)
+
+    rx_frame = await tb.sink.recv()
+
+    assert rx_frame.tdata == test_data
+    assert rx_frame.tuser
+
+    assert tb.sink.empty()
+
+    await RisingEdge(dut.clk)
+    await RisingEdge(dut.clk)
+
+
 async def run_arb_test(dut):
 
     tb = TB(dut)
@@ -241,6 +262,11 @@ if cocotb.SIM_NAME:
     factory.add_option("backpressure_inserter", [None, cycle_pause])
     factory.add_option("port", list(range(ports)))
     factory.generate_tests()
+
+    for test in [run_test_tuser_assert]:
+        factory = TestFactory(test)
+        factory.add_option("port", list(range(ports)))
+        factory.generate_tests()
 
     if ports > 1:
         factory = TestFactory(run_arb_test)
