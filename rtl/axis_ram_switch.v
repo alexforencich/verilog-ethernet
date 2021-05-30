@@ -184,8 +184,18 @@ initial begin
 
     if (M_BASE == 0) begin
         // M_BASE is zero, route with tdest as port index
+        $display("Addressing configuration for axis_switch instance %m");
+        for (i = 0; i < M_COUNT; i = i + 1) begin
+            $display("%d: %08x-%08x (connect mask %b)", i, i << (DEST_WIDTH-CL_M_COUNT), ((i+1) << (DEST_WIDTH-CL_M_COUNT))-1, M_CONNECT[i*S_COUNT +: S_COUNT]);
+        end
+
     end else if (M_TOP == 0) begin
         // M_TOP is zero, assume equal to M_BASE
+        $display("Addressing configuration for axis_switch instance %m");
+        for (i = 0; i < M_COUNT; i = i + 1) begin
+            $display("%d: %08x (connect mask %b)", i, M_BASE[i*DEST_WIDTH +: DEST_WIDTH], M_CONNECT[i*S_COUNT +: S_COUNT]);
+        end
+
         for (i = 0; i < M_COUNT; i = i + 1) begin
             for (j = i+1; j < M_COUNT; j = j + 1) begin
                 if (M_BASE[i*DEST_WIDTH +: DEST_WIDTH] == M_BASE[j*DEST_WIDTH +: DEST_WIDTH]) begin
@@ -197,6 +207,11 @@ initial begin
             end
         end
     end else begin
+        $display("Addressing configuration for axis_switch instance %m");
+        for (i = 0; i < M_COUNT; i = i + 1) begin
+            $display("%d: %08x-%08x (connect mask %b)", i, M_BASE[i*DEST_WIDTH +: DEST_WIDTH], M_TOP[i*DEST_WIDTH +: DEST_WIDTH], M_CONNECT[i*S_COUNT +: S_COUNT]);
+        end
+
         for (i = 0; i < M_COUNT; i = i + 1) begin
             if (M_BASE[i*DEST_WIDTH +: DEST_WIDTH] > M_TOP[i*DEST_WIDTH +: DEST_WIDTH]) begin
                 $error("Error: invalid range (instance %m)");
