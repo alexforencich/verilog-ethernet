@@ -664,7 +664,7 @@ generate
                             cmd_table_start_addr_end = wr_ptr_cur_reg + 1;
                             cmd_table_start_len = len_reg;
                             cmd_table_start_select = select_reg;
-                            cmd_table_start_tkeep = S_KEEP_ENABLE ? port_axis_tkeep : 1'b1;
+                            cmd_table_start_tkeep = port_axis_tkeep;
                             cmd_table_start_tid = port_axis_tid;
                             cmd_table_start_tdest = port_axis_tdest;
                             cmd_table_start_tuser = port_axis_tuser;
