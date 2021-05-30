@@ -182,17 +182,24 @@ generate
             drop_next = drop_reg && !(int_s_axis_tvalid[m] && int_s_axis_tready[m] && int_s_axis_tlast[m]);
             select_valid_next = select_valid_reg && !(int_s_axis_tvalid[m] && int_s_axis_tready[m] && int_s_axis_tlast[m]);
 
-            if (int_s_axis_tvalid[m] && !select_valid_reg) begin
-                select_next = 1'b0;
+            if (int_s_axis_tvalid[m] && !select_valid_reg && !drop_reg) begin
+                select_next = 0;
                 select_valid_next = 1'b0;
                 drop_next = 1'b1;
                 for (k = 0; k < M_COUNT; k = k + 1) begin
                     if (M_BASE == 0) begin
-                        // M_BASE is zero, route with $clog2(M_COUNT) MSBs of tdest as port index
-                        if (int_s_axis_tdest[m*DEST_WIDTH+(DEST_WIDTH-CL_M_COUNT) +: CL_M_COUNT] == k && (M_CONNECT & (1 << (m+k*S_COUNT)))) begin
-                            select_next = k;
+                        if (M_COUNT == 1) begin
+                            // M_BASE is zero with only one output port, ignore tdest
+                            select_next = 0;
                             select_valid_next = 1'b1;
                             drop_next = 1'b0;
+                        end else begin
+                            // M_BASE is zero, route with $clog2(M_COUNT) MSBs of tdest as port index
+                            if (int_s_axis_tdest[m*DEST_WIDTH+(DEST_WIDTH-CL_M_COUNT) +: CL_M_COUNT] == k && (M_CONNECT & (1 << (m+k*S_COUNT)))) begin
+                                select_next = k;
+                                select_valid_next = 1'b1;
+                                drop_next = 1'b0;
+                            end
                         end
                     end else if (M_TOP == 0) begin
                         // M_TOP is zero, assume equal to M_BASE
