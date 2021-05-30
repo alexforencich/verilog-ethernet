@@ -86,7 +86,7 @@ module {{name}} #
     parameter ID_WIDTH = 8,
     // tdest signal width
     // must be wide enough to uniquely address outputs
-    parameter DEST_WIDTH = {{cm}},
+    parameter DEST_WIDTH = {{cn}},
     // Propagate tuser signal
     parameter USER_ENABLE = 1,
     // tuser signal width
@@ -145,11 +145,11 @@ module {{name}} #
 );
 
 // parameter sizing helpers
-function [31:0] w_32(input [31:0] val);
-    w_32 = val;
+function [DEST_WIDTH-1:0] w_dw(input [DEST_WIDTH-1:0] val);
+    w_dw = val;
 endfunction
 
-function [S_COUNT-1:0] w_s(input [S_COUNT-1:0] val);
+function [{{m-1}}:0] w_s(input [{{m-1}}:0] val);
     w_s = val;
 endfunction
 
@@ -164,8 +164,8 @@ axis_switch #(
     .DEST_WIDTH(DEST_WIDTH),
     .USER_ENABLE(USER_ENABLE),
     .USER_WIDTH(USER_WIDTH),
-    .M_BASE({ {% for p in range(n-1,-1,-1) %}w_32(M{{'%02d'%p}}_BASE){% if not loop.last %}, {% endif %}{% endfor %} }),
-    .M_TOP({ {% for p in range(n-1,-1,-1) %}w_32(M{{'%02d'%p}}_TOP){% if not loop.last %}, {% endif %}{% endfor %} }),
+    .M_BASE({ {% for p in range(n-1,-1,-1) %}w_dw(M{{'%02d'%p}}_BASE){% if not loop.last %}, {% endif %}{% endfor %} }),
+    .M_TOP({ {% for p in range(n-1,-1,-1) %}w_dw(M{{'%02d'%p}}_TOP){% if not loop.last %}, {% endif %}{% endfor %} }),
     .M_CONNECT({ {% for p in range(n-1,-1,-1) %}w_s(M{{'%02d'%p}}_CONNECT){% if not loop.last %}, {% endif %}{% endfor %} }),
     .S_REG_TYPE(S_REG_TYPE),
     .M_REG_TYPE(M_REG_TYPE),
