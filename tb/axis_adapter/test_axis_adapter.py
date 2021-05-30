@@ -178,7 +178,7 @@ def cycle_pause():
 
 
 def size_list():
-    data_width = max(int(os.getenv("PARAM_S_DATA_WIDTH")), int(os.getenv("PARAM_M_DATA_WIDTH")))
+    data_width = max(len(cocotb.top.s_axis_tdata), len(cocotb.top.m_axis_tdata))
     byte_width = data_width // 8
     return list(range(1, byte_width*4+1))+[512]+[1]*64
 

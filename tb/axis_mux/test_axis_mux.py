@@ -43,7 +43,7 @@ class TB(object):
     def __init__(self, dut):
         self.dut = dut
 
-        ports = int(os.getenv("PORTS"))
+        ports = len(dut.axis_mux_inst.s_axis_tvalid)
 
         self.log = logging.getLogger("cocotb.tb")
         self.log.setLevel(logging.DEBUG)
@@ -159,7 +159,7 @@ def incrementing_payload(length):
 
 if cocotb.SIM_NAME:
 
-    ports = int(os.getenv("PORTS"))
+    ports = len(cocotb.top.axis_mux_inst.s_axis_tvalid)
 
     factory = TestFactory(run_test)
     factory.add_option("payload_lengths", [size_list])

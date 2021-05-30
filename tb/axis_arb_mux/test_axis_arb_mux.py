@@ -44,7 +44,7 @@ class TB(object):
     def __init__(self, dut):
         self.dut = dut
 
-        ports = int(os.getenv("PARAM_PORTS"))
+        ports = len(dut.axis_arb_mux_inst.s_axis_tvalid)
 
         self.log = logging.getLogger("cocotb.tb")
         self.log.setLevel(logging.DEBUG)
@@ -242,7 +242,7 @@ def cycle_pause():
 
 
 def size_list():
-    data_width = int(os.getenv("PARAM_DATA_WIDTH"))
+    data_width = len(cocotb.top.s00_axis_tdata)
     byte_width = data_width // 8
     return list(range(1, byte_width*4+1))+[512]+[1]*64
 
@@ -253,7 +253,7 @@ def incrementing_payload(length):
 
 if cocotb.SIM_NAME:
 
-    ports = int(os.getenv("PARAM_PORTS"))
+    ports = len(cocotb.top.axis_arb_mux_inst.s_axis_tvalid)
 
     factory = TestFactory(run_test)
     factory.add_option("payload_lengths", [size_list])
