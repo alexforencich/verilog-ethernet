@@ -769,7 +769,7 @@ generate
 
             if (cmd_table_finish_en) begin
                 cmd_table_finish_ptr_reg <= cmd_table_finish_ptr_reg + 1;
-                cmd_table_active[cmd_table_finish_ptr_reg[CMD_ADDR_WIDTH-1:0]] <= 1'b1;
+                cmd_table_active[cmd_table_finish_ptr_reg[CMD_ADDR_WIDTH-1:0]] <= 1'b0;
             end
 
             if (rst) begin
