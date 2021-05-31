@@ -691,7 +691,7 @@ generate
 
             // read
             cmd_valid_next = cmd_valid_reg & ~port_cmd_ready;
-            if (!cmd_valid_reg && cmd_table_active[cmd_table_read_ptr_reg[CMD_ADDR_WIDTH-1:0]] && cmd_table_read_ptr_reg != cmd_table_start_ptr_reg) begin
+            if (!cmd_valid_reg && cmd_table_active[cmd_table_read_ptr_reg[CMD_ADDR_WIDTH-1:0]] && cmd_table_read_ptr_reg != cmd_table_start_ptr_reg && (!ram_wr_en_reg || ram_wr_ack)) begin
                 cmd_table_read_en = 1'b1;
                 cmd_addr_next = cmd_table_addr_start[cmd_table_read_ptr_reg[CMD_ADDR_WIDTH-1:0]];
                 cmd_len_next = cmd_table_len[cmd_table_read_ptr_reg[CMD_ADDR_WIDTH-1:0]];
