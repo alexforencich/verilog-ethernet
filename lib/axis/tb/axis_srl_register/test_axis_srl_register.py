@@ -26,6 +26,7 @@ THE SOFTWARE.
 import itertools
 import logging
 import os
+import random
 
 import cocotb_test.simulator
 import pytest
@@ -109,6 +110,69 @@ async def run_test(dut, payload_lengths=None, payload_data=None, idle_inserter=N
     await RisingEdge(dut.clk)
 
 
+async def run_test_tuser_assert(dut):
+
+    tb = TB(dut)
+
+    await tb.reset()
+
+    test_data = bytearray(itertools.islice(itertools.cycle(range(256)), 32))
+    test_frame = AxiStreamFrame(test_data, tuser=1)
+    await tb.source.send(test_frame)
+
+    rx_frame = await tb.sink.recv()
+
+    assert rx_frame.tdata == test_data
+    assert rx_frame.tuser
+
+    assert tb.sink.empty()
+
+    await RisingEdge(dut.clk)
+    await RisingEdge(dut.clk)
+
+
+async def run_stress_test(dut, idle_inserter=None, backpressure_inserter=None):
+
+    tb = TB(dut)
+
+    byte_lanes = tb.source.byte_lanes
+    id_count = 2**len(tb.source.bus.tid)
+
+    cur_id = 1
+
+    await tb.reset()
+
+    tb.set_idle_generator(idle_inserter)
+    tb.set_backpressure_generator(backpressure_inserter)
+
+    test_frames = []
+
+    for k in range(128):
+        length = random.randint(1, byte_lanes*16)
+        test_data = bytearray(itertools.islice(itertools.cycle(range(256)), length))
+        test_frame = AxiStreamFrame(test_data)
+        test_frame.tid = cur_id
+        test_frame.tdest = cur_id
+
+        test_frames.append(test_frame)
+        await tb.source.send(test_frame)
+
+        cur_id = (cur_id + 1) % id_count
+
+    for test_frame in test_frames:
+        rx_frame = await tb.sink.recv()
+
+        assert rx_frame.tdata == test_frame.tdata
+        assert rx_frame.tid == test_frame.tid
+        assert rx_frame.tdest == test_frame.tdest
+        assert not rx_frame.tuser
+
+    assert tb.sink.empty()
+
+    await RisingEdge(dut.clk)
+    await RisingEdge(dut.clk)
+
+
 def cycle_pause():
     return itertools.cycle([1, 1, 1, 0])
 
@@ -128,6 +192,15 @@ if cocotb.SIM_NAME:
     factory = TestFactory(run_test)
     factory.add_option("payload_lengths", [size_list])
     factory.add_option("payload_data", [incrementing_payload])
+    factory.add_option("idle_inserter", [None, cycle_pause])
+    factory.add_option("backpressure_inserter", [None, cycle_pause])
+    factory.generate_tests()
+
+    for test in [run_test_tuser_assert]:
+        factory = TestFactory(test)
+        factory.generate_tests()
+
+    factory = TestFactory(run_stress_test)
     factory.add_option("idle_inserter", [None, cycle_pause])
     factory.add_option("backpressure_inserter", [None, cycle_pause])
     factory.generate_tests()

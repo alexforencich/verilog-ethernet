@@ -43,7 +43,7 @@ class TB(object):
     def __init__(self, dut):
         self.dut = dut
 
-        ports = int(os.getenv("PORTS"))
+        ports = len(dut.axis_mux_inst.s_axis_tvalid)
 
         self.log = logging.getLogger("cocotb.tb")
         self.log.setLevel(logging.DEBUG)
@@ -119,6 +119,30 @@ async def run_test(dut, payload_lengths=None, payload_data=None, idle_inserter=N
     await RisingEdge(dut.clk)
 
 
+async def run_test_tuser_assert(dut, port=0):
+
+    tb = TB(dut)
+
+    await tb.reset()
+
+    dut.enable.setimmediatevalue(1)
+    dut.select.setimmediatevalue(port)
+
+    test_data = bytearray(itertools.islice(itertools.cycle(range(256)), 32))
+    test_frame = AxiStreamFrame(test_data, tuser=1)
+    await tb.source[port].send(test_frame)
+
+    rx_frame = await tb.sink.recv()
+
+    assert rx_frame.tdata == test_data
+    assert rx_frame.tuser
+
+    assert tb.sink.empty()
+
+    await RisingEdge(dut.clk)
+    await RisingEdge(dut.clk)
+
+
 def cycle_pause():
     return itertools.cycle([1, 1, 1, 0])
 
@@ -135,7 +159,7 @@ def incrementing_payload(length):
 
 if cocotb.SIM_NAME:
 
-    ports = int(os.getenv("PORTS"))
+    ports = len(cocotb.top.axis_mux_inst.s_axis_tvalid)
 
     factory = TestFactory(run_test)
     factory.add_option("payload_lengths", [size_list])
@@ -144,6 +168,11 @@ if cocotb.SIM_NAME:
     factory.add_option("backpressure_inserter", [None, cycle_pause])
     factory.add_option("port", list(range(ports)))
     factory.generate_tests()
+
+    for test in [run_test_tuser_assert]:
+        factory = TestFactory(test)
+        factory.add_option("port", list(range(ports)))
+        factory.generate_tests()
 
 
 # cocotb-test

@@ -119,8 +119,18 @@ initial begin
 
     if (M_BASE == 0) begin
         // M_BASE is zero, route with tdest as port index
+        $display("Addressing configuration for axis_switch instance %m");
+        for (i = 0; i < M_COUNT; i = i + 1) begin
+            $display("%d: %08x-%08x (connect mask %b)", i, i << (DEST_WIDTH-CL_M_COUNT), ((i+1) << (DEST_WIDTH-CL_M_COUNT))-1, M_CONNECT[i*S_COUNT +: S_COUNT]);
+        end
+
     end else if (M_TOP == 0) begin
         // M_TOP is zero, assume equal to M_BASE
+        $display("Addressing configuration for axis_switch instance %m");
+        for (i = 0; i < M_COUNT; i = i + 1) begin
+            $display("%d: %08x (connect mask %b)", i, M_BASE[i*DEST_WIDTH +: DEST_WIDTH], M_CONNECT[i*S_COUNT +: S_COUNT]);
+        end
+
         for (i = 0; i < M_COUNT; i = i + 1) begin
             for (j = i+1; j < M_COUNT; j = j + 1) begin
                 if (M_BASE[i*DEST_WIDTH +: DEST_WIDTH] == M_BASE[j*DEST_WIDTH +: DEST_WIDTH]) begin
@@ -132,6 +142,11 @@ initial begin
             end
         end
     end else begin
+        $display("Addressing configuration for axis_switch instance %m");
+        for (i = 0; i < M_COUNT; i = i + 1) begin
+            $display("%d: %08x-%08x (connect mask %b)", i, M_BASE[i*DEST_WIDTH +: DEST_WIDTH], M_TOP[i*DEST_WIDTH +: DEST_WIDTH], M_CONNECT[i*S_COUNT +: S_COUNT]);
+        end
+
         for (i = 0; i < M_COUNT; i = i + 1) begin
             if (M_BASE[i*DEST_WIDTH +: DEST_WIDTH] > M_TOP[i*DEST_WIDTH +: DEST_WIDTH]) begin
                 $error("Error: invalid range (instance %m)");
@@ -182,17 +197,24 @@ generate
             drop_next = drop_reg && !(int_s_axis_tvalid[m] && int_s_axis_tready[m] && int_s_axis_tlast[m]);
             select_valid_next = select_valid_reg && !(int_s_axis_tvalid[m] && int_s_axis_tready[m] && int_s_axis_tlast[m]);
 
-            if (int_s_axis_tvalid[m] && !select_valid_reg) begin
-                select_next = 1'b0;
+            if (int_s_axis_tvalid[m] && !select_valid_reg && !drop_reg) begin
+                select_next = 0;
                 select_valid_next = 1'b0;
                 drop_next = 1'b1;
                 for (k = 0; k < M_COUNT; k = k + 1) begin
                     if (M_BASE == 0) begin
-                        // M_BASE is zero, route with $clog2(M_COUNT) MSBs of tdest as port index
-                        if (int_s_axis_tdest[m*DEST_WIDTH+(DEST_WIDTH-CL_M_COUNT) +: CL_M_COUNT] == k && (M_CONNECT & (1 << (m+k*S_COUNT)))) begin
-                            select_next = k;
+                        if (M_COUNT == 1) begin
+                            // M_BASE is zero with only one output port, ignore tdest
+                            select_next = 0;
                             select_valid_next = 1'b1;
                             drop_next = 1'b0;
+                        end else begin
+                            // M_BASE is zero, route with $clog2(M_COUNT) MSBs of tdest as port index
+                            if (int_s_axis_tdest[m*DEST_WIDTH+(DEST_WIDTH-CL_M_COUNT) +: CL_M_COUNT] == k && (M_CONNECT & (1 << (m+k*S_COUNT)))) begin
+                                select_next = k;
+                                select_valid_next = 1'b1;
+                                drop_next = 1'b0;
+                            end
                         end
                     end else if (M_TOP == 0) begin
                         // M_TOP is zero, assume equal to M_BASE

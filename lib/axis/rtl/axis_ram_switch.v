@@ -184,8 +184,18 @@ initial begin
 
     if (M_BASE == 0) begin
         // M_BASE is zero, route with tdest as port index
+        $display("Addressing configuration for axis_switch instance %m");
+        for (i = 0; i < M_COUNT; i = i + 1) begin
+            $display("%d: %08x-%08x (connect mask %b)", i, i << (DEST_WIDTH-CL_M_COUNT), ((i+1) << (DEST_WIDTH-CL_M_COUNT))-1, M_CONNECT[i*S_COUNT +: S_COUNT]);
+        end
+
     end else if (M_TOP == 0) begin
         // M_TOP is zero, assume equal to M_BASE
+        $display("Addressing configuration for axis_switch instance %m");
+        for (i = 0; i < M_COUNT; i = i + 1) begin
+            $display("%d: %08x (connect mask %b)", i, M_BASE[i*DEST_WIDTH +: DEST_WIDTH], M_CONNECT[i*S_COUNT +: S_COUNT]);
+        end
+
         for (i = 0; i < M_COUNT; i = i + 1) begin
             for (j = i+1; j < M_COUNT; j = j + 1) begin
                 if (M_BASE[i*DEST_WIDTH +: DEST_WIDTH] == M_BASE[j*DEST_WIDTH +: DEST_WIDTH]) begin
@@ -197,6 +207,11 @@ initial begin
             end
         end
     end else begin
+        $display("Addressing configuration for axis_switch instance %m");
+        for (i = 0; i < M_COUNT; i = i + 1) begin
+            $display("%d: %08x-%08x (connect mask %b)", i, M_BASE[i*DEST_WIDTH +: DEST_WIDTH], M_TOP[i*DEST_WIDTH +: DEST_WIDTH], M_CONNECT[i*S_COUNT +: S_COUNT]);
+        end
+
         for (i = 0; i < M_COUNT; i = i + 1) begin
             if (M_BASE[i*DEST_WIDTH +: DEST_WIDTH] > M_TOP[i*DEST_WIDTH +: DEST_WIDTH]) begin
                 $error("Error: invalid range (instance %m)");
@@ -413,16 +428,23 @@ generate
             select_valid_next = select_valid_reg && !(port_axis_tvalid && port_axis_tready && port_axis_tlast);
 
             if (port_axis_tvalid && !select_valid_reg && !drop_reg) begin
-                select_next = 1'b0;
+                select_next = 0;
                 select_valid_next = 1'b0;
                 drop_next = 1'b1;
                 for (k = 0; k < M_COUNT; k = k + 1) begin
                     if (M_BASE == 0) begin
-                        // M_BASE is zero, route with $clog2(M_COUNT) MSBs of tdest as port index
-                        if (port_axis_tdest[DEST_WIDTH-CL_M_COUNT +: CL_M_COUNT] == k && (M_CONNECT & (1 << (m+k*S_COUNT)))) begin
-                            select_next = k;
+                        if (M_COUNT == 1) begin
+                            // M_BASE is zero with only one output port, ignore tdest
+                            select_next = 0;
                             select_valid_next = 1'b1;
                             drop_next = 1'b0;
+                        end else begin
+                            // M_BASE is zero, route with $clog2(M_COUNT) MSBs of tdest as port index
+                            if (port_axis_tdest[DEST_WIDTH-CL_M_COUNT +: CL_M_COUNT] == k && (M_CONNECT & (1 << (m+k*S_COUNT)))) begin
+                                select_next = k;
+                                select_valid_next = 1'b1;
+                                drop_next = 1'b0;
+                            end
                         end
                     end else if (M_TOP == 0) begin
                         // M_TOP is zero, assume equal to M_BASE
@@ -657,7 +679,7 @@ generate
                             cmd_table_start_addr_end = wr_ptr_cur_reg + 1;
                             cmd_table_start_len = len_reg;
                             cmd_table_start_select = select_reg;
-                            cmd_table_start_tkeep = S_KEEP_ENABLE ? port_axis_tkeep : 1'b1;
+                            cmd_table_start_tkeep = port_axis_tkeep;
                             cmd_table_start_tid = port_axis_tid;
                             cmd_table_start_tdest = port_axis_tdest;
                             cmd_table_start_tuser = port_axis_tuser;
@@ -669,7 +691,7 @@ generate
 
             // read
             cmd_valid_next = cmd_valid_reg & ~port_cmd_ready;
-            if (!cmd_valid_reg && cmd_table_active[cmd_table_read_ptr_reg[CMD_ADDR_WIDTH-1:0]] && cmd_table_read_ptr_reg != cmd_table_start_ptr_reg) begin
+            if (!cmd_valid_reg && cmd_table_active[cmd_table_read_ptr_reg[CMD_ADDR_WIDTH-1:0]] && cmd_table_read_ptr_reg != cmd_table_start_ptr_reg && (!ram_wr_en_reg || ram_wr_ack)) begin
                 cmd_table_read_en = 1'b1;
                 cmd_addr_next = cmd_table_addr_start[cmd_table_read_ptr_reg[CMD_ADDR_WIDTH-1:0]];
                 cmd_len_next = cmd_table_len[cmd_table_read_ptr_reg[CMD_ADDR_WIDTH-1:0]];
@@ -747,7 +769,7 @@ generate
 
             if (cmd_table_finish_en) begin
                 cmd_table_finish_ptr_reg <= cmd_table_finish_ptr_reg + 1;
-                cmd_table_active[cmd_table_finish_ptr_reg[CMD_ADDR_WIDTH-1:0]] <= 1'b1;
+                cmd_table_active[cmd_table_finish_ptr_reg[CMD_ADDR_WIDTH-1:0]] <= 1'b0;
             end
 
             if (rst) begin
