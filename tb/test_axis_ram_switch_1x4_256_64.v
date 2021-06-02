@@ -54,8 +54,8 @@ parameter DROP_WHEN_FULL = 0;
 parameter M_BASE = {3'd3, 3'd2, 3'd1, 3'd0};
 parameter M_TOP = {3'd3, 3'd2, 3'd1, 3'd0};
 parameter M_CONNECT = {M_COUNT{{S_COUNT{1'b1}}}};
-parameter ARB_TYPE = "ROUND_ROBIN";
-parameter LSB_PRIORITY = "HIGH";
+parameter ARB_TYPE_ROUND_ROBIN = 1;
+parameter ARB_LSB_HIGH_PRIORITY = 1;
 parameter RAM_PIPELINE = 2;
 
 // Inputs
@@ -142,8 +142,8 @@ axis_ram_switch #(
     .M_BASE(M_BASE),
     .M_TOP(M_TOP),
     .M_CONNECT(M_CONNECT),
-    .ARB_TYPE(ARB_TYPE),
-    .LSB_PRIORITY(LSB_PRIORITY),
+    .ARB_TYPE_ROUND_ROBIN(ARB_TYPE_ROUND_ROBIN),
+    .ARB_LSB_HIGH_PRIORITY(ARB_LSB_HIGH_PRIORITY),
     .RAM_PIPELINE(RAM_PIPELINE)
 )
 UUT (

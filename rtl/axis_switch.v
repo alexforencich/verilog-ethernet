@@ -71,10 +71,10 @@ module axis_switch #
     // Output interface register type
     // 0 to bypass, 1 for simple buffer, 2 for skid buffer
     parameter M_REG_TYPE = 2,
-    // arbitration type: "PRIORITY" or "ROUND_ROBIN"
-    parameter ARB_TYPE = "ROUND_ROBIN",
-    // LSB priority: "LOW", "HIGH"
-    parameter LSB_PRIORITY = "HIGH"
+    // select round robin arbitration
+    parameter ARB_TYPE_ROUND_ROBIN = 1,
+    // LSB priority selection
+    parameter ARB_LSB_HIGH_PRIORITY = 1
 )
 (
     input  wire                   clk,
@@ -298,9 +298,10 @@ generate
 
         arbiter #(
             .PORTS(S_COUNT),
-            .TYPE(ARB_TYPE),
-            .BLOCK("ACKNOWLEDGE"),
-            .LSB_PRIORITY(LSB_PRIORITY)
+            .ARB_TYPE_ROUND_ROBIN(ARB_TYPE_ROUND_ROBIN),
+            .ARB_BLOCK(1),
+            .ARB_BLOCK_ACK(1),
+            .ARB_LSB_HIGH_PRIORITY(ARB_LSB_HIGH_PRIORITY)
         )
         arb_inst (
             .clk(clk),

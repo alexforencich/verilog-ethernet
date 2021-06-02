@@ -43,8 +43,10 @@ def bench():
 
     # Parameters
     PORTS = 32
-    TYPE = "ROUND_ROBIN"
-    BLOCK = "REQUEST"
+    ARB_TYPE_ROUND_ROBIN = 1
+    ARB_BLOCK = 1
+    ARB_BLOCK_ACK = 0
+    ARB_LSB_HIGH_PRIORITY = 0
 
     # Inputs
     clk = Signal(bool(0))

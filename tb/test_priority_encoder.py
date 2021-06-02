@@ -42,6 +42,7 @@ def bench():
 
     # Parameters
     WIDTH = 32
+    LSB_HIGH_PRIORITY = 0
 
     # Inputs
     clk = Signal(bool(0))

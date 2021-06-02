@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014-2018 Alex Forencich
+Copyright (c) 2014-2021 Alex Forencich
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -32,8 +32,8 @@ THE SOFTWARE.
 module priority_encoder #
 (
     parameter WIDTH = 4,
-    // LSB priority: "LOW", "HIGH"
-    parameter LSB_PRIORITY = "LOW"
+    // LSB priority selection
+    parameter LSB_HIGH_PRIORITY = 0
 )
 (
     input  wire [WIDTH-1:0]         input_unencoded,
@@ -57,10 +57,12 @@ generate
     // process input bits; generate valid bit and encoded bit for each pair
     for (n = 0; n < W/2; n = n + 1) begin : loop_in
         assign stage_valid[0][n] = |input_padded[n*2+1:n*2];
-        if (LSB_PRIORITY == "LOW") begin
-            assign stage_enc[0][n] = input_padded[n*2+1];
-        end else begin
+        if (LSB_HIGH_PRIORITY) begin
+            // bit 0 is highest priority
             assign stage_enc[0][n] = !input_padded[n*2+0];
+        end else begin
+            // bit 0 is lowest priority
+            assign stage_enc[0][n] = input_padded[n*2+1];
         end
     end
 
@@ -68,10 +70,12 @@ generate
     for (l = 1; l < LEVELS; l = l + 1) begin : loop_levels
         for (n = 0; n < W/(2*2**l); n = n + 1) begin : loop_compress
             assign stage_valid[l][n] = |stage_valid[l-1][n*2+1:n*2];
-            if (LSB_PRIORITY == "LOW") begin
-                assign stage_enc[l][(n+1)*(l+1)-1:n*(l+1)] = stage_valid[l-1][n*2+1] ? {1'b1, stage_enc[l-1][(n*2+2)*l-1:(n*2+1)*l]} : {1'b0, stage_enc[l-1][(n*2+1)*l-1:(n*2+0)*l]};
-            end else begin
+            if (LSB_HIGH_PRIORITY) begin
+                // bit 0 is highest priority
                 assign stage_enc[l][(n+1)*(l+1)-1:n*(l+1)] = stage_valid[l-1][n*2+0] ? {1'b0, stage_enc[l-1][(n*2+1)*l-1:(n*2+0)*l]} : {1'b1, stage_enc[l-1][(n*2+2)*l-1:(n*2+1)*l]};
+            end else begin
+                // bit 0 is lowest priority
+                assign stage_enc[l][(n+1)*(l+1)-1:n*(l+1)] = stage_valid[l-1][n*2+1] ? {1'b1, stage_enc[l-1][(n*2+2)*l-1:(n*2+1)*l]} : {1'b0, stage_enc[l-1][(n*2+1)*l-1:(n*2+0)*l]};
             end
         end
     end

@@ -61,8 +61,8 @@ def bench():
     M_CONNECT = [0b1111]*M_COUNT
     S_REG_TYPE = 0
     M_REG_TYPE = 2
-    ARB_TYPE = "ROUND_ROBIN"
-    LSB_PRIORITY = "HIGH"
+    ARB_TYPE_ROUND_ROBIN = 1
+    ARB_LSB_HIGH_PRIORITY = 1
 
     # Inputs
     clk = Signal(bool(0))

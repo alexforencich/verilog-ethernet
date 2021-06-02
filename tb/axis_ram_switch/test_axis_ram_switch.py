@@ -343,6 +343,8 @@ def test_axis_ram_switch(request, s_count, m_count, s_data_width, m_data_width):
     parameters['USER_BAD_FRAME_MASK'] = 1
     parameters['DROP_BAD_FRAME'] = 0
     parameters['DROP_WHEN_FULL'] = 0
+    parameters['ARB_TYPE_ROUND_ROBIN'] = 1
+    parameters['ARB_LSB_HIGH_PRIORITY'] = 1
     parameters['RAM_PIPELINE'] = 2
 
     extra_env = {f'PARAM_{k}': str(v) for k, v in parameters.items()}

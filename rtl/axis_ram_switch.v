@@ -90,10 +90,10 @@ module axis_ram_switch #
     // Interface connection control
     // M_COUNT concatenated fields of S_COUNT bits
     parameter M_CONNECT = {M_COUNT{{S_COUNT{1'b1}}}},
-    // arbitration type: "PRIORITY" or "ROUND_ROBIN"
-    parameter ARB_TYPE = "ROUND_ROBIN",
-    // LSB priority: "LOW", "HIGH"
-    parameter LSB_PRIORITY = "HIGH",
+    // select round robin arbitration
+    parameter ARB_TYPE_ROUND_ROBIN = 1,
+    // LSB priority selection
+    parameter ARB_LSB_HIGH_PRIORITY = 1,
     // RAM read data output pipeline stages
     parameter RAM_PIPELINE = 2
 )
@@ -263,9 +263,9 @@ if (S_COUNT > 1) begin
 
     arbiter #(
         .PORTS(S_COUNT),
-        .TYPE("ROUND_ROBIN"),
-        .BLOCK("NONE"),
-        .LSB_PRIORITY("HIGH")
+        .ARB_TYPE_ROUND_ROBIN(1),
+        .ARB_BLOCK(0),
+        .ARB_LSB_HIGH_PRIORITY(1)
     )
     ram_write_arb_inst (
         .clk(clk),
@@ -299,9 +299,9 @@ if (M_COUNT > 1) begin
 
     arbiter #(
         .PORTS(M_COUNT),
-        .TYPE("ROUND_ROBIN"),
-        .BLOCK("NONE"),
-        .LSB_PRIORITY("HIGH")
+        .ARB_TYPE_ROUND_ROBIN(1),
+        .ARB_BLOCK(0),
+        .ARB_LSB_HIGH_PRIORITY(1)
     )
     ram_read_arb_inst (
         .clk(clk),
@@ -483,9 +483,10 @@ generate
 
         arbiter #(
             .PORTS(M_COUNT),
-            .TYPE(ARB_TYPE),
-            .BLOCK("ACKNOWLEDGE"),
-            .LSB_PRIORITY(LSB_PRIORITY)
+            .ARB_TYPE_ROUND_ROBIN(ARB_TYPE_ROUND_ROBIN),
+            .ARB_BLOCK(1),
+            .ARB_BLOCK_ACK(1),
+            .ARB_LSB_HIGH_PRIORITY(ARB_LSB_HIGH_PRIORITY)
         )
         cmd_status_arb_inst (
             .clk(clk),
@@ -802,9 +803,10 @@ generate
 
         arbiter #(
             .PORTS(S_COUNT),
-            .TYPE(ARB_TYPE),
-            .BLOCK("ACKNOWLEDGE"),
-            .LSB_PRIORITY(LSB_PRIORITY)
+            .ARB_TYPE_ROUND_ROBIN(ARB_TYPE_ROUND_ROBIN),
+            .ARB_BLOCK(1),
+            .ARB_BLOCK_ACK(1),
+            .ARB_LSB_HIGH_PRIORITY(ARB_LSB_HIGH_PRIORITY)
         )
         cmd_arb_inst (
             .clk(clk),

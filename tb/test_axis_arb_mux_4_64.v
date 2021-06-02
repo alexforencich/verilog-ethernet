@@ -42,8 +42,8 @@ parameter DEST_ENABLE = 1;
 parameter DEST_WIDTH = 8;
 parameter USER_ENABLE = 1;
 parameter USER_WIDTH = 1;
-parameter ARB_TYPE = "PRIORITY";
-parameter LSB_PRIORITY = "HIGH";
+parameter ARB_TYPE_ROUND_ROBIN = 0;
+parameter ARB_LSB_HIGH_PRIORITY = 1;
 
 // Inputs
 reg clk = 0;
@@ -113,8 +113,8 @@ axis_arb_mux #(
     .DEST_WIDTH(DEST_WIDTH),
     .USER_ENABLE(USER_ENABLE),
     .USER_WIDTH(USER_WIDTH),
-    .ARB_TYPE(ARB_TYPE),
-    .LSB_PRIORITY(LSB_PRIORITY)
+    .ARB_TYPE_ROUND_ROBIN(ARB_TYPE_ROUND_ROBIN),
+    .ARB_LSB_HIGH_PRIORITY(ARB_LSB_HIGH_PRIORITY)
 )
 UUT (
     .clk(clk),

@@ -33,8 +33,10 @@ module test_arbiter;
 
 // Parameters
 localparam PORTS = 32;
-localparam TYPE = "PRIORITY";
-localparam BLOCK = "REQUEST";
+localparam ARB_TYPE_ROUND_ROBIN = 0;
+localparam ARB_BLOCK = 1;
+localparam ARB_BLOCK_ACK = 0;
+localparam ARB_LSB_HIGH_PRIORITY = 0;
 
 // Inputs
 reg clk = 0;
@@ -71,8 +73,10 @@ end
 
 arbiter #(
     .PORTS(PORTS),
-    .TYPE(TYPE),
-    .BLOCK(BLOCK)
+    .ARB_TYPE_ROUND_ROBIN(ARB_TYPE_ROUND_ROBIN),
+    .ARB_BLOCK(ARB_BLOCK),
+    .ARB_BLOCK_ACK(ARB_BLOCK_ACK),
+    .ARB_LSB_HIGH_PRIORITY(ARB_LSB_HIGH_PRIORITY)
 )
 UUT (
     .clk(clk),
