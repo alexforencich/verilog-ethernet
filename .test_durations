@@ -1,678 +1,702 @@
 [
   [
     "tb/axis_adapter/test_axis_adapter.py::test_axis_register[16-16]",
-    8.593190127052367
+    8.483941189013422
   ],
   [
     "tb/axis_adapter/test_axis_adapter.py::test_axis_register[16-32]",
-    12.195417289622128
+    12.183435856364667
   ],
   [
     "tb/axis_adapter/test_axis_adapter.py::test_axis_register[16-8]",
-    9.789422770030797
+    15.273643580265343
   ],
   [
     "tb/axis_adapter/test_axis_adapter.py::test_axis_register[32-16]",
-    12.671152506023645
+    12.149231696501374
   ],
   [
     "tb/axis_adapter/test_axis_adapter.py::test_axis_register[32-32]",
-    7.9916584407910705
+    8.356878926046193
   ],
   [
     "tb/axis_adapter/test_axis_adapter.py::test_axis_register[32-8]",
-    18.75230613257736
+    20.09698907379061
   ],
   [
     "tb/axis_adapter/test_axis_adapter.py::test_axis_register[8-16]",
-    12.944865978322923
+    14.036654611118138
   ],
   [
     "tb/axis_adapter/test_axis_adapter.py::test_axis_register[8-32]",
-    14.129353470169008
+    20.72295395191759
   ],
   [
     "tb/axis_adapter/test_axis_adapter.py::test_axis_register[8-8]",
-    9.817764451727271
+    9.67024243157357
   ],
   [
-    "tb/axis_arb_mux/test_axis_arb_mux.py::test_axis_arb_mux[1-16]",
-    8.91946775931865
+    "tb/axis_arb_mux/test_axis_arb_mux.py::test_axis_arb_mux[1-16-0]",
+    8.80191641394049
   ],
   [
-    "tb/axis_arb_mux/test_axis_arb_mux.py::test_axis_arb_mux[1-32]",
-    8.098858617246151
+    "tb/axis_arb_mux/test_axis_arb_mux.py::test_axis_arb_mux[1-16-1]",
+    8.888714388012886
   ],
   [
-    "tb/axis_arb_mux/test_axis_arb_mux.py::test_axis_arb_mux[1-8]",
-    9.076799966394901
+    "tb/axis_arb_mux/test_axis_arb_mux.py::test_axis_arb_mux[1-32-0]",
+    8.136447852477431
   ],
   [
-    "tb/axis_arb_mux/test_axis_arb_mux.py::test_axis_arb_mux[4-16]",
-    41.119202432222664
+    "tb/axis_arb_mux/test_axis_arb_mux.py::test_axis_arb_mux[1-32-1]",
+    8.479219575412571
   ],
   [
-    "tb/axis_arb_mux/test_axis_arb_mux.py::test_axis_arb_mux[4-32]",
-    39.96406711637974
+    "tb/axis_arb_mux/test_axis_arb_mux.py::test_axis_arb_mux[1-8-0]",
+    9.372539699077606
   ],
   [
-    "tb/axis_arb_mux/test_axis_arb_mux.py::test_axis_arb_mux[4-8]",
-    48.189331891946495
+    "tb/axis_arb_mux/test_axis_arb_mux.py::test_axis_arb_mux[1-8-1]",
+    9.620848827064037
+  ],
+  [
+    "tb/axis_arb_mux/test_axis_arb_mux.py::test_axis_arb_mux[4-16-0]",
+    41.3716892702505
+  ],
+  [
+    "tb/axis_arb_mux/test_axis_arb_mux.py::test_axis_arb_mux[4-16-1]",
+    20.9912348985672
+  ],
+  [
+    "tb/axis_arb_mux/test_axis_arb_mux.py::test_axis_arb_mux[4-32-0]",
+    38.763809450902045
+  ],
+  [
+    "tb/axis_arb_mux/test_axis_arb_mux.py::test_axis_arb_mux[4-32-1]",
+    39.00887794140726
+  ],
+  [
+    "tb/axis_arb_mux/test_axis_arb_mux.py::test_axis_arb_mux[4-8-0]",
+    47.790937554091215
+  ],
+  [
+    "tb/axis_arb_mux/test_axis_arb_mux.py::test_axis_arb_mux[4-8-1]",
+    49.57062931638211
   ],
   [
     "tb/axis_async_fifo/test_axis_async_fifo.py::test_axis_async_fifo[16-0]",
-    11.827675406821072
+    15.43954882118851
   ],
   [
     "tb/axis_async_fifo/test_axis_async_fifo.py::test_axis_async_fifo[16-1]",
-    16.27723410911858
+    11.91048608161509
   ],
   [
     "tb/axis_async_fifo/test_axis_async_fifo.py::test_axis_async_fifo[32-0]",
-    12.823232500813901
+    13.242155662737787
   ],
   [
     "tb/axis_async_fifo/test_axis_async_fifo.py::test_axis_async_fifo[32-1]",
-    16.625567510724068
+    13.464628098532557
   ],
   [
     "tb/axis_async_fifo/test_axis_async_fifo.py::test_axis_async_fifo[64-0]",
-    14.016773122362792
+    7.071359728462994
   ],
   [
     "tb/axis_async_fifo/test_axis_async_fifo.py::test_axis_async_fifo[64-1]",
-    13.324867684394121
+    16.398313520476222
   ],
   [
     "tb/axis_async_fifo/test_axis_async_fifo.py::test_axis_async_fifo[8-0]",
-    17.48489771410823
+    18.127660962752998
   ],
   [
     "tb/axis_async_fifo/test_axis_async_fifo.py::test_axis_async_fifo[8-1]",
-    20.536784620955586
+    19.98516616784036
   ],
   [
     "tb/axis_async_fifo_adapter/test_axis_async_fifo_adapter.py::test_axis_async_fifo_adapter[16-16-0]",
-    15.515931718982756
+    15.28719337284565
   ],
   [
     "tb/axis_async_fifo_adapter/test_axis_async_fifo_adapter.py::test_axis_async_fifo_adapter[16-16-1]",
-    15.86473059374839
+    14.72983381152153
   ],
   [
     "tb/axis_async_fifo_adapter/test_axis_async_fifo_adapter.py::test_axis_async_fifo_adapter[16-32-0]",
-    19.79045902378857
+    20.979268831200898
   ],
   [
     "tb/axis_async_fifo_adapter/test_axis_async_fifo_adapter.py::test_axis_async_fifo_adapter[16-32-1]",
-    22.031130514107645
+    22.195295968092978
   ],
   [
     "tb/axis_async_fifo_adapter/test_axis_async_fifo_adapter.py::test_axis_async_fifo_adapter[16-8-0]",
-    23.1467945240438
+    23.98039153032005
   ],
   [
     "tb/axis_async_fifo_adapter/test_axis_async_fifo_adapter.py::test_axis_async_fifo_adapter[16-8-1]",
-    24.25652244873345
+    25.33799554500729
   ],
   [
     "tb/axis_async_fifo_adapter/test_axis_async_fifo_adapter.py::test_axis_async_fifo_adapter[32-16-0]",
-    21.167339676991105
+    21.38693269621581
   ],
   [
     "tb/axis_async_fifo_adapter/test_axis_async_fifo_adapter.py::test_axis_async_fifo_adapter[32-16-1]",
-    15.328569454140961
+    22.843697079457343
   ],
   [
     "tb/axis_async_fifo_adapter/test_axis_async_fifo_adapter.py::test_axis_async_fifo_adapter[32-32-0]",
-    13.75000267289579
+    14.771314449608326
   ],
   [
     "tb/axis_async_fifo_adapter/test_axis_async_fifo_adapter.py::test_axis_async_fifo_adapter[32-32-1]",
-    14.697162045165896
+    15.583775363862514
   ],
   [
     "tb/axis_async_fifo_adapter/test_axis_async_fifo_adapter.py::test_axis_async_fifo_adapter[32-8-0]",
-    34.25803263951093
+    35.09259484522045
   ],
   [
     "tb/axis_async_fifo_adapter/test_axis_async_fifo_adapter.py::test_axis_async_fifo_adapter[32-8-1]",
-    20.77494945563376
+    38.66012675408274
   ],
   [
     "tb/axis_async_fifo_adapter/test_axis_async_fifo_adapter.py::test_axis_async_fifo_adapter[8-16-0]",
-    22.107110468670726
+    23.472982441075146
   ],
   [
     "tb/axis_async_fifo_adapter/test_axis_async_fifo_adapter.py::test_axis_async_fifo_adapter[8-16-1]",
-    24.52229151222855
+    24.373460155911744
   ],
   [
     "tb/axis_async_fifo_adapter/test_axis_async_fifo_adapter.py::test_axis_async_fifo_adapter[8-32-0]",
-    32.68651257175952
+    23.52575704175979
   ],
   [
     "tb/axis_async_fifo_adapter/test_axis_async_fifo_adapter.py::test_axis_async_fifo_adapter[8-32-1]",
-    34.53164793737233
+    36.40251354407519
   ],
   [
     "tb/axis_async_fifo_adapter/test_axis_async_fifo_adapter.py::test_axis_async_fifo_adapter[8-8-0]",
-    18.034708897583187
+    18.028654030524194
   ],
   [
     "tb/axis_async_fifo_adapter/test_axis_async_fifo_adapter.py::test_axis_async_fifo_adapter[8-8-1]",
-    21.166472426615655
+    21.13579823449254
   ],
   [
     "tb/axis_broadcast/test_axis_broadcast.py::test_axis_broadcast[1-16]",
-    4.1349410535767674
+    2.2486894400790334
   ],
   [
     "tb/axis_broadcast/test_axis_broadcast.py::test_axis_broadcast[1-32]",
-    1.9841334708034992
+    3.3408188205212355
   ],
   [
     "tb/axis_broadcast/test_axis_broadcast.py::test_axis_broadcast[1-8]",
-    4.198510793969035
+    3.8328330805525184
   ],
   [
     "tb/axis_broadcast/test_axis_broadcast.py::test_axis_broadcast[2-16]",
-    2.692502399906516
+    3.3924587378278375
   ],
   [
     "tb/axis_broadcast/test_axis_broadcast.py::test_axis_broadcast[2-32]",
-    2.386414110660553
+    2.4155559316277504
   ],
   [
     "tb/axis_broadcast/test_axis_broadcast.py::test_axis_broadcast[2-8]",
-    4.363627223297954
+    4.354510634206235
   ],
   [
     "tb/axis_broadcast/test_axis_broadcast.py::test_axis_broadcast[3-16]",
-    3.1008117590099573
+    3.9187457151710987
   ],
   [
     "tb/axis_broadcast/test_axis_broadcast.py::test_axis_broadcast[3-32]",
-    2.8256580103188753
+    2.3478107070550323
   ],
   [
     "tb/axis_broadcast/test_axis_broadcast.py::test_axis_broadcast[3-8]",
-    4.709306005388498
+    5.353845959529281
   ],
   [
     "tb/axis_cobs_decode/test_axis_cobs_decode.py::test_axis_cobs_decode",
-    54.703362938947976
+    55.826087379828095
   ],
   [
     "tb/axis_cobs_encode/test_axis_cobs_encode.py::test_axis_cobs_encode[0]",
-    59.61654491070658
+    60.14388539083302
   ],
   [
     "tb/axis_cobs_encode/test_axis_cobs_encode.py::test_axis_cobs_encode[1]",
-    58.38117606379092
+    60.65679369494319
   ],
   [
     "tb/axis_demux/test_axis_demux.py::test_axis_demux[4-16]",
-    9.495323976501822
+    11.17595996055752
   ],
   [
     "tb/axis_demux/test_axis_demux.py::test_axis_demux[4-32]",
-    6.288495775312185
+    9.011272833682597
   ],
   [
     "tb/axis_demux/test_axis_demux.py::test_axis_demux[4-8]",
-    18.37746755219996
+    16.84931145980954
   ],
   [
     "tb/axis_fifo/test_axis_fifo.py::test_axis_fifo[16-0]",
-    10.393654933199286
+    9.873918373137712
   ],
   [
     "tb/axis_fifo/test_axis_fifo.py::test_axis_fifo[16-1]",
-    10.415633418597281
+    11.383060522377491
   ],
   [
     "tb/axis_fifo/test_axis_fifo.py::test_axis_fifo[32-0]",
-    8.87678967602551
+    9.711695202626288
   ],
   [
     "tb/axis_fifo/test_axis_fifo.py::test_axis_fifo[32-1]",
-    11.098749899305403
+    12.384634766727686
   ],
   [
     "tb/axis_fifo/test_axis_fifo.py::test_axis_fifo[64-0]",
-    9.422987031750381
+    10.434627835638821
   ],
   [
     "tb/axis_fifo/test_axis_fifo.py::test_axis_fifo[64-1]",
-    9.699089953675866
+    11.430708304047585
   ],
   [
     "tb/axis_fifo/test_axis_fifo.py::test_axis_fifo[8-0]",
-    11.044142582453787
+    11.589529667049646
   ],
   [
     "tb/axis_fifo/test_axis_fifo.py::test_axis_fifo[8-1]",
-    10.83289519045502
+    12.421730290167034
   ],
   [
     "tb/axis_fifo_adapter/test_axis_fifo_adapter.py::test_axis_fifo_adapter[16-16-0]",
-    10.219957860186696
+    10.80021746456623
   ],
   [
     "tb/axis_fifo_adapter/test_axis_fifo_adapter.py::test_axis_fifo_adapter[16-16-1]",
-    10.486625554971397
+    10.89279662258923
   ],
   [
     "tb/axis_fifo_adapter/test_axis_fifo_adapter.py::test_axis_fifo_adapter[16-32-0]",
-    14.431692690588534
+    13.585506396368146
   ],
   [
     "tb/axis_fifo_adapter/test_axis_fifo_adapter.py::test_axis_fifo_adapter[16-32-1]",
-    15.22019578423351
+    15.308839865028858
   ],
   [
     "tb/axis_fifo_adapter/test_axis_fifo_adapter.py::test_axis_fifo_adapter[16-8-0]",
-    14.902987204492092
+    20.64511328469962
   ],
   [
     "tb/axis_fifo_adapter/test_axis_fifo_adapter.py::test_axis_fifo_adapter[16-8-1]",
-    11.420198984444141
+    16.18205363024026
   ],
   [
     "tb/axis_fifo_adapter/test_axis_fifo_adapter.py::test_axis_fifo_adapter[32-16-0]",
-    13.592619517818093
+    14.36786316614598
   ],
   [
     "tb/axis_fifo_adapter/test_axis_fifo_adapter.py::test_axis_fifo_adapter[32-16-1]",
-    14.155559001490474
+    14.434740445576608
   ],
   [
     "tb/axis_fifo_adapter/test_axis_fifo_adapter.py::test_axis_fifo_adapter[32-32-0]",
-    9.66715748142451
+    10.165998640470207
   ],
   [
     "tb/axis_fifo_adapter/test_axis_fifo_adapter.py::test_axis_fifo_adapter[32-32-1]",
-    9.999405917711556
+    10.150555622763932
   ],
   [
     "tb/axis_fifo_adapter/test_axis_fifo_adapter.py::test_axis_fifo_adapter[32-8-0]",
-    22.81020149681717
+    11.068586284294724
   ],
   [
     "tb/axis_fifo_adapter/test_axis_fifo_adapter.py::test_axis_fifo_adapter[32-8-1]",
-    22.00941563770175
+    16.357546158134937
   ],
   [
     "tb/axis_fifo_adapter/test_axis_fifo_adapter.py::test_axis_fifo_adapter[8-16-0]",
-    15.273434751667082
+    16.091410939581692
   ],
   [
     "tb/axis_fifo_adapter/test_axis_fifo_adapter.py::test_axis_fifo_adapter[8-16-1]",
-    16.60779592487961
+    10.058018677867949
   ],
   [
     "tb/axis_fifo_adapter/test_axis_fifo_adapter.py::test_axis_fifo_adapter[8-32-0]",
-    22.687564965337515
+    24.09095669351518
   ],
   [
     "tb/axis_fifo_adapter/test_axis_fifo_adapter.py::test_axis_fifo_adapter[8-32-1]",
-    23.706279216334224
+    26.43678816128522
   ],
   [
     "tb/axis_fifo_adapter/test_axis_fifo_adapter.py::test_axis_fifo_adapter[8-8-0]",
-    11.400899667292833
+    11.711163954809308
   ],
   [
     "tb/axis_fifo_adapter/test_axis_fifo_adapter.py::test_axis_fifo_adapter[8-8-1]",
-    12.362589475698769
+    12.910191633738577
   ],
   [
     "tb/axis_frame_length_adjust/test_axis_frame_length_adjust.py::test_axis_frame_length_adjust[16]",
-    4.168933109380305
+    3.5334407119080424
   ],
   [
     "tb/axis_frame_length_adjust/test_axis_frame_length_adjust.py::test_axis_frame_length_adjust[32]",
-    3.4525004364550114
+    4.151716801337898
   ],
   [
     "tb/axis_frame_length_adjust/test_axis_frame_length_adjust.py::test_axis_frame_length_adjust[8]",
-    6.410637116059661
+    6.478000270202756
   ],
   [
     "tb/axis_frame_length_adjust_fifo/test_axis_frame_length_adjust_fifo.py::test_axis_frame_length_adjust_fifo[16]",
-    18.54528176225722
+    19.497028473764658
   ],
   [
     "tb/axis_frame_length_adjust_fifo/test_axis_frame_length_adjust_fifo.py::test_axis_frame_length_adjust_fifo[32]",
-    14.18258341960609
+    14.625197235494852
   ],
   [
     "tb/axis_frame_length_adjust_fifo/test_axis_frame_length_adjust_fifo.py::test_axis_frame_length_adjust_fifo[8]",
-    29.039860404096544
+    31.26134085189551
   ],
   [
     "tb/axis_mux/test_axis_mux.py::test_axis_mux[1-16]",
-    2.7313873413950205
+    2.631902800872922
   ],
   [
     "tb/axis_mux/test_axis_mux.py::test_axis_mux[1-32]",
-    2.1904209554195404
+    2.2098573492839932
   ],
   [
     "tb/axis_mux/test_axis_mux.py::test_axis_mux[1-8]",
-    3.747754485346377
+    3.7917686188593507
   ],
   [
     "tb/axis_mux/test_axis_mux.py::test_axis_mux[4-16]",
-    11.27847404498607
+    11.458919913507998
   ],
   [
     "tb/axis_mux/test_axis_mux.py::test_axis_mux[4-32]",
-    8.642733175307512
+    8.667683197185397
   ],
   [
     "tb/axis_mux/test_axis_mux.py::test_axis_mux[4-8]",
-    18.31573899462819
+    9.604000289924443
   ],
   [
     "tb/axis_pipeline_register/test_axis_pipeline_register.py::test_axis_pipeline_register[0-16-0]",
-    7.748892365954816
+    6.895352038554847
   ],
   [
     "tb/axis_pipeline_register/test_axis_pipeline_register.py::test_axis_pipeline_register[0-16-1]",
-    8.249635859392583
+    4.336018988862634
   ],
   [
     "tb/axis_pipeline_register/test_axis_pipeline_register.py::test_axis_pipeline_register[0-16-2]",
-    7.861832721158862
+    7.675565160810947
   ],
   [
     "tb/axis_pipeline_register/test_axis_pipeline_register.py::test_axis_pipeline_register[0-32-0]",
-    7.814906599000096
+    8.0723494021222
   ],
   [
     "tb/axis_pipeline_register/test_axis_pipeline_register.py::test_axis_pipeline_register[0-32-1]",
-    7.478627904318273
+    7.769978761672974
   ],
   [
     "tb/axis_pipeline_register/test_axis_pipeline_register.py::test_axis_pipeline_register[0-32-2]",
-    8.728103519417346
+    8.448219609446824
   ],
   [
     "tb/axis_pipeline_register/test_axis_pipeline_register.py::test_axis_pipeline_register[0-8-0]",
-    8.562991634011269
+    9.587259081192315
   ],
   [
     "tb/axis_pipeline_register/test_axis_pipeline_register.py::test_axis_pipeline_register[0-8-1]",
-    8.853606965392828
+    9.03206697665155
   ],
   [
     "tb/axis_pipeline_register/test_axis_pipeline_register.py::test_axis_pipeline_register[0-8-2]",
-    10.302599406801164
+    9.326968599110842
   ],
   [
     "tb/axis_pipeline_register/test_axis_pipeline_register.py::test_axis_pipeline_register[1-16-0]",
-    8.787222282029688
+    4.2896037278696895
   ],
   [
     "tb/axis_pipeline_register/test_axis_pipeline_register.py::test_axis_pipeline_register[1-16-1]",
-    9.04017788078636
+    8.898237090557814
   ],
   [
     "tb/axis_pipeline_register/test_axis_pipeline_register.py::test_axis_pipeline_register[1-16-2]",
-    8.097946026362479
+    8.61472461745143
   ],
   [
     "tb/axis_pipeline_register/test_axis_pipeline_register.py::test_axis_pipeline_register[1-32-0]",
-    6.282582161016762
+    8.025696137920022
   ],
   [
     "tb/axis_pipeline_register/test_axis_pipeline_register.py::test_axis_pipeline_register[1-32-1]",
-    8.129383312538266
+    8.600431662984192
   ],
   [
     "tb/axis_pipeline_register/test_axis_pipeline_register.py::test_axis_pipeline_register[1-32-2]",
-    7.848937609232962
+    8.175965080969036
   ],
   [
     "tb/axis_pipeline_register/test_axis_pipeline_register.py::test_axis_pipeline_register[1-8-0]",
-    6.842636492103338
+    9.310021080076694
   ],
   [
     "tb/axis_pipeline_register/test_axis_pipeline_register.py::test_axis_pipeline_register[1-8-1]",
-    9.389978448860347
+    9.467389784753323
   ],
   [
     "tb/axis_pipeline_register/test_axis_pipeline_register.py::test_axis_pipeline_register[1-8-2]",
-    9.679912436753511
+    9.966927672736347
   ],
   [
     "tb/axis_pipeline_register/test_axis_pipeline_register.py::test_axis_pipeline_register[2-16-0]",
-    7.3867769334465265
+    7.999405732378364
   ],
   [
     "tb/axis_pipeline_register/test_axis_pipeline_register.py::test_axis_pipeline_register[2-16-1]",
-    8.3051818581298
+    8.82688494771719
   ],
   [
     "tb/axis_pipeline_register/test_axis_pipeline_register.py::test_axis_pipeline_register[2-16-2]",
-    8.126775786280632
+    8.250563642010093
   ],
   [
     "tb/axis_pipeline_register/test_axis_pipeline_register.py::test_axis_pipeline_register[2-32-0]",
-    7.643013674765825
+    7.774365910328925
   ],
   [
     "tb/axis_pipeline_register/test_axis_pipeline_register.py::test_axis_pipeline_register[2-32-1]",
-    8.875891353935003
+    8.71679317113012
   ],
   [
     "tb/axis_pipeline_register/test_axis_pipeline_register.py::test_axis_pipeline_register[2-32-2]",
-    8.881751327775419
+    5.161040591076016
   ],
   [
     "tb/axis_pipeline_register/test_axis_pipeline_register.py::test_axis_pipeline_register[2-8-0]",
-    9.265739167109132
+    9.297835460864007
   ],
   [
     "tb/axis_pipeline_register/test_axis_pipeline_register.py::test_axis_pipeline_register[2-8-1]",
-    10.11152211111039
+    11.577949982136488
   ],
   [
     "tb/axis_pipeline_register/test_axis_pipeline_register.py::test_axis_pipeline_register[2-8-2]",
-    8.9882518267259
+    8.873363682068884
   ],
   [
     "tb/axis_ram_switch/test_axis_ram_switch.py::test_axis_ram_switch[1-1-32-32]",
-    10.515457849018276
+    10.698955222032964
   ],
   [
     "tb/axis_ram_switch/test_axis_ram_switch.py::test_axis_ram_switch[1-1-32-8]",
-    23.015697445720434
+    23.138351750560105
   ],
   [
     "tb/axis_ram_switch/test_axis_ram_switch.py::test_axis_ram_switch[1-1-8-32]",
-    23.339799378067255
+    12.704511863179505
   ],
   [
     "tb/axis_ram_switch/test_axis_ram_switch.py::test_axis_ram_switch[1-1-8-8]",
-    13.376416123472154
+    13.242558791302145
   ],
   [
     "tb/axis_ram_switch/test_axis_ram_switch.py::test_axis_ram_switch[1-4-32-32]",
-    15.32683065906167
+    14.667932166717947
   ],
   [
     "tb/axis_ram_switch/test_axis_ram_switch.py::test_axis_ram_switch[1-4-32-8]",
-    25.25002766493708
+    24.80871715210378
   ],
   [
     "tb/axis_ram_switch/test_axis_ram_switch.py::test_axis_ram_switch[1-4-8-32]",
-    38.70766987465322
+    40.924790360964835
   ],
   [
     "tb/axis_ram_switch/test_axis_ram_switch.py::test_axis_ram_switch[1-4-8-8]",
-    23.433873833157122
+    23.59427309501916
   ],
   [
     "tb/axis_ram_switch/test_axis_ram_switch.py::test_axis_ram_switch[4-1-32-32]",
-    38.13711098767817
+    38.86630432680249
   ],
   [
     "tb/axis_ram_switch/test_axis_ram_switch.py::test_axis_ram_switch[4-1-32-8]",
-    108.21325397957116
+    109.70201741717756
   ],
   [
     "tb/axis_ram_switch/test_axis_ram_switch.py::test_axis_ram_switch[4-1-8-32]",
-    31.623636212199926
+    61.44204685743898
   ],
   [
     "tb/axis_ram_switch/test_axis_ram_switch.py::test_axis_ram_switch[4-1-8-8]",
-    46.20649198163301
+    28.717600805684924
   ],
   [
     "tb/axis_ram_switch/test_axis_ram_switch.py::test_axis_ram_switch[4-4-32-32]",
-    36.73501186538488
+    38.1749139809981
   ],
   [
     "tb/axis_ram_switch/test_axis_ram_switch.py::test_axis_ram_switch[4-4-32-8]",
-    74.66561388224363
+    75.80451656039804
   ],
   [
     "tb/axis_ram_switch/test_axis_ram_switch.py::test_axis_ram_switch[4-4-8-32]",
-    51.076979514211416
+    81.32635415904224
   ],
   [
     "tb/axis_ram_switch/test_axis_ram_switch.py::test_axis_ram_switch[4-4-8-8]",
-    57.79113897960633
+    47.61883344408125
   ],
   [
     "tb/axis_rate_limit/test_axis_rate_limit.py::test_axis_rate_limit[16]",
-    11.168463669717312
+    11.520241399295628
   ],
   [
     "tb/axis_rate_limit/test_axis_rate_limit.py::test_axis_rate_limit[32]",
-    8.627638365142047
+    8.736321086063981
   ],
   [
     "tb/axis_rate_limit/test_axis_rate_limit.py::test_axis_rate_limit[64]",
-    8.261535592377186
+    8.604822164401412
   ],
   [
     "tb/axis_rate_limit/test_axis_rate_limit.py::test_axis_rate_limit[8]",
-    18.147929472848773
+    18.346259148791432
   ],
   [
     "tb/axis_register/test_axis_register.py::test_axis_register[16-0]",
-    7.894782732240856
+    8.026971002109349
   ],
   [
     "tb/axis_register/test_axis_register.py::test_axis_register[16-1]",
-    8.63187304791063
+    8.026794811710715
   ],
   [
     "tb/axis_register/test_axis_register.py::test_axis_register[16-2]",
-    7.384906925261021
+    7.599463477730751
   ],
   [
     "tb/axis_register/test_axis_register.py::test_axis_register[32-0]",
-    7.757337849587202
+    9.286245197057724
   ],
   [
     "tb/axis_register/test_axis_register.py::test_axis_register[32-1]",
-    8.349224615842104
+    9.02181441616267
   ],
   [
     "tb/axis_register/test_axis_register.py::test_axis_register[32-2]",
-    8.202552252449095
+    7.845509672537446
   ],
   [
     "tb/axis_register/test_axis_register.py::test_axis_register[8-0]",
-    9.517546870745718
+    9.408596233464777
   ],
   [
     "tb/axis_register/test_axis_register.py::test_axis_register[8-1]",
-    9.37106759659946
+    9.520361858420074
   ],
   [
     "tb/axis_register/test_axis_register.py::test_axis_register[8-2]",
-    8.858125889673829
+    9.569798718206584
   ],
   [
     "tb/axis_srl_fifo/test_axis_srl_fifo.py::test_axis_srl_fifo[16]",
-    21.84353820141405
+    22.581085451878607
   ],
   [
     "tb/axis_srl_fifo/test_axis_srl_fifo.py::test_axis_srl_fifo[32]",
-    19.996354782022536
+    9.659299658611417
   ],
   [
     "tb/axis_srl_fifo/test_axis_srl_fifo.py::test_axis_srl_fifo[64]",
-    21.48448957223445
+    22.424715185537934
   ],
   [
     "tb/axis_srl_fifo/test_axis_srl_fifo.py::test_axis_srl_fifo[8]",
-    26.7858392810449
+    26.91986977122724
   ],
   [
     "tb/axis_srl_register/test_axis_srl_register.py::test_axis_srl_register[16]",
-    8.400416224263608
+    8.554050285369158
   ],
   [
     "tb/axis_srl_register/test_axis_srl_register.py::test_axis_srl_register[32]",
-    7.900802923366427
+    7.937327633611858
   ],
   [
     "tb/axis_srl_register/test_axis_srl_register.py::test_axis_srl_register[8]",
-    8.795997133478522
+    9.054486553184688
   ],
   [
     "tb/axis_switch/test_axis_switch.py::test_axis_switch[1-1-16]",
-    8.356694316491485
+    8.553263206966221
   ],
   [
     "tb/axis_switch/test_axis_switch.py::test_axis_switch[1-1-32]",
-    7.599317821674049
+    8.586661523208022
   ],
   [
     "tb/axis_switch/test_axis_switch.py::test_axis_switch[1-1-8]",
-    9.621531581506133
+    9.096829366870224
   ],
   [
     "tb/axis_switch/test_axis_switch.py::test_axis_switch[1-4-16]",
-    13.667238024994731
+    14.012520941905677
   ],
   [
     "tb/axis_switch/test_axis_switch.py::test_axis_switch[1-4-32]",
-    13.290190611034632
+    13.075153623707592
   ],
   [
     "tb/axis_switch/test_axis_switch.py::test_axis_switch[1-4-8]",
-    16.950868975371122
+    17.383749869652092
   ],
   [
     "tb/axis_switch/test_axis_switch.py::test_axis_switch[4-1-16]",
-    33.594604125246406
+    34.82370695192367
   ],
   [
     "tb/axis_switch/test_axis_switch.py::test_axis_switch[4-1-32]",
-    33.071954203769565
+    35.304351408965886
   ],
   [
     "tb/axis_switch/test_axis_switch.py::test_axis_switch[4-1-8]",
-    36.24359125737101
+    37.828716196119785
   ],
   [
     "tb/axis_switch/test_axis_switch.py::test_axis_switch[4-4-16]",
-    33.63313777372241
+    33.89667668007314
   ],
   [
     "tb/axis_switch/test_axis_switch.py::test_axis_switch[4-4-32]",
-    22.27076547406614
+    20.13663470558822
   ],
   [
     "tb/axis_switch/test_axis_switch.py::test_axis_switch[4-4-8]",
-    39.87212748918682
+    41.23441004194319
   ]
 ]
