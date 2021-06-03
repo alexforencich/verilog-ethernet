@@ -271,8 +271,8 @@ eth_arb_mux #(
     .DEST_ENABLE(0),
     .USER_ENABLE(1),
     .USER_WIDTH(1),
-    .ARB_TYPE("PRIORITY"),
-    .LSB_PRIORITY("HIGH")
+    .ARB_TYPE_ROUND_ROBIN(0),
+    .ARB_LSB_HIGH_PRIORITY(1)
 )
 eth_arb_mux_inst (
     .clk(clk),

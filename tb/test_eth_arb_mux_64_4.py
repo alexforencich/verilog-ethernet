@@ -55,8 +55,8 @@ def bench():
     DEST_WIDTH = 8
     USER_ENABLE = 1
     USER_WIDTH = 1
-    ARB_TYPE = "PRIORITY"
-    LSB_PRIORITY = "HIGH"
+    ARB_TYPE_ROUND_ROBIN = 0
+    ARB_LSB_HIGH_PRIORITY = 1
 
     # Inputs
     clk = Signal(bool(0))

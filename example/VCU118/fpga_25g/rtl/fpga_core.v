@@ -645,8 +645,8 @@ axis_switch #(
     .M_CONNECT({3{3'b111}}),
     .S_REG_TYPE(0),
     .M_REG_TYPE(2),
-    .ARB_TYPE("PRIORITY"),
-    .LSB_PRIORITY("HIGH")
+    .ARB_TYPE_ROUND_ROBIN(0),
+    .ARB_LSB_HIGH_PRIORITY(1)
 )
 axis_switch_inst (
     .clk(clk),
