@@ -47,8 +47,8 @@ parameter M_TOP = {3'd3, 3'd2, 3'd1, 3'd0};
 parameter M_CONNECT = {M_COUNT{{S_COUNT{1'b1}}}};
 parameter S_REG_TYPE = 0;
 parameter M_REG_TYPE = 2;
-parameter ARB_TYPE = "ROUND_ROBIN";
-parameter LSB_PRIORITY = "HIGH";
+parameter ARB_TYPE_ROUND_ROBIN = 1;
+parameter ARB_LSB_HIGH_PRIORITY = 1;
 
 // Inputs
 reg clk = 0;
@@ -121,8 +121,8 @@ axis_switch #(
     .M_CONNECT(M_CONNECT),
     .S_REG_TYPE(S_REG_TYPE),
     .M_REG_TYPE(M_REG_TYPE),
-    .ARB_TYPE(ARB_TYPE),
-    .LSB_PRIORITY(LSB_PRIORITY)
+    .ARB_TYPE_ROUND_ROBIN(ARB_TYPE_ROUND_ROBIN),
+    .ARB_LSB_HIGH_PRIORITY(ARB_LSB_HIGH_PRIORITY)
 )
 UUT (
     .clk(clk),

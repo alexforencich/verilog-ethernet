@@ -284,9 +284,10 @@ tests_dir = os.path.dirname(__file__)
 rtl_dir = os.path.abspath(os.path.join(tests_dir, '..', '..', 'rtl'))
 
 
+@pytest.mark.parametrize("round_robin", [0, 1])
 @pytest.mark.parametrize("data_width", [8, 16, 32])
 @pytest.mark.parametrize("ports", [1, 4])
-def test_axis_arb_mux(request, ports, data_width):
+def test_axis_arb_mux(request, ports, data_width, round_robin):
     dut = "axis_arb_mux"
     wrapper = f"{dut}_wrap_{ports}"
     module = os.path.splitext(os.path.basename(__file__))[0]
@@ -320,6 +321,8 @@ def test_axis_arb_mux(request, ports, data_width):
     parameters['DEST_WIDTH'] = 8
     parameters['USER_ENABLE'] = 1
     parameters['USER_WIDTH'] = 1
+    parameters['ARB_TYPE_ROUND_ROBIN'] = round_robin
+    parameters['ARB_LSB_HIGH_PRIORITY'] = 1
 
     extra_env = {f'PARAM_{k}': str(v) for k, v in parameters.items()}
 

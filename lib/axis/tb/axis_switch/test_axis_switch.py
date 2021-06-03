@@ -334,6 +334,8 @@ def test_axis_switch(request, s_count, m_count, data_width):
     parameters['USER_WIDTH'] = 1
     parameters['S_REG_TYPE'] = 0
     parameters['M_REG_TYPE'] = 2
+    parameters['ARB_TYPE_ROUND_ROBIN'] = 1
+    parameters['ARB_LSB_HIGH_PRIORITY'] = 1
 
     extra_env = {f'PARAM_{k}': str(v) for k, v in parameters.items()}
 

@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014-2018 Alex Forencich
+Copyright (c) 2014-2021 Alex Forencich
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -32,12 +32,14 @@ THE SOFTWARE.
 module arbiter #
 (
     parameter PORTS = 4,
-    // arbitration type: "PRIORITY" or "ROUND_ROBIN"
-    parameter TYPE = "PRIORITY",
-    // block type: "NONE", "REQUEST", "ACKNOWLEDGE"
-    parameter BLOCK = "NONE",
-    // LSB priority: "LOW", "HIGH"
-    parameter LSB_PRIORITY = "LOW"
+    // select round robin arbitration
+    parameter ARB_TYPE_ROUND_ROBIN = 0,
+    // blocking arbiter enable
+    parameter ARB_BLOCK = 0,
+    // block on acknowledge assert when nonzero, request deassert when 0
+    parameter ARB_BLOCK_ACK = 1,
+    // LSB priority selection
+    parameter ARB_LSB_HIGH_PRIORITY = 0
 )
 (
     input  wire                     clk,
@@ -65,7 +67,7 @@ wire [PORTS-1:0] request_mask;
 
 priority_encoder #(
     .WIDTH(PORTS),
-    .LSB_PRIORITY(LSB_PRIORITY)
+    .LSB_HIGH_PRIORITY(ARB_LSB_HIGH_PRIORITY)
 )
 priority_encoder_inst (
     .input_unencoded(request),
@@ -82,7 +84,7 @@ wire [PORTS-1:0] masked_request_mask;
 
 priority_encoder #(
     .WIDTH(PORTS),
-    .LSB_PRIORITY(LSB_PRIORITY)
+    .LSB_HIGH_PRIORITY(ARB_LSB_HIGH_PRIORITY)
 )
 priority_encoder_masked (
     .input_unencoded(request & mask_reg),
@@ -97,41 +99,41 @@ always @* begin
     grant_encoded_next = 0;
     mask_next = mask_reg;
 
-    if (BLOCK == "REQUEST" && grant_reg & request) begin
+    if (ARB_BLOCK && !ARB_BLOCK_ACK && grant_reg & request) begin
         // granted request still asserted; hold it
         grant_valid_next = grant_valid_reg;
         grant_next = grant_reg;
         grant_encoded_next = grant_encoded_reg;
-    end else if (BLOCK == "ACKNOWLEDGE" && grant_valid && !(grant_reg & acknowledge)) begin
+    end else if (ARB_BLOCK && ARB_BLOCK_ACK && grant_valid && !(grant_reg & acknowledge)) begin
         // granted request not yet acknowledged; hold it
         grant_valid_next = grant_valid_reg;
         grant_next = grant_reg;
         grant_encoded_next = grant_encoded_reg;
     end else if (request_valid) begin
-        if (TYPE == "PRIORITY") begin
-            grant_valid_next = 1;
-            grant_next = request_mask;
-            grant_encoded_next = request_index;
-        end else if (TYPE == "ROUND_ROBIN") begin
+        if (ARB_TYPE_ROUND_ROBIN) begin
             if (masked_request_valid) begin
                 grant_valid_next = 1;
                 grant_next = masked_request_mask;
                 grant_encoded_next = masked_request_index;
-                if (LSB_PRIORITY == "LOW") begin
-                    mask_next = {PORTS{1'b1}} >> (PORTS - masked_request_index);
-                end else begin
+                if (ARB_LSB_HIGH_PRIORITY) begin
                     mask_next = {PORTS{1'b1}} << (masked_request_index + 1);
+                end else begin
+                    mask_next = {PORTS{1'b1}} >> (PORTS - masked_request_index);
                 end
             end else begin
                 grant_valid_next = 1;
                 grant_next = request_mask;
                 grant_encoded_next = request_index;
-                if (LSB_PRIORITY == "LOW") begin
-                    mask_next = {PORTS{1'b1}} >> (PORTS - request_index);
-                end else begin
+                if (ARB_LSB_HIGH_PRIORITY) begin
                     mask_next = {PORTS{1'b1}} << (request_index + 1);
+                end else begin
+                    mask_next = {PORTS{1'b1}} >> (PORTS - request_index);
                 end
             end
+        end else begin
+            grant_valid_next = 1;
+            grant_next = request_mask;
+            grant_encoded_next = request_index;
         end
     end
 end
