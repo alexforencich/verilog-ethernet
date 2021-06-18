@@ -147,7 +147,8 @@ localparam [2:0]
     STATE_SUM_HEADER = 3'd1,
     STATE_SUM_PAYLOAD = 3'd2,
     STATE_FINISH_SUM_1 = 3'd3,
-    STATE_FINISH_SUM_2 = 3'd4;
+    STATE_FINISH_SUM_2 = 3'd4,
+    STATE_COMMIT_HDR = 3'd5;
 
 reg [2:0] state_reg = STATE_IDLE, state_next;
 
@@ -541,6 +542,9 @@ always @* begin
             checksum_part = checksum_reg[15:0] + checksum_reg[31:16];
             checksum_next = ~(checksum_part[15:0] + checksum_part[16]);
             hdr_valid_next = 1;
+            state_next = STATE_COMMIT_HDR;
+        end
+        STATE_COMMIT_HDR: begin
             state_next = STATE_IDLE;
         end
     endcase
