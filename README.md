@@ -44,6 +44,7 @@ following boards:
 *  Terasic DE5-Net (Intel Stratix V 5SGXEA7N2F45C2)
 *  Exablaze ExaNIC X10 (Xilinx Kintex UltraScale XCKU035)
 *  Exablaze ExaNIC X25 (Xilinx Kintex UltraScale+ XCKU3P)
+*  HiTech Global HTG-9200 (Xilinx UltraScale+ XCVU9P)
 *  HiTech Global HTG-V6HXT-100GIG-565 (Xilinx Virtex 6 XC6VHX565T)
 *  Silicom fb2CG@KU15P (Xilinx Kintex UltraScale+ XCKU15P)
 *  Xilinx KC705 (Xilinx Kintex 7 XC7K325T)
