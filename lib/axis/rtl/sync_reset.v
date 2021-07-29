@@ -36,16 +36,20 @@ module sync_reset #
     parameter N = 2
 )
 (
-    input  wire clk,
-    input  wire rst,
-    output wire out
+    input wire 	clk,
+    input wire 	rst,
+// KH rename
+//    output wire out
+    output wire o
 );
 
 (* srl_style = "register" *)
 reg [N-1:0] sync_reg = {N{1'b1}};
 
-assign out = sync_reg[N-1];
-
+// KH rename
+//assign out = sync_reg[N-1];
+assign o = sync_reg[N-1];
+   
 always @(posedge clk or posedge rst) begin
     if (rst) begin
         sync_reg <= {N{1'b1}};
