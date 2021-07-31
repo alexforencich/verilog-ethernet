@@ -38,10 +38,9 @@ module ssio_ddr_in_diff #
     // Use IODDR2 for Spartan-6
     parameter IODDR_STYLE = "IODDR2",
     // Clock input style ("BUFG", "BUFR", "BUFIO", "BUFIO2")
-    // Use BUFR for Virtex-5, Virtex-6, 7-series
-    // Use BUFG for Ultrascale
-    // Use BUFIO2 for Spartan-6
-    parameter CLOCK_INPUT_STYLE = "BUFIO2",
+    // Use BUFR for Virtex-6, 7-series
+    // Use BUFG for Virtex-5, Spartan-6, Ultrascale
+    parameter CLOCK_INPUT_STYLE = "BUFG",
     // Width of register in bits
     parameter WIDTH = 1
 )

@@ -38,10 +38,9 @@ module ssio_ddr_in #
     // Use IODDR2 for Spartan-6
     parameter IODDR_STYLE = "IODDR2",
     // Clock input style ("BUFG", "BUFR", "BUFIO", "BUFIO2")
-    // Use BUFR for Virtex-5, Virtex-6, 7-series
-    // Use BUFG for Ultrascale
-    // Use BUFIO2 for Spartan-6
-    parameter CLOCK_INPUT_STYLE = "BUFIO2",
+    // Use BUFR for Virtex-6, 7-series
+    // Use BUFG for Virtex-5, Spartan-6, Ultrascale
+    parameter CLOCK_INPUT_STYLE = "BUFG",
     // Width of register in bits
     parameter WIDTH = 1
 )
@@ -109,29 +108,6 @@ if (TARGET == "XILINX") begin
         clk_bufio (
             .I(clk_int),
             .O(clk_io)
-        );
-
-        // pass through RX clock to MAC
-        BUFG
-        clk_bufg (
-            .I(clk_int),
-            .O(output_clk)
-        );
-
-    end else if (CLOCK_INPUT_STYLE == "BUFIO2") begin
-
-        // pass through RX clock to input buffers
-        BUFIO2 #(
-            .DIVIDE(1),
-            .DIVIDE_BYPASS("TRUE"),
-            .I_INVERT("FALSE"),
-            .USE_DOUBLER("FALSE")
-        )
-        clk_bufio (
-            .I(input_clk),
-            .DIVCLK(clk_int),
-            .IOCLK(clk_io),
-            .SERDESSTROBE()
         );
 
         // pass through RX clock to MAC
