@@ -321,6 +321,7 @@ def test_axis_arb_mux(request, ports, data_width, round_robin):
     parameters['DEST_WIDTH'] = 8
     parameters['USER_ENABLE'] = 1
     parameters['USER_WIDTH'] = 1
+    parameters['LAST_ENABLE'] = 1
     parameters['ARB_TYPE_ROUND_ROBIN'] = round_robin
     parameters['ARB_LSB_HIGH_PRIORITY'] = 1
 
