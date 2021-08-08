@@ -382,18 +382,26 @@ always @* begin
                 end
             end
         end else if (arp_request_valid && arp_request_ready) begin
-            if (~(arp_request_ip | subnet_mask) == 0) begin
-                // broadcast address
-                // (all bits in request IP set where subnet mask is clear)
+            if (arp_request_ip == 32'hffffffff) begin
+                // broadcast address; use broadcast MAC address
                 arp_response_valid_next = 1'b1;
                 arp_response_error_next = 1'b0;
                 arp_response_mac_next = 48'hffffffffffff;
             end else if (((arp_request_ip ^ gateway_ip) & subnet_mask) == 0) begin
-                // within subnet, look up IP directly
+                // within subnet
                 // (no bits differ between request IP and gateway IP where subnet mask is set)
-                cache_query_request_valid_next = 1'b1;
-                cache_query_request_ip_next = arp_request_ip;
-                arp_request_ip_next = arp_request_ip;
+                if (~(arp_request_ip | subnet_mask) == 0) begin
+                    // broadcast address; use broadcast MAC address
+                    // (all bits in request IP set where subnet mask is clear)
+                    arp_response_valid_next = 1'b1;
+                    arp_response_error_next = 1'b0;
+                    arp_response_mac_next = 48'hffffffffffff;
+                end else begin
+                    // unicast address; look up IP directly
+                    cache_query_request_valid_next = 1'b1;
+                    cache_query_request_ip_next = arp_request_ip;
+                    arp_request_ip_next = arp_request_ip;
+                end
             end else begin
                 // outside of subnet, so look up gateway address
                 cache_query_request_valid_next = 1'b1;
