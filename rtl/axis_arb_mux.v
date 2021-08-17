@@ -137,7 +137,7 @@ arb_inst (
 );
 
 assign request = s_axis_tvalid & ~grant;
-assign acknowledge = grant & s_axis_tvalid & s_axis_tready & s_axis_tlast;
+assign acknowledge = grant & s_axis_tvalid & s_axis_tready & (LAST_ENABLE ? s_axis_tlast : {S_COUNT{1'b1}});
 
 always @* begin
     // pass through selected packet data
