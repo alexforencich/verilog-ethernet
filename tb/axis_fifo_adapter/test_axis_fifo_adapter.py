@@ -120,7 +120,7 @@ async def run_test_tuser_assert(dut):
     test_frame = AxiStreamFrame(test_data, tuser=1)
     await tb.source.send(test_frame)
 
-    if int(os.getenv("PARAM_FRAME_FIFO")):
+    if int(os.getenv("PARAM_DROP_BAD_FRAME")):
         for k in range(64):
             await RisingEdge(dut.clk)
 
@@ -209,7 +209,7 @@ async def run_test_overflow(dut):
 
     tb.sink.pause = False
 
-    if int(os.getenv("PARAM_FRAME_FIFO")):
+    if int(os.getenv("PARAM_DROP_OVERSIZE_FRAME")):
         for k in range(2048):
             await RisingEdge(dut.clk)
 
@@ -306,10 +306,11 @@ tests_dir = os.path.dirname(__file__)
 rtl_dir = os.path.abspath(os.path.join(tests_dir, '..', '..', 'rtl'))
 
 
-@pytest.mark.parametrize("frame_fifo", [0, 1])
+@pytest.mark.parametrize(("frame_fifo", "drop_oversize_frame", "drop_bad_frame", "drop_when_full"),
+    [(0, 0, 0, 0), (1, 0, 0, 0), (1, 1, 0, 0), (1, 1, 1, 0)])
 @pytest.mark.parametrize("m_data_width", [8, 16, 32])
 @pytest.mark.parametrize("s_data_width", [8, 16, 32])
-def test_axis_fifo_adapter(request, s_data_width, m_data_width, frame_fifo):
+def test_axis_fifo_adapter(request, s_data_width, m_data_width, frame_fifo, drop_oversize_frame, drop_bad_frame, drop_when_full):
     dut = "axis_fifo_adapter"
     module = os.path.splitext(os.path.basename(__file__))[0]
     toplevel = dut
@@ -338,8 +339,9 @@ def test_axis_fifo_adapter(request, s_data_width, m_data_width, frame_fifo):
     parameters['FRAME_FIFO'] = frame_fifo
     parameters['USER_BAD_FRAME_VALUE'] = 1
     parameters['USER_BAD_FRAME_MASK'] = 1
-    parameters['DROP_BAD_FRAME'] = frame_fifo
-    parameters['DROP_WHEN_FULL'] = 0
+    parameters['DROP_OVERSIZE_FRAME'] = drop_oversize_frame
+    parameters['DROP_BAD_FRAME'] = drop_bad_frame
+    parameters['DROP_WHEN_FULL'] = drop_when_full
 
     extra_env = {f'PARAM_{k}': str(v) for k, v in parameters.items()}
 
