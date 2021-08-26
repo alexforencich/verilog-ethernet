@@ -51,6 +51,8 @@ module axis_arb_mux #
     parameter USER_ENABLE = 1,
     // tuser signal width
     parameter USER_WIDTH = 1,
+    // Propagate tlast signal
+    parameter LAST_ENABLE = 1,
     // select round robin arbitration
     parameter ARB_TYPE_ROUND_ROBIN = 0,
     // LSB priority selection
@@ -135,7 +137,7 @@ arb_inst (
 );
 
 assign request = s_axis_tvalid & ~grant;
-assign acknowledge = grant & s_axis_tvalid & s_axis_tready & s_axis_tlast;
+assign acknowledge = grant & s_axis_tvalid & s_axis_tready & (LAST_ENABLE ? s_axis_tlast : {S_COUNT{1'b1}});
 
 always @* begin
     // pass through selected packet data
@@ -173,7 +175,7 @@ reg store_axis_temp_to_output;
 assign m_axis_tdata  = m_axis_tdata_reg;
 assign m_axis_tkeep  = KEEP_ENABLE ? m_axis_tkeep_reg : {KEEP_WIDTH{1'b1}};
 assign m_axis_tvalid = m_axis_tvalid_reg;
-assign m_axis_tlast  = m_axis_tlast_reg;
+assign m_axis_tlast  = LAST_ENABLE ? m_axis_tlast_reg : 1'b1;
 assign m_axis_tid    = ID_ENABLE   ? m_axis_tid_reg   : {ID_WIDTH{1'b0}};
 assign m_axis_tdest  = DEST_ENABLE ? m_axis_tdest_reg : {DEST_WIDTH{1'b0}};
 assign m_axis_tuser  = USER_ENABLE ? m_axis_tuser_reg : {USER_WIDTH{1'b0}};

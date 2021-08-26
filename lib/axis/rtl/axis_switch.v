@@ -77,8 +77,8 @@ module axis_switch #
     parameter ARB_LSB_HIGH_PRIORITY = 1
 )
 (
-    input  wire                   clk,
-    input  wire                   rst,
+    input  wire                          clk,
+    input  wire                          rst,
 
     /*
      * AXI Stream inputs

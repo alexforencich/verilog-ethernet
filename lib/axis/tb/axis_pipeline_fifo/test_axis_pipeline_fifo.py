@@ -27,14 +27,13 @@ import itertools
 import logging
 import os
 import random
-import subprocess
 
 import cocotb_test.simulator
 import pytest
 
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import RisingEdge, Event
+from cocotb.triggers import RisingEdge
 from cocotb.regression import TestFactory
 
 from cocotbext.axi import AxiStreamBus, AxiStreamFrame, AxiStreamSource, AxiStreamSink
@@ -44,20 +43,17 @@ class TB(object):
     def __init__(self, dut):
         self.dut = dut
 
-        ports = len(dut.axis_arb_mux_inst.s_axis_tvalid)
-
         self.log = logging.getLogger("cocotb.tb")
         self.log.setLevel(logging.DEBUG)
 
         cocotb.fork(Clock(dut.clk, 10, units="ns").start())
 
-        self.source = [AxiStreamSource(AxiStreamBus.from_prefix(dut, f"s{k:02d}_axis"), dut.clk, dut.rst) for k in range(ports)]
+        self.source = AxiStreamSource(AxiStreamBus.from_prefix(dut, "s_axis"), dut.clk, dut.rst)
         self.sink = AxiStreamSink(AxiStreamBus.from_prefix(dut, "m_axis"), dut.clk, dut.rst)
 
     def set_idle_generator(self, generator=None):
         if generator:
-            for source in self.source:
-                source.set_pause_generator(generator())
+            self.source.set_pause_generator(generator())
 
     def set_backpressure_generator(self, generator=None):
         if generator:
@@ -75,11 +71,11 @@ class TB(object):
         await RisingEdge(self.dut.clk)
 
 
-async def run_test(dut, payload_lengths=None, payload_data=None, idle_inserter=None, backpressure_inserter=None, port=0):
+async def run_test(dut, payload_lengths=None, payload_data=None, idle_inserter=None, backpressure_inserter=None):
 
     tb = TB(dut)
 
-    id_count = 2**len(tb.source[port].bus.tid)
+    id_count = 2**len(tb.source.bus.tid)
 
     cur_id = 1
 
@@ -96,7 +92,7 @@ async def run_test(dut, payload_lengths=None, payload_data=None, idle_inserter=N
         test_frame.tdest = cur_id
 
         test_frames.append(test_frame)
-        await tb.source[port].send(test_frame)
+        await tb.source.send(test_frame)
 
         cur_id = (cur_id + 1) % id_count
 
@@ -114,7 +110,7 @@ async def run_test(dut, payload_lengths=None, payload_data=None, idle_inserter=N
     await RisingEdge(dut.clk)
 
 
-async def run_test_tuser_assert(dut, port=0):
+async def run_test_tuser_assert(dut):
 
     tb = TB(dut)
 
@@ -122,7 +118,7 @@ async def run_test_tuser_assert(dut, port=0):
 
     test_data = bytearray(itertools.islice(itertools.cycle(range(256)), 32))
     test_frame = AxiStreamFrame(test_data, tuser=1)
-    await tb.source[port].send(test_frame)
+    await tb.source.send(test_frame)
 
     rx_frame = await tb.sink.recv()
 
@@ -135,62 +131,12 @@ async def run_test_tuser_assert(dut, port=0):
     await RisingEdge(dut.clk)
 
 
-async def run_arb_test(dut):
-
-    tb = TB(dut)
-
-    byte_lanes = tb.source[0].byte_lanes
-    id_count = 2**len(tb.source[0].bus.tid)
-
-    cur_id = 1
-
-    await tb.reset()
-
-    test_frames = []
-
-    length = byte_lanes*16
-    test_data = bytearray(itertools.islice(itertools.cycle(range(256)), length))
-
-    for k in range(5):
-        test_frame = AxiStreamFrame(test_data, tx_complete=Event())
-        test_frame.tid = cur_id
-
-        if k == 0:
-            test_frame.tdest = 0
-        elif k == 4:
-            await test_frames[1].tx_complete.wait()
-            for j in range(8):
-                await RisingEdge(dut.clk)
-            test_frame.tdest = 0
-        else:
-            test_frame.tdest = 1
-
-        test_frames.append(test_frame)
-        await tb.source[test_frame.tdest].send(test_frame)
-
-        cur_id = (cur_id + 1) % id_count
-
-    for k in [0, 1, 2, 4, 3]:
-        test_frame = test_frames[k]
-        rx_frame = await tb.sink.recv()
-
-        assert rx_frame.tdata == test_frame.tdata
-        assert rx_frame.tid == test_frame.tid
-        assert rx_frame.tdest == test_frame.tdest
-        assert not rx_frame.tuser
-
-    assert tb.sink.empty()
-
-    await RisingEdge(dut.clk)
-    await RisingEdge(dut.clk)
-
-
 async def run_stress_test(dut, idle_inserter=None, backpressure_inserter=None):
 
     tb = TB(dut)
 
-    byte_lanes = tb.source[0].byte_lanes
-    id_count = 2**len(tb.source[0].bus.tid)
+    byte_lanes = tb.source.byte_lanes
+    id_count = 2**len(tb.source.bus.tid)
 
     cur_id = 1
 
@@ -199,32 +145,22 @@ async def run_stress_test(dut, idle_inserter=None, backpressure_inserter=None):
     tb.set_idle_generator(idle_inserter)
     tb.set_backpressure_generator(backpressure_inserter)
 
-    test_frames = [list() for x in tb.source]
+    test_frames = []
 
-    for p in range(len(tb.source)):
-        for k in range(128):
-            length = random.randint(1, byte_lanes*16)
-            test_data = bytearray(itertools.islice(itertools.cycle(range(256)), length))
-            test_frame = AxiStreamFrame(test_data)
-            test_frame.tid = p
-            test_frame.tdest = cur_id
+    for k in range(128):
+        length = random.randint(1, byte_lanes*16)
+        test_data = bytearray(itertools.islice(itertools.cycle(range(256)), length))
+        test_frame = AxiStreamFrame(test_data)
+        test_frame.tid = cur_id
+        test_frame.tdest = cur_id
 
-            test_frames[p].append(test_frame)
-            await tb.source[p].send(test_frame)
+        test_frames.append(test_frame)
+        await tb.source.send(test_frame)
 
-            cur_id = (cur_id + 1) % id_count
+        cur_id = (cur_id + 1) % id_count
 
-    while any(test_frames):
+    for test_frame in test_frames:
         rx_frame = await tb.sink.recv()
-
-        test_frame = None
-
-        for lst in test_frames:
-            if lst and lst[0].tid == rx_frame.tid:
-                test_frame = lst.pop(0)
-                break
-
-        assert test_frame is not None
 
         assert rx_frame.tdata == test_frame.tdata
         assert rx_frame.tid == test_frame.tid
@@ -242,7 +178,7 @@ def cycle_pause():
 
 
 def size_list():
-    data_width = len(cocotb.top.s00_axis_tdata)
+    data_width = len(cocotb.top.m_axis_tdata)
     byte_width = data_width // 8
     return list(range(1, byte_width*4+1))+[512]+[1]*64
 
@@ -253,23 +189,15 @@ def incrementing_payload(length):
 
 if cocotb.SIM_NAME:
 
-    ports = len(cocotb.top.axis_arb_mux_inst.s_axis_tvalid)
-
     factory = TestFactory(run_test)
     factory.add_option("payload_lengths", [size_list])
     factory.add_option("payload_data", [incrementing_payload])
     factory.add_option("idle_inserter", [None, cycle_pause])
     factory.add_option("backpressure_inserter", [None, cycle_pause])
-    factory.add_option("port", list(range(ports)))
     factory.generate_tests()
 
     for test in [run_test_tuser_assert]:
         factory = TestFactory(test)
-        factory.add_option("port", list(range(ports)))
-        factory.generate_tests()
-
-    if ports > 1:
-        factory = TestFactory(run_arb_test)
         factory.generate_tests()
 
     factory = TestFactory(run_stress_test)
@@ -284,46 +212,30 @@ tests_dir = os.path.dirname(__file__)
 rtl_dir = os.path.abspath(os.path.join(tests_dir, '..', '..', 'rtl'))
 
 
-@pytest.mark.parametrize("round_robin", [0, 1])
-@pytest.mark.parametrize("data_width", [8, 16, 32])
-@pytest.mark.parametrize("ports", [1, 4])
-def test_axis_arb_mux(request, ports, data_width, round_robin):
-    dut = "axis_arb_mux"
-    wrapper = f"{dut}_wrap_{ports}"
+@pytest.mark.parametrize("data_width", [8, 16])
+@pytest.mark.parametrize("length", list(range(1, 17)))
+def test_axis_pipeline_fifo(request, length, data_width):
+    dut = "axis_pipeline_fifo"
     module = os.path.splitext(os.path.basename(__file__))[0]
-    toplevel = wrapper
-
-    # generate wrapper
-    wrapper_file = os.path.join(tests_dir, f"{wrapper}.v")
-    if not os.path.exists(wrapper_file):
-        subprocess.Popen(
-            [os.path.join(rtl_dir, f"{dut}_wrap.py"), "-p", f"{ports}"],
-            cwd=tests_dir
-        ).wait()
+    toplevel = dut
 
     verilog_sources = [
-        wrapper_file,
         os.path.join(rtl_dir, f"{dut}.v"),
-        os.path.join(rtl_dir, "arbiter.v"),
-        os.path.join(rtl_dir, "priority_encoder.v"),
     ]
 
     parameters = {}
 
-    parameters['PORTS'] = ports
-
     parameters['DATA_WIDTH'] = data_width
     parameters['KEEP_ENABLE'] = int(parameters['DATA_WIDTH'] > 8)
     parameters['KEEP_WIDTH'] = parameters['DATA_WIDTH'] // 8
+    parameters['LAST_ENABLE'] = 1
     parameters['ID_ENABLE'] = 1
     parameters['ID_WIDTH'] = 8
     parameters['DEST_ENABLE'] = 1
     parameters['DEST_WIDTH'] = 8
     parameters['USER_ENABLE'] = 1
     parameters['USER_WIDTH'] = 1
-    parameters['LAST_ENABLE'] = 1
-    parameters['ARB_TYPE_ROUND_ROBIN'] = round_robin
-    parameters['ARB_LSB_HIGH_PRIORITY'] = 1
+    parameters['LENGTH'] = length
 
     extra_env = {f'PARAM_{k}': str(v) for k, v in parameters.items()}
 

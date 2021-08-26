@@ -71,12 +71,15 @@ module axis_fifo_adapter #
     parameter USER_BAD_FRAME_VALUE = 1'b1,
     // tuser mask for bad frame marker
     parameter USER_BAD_FRAME_MASK = 1'b1,
-    // Drop frames marked bad
+    // Drop frames larger than FIFO
     // Requires FRAME_FIFO set
+    parameter DROP_OVERSIZE_FRAME = FRAME_FIFO,
+    // Drop frames marked bad
+    // Requires FRAME_FIFO and DROP_OVERSIZE_FRAME set
     parameter DROP_BAD_FRAME = 0,
     // Drop incoming frames when full
     // When set, s_axis_tready is always asserted
-    // Requires FRAME_FIFO set
+    // Requires FRAME_FIFO and DROP_OVERSIZE_FRAME set
     parameter DROP_WHEN_FULL = 0
 )
 (
@@ -308,6 +311,7 @@ axis_fifo #(
     .FRAME_FIFO(FRAME_FIFO),
     .USER_BAD_FRAME_VALUE(USER_BAD_FRAME_VALUE),
     .USER_BAD_FRAME_MASK(USER_BAD_FRAME_MASK),
+    .DROP_OVERSIZE_FRAME(DROP_OVERSIZE_FRAME),
     .DROP_BAD_FRAME(DROP_BAD_FRAME),
     .DROP_WHEN_FULL(DROP_WHEN_FULL)
 )

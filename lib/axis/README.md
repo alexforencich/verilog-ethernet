@@ -121,10 +121,17 @@ count.
 
 Wrappers can generated with `axis_mux_wrap.py`.
 
+### `axis_pipeline_fifo` module
+
+Parametrizable register pipeline with output FIFO.  LENGTH parameter
+determines number of register stages.  For a sufficient pipeline length and
+bus width, consumes fewer resources than `axis_pipeline_register` while
+providing full throughput.
+
 ### `axis_pipeline_register` module
 
 Parametrizable register pipeline.  LENGTH parameter determines number of
-register stages.
+register stages (instances of `axis_register`).
 
 ### `axis_ram_switch` module
 
@@ -143,7 +150,8 @@ Parametrizable data width.  Rate and mode are configurable at run time.
 ### `axis_register` module
 
 Datapath register with parameter to select between skid buffer, simple buffer,
-and bypass.  Use to improve timing for long routes.
+and bypass.  Use to improve timing for long routes.  Use `REG_TYPE` parameter
+to select the type of register (bypass, simple, or skid buffer).
 
 ### `axis_srl_fifo` module
 
@@ -227,6 +235,8 @@ Parametrizable priority encoder.
     axis_frame_length_adjust_fifo.v    : Frame length adjuster with FIFO
     axis_ll_bridge.v                   : AXI stream to LocalLink bridge
     axis_mux.v                         : Multiplexer generator
+    axis_pipeline_fifo.v               : AXI stream register pipeline with FIFO
+    axis_pipeline_register.v           : AXI stream register pipeline
     axis_ram_switch.v                  : AXI stream RAM switch
     axis_rate_limit.v                  : Fractional rate limiter
     axis_register.v                    : AXI Stream register

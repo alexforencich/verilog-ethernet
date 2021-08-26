@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013-2018 Alex Forencich
+Copyright (c) 2013-2021 Alex Forencich
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -66,12 +66,15 @@ module axis_fifo #
     parameter USER_BAD_FRAME_VALUE = 1'b1,
     // tuser mask for bad frame marker
     parameter USER_BAD_FRAME_MASK = 1'b1,
-    // Drop frames marked bad
+    // Drop frames larger than FIFO
     // Requires FRAME_FIFO set
+    parameter DROP_OVERSIZE_FRAME = FRAME_FIFO,
+    // Drop frames marked bad
+    // Requires FRAME_FIFO and DROP_OVERSIZE_FRAME set
     parameter DROP_BAD_FRAME = 0,
     // Drop incoming frames when full
     // When set, s_axis_tready is always asserted
-    // Requires FRAME_FIFO set
+    // Requires FRAME_FIFO and DROP_OVERSIZE_FRAME set
     parameter DROP_WHEN_FULL = 0
 )
 (
@@ -124,13 +127,18 @@ initial begin
         $finish;
     end
 
-    if (DROP_BAD_FRAME && !FRAME_FIFO) begin
-        $error("Error: DROP_BAD_FRAME set requires FRAME_FIFO set (instance %m)");
+    if (DROP_OVERSIZE_FRAME && !FRAME_FIFO) begin
+        $error("Error: DROP_OVERSIZE_FRAME set requires FRAME_FIFO set (instance %m)");
         $finish;
     end
 
-    if (DROP_WHEN_FULL && !FRAME_FIFO) begin
-        $error("Error: DROP_WHEN_FULL set requires FRAME_FIFO set (instance %m)");
+    if (DROP_BAD_FRAME && !(FRAME_FIFO && DROP_OVERSIZE_FRAME)) begin
+        $error("Error: DROP_BAD_FRAME set requires FRAME_FIFO and DROP_OVERSIZE_FRAME set (instance %m)");
+        $finish;
+    end
+
+    if (DROP_WHEN_FULL && !(FRAME_FIFO && DROP_OVERSIZE_FRAME)) begin
+        $error("Error: DROP_WHEN_FULL set requires FRAME_FIFO and DROP_OVERSIZE_FRAME set (instance %m)");
         $finish;
     end
 
@@ -169,11 +177,12 @@ wire empty = wr_ptr_reg == rd_ptr_reg;
 wire full_wr = wr_ptr_reg == (wr_ptr_cur_reg ^ {1'b1, {ADDR_WIDTH{1'b0}}});
 
 reg drop_frame_reg = 1'b0;
+reg send_frame_reg = 1'b0;
 reg overflow_reg = 1'b0;
 reg bad_frame_reg = 1'b0;
 reg good_frame_reg = 1'b0;
 
-assign s_axis_tready = FRAME_FIFO ? (!full_cur || full_wr || DROP_WHEN_FULL) : !full;
+assign s_axis_tready = FRAME_FIFO ? (!full_cur || (full_wr && DROP_OVERSIZE_FRAME) || DROP_WHEN_FULL) : !full;
 
 generate
     assign s_axis[DATA_WIDTH-1:0] = s_axis_tdata;
@@ -209,7 +218,7 @@ always @(posedge clk) begin
             // normal FIFO mode
             mem[wr_ptr_reg[ADDR_WIDTH-1:0]] <= s_axis;
             wr_ptr_reg <= wr_ptr_reg + 1;
-        end else if (full_cur || full_wr || drop_frame_reg) begin
+        end else if ((full_cur && DROP_WHEN_FULL) || (full_wr && DROP_OVERSIZE_FRAME) || drop_frame_reg) begin
             // full, packet overflow, or currently dropping frame
             // drop frame
             drop_frame_reg <= 1'b1;
@@ -220,21 +229,28 @@ always @(posedge clk) begin
                 overflow_reg <= 1'b1;
             end
         end else begin
+            // store it
             mem[wr_ptr_cur_reg[ADDR_WIDTH-1:0]] <= s_axis;
             wr_ptr_cur_reg <= wr_ptr_cur_reg + 1;
-            if (s_axis_tlast) begin
-                // end of frame
-                if (DROP_BAD_FRAME && USER_BAD_FRAME_MASK & ~(s_axis_tuser ^ USER_BAD_FRAME_VALUE)) begin
+            if (s_axis_tlast || (!DROP_OVERSIZE_FRAME && (full_wr || send_frame_reg))) begin
+                // end of frame or send frame
+                send_frame_reg <= !s_axis_tlast;
+                if (s_axis_tlast && DROP_BAD_FRAME && USER_BAD_FRAME_MASK & ~(s_axis_tuser ^ USER_BAD_FRAME_VALUE)) begin
                     // bad packet, reset write pointer
                     wr_ptr_cur_reg <= wr_ptr_reg;
                     bad_frame_reg <= 1'b1;
                 end else begin
-                    // good packet, update write pointer
+                    // good packet or packet overflow, update write pointer
                     wr_ptr_reg <= wr_ptr_cur_reg + 1;
-                    good_frame_reg <= 1'b1;
+                    good_frame_reg <= s_axis_tlast;
                 end
             end
         end
+    end else if (s_axis_tvalid && full_wr && FRAME_FIFO && !DROP_OVERSIZE_FRAME) begin
+        // data valid with packet overflow
+        // update write pointer
+        send_frame_reg <= 1'b1;
+        wr_ptr_reg <= wr_ptr_cur_reg;
     end
 
     if (rst) begin
@@ -242,6 +258,7 @@ always @(posedge clk) begin
         wr_ptr_cur_reg <= {ADDR_WIDTH+1{1'b0}};
 
         drop_frame_reg <= 1'b0;
+        send_frame_reg <= 1'b0;
         overflow_reg <= 1'b0;
         bad_frame_reg <= 1'b0;
         good_frame_reg <= 1'b0;
