@@ -181,12 +181,14 @@ def test_eth_mac_mii_fifo(request):
     parameters['MIN_FRAME_LENGTH'] = 64
     parameters['TX_FIFO_DEPTH'] = 16384
     parameters['TX_FRAME_FIFO'] = 1
-    parameters['TX_DROP_BAD_FRAME'] = parameters['TX_FRAME_FIFO']
+    parameters['TX_DROP_OVERSIZE_FRAME'] = parameters['TX_FRAME_FIFO']
+    parameters['TX_DROP_BAD_FRAME'] = parameters['TX_DROP_OVERSIZE_FRAME']
     parameters['TX_DROP_WHEN_FULL'] = 0
     parameters['RX_FIFO_DEPTH'] = 16384
     parameters['RX_FRAME_FIFO'] = 1
-    parameters['RX_DROP_BAD_FRAME'] = parameters['RX_FRAME_FIFO']
-    parameters['RX_DROP_WHEN_FULL'] = parameters['RX_FRAME_FIFO']
+    parameters['RX_DROP_OVERSIZE_FRAME'] = parameters['RX_FRAME_FIFO']
+    parameters['RX_DROP_BAD_FRAME'] = parameters['RX_DROP_OVERSIZE_FRAME']
+    parameters['RX_DROP_WHEN_FULL'] = parameters['RX_DROP_OVERSIZE_FRAME']
 
     extra_env = {f'PARAM_{k}': str(v) for k, v in parameters.items()}
 

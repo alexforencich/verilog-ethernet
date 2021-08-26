@@ -50,13 +50,15 @@ module eth_mac_phy_10g_fifo #
     parameter TX_FIFO_DEPTH = 4096,
     parameter TX_FIFO_PIPELINE_OUTPUT = 2,
     parameter TX_FRAME_FIFO = 1,
-    parameter TX_DROP_BAD_FRAME = TX_FRAME_FIFO,
+    parameter TX_DROP_OVERSIZE_FRAME = TX_FRAME_FIFO,
+    parameter TX_DROP_BAD_FRAME = TX_DROP_OVERSIZE_FRAME,
     parameter TX_DROP_WHEN_FULL = 0,
     parameter RX_FIFO_DEPTH = 4096,
     parameter RX_FIFO_PIPELINE_OUTPUT = 2,
     parameter RX_FRAME_FIFO = 1,
-    parameter RX_DROP_BAD_FRAME = RX_FRAME_FIFO,
-    parameter RX_DROP_WHEN_FULL = RX_FRAME_FIFO,
+    parameter RX_DROP_OVERSIZE_FRAME = RX_FRAME_FIFO,
+    parameter RX_DROP_BAD_FRAME = RX_DROP_OVERSIZE_FRAME,
+    parameter RX_DROP_WHEN_FULL = RX_DROP_OVERSIZE_FRAME,
     parameter LOGIC_PTP_PERIOD_NS = 4'h6,
     parameter LOGIC_PTP_PERIOD_FNS = 16'h6666,
     parameter PTP_PERIOD_NS = 4'h6,
@@ -625,6 +627,7 @@ axis_async_fifo_adapter #(
     .FRAME_FIFO(TX_FRAME_FIFO),
     .USER_BAD_FRAME_VALUE(1'b1),
     .USER_BAD_FRAME_MASK(1'b1),
+    .DROP_OVERSIZE_FRAME(TX_DROP_OVERSIZE_FRAME),
     .DROP_BAD_FRAME(TX_DROP_BAD_FRAME),
     .DROP_WHEN_FULL(TX_DROP_WHEN_FULL)
 )
@@ -676,6 +679,7 @@ axis_async_fifo_adapter #(
     .FRAME_FIFO(RX_FRAME_FIFO),
     .USER_BAD_FRAME_VALUE(1'b1),
     .USER_BAD_FRAME_MASK(1'b1),
+    .DROP_OVERSIZE_FRAME(RX_DROP_OVERSIZE_FRAME),
     .DROP_BAD_FRAME(RX_DROP_BAD_FRAME),
     .DROP_WHEN_FULL(RX_DROP_WHEN_FULL)
 )
