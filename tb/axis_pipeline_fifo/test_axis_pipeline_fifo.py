@@ -213,7 +213,7 @@ rtl_dir = os.path.abspath(os.path.join(tests_dir, '..', '..', 'rtl'))
 
 
 @pytest.mark.parametrize("data_width", [8, 16])
-@pytest.mark.parametrize("length", list(range(1, 17)))
+@pytest.mark.parametrize("length", list(range(17)))
 def test_axis_pipeline_fifo(request, length, data_width):
     dut = "axis_pipeline_fifo"
     module = os.path.splitext(os.path.basename(__file__))[0]
