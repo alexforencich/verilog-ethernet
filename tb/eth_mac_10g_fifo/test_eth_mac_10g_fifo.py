@@ -290,10 +290,11 @@ def test_eth_mac_10g_fifo(request, data_width, enable_dic):
     parameters['TX_PTP_TS_ENABLE'] = 0
     parameters['RX_PTP_TS_ENABLE'] = 0
     parameters['TX_PTP_TS_FIFO_DEPTH'] = 64
-    parameters['RX_PTP_TS_FIFO_DEPTH'] = 64
     parameters['PTP_TS_WIDTH'] = 96
     parameters['TX_PTP_TAG_ENABLE'] = 0
     parameters['PTP_TAG_WIDTH'] = 16
+    parameters['TX_USER_WIDTH'] = (parameters['TX_PTP_TAG_WIDTH'] if parameters['TX_PTP_TS_ENABLE'] and parameters['TX_PTP_TAG_ENABLE'] else 0) + 1
+    parameters['RX_USER_WIDTH'] = (parameters['RX_PTP_TS_WIDTH'] if parameters['RX_PTP_TS_ENABLE'] else 0) + 1
 
     extra_env = {f'PARAM_{k}': str(v) for k, v in parameters.items()}
 
