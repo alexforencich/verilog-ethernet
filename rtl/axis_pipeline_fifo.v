@@ -158,8 +158,8 @@ if (LENGTH > 0) begin
 
         if (rst) begin
             for (i = 0; i < LENGTH; i = i + 1) begin
-                axis_tvalid_reg[i] = 1'b0;
-                axis_tready_reg[i] = 1'b0;
+                axis_tvalid_reg[i] <= 1'b0;
+                axis_tready_reg[i] <= 1'b0;
             end
         end
     end
