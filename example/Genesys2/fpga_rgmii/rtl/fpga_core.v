@@ -1,6 +1,7 @@
 /*
 
 Copyright (c) 2014-2018 Alex Forencich
+Adaptation to Digilent Genesys2 by Torsten Reuschel 2021
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -69,9 +70,7 @@ module fpga_core #
      * UART: 115200 bps, 8N1
      */
     input  wire       uart_rxd,
-    output wire       uart_txd,
-    output wire       uart_rts,
-    input  wire       uart_cts
+    output wire       uart_txd
 );
 
 // AXI between MAC and Ethernet modules
@@ -305,7 +304,6 @@ assign led = led_reg;
 assign phy_reset_n = !rst;
 
 assign uart_txd = 0;
-assign uart_rts = 0;
 
 eth_mac_1g_rgmii_fifo #(
     .TARGET(TARGET),

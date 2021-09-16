@@ -22,4 +22,4 @@ clean: $(SUBDIRS_CLEAN)
 	-rm -rf $(TARGETS)
 
 program:
-	#djtgcfg prog -d Atlys --index 0 --file fpga/fpga.bit
+	#djtgcfg prog -d Genesys2 --index 0 --file fpga/fpga.bit
