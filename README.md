@@ -39,6 +39,7 @@ following boards:
 *  Alpha Data ADM-PCIE-9V3 (Xilinx Virtex UltraScale+ XCVU3P)
 *  Digilent Arty A7 (Xilinx Artix 7 XC7A35T)
 *  Digilent Atlys (Xilinx Spartan 6 XC6SLX45)
+*  Digilent Genesys2 (Xilinx Kintex 7 XC7K325T)
 *  Intel Cyclone 10 LP (Intel Cyclone 10 10CL025YU256I7G)
 *  Terasic DE2-115 (Intel Cyclone IV E EP4CE115F29C7)
 *  Terasic DE5-Net (Intel Stratix V 5SGXEA7N2F45C2)
