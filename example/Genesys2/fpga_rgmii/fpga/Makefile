@@ -1,6 +1,6 @@
 
 # FPGA settings
-FPGA_PART = xc7k325tffg900c
+FPGA_PART = xc7k325tffg900-2
 FPGA_TOP = fpga
 FPGA_ARCH = kintex7
 
