@@ -46,8 +46,11 @@ class TB(object):
         self.log = logging.getLogger("cocotb.tb")
         self.log.setLevel(logging.DEBUG)
 
-        cocotb.fork(Clock(dut.s_clk, 10, units="ns").start())
-        cocotb.fork(Clock(dut.m_clk, 11, units="ns").start())
+        s_clk = int(os.getenv("S_CLK", "10"))
+        m_clk = int(os.getenv("M_CLK", "11"))
+
+        cocotb.fork(Clock(dut.s_clk, s_clk, units="ns").start())
+        cocotb.fork(Clock(dut.m_clk, m_clk, units="ns").start())
 
         self.source = AxiStreamSource(AxiStreamBus.from_prefix(dut, "s_axis"), dut.s_clk, dut.async_rst)
         self.sink = AxiStreamSink(AxiStreamBus.from_prefix(dut, "m_axis"), dut.m_clk, dut.async_rst)
@@ -307,10 +310,13 @@ tests_dir = os.path.dirname(__file__)
 rtl_dir = os.path.abspath(os.path.join(tests_dir, '..', '..', 'rtl'))
 
 
+@pytest.mark.parametrize(("s_clk", "m_clk"), [(10, 10), (10, 11), (11, 10)])
 @pytest.mark.parametrize(("frame_fifo", "drop_oversize_frame", "drop_bad_frame", "drop_when_full"),
     [(0, 0, 0, 0), (1, 0, 0, 0), (1, 1, 0, 0), (1, 1, 1, 0)])
 @pytest.mark.parametrize("data_width", [8, 16, 32, 64])
-def test_axis_async_fifo(request, data_width, frame_fifo, drop_oversize_frame, drop_bad_frame, drop_when_full):
+def test_axis_async_fifo(request, data_width, frame_fifo, drop_oversize_frame, drop_bad_frame,
+        drop_when_full, s_clk, m_clk):
+
     dut = "axis_async_fifo"
     module = os.path.splitext(os.path.basename(__file__))[0]
     toplevel = dut
@@ -341,6 +347,9 @@ def test_axis_async_fifo(request, data_width, frame_fifo, drop_oversize_frame, d
     parameters['DROP_WHEN_FULL'] = drop_when_full
 
     extra_env = {f'PARAM_{k}': str(v) for k, v in parameters.items()}
+
+    extra_env['S_CLK'] = str(s_clk)
+    extra_env['M_CLK'] = str(m_clk)
 
     sim_build = os.path.join(tests_dir, "sim_build",
         request.node.name.replace('[', '-').replace(']', ''))
