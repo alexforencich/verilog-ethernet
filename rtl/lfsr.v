@@ -23,7 +23,7 @@ THE SOFTWARE.
 */
 
 // Language: Verilog 2001
-
+`default_nettype none   //do not allow undeclared wires
 `timescale 1ns / 1ps
 
 /*
@@ -360,10 +360,10 @@ end
 
 `ifdef SIMULATION
 // "AUTO" style is "REDUCTION" for faster simulation
-parameter STYLE_INT = (STYLE == "AUTO") ? "REDUCTION" : STYLE;
+localparam STYLE_INT = (STYLE == "AUTO") ? "REDUCTION" : STYLE;
 `else
 // "AUTO" style is "LOOP" for better synthesis result
-parameter STYLE_INT = (STYLE == "AUTO") ? "LOOP" : STYLE;
+localparam STYLE_INT = (STYLE == "AUTO") ? "LOOP" : STYLE;
 `endif
 
 genvar n;

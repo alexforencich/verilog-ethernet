@@ -23,7 +23,7 @@ THE SOFTWARE.
 */
 
 // Language: Verilog-2001
-
+`default_nettype none   //do not allow undeclared wires
 `timescale 1 ns / 1 ps
 
 /*

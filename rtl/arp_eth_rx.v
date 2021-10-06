@@ -23,7 +23,7 @@ THE SOFTWARE.
 */
 
 // Language: Verilog 2001
-
+`default_nettype none   //do not allow undeclared wires
 `timescale 1ns / 1ps
 
 /*
@@ -84,11 +84,11 @@ module arp_eth_rx #
     output wire                   error_invalid_header
 );
 
-parameter CYCLE_COUNT = (28+KEEP_WIDTH-1)/KEEP_WIDTH;
+localparam CYCLE_COUNT = (28+KEEP_WIDTH-1)/KEEP_WIDTH;
 
-parameter PTR_WIDTH = $clog2(CYCLE_COUNT);
+localparam PTR_WIDTH = $clog2(CYCLE_COUNT);
 
-parameter OFFSET = 28 % KEEP_WIDTH;
+localparam OFFSET = 28 % KEEP_WIDTH;
 
 // bus width assertions
 initial begin

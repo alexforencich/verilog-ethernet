@@ -23,7 +23,7 @@ THE SOFTWARE.
 */
 
 // Language: Verilog 2001
-
+`default_nettype none   //do not allow undeclared wires
 `timescale 1ns / 1ps
 
 /*
@@ -42,8 +42,8 @@ module priority_encoder #
     output wire [WIDTH-1:0]         output_unencoded
 );
 
-parameter LEVELS = WIDTH > 2 ? $clog2(WIDTH) : 1;
-parameter W = 2**LEVELS;
+localparam LEVELS = WIDTH > 2 ? $clog2(WIDTH) : 1;
+localparam W = 2**LEVELS;
 
 // pad input to even power of two
 wire [W-1:0] input_padded = {{W-WIDTH{1'b0}}, input_unencoded};

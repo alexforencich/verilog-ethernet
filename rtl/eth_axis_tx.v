@@ -23,7 +23,7 @@ THE SOFTWARE.
 */
 
 // Language: Verilog 2001
-
+`default_nettype none   //do not allow undeclared wires
 `timescale 1ns / 1ps
 
 /*
@@ -74,11 +74,11 @@ module eth_axis_tx #
     output wire                  busy
 );
 
-parameter CYCLE_COUNT = (14+KEEP_WIDTH-1)/KEEP_WIDTH;
+localparam CYCLE_COUNT = (14+KEEP_WIDTH-1)/KEEP_WIDTH;
 
-parameter PTR_WIDTH = $clog2(CYCLE_COUNT);
+localparam PTR_WIDTH = $clog2(CYCLE_COUNT);
 
-parameter OFFSET = 14 % KEEP_WIDTH;
+localparam OFFSET = 14 % KEEP_WIDTH;
 
 // bus width assertions
 initial begin

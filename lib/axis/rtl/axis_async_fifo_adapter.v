@@ -23,7 +23,7 @@ THE SOFTWARE.
 */
 
 // Language: Verilog 2001
-
+`default_nettype none   //do not allow undeclared wires
 `timescale 1ns / 1ps
 
 /*
@@ -123,17 +123,17 @@ module axis_async_fifo_adapter #
 );
 
 // force keep width to 1 when disabled
-parameter S_KEEP_WIDTH_INT = S_KEEP_ENABLE ? S_KEEP_WIDTH : 1;
-parameter M_KEEP_WIDTH_INT = M_KEEP_ENABLE ? M_KEEP_WIDTH : 1;
+localparam S_KEEP_WIDTH_INT = S_KEEP_ENABLE ? S_KEEP_WIDTH : 1;
+localparam M_KEEP_WIDTH_INT = M_KEEP_ENABLE ? M_KEEP_WIDTH : 1;
 
 // bus word sizes (must be identical)
-parameter S_DATA_WORD_SIZE = S_DATA_WIDTH / S_KEEP_WIDTH_INT;
-parameter M_DATA_WORD_SIZE = M_DATA_WIDTH / M_KEEP_WIDTH_INT;
+localparam S_DATA_WORD_SIZE = S_DATA_WIDTH / S_KEEP_WIDTH_INT;
+localparam M_DATA_WORD_SIZE = M_DATA_WIDTH / M_KEEP_WIDTH_INT;
 // output bus is wider
-parameter EXPAND_BUS = M_KEEP_WIDTH_INT > S_KEEP_WIDTH_INT;
+localparam EXPAND_BUS = M_KEEP_WIDTH_INT > S_KEEP_WIDTH_INT;
 // total data and keep widths
-parameter DATA_WIDTH = EXPAND_BUS ? M_DATA_WIDTH : S_DATA_WIDTH;
-parameter KEEP_WIDTH = EXPAND_BUS ? M_KEEP_WIDTH_INT : S_KEEP_WIDTH_INT;
+localparam DATA_WIDTH = EXPAND_BUS ? M_DATA_WIDTH : S_DATA_WIDTH;
+localparam KEEP_WIDTH = EXPAND_BUS ? M_KEEP_WIDTH_INT : S_KEEP_WIDTH_INT;
 
 // bus width assertions
 initial begin

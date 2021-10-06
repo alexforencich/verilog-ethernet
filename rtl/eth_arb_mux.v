@@ -23,7 +23,7 @@ THE SOFTWARE.
 */
 
 // Language: Verilog 2001
-
+`default_nettype none   //do not allow undeclared wires
 `timescale 1ns / 1ps
 
 /*
@@ -85,7 +85,7 @@ module eth_arb_mux #
     output wire [USER_WIDTH-1:0]         m_eth_payload_axis_tuser
 );
 
-parameter CL_S_COUNT = $clog2(S_COUNT);
+localparam CL_S_COUNT = $clog2(S_COUNT);
 
 reg frame_reg = 1'b0, frame_next;
 
