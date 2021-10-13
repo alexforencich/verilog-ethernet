@@ -290,7 +290,13 @@ if cocotb.SIM_NAME:
     factory.add_option("backpressure_inserter", [None, cycle_pause])
     factory.generate_tests()
 
-    for test in [run_test_tuser_assert, run_test_init_sink_pause, run_test_init_sink_pause_reset, run_test_overflow]:
+    for test in [
+                run_test_tuser_assert,
+                run_test_init_sink_pause,
+                run_test_init_sink_pause_reset,
+                run_test_overflow
+            ]:
+
         factory = TestFactory(test)
         factory.generate_tests()
 

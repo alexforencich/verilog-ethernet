@@ -26,12 +26,12 @@ proc constrain_axis_async_fifo_inst { inst } {
     # reset synchronization
     set_false_path -from * -to [get_registers "$inst|s_rst_sync*_reg $inst|m_rst_sync*_reg"]
 
-    if {[get_collection_size [get_registers -nowarn "$inst|s_rst_sync2_reg"]]} {
-        set_max_delay  -from [get_registers "$inst|s_rst_sync2_reg"] -to [get_registers "$inst|s_rst_sync3_reg"] 8.000
+    if {[get_collection_size [get_registers -nowarn "$inst|s_rst_sync1_reg"]]} {
+        set_max_delay  -from [get_registers "$inst|s_rst_sync1_reg"] -to [get_registers "$inst|s_rst_sync2_reg"] 8.000
     }
 
-    if {[get_collection_size [get_registers -nowarn "$inst|m_rst_sync2_reg"]]} {
-        set_max_delay  -from [get_registers "$inst|m_rst_sync2_reg"] -to [get_registers "$inst|m_rst_sync3_reg"] 8.000
+    if {[get_collection_size [get_registers -nowarn "$inst|m_rst_sync1_reg"]]} {
+        set_max_delay  -from [get_registers "$inst|m_rst_sync1_reg"] -to [get_registers "$inst|m_rst_sync2_reg"] 8.000
     }
 
     # pointer synchronization

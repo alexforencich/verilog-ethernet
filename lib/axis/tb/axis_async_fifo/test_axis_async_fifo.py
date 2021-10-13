@@ -46,11 +46,14 @@ class TB(object):
         self.log = logging.getLogger("cocotb.tb")
         self.log.setLevel(logging.DEBUG)
 
-        cocotb.fork(Clock(dut.s_clk, 10, units="ns").start())
-        cocotb.fork(Clock(dut.m_clk, 11, units="ns").start())
+        s_clk = int(os.getenv("S_CLK", "10"))
+        m_clk = int(os.getenv("M_CLK", "11"))
 
-        self.source = AxiStreamSource(AxiStreamBus.from_prefix(dut, "s_axis"), dut.s_clk, dut.async_rst)
-        self.sink = AxiStreamSink(AxiStreamBus.from_prefix(dut, "m_axis"), dut.m_clk, dut.async_rst)
+        cocotb.fork(Clock(dut.s_clk, s_clk, units="ns").start())
+        cocotb.fork(Clock(dut.m_clk, m_clk, units="ns").start())
+
+        self.source = AxiStreamSource(AxiStreamBus.from_prefix(dut, "s_axis"), dut.s_clk, dut.s_rst)
+        self.sink = AxiStreamSink(AxiStreamBus.from_prefix(dut, "m_axis"), dut.m_clk, dut.m_rst)
 
     def set_idle_generator(self, generator=None):
         if generator:
@@ -61,15 +64,40 @@ class TB(object):
             self.sink.set_pause_generator(generator())
 
     async def reset(self):
-        self.dut.async_rst.setimmediatevalue(0)
+        self.dut.m_rst.setimmediatevalue(0)
+        self.dut.s_rst.setimmediatevalue(0)
         for k in range(10):
             await RisingEdge(self.dut.s_clk)
-        self.dut.async_rst <= 1
+        self.dut.m_rst <= 1
+        self.dut.s_rst <= 1
         for k in range(10):
             await RisingEdge(self.dut.s_clk)
-        self.dut.async_rst <= 0
+        self.dut.m_rst <= 0
+        self.dut.s_rst <= 0
         for k in range(10):
             await RisingEdge(self.dut.s_clk)
+
+    async def reset_source(self):
+        self.dut.s_rst.setimmediatevalue(0)
+        for k in range(10):
+            await RisingEdge(self.dut.s_clk)
+        self.dut.s_rst <= 1
+        for k in range(10):
+            await RisingEdge(self.dut.s_clk)
+        self.dut.s_rst <= 0
+        for k in range(10):
+            await RisingEdge(self.dut.s_clk)
+
+    async def reset_sink(self):
+        self.dut.m_rst.setimmediatevalue(0)
+        for k in range(10):
+            await RisingEdge(self.dut.m_clk)
+        self.dut.m_rst <= 1
+        for k in range(10):
+            await RisingEdge(self.dut.m_clk)
+        self.dut.m_rst <= 0
+        for k in range(10):
+            await RisingEdge(self.dut.m_clk)
 
 
 async def run_test(dut, payload_lengths=None, payload_data=None, idle_inserter=None, backpressure_inserter=None):
@@ -187,7 +215,179 @@ async def run_test_init_sink_pause_reset(dut):
     for k in range(64):
         await RisingEdge(dut.s_clk)
 
-    assert tb.sink.empty()
+    assert tb.sink.idle()
+
+    await RisingEdge(dut.s_clk)
+    await RisingEdge(dut.s_clk)
+
+
+async def run_test_init_sink_pause_source_reset(dut):
+
+    tb = TB(dut)
+
+    await tb.reset()
+
+    tb.sink.pause = True
+
+    test_data = bytearray(itertools.islice(itertools.cycle(range(256)), 32))
+    test_frame = AxiStreamFrame(test_data)
+    await tb.source.send(test_frame)
+
+    for k in range(64):
+        await RisingEdge(dut.s_clk)
+
+    await tb.reset_source()
+
+    tb.sink.pause = False
+
+    for k in range(64):
+        await RisingEdge(dut.s_clk)
+
+    rx_frame = await tb.sink.recv()
+
+    assert rx_frame.tuser
+
+    assert tb.sink.idle()
+
+    await RisingEdge(dut.s_clk)
+    await RisingEdge(dut.s_clk)
+
+
+async def run_test_init_sink_pause_sink_reset(dut):
+
+    tb = TB(dut)
+
+    await tb.reset()
+
+    tb.sink.pause = True
+
+    test_data = bytearray(itertools.islice(itertools.cycle(range(256)), 32))
+    test_frame = AxiStreamFrame(test_data)
+    await tb.source.send(test_frame)
+
+    for k in range(64):
+        await RisingEdge(dut.s_clk)
+
+    await tb.reset_sink()
+
+    tb.sink.pause = False
+
+    for k in range(64):
+        await RisingEdge(dut.s_clk)
+
+    assert tb.sink.idle()
+
+    await RisingEdge(dut.s_clk)
+    await RisingEdge(dut.s_clk)
+
+
+async def run_test_shift_in_source_reset(dut):
+
+    tb = TB(dut)
+
+    await tb.reset()
+
+    test_data = bytearray(itertools.islice(itertools.cycle(range(256)), 256))
+    test_frame = AxiStreamFrame(test_data)
+    await tb.source.send(test_frame)
+
+    for k in range(8):
+        await RisingEdge(dut.s_clk)
+
+    await tb.reset_source()
+
+    for k in range(64):
+        await RisingEdge(dut.s_clk)
+
+    if int(os.getenv("PARAM_FRAME_FIFO")):
+        assert tb.sink.empty()
+    else:
+        rx_frame = await tb.sink.recv()
+
+        assert rx_frame.tuser
+
+        assert tb.sink.empty()
+    assert tb.sink.idle()
+
+    await RisingEdge(dut.s_clk)
+    await RisingEdge(dut.s_clk)
+
+
+async def run_test_shift_in_sink_reset(dut):
+
+    tb = TB(dut)
+
+    await tb.reset()
+
+    test_data = bytearray(itertools.islice(itertools.cycle(range(256)), 256))
+    test_frame = AxiStreamFrame(test_data)
+    await tb.source.send(test_frame)
+
+    for k in range(8):
+        await RisingEdge(dut.s_clk)
+
+    await tb.reset_sink()
+
+    for k in range(64):
+        await RisingEdge(dut.s_clk)
+
+    assert tb.sink.idle()
+
+    await RisingEdge(dut.s_clk)
+    await RisingEdge(dut.s_clk)
+
+
+async def run_test_shift_out_source_reset(dut):
+
+    tb = TB(dut)
+
+    await tb.reset()
+
+    test_data = bytearray(itertools.islice(itertools.cycle(range(256)), 256))
+    test_frame = AxiStreamFrame(test_data)
+    await tb.source.send(test_frame)
+
+    await RisingEdge(dut.m_axis_tvalid)
+
+    for k in range(8):
+        await RisingEdge(dut.s_clk)
+
+    await tb.reset_source()
+
+    for k in range(64):
+        await RisingEdge(dut.s_clk)
+
+    rx_frame = await tb.sink.recv()
+
+    assert rx_frame.tuser
+
+    assert tb.sink.idle()
+
+    await RisingEdge(dut.s_clk)
+    await RisingEdge(dut.s_clk)
+
+
+async def run_test_shift_out_sink_reset(dut):
+
+    tb = TB(dut)
+
+    await tb.reset()
+
+    test_data = bytearray(itertools.islice(itertools.cycle(range(256)), 256))
+    test_frame = AxiStreamFrame(test_data)
+    await tb.source.send(test_frame)
+
+    await RisingEdge(dut.m_axis_tvalid)
+
+    for k in range(8):
+        await RisingEdge(dut.s_clk)
+
+    await tb.reset_sink()
+
+    for k in range(64):
+        await RisingEdge(dut.s_clk)
+
+    assert tb.sink.idle()
 
     await RisingEdge(dut.s_clk)
     await RisingEdge(dut.s_clk)
@@ -291,7 +491,19 @@ if cocotb.SIM_NAME:
     factory.add_option("backpressure_inserter", [None, cycle_pause])
     factory.generate_tests()
 
-    for test in [run_test_tuser_assert, run_test_init_sink_pause, run_test_init_sink_pause_reset, run_test_overflow]:
+    for test in [
+                run_test_tuser_assert,
+                run_test_init_sink_pause,
+                run_test_init_sink_pause_reset,
+                run_test_init_sink_pause_source_reset,
+                run_test_init_sink_pause_sink_reset,
+                run_test_shift_in_source_reset,
+                run_test_shift_in_sink_reset,
+                run_test_shift_out_source_reset,
+                run_test_shift_out_sink_reset,
+                run_test_overflow
+            ]:
+
         factory = TestFactory(test)
         factory.generate_tests()
 
@@ -307,10 +519,13 @@ tests_dir = os.path.dirname(__file__)
 rtl_dir = os.path.abspath(os.path.join(tests_dir, '..', '..', 'rtl'))
 
 
+@pytest.mark.parametrize(("s_clk", "m_clk"), [(10, 10), (10, 11), (11, 10)])
 @pytest.mark.parametrize(("frame_fifo", "drop_oversize_frame", "drop_bad_frame", "drop_when_full"),
     [(0, 0, 0, 0), (1, 0, 0, 0), (1, 1, 0, 0), (1, 1, 1, 0)])
 @pytest.mark.parametrize("data_width", [8, 16, 32, 64])
-def test_axis_async_fifo(request, data_width, frame_fifo, drop_oversize_frame, drop_bad_frame, drop_when_full):
+def test_axis_async_fifo(request, data_width, frame_fifo, drop_oversize_frame, drop_bad_frame,
+        drop_when_full, s_clk, m_clk):
+
     dut = "axis_async_fifo"
     module = os.path.splitext(os.path.basename(__file__))[0]
     toplevel = dut
@@ -341,6 +556,9 @@ def test_axis_async_fifo(request, data_width, frame_fifo, drop_oversize_frame, d
     parameters['DROP_WHEN_FULL'] = drop_when_full
 
     extra_env = {f'PARAM_{k}': str(v) for k, v in parameters.items()}
+
+    extra_env['S_CLK'] = str(s_clk)
+    extra_env['M_CLK'] = str(m_clk)
 
     sim_build = os.path.join(tests_dir, "sim_build",
         request.node.name.replace('[', '-').replace(']', ''))
