@@ -504,10 +504,9 @@ axis_async_fifo #(
     .DROP_WHEN_FULL(1)
 )
 max_rx_fifo (
-    .async_rst(rst | qsfp1_mac_1_rx_rst),
-
     // AXI input
     .s_clk(qsfp1_mac_1_rx_clk),
+    .s_rst(qsfp1_mac_1_rx_rst),
     .s_axis_tdata(qsfp1_mac_1_rx_axis_tdata),
     .s_axis_tkeep(qsfp1_mac_1_rx_axis_tkeep),
     .s_axis_tvalid(qsfp1_mac_1_rx_axis_tvalid),
@@ -519,6 +518,7 @@ max_rx_fifo (
 
     // AXI output
     .m_clk(clk),
+    .m_rst(rst),
     .m_axis_tdata(rx_axis_tdata),
     .m_axis_tkeep(rx_axis_tkeep),
     .m_axis_tvalid(rx_axis_tvalid),
@@ -554,10 +554,9 @@ axis_async_fifo #(
     .DROP_WHEN_FULL(0)
 )
 max_tx_fifo (
-    .async_rst(rst | qsfp1_mac_1_tx_rst),
-
     // AXI input
     .s_clk(clk),
+    .s_rst(rst),
     .s_axis_tdata(tx_axis_tdata),
     .s_axis_tkeep(tx_axis_tkeep),
     .s_axis_tvalid(tx_axis_tvalid),
@@ -569,6 +568,7 @@ max_tx_fifo (
 
     // AXI output
     .m_clk(qsfp1_mac_1_tx_clk),
+    .m_rst(qsfp1_mac_1_tx_rst),
     .m_axis_tdata(qsfp1_mac_1_tx_axis_tdata),
     .m_axis_tkeep(qsfp1_mac_1_tx_axis_tkeep),
     .m_axis_tvalid(qsfp1_mac_1_tx_axis_tvalid),
