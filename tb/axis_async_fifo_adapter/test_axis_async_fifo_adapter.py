@@ -74,6 +74,28 @@ class TB(object):
         for k in range(10):
             await RisingEdge(self.dut.s_clk)
 
+    async def reset_source(self):
+        self.dut.s_rst.setimmediatevalue(0)
+        for k in range(10):
+            await RisingEdge(self.dut.s_clk)
+        self.dut.s_rst <= 1
+        for k in range(10):
+            await RisingEdge(self.dut.s_clk)
+        self.dut.s_rst <= 0
+        for k in range(10):
+            await RisingEdge(self.dut.s_clk)
+
+    async def reset_sink(self):
+        self.dut.m_rst.setimmediatevalue(0)
+        for k in range(10):
+            await RisingEdge(self.dut.m_clk)
+        self.dut.m_rst <= 1
+        for k in range(10):
+            await RisingEdge(self.dut.m_clk)
+        self.dut.m_rst <= 0
+        for k in range(10):
+            await RisingEdge(self.dut.m_clk)
+
 
 async def run_test(dut, payload_lengths=None, payload_data=None, idle_inserter=None, backpressure_inserter=None):
 
@@ -190,7 +212,179 @@ async def run_test_init_sink_pause_reset(dut):
     for k in range(64):
         await RisingEdge(dut.s_clk)
 
-    assert tb.sink.empty()
+    assert tb.sink.idle()
+
+    await RisingEdge(dut.s_clk)
+    await RisingEdge(dut.s_clk)
+
+
+async def run_test_init_sink_pause_source_reset(dut):
+
+    tb = TB(dut)
+
+    await tb.reset()
+
+    tb.sink.pause = True
+
+    test_data = bytearray(itertools.islice(itertools.cycle(range(256)), 32))
+    test_frame = AxiStreamFrame(test_data)
+    await tb.source.send(test_frame)
+
+    for k in range(64):
+        await RisingEdge(dut.s_clk)
+
+    await tb.reset_source()
+
+    tb.sink.pause = False
+
+    for k in range(64):
+        await RisingEdge(dut.s_clk)
+
+    rx_frame = await tb.sink.recv()
+
+    assert rx_frame.tuser
+
+    assert tb.sink.idle()
+
+    await RisingEdge(dut.s_clk)
+    await RisingEdge(dut.s_clk)
+
+
+async def run_test_init_sink_pause_sink_reset(dut):
+
+    tb = TB(dut)
+
+    await tb.reset()
+
+    tb.sink.pause = True
+
+    test_data = bytearray(itertools.islice(itertools.cycle(range(256)), 32))
+    test_frame = AxiStreamFrame(test_data)
+    await tb.source.send(test_frame)
+
+    for k in range(64):
+        await RisingEdge(dut.s_clk)
+
+    await tb.reset_sink()
+
+    tb.sink.pause = False
+
+    for k in range(64):
+        await RisingEdge(dut.s_clk)
+
+    assert tb.sink.idle()
+
+    await RisingEdge(dut.s_clk)
+    await RisingEdge(dut.s_clk)
+
+
+async def run_test_shift_in_source_reset(dut):
+
+    tb = TB(dut)
+
+    await tb.reset()
+
+    test_data = bytearray(itertools.islice(itertools.cycle(range(256)), 256))
+    test_frame = AxiStreamFrame(test_data)
+    await tb.source.send(test_frame)
+
+    for k in range(8):
+        await RisingEdge(dut.s_clk)
+
+    await tb.reset_source()
+
+    for k in range(64):
+        await RisingEdge(dut.s_clk)
+
+    if int(os.getenv("PARAM_FRAME_FIFO")):
+        assert tb.sink.empty()
+    else:
+        rx_frame = await tb.sink.recv()
+
+        assert rx_frame.tuser
+
+        assert tb.sink.empty()
+    assert tb.sink.idle()
+
+    await RisingEdge(dut.s_clk)
+    await RisingEdge(dut.s_clk)
+
+
+async def run_test_shift_in_sink_reset(dut):
+
+    tb = TB(dut)
+
+    await tb.reset()
+
+    test_data = bytearray(itertools.islice(itertools.cycle(range(256)), 256))
+    test_frame = AxiStreamFrame(test_data)
+    await tb.source.send(test_frame)
+
+    for k in range(8):
+        await RisingEdge(dut.s_clk)
+
+    await tb.reset_sink()
+
+    for k in range(64):
+        await RisingEdge(dut.s_clk)
+
+    assert tb.sink.idle()
+
+    await RisingEdge(dut.s_clk)
+    await RisingEdge(dut.s_clk)
+
+
+async def run_test_shift_out_source_reset(dut):
+
+    tb = TB(dut)
+
+    await tb.reset()
+
+    test_data = bytearray(itertools.islice(itertools.cycle(range(256)), 256))
+    test_frame = AxiStreamFrame(test_data)
+    await tb.source.send(test_frame)
+
+    await RisingEdge(dut.m_axis_tvalid)
+
+    for k in range(8):
+        await RisingEdge(dut.s_clk)
+
+    await tb.reset_source()
+
+    for k in range(64):
+        await RisingEdge(dut.s_clk)
+
+    rx_frame = await tb.sink.recv()
+
+    assert rx_frame.tuser
+
+    assert tb.sink.idle()
+
+    await RisingEdge(dut.s_clk)
+    await RisingEdge(dut.s_clk)
+
+
+async def run_test_shift_out_sink_reset(dut):
+
+    tb = TB(dut)
+
+    await tb.reset()
+
+    test_data = bytearray(itertools.islice(itertools.cycle(range(256)), 256))
+    test_frame = AxiStreamFrame(test_data)
+    await tb.source.send(test_frame)
+
+    await RisingEdge(dut.m_axis_tvalid)
+
+    for k in range(8):
+        await RisingEdge(dut.s_clk)
+
+    await tb.reset_sink()
+
+    for k in range(64):
+        await RisingEdge(dut.s_clk)
+
+    assert tb.sink.idle()
 
     await RisingEdge(dut.s_clk)
     await RisingEdge(dut.s_clk)
@@ -298,6 +492,12 @@ if cocotb.SIM_NAME:
                 run_test_tuser_assert,
                 run_test_init_sink_pause,
                 run_test_init_sink_pause_reset,
+                run_test_init_sink_pause_source_reset,
+                run_test_init_sink_pause_sink_reset,
+                run_test_shift_in_source_reset,
+                run_test_shift_in_sink_reset,
+                run_test_shift_out_source_reset,
+                run_test_shift_out_sink_reset,
                 run_test_overflow
             ]:
 
