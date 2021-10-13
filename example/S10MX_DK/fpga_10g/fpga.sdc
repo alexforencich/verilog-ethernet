@@ -94,6 +94,6 @@ constrain_sync_reset_inst "qsfp1_eth_xcvr_phy_quad|eth_xcvr_phy_4|phy_tx_rst_res
 constrain_sync_reset_inst "qsfp1_eth_xcvr_phy_quad|eth_xcvr_phy_4|phy_rx_rst_reset_sync_inst"
 
 # 10G MAC
-constrain_eth_mac_fifo_inst "core_inst|eth_mac_10g_inst"
+constrain_eth_mac_fifo_inst "core_inst|eth_mac_10g_fifo_inst"
 constrain_axis_async_fifo_inst "core_inst|eth_mac_10g_fifo_inst|rx_fifo|fifo_inst"
 constrain_axis_async_fifo_inst "core_inst|eth_mac_10g_fifo_inst|tx_fifo|fifo_inst"
