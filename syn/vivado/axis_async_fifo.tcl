@@ -33,7 +33,7 @@ foreach fifo_inst [get_cells -hier -filter {(ORIG_REF_NAME == axis_async_fifo ||
     set min_clk_period [expr $read_clk_period < $write_clk_period ? $read_clk_period : $write_clk_period]
 
     # reset synchronization
-    set reset_ffs [get_cells -quiet -hier -regexp ".*/s_rst_sync\[123\]_reg_reg" -filter "PARENT == $fifo_inst"]
+    set reset_ffs [get_cells -quiet -hier -regexp ".*/s_rst_sync\[23\]_reg_reg" -filter "PARENT == $fifo_inst"]
 
     if {[llength $reset_ffs]} {
         set_property ASYNC_REG TRUE $reset_ffs
@@ -48,7 +48,7 @@ foreach fifo_inst [get_cells -hier -filter {(ORIG_REF_NAME == axis_async_fifo ||
         set_max_delay -from $source -to $dest -datapath_only $read_clk_period
     }
 
-    set reset_ffs [get_cells -quiet -hier -regexp ".*/m_rst_sync\[123\]_reg_reg" -filter "PARENT == $fifo_inst"]
+    set reset_ffs [get_cells -quiet -hier -regexp ".*/m_rst_sync\[23\]_reg_reg" -filter "PARENT == $fifo_inst"]
 
     if {[llength $reset_ffs]} {
         set_property ASYNC_REG TRUE $reset_ffs
