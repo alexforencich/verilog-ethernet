@@ -252,7 +252,7 @@ class BaseRSerdesSource():
                             cl.append(1)
 
                     # remap control characters
-                    ctrl = sum(xgmii_ctrl_to_baser_mapping.get(d, BaseRCtrl.ERROR) << i*7 for d, i in enumerate(dl))
+                    ctrl = sum(xgmii_ctrl_to_baser_mapping.get(d, BaseRCtrl.ERROR) << i*7 for i, d in enumerate(dl))
 
                     if not any(cl):
                         # data
