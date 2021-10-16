@@ -765,6 +765,120 @@ always @* begin
 end
 
 always @(posedge clk) begin
+    state_reg <= state_next;
+
+    frame_ptr_reg <= frame_ptr_next;
+
+    ifg_count_reg <= ifg_count_next;
+    deficit_idle_count_reg <= deficit_idle_count_next;
+
+    s_tdata_reg <= s_tdata_next;
+    s_tkeep_reg <= s_tkeep_next;
+
+    s_axis_tready_reg <= s_axis_tready_next;
+
+    m_axis_ptp_ts_reg <= m_axis_ptp_ts_next;
+    m_axis_ptp_ts_tag_reg <= m_axis_ptp_ts_tag_next;
+    m_axis_ptp_ts_valid_reg <= m_axis_ptp_ts_valid_next;
+    m_axis_ptp_ts_valid_int_reg <= m_axis_ptp_ts_valid_int_next;
+
+    start_packet_reg <= start_packet_next;
+    error_underflow_reg <= error_underflow_next;
+
+    delay_type_valid <= 1'b0;
+    delay_type <= output_type_next ^ 4'd4;
+
+    swap_data <= output_data_next[63:32];
+
+    if (swap_lanes || (lanes_swapped && !unswap_lanes)) begin
+        lanes_swapped <= 1'b1;
+        output_data_reg <= {output_data_next[31:0], swap_data};
+        if (delay_type_valid) begin
+            output_type_reg <= delay_type;
+        end else if (output_type_next == OUTPUT_TYPE_START_0) begin
+            output_type_reg <= OUTPUT_TYPE_START_4;
+        end else if (output_type_next[3]) begin
+            // OUTPUT_TYPE_TERM_*
+            if (output_type_next[2]) begin
+                delay_type_valid <= 1'b1;
+                output_type_reg <= OUTPUT_TYPE_DATA;
+            end else begin
+                output_type_reg <= output_type_next ^ 4'd4;
+            end
+        end else begin
+            output_type_reg <= output_type_next;
+        end
+    end else begin
+        lanes_swapped <= 1'b0;
+        output_data_reg <= output_data_next;
+        output_type_reg <= output_type_next;
+    end
+
+    case (output_type_reg)
+        OUTPUT_TYPE_IDLE: begin
+            encoded_tx_data_reg <= {{8{CTRL_IDLE}}, BLOCK_TYPE_CTRL};
+            encoded_tx_hdr_reg <= SYNC_CTRL;
+        end
+        OUTPUT_TYPE_ERROR: begin
+            encoded_tx_data_reg <= {{8{CTRL_ERROR}}, BLOCK_TYPE_CTRL};
+            encoded_tx_hdr_reg <= SYNC_CTRL;
+        end
+        OUTPUT_TYPE_START_0: begin
+            encoded_tx_data_reg <= {output_data_reg[63:8], BLOCK_TYPE_START_0};
+            encoded_tx_hdr_reg <= SYNC_CTRL;
+        end
+        OUTPUT_TYPE_START_4: begin
+            encoded_tx_data_reg <= {output_data_reg[63:40], 4'd0, {4{CTRL_IDLE}}, BLOCK_TYPE_START_4};
+            encoded_tx_hdr_reg <= SYNC_CTRL;
+        end
+        OUTPUT_TYPE_DATA: begin
+            encoded_tx_data_reg <= output_data_reg;
+            encoded_tx_hdr_reg <= SYNC_DATA;
+        end
+        OUTPUT_TYPE_TERM_0: begin
+            encoded_tx_data_reg <= {{7{CTRL_IDLE}}, 7'd0, BLOCK_TYPE_TERM_0};
+            encoded_tx_hdr_reg <= SYNC_CTRL;
+        end
+        OUTPUT_TYPE_TERM_1: begin
+            encoded_tx_data_reg <= {{6{CTRL_IDLE}}, 6'd0, output_data_reg[7:0], BLOCK_TYPE_TERM_1};
+            encoded_tx_hdr_reg <= SYNC_CTRL;
+        end
+        OUTPUT_TYPE_TERM_2: begin
+            encoded_tx_data_reg <= {{5{CTRL_IDLE}}, 5'd0, output_data_reg[15:0], BLOCK_TYPE_TERM_2};
+            encoded_tx_hdr_reg <= SYNC_CTRL;
+        end
+        OUTPUT_TYPE_TERM_3: begin
+            encoded_tx_data_reg <= {{4{CTRL_IDLE}}, 4'd0, output_data_reg[23:0], BLOCK_TYPE_TERM_3};
+            encoded_tx_hdr_reg <= SYNC_CTRL;
+        end
+        OUTPUT_TYPE_TERM_4: begin
+            encoded_tx_data_reg <= {{3{CTRL_IDLE}}, 3'd0, output_data_reg[31:0], BLOCK_TYPE_TERM_4};
+            encoded_tx_hdr_reg <= SYNC_CTRL;
+        end
+        OUTPUT_TYPE_TERM_5: begin
+            encoded_tx_data_reg <= {{2{CTRL_IDLE}}, 2'd0, output_data_reg[39:0], BLOCK_TYPE_TERM_5};
+            encoded_tx_hdr_reg <= SYNC_CTRL;
+        end
+        OUTPUT_TYPE_TERM_6: begin
+            encoded_tx_data_reg <= {{1{CTRL_IDLE}}, 1'd0, output_data_reg[47:0], BLOCK_TYPE_TERM_6};
+            encoded_tx_hdr_reg <= SYNC_CTRL;
+        end
+        OUTPUT_TYPE_TERM_7: begin
+            encoded_tx_data_reg <= {output_data_reg[55:0], BLOCK_TYPE_TERM_7};
+            encoded_tx_hdr_reg <= SYNC_CTRL;
+        end
+        default: begin
+            encoded_tx_data_reg <= {{8{CTRL_ERROR}}, BLOCK_TYPE_CTRL};
+            encoded_tx_hdr_reg <= SYNC_CTRL;
+        end
+    endcase
+
+    if (reset_crc) begin
+        crc_state <= 32'hFFFFFFFF;
+    end else if (update_crc) begin
+        crc_state <= crc_next7;
+    end
+
     if (rst) begin
         state_reg <= STATE_IDLE;
 
@@ -793,124 +907,7 @@ always @(posedge clk) begin
 
         delay_type_valid <= 1'b0;
         delay_type <= OUTPUT_TYPE_IDLE;
-    end else begin
-        state_reg <= state_next;
-
-        frame_ptr_reg <= frame_ptr_next;
-
-        ifg_count_reg <= ifg_count_next;
-        deficit_idle_count_reg <= deficit_idle_count_next;
-
-        s_axis_tready_reg <= s_axis_tready_next;
-    
-        m_axis_ptp_ts_valid_reg <= m_axis_ptp_ts_valid_next;
-        m_axis_ptp_ts_valid_int_reg <= m_axis_ptp_ts_valid_int_next;
-
-        start_packet_reg <= start_packet_next;
-        error_underflow_reg <= error_underflow_next;
-
-        delay_type_valid <= 1'b0;
-
-        if (swap_lanes || (lanes_swapped && !unswap_lanes)) begin
-            lanes_swapped <= 1'b1;
-            output_data_reg <= {output_data_next[31:0], swap_data};
-            if (delay_type_valid) begin
-                output_type_reg <= delay_type;
-            end else if (output_type_next == OUTPUT_TYPE_START_0) begin
-                output_type_reg <= OUTPUT_TYPE_START_4;
-            end else if (output_type_next[3]) begin
-                // OUTPUT_TYPE_TERM_*
-                if (output_type_next[2]) begin
-                    delay_type_valid <= 1'b1;
-                    output_type_reg <= OUTPUT_TYPE_DATA;
-                end else begin
-                    output_type_reg <= output_type_next ^ 4'd4;
-                end
-            end else begin
-                output_type_reg <= output_type_next;
-            end
-        end else begin
-            lanes_swapped <= 1'b0;
-            output_data_reg <= output_data_next;
-            output_type_reg <= output_type_next;
-        end
-
-        case (output_type_reg)
-            OUTPUT_TYPE_IDLE: begin
-                encoded_tx_data_reg <= {{8{CTRL_IDLE}}, BLOCK_TYPE_CTRL};
-                encoded_tx_hdr_reg <= SYNC_CTRL;
-            end
-            OUTPUT_TYPE_ERROR: begin
-                encoded_tx_data_reg <= {{8{CTRL_ERROR}}, BLOCK_TYPE_CTRL};
-                encoded_tx_hdr_reg <= SYNC_CTRL;
-            end
-            OUTPUT_TYPE_START_0: begin
-                encoded_tx_data_reg <= {output_data_reg[63:8], BLOCK_TYPE_START_0};
-                encoded_tx_hdr_reg <= SYNC_CTRL;
-            end
-            OUTPUT_TYPE_START_4: begin
-                encoded_tx_data_reg <= {output_data_reg[63:40], 4'd0, {4{CTRL_IDLE}}, BLOCK_TYPE_START_4};
-                encoded_tx_hdr_reg <= SYNC_CTRL;
-            end
-            OUTPUT_TYPE_DATA: begin
-                encoded_tx_data_reg <= output_data_reg;
-                encoded_tx_hdr_reg <= SYNC_DATA;
-            end
-            OUTPUT_TYPE_TERM_0: begin
-                encoded_tx_data_reg <= {{7{CTRL_IDLE}}, 7'd0, BLOCK_TYPE_TERM_0};
-                encoded_tx_hdr_reg <= SYNC_CTRL;
-            end
-            OUTPUT_TYPE_TERM_1: begin
-                encoded_tx_data_reg <= {{6{CTRL_IDLE}}, 6'd0, output_data_reg[7:0], BLOCK_TYPE_TERM_1};
-                encoded_tx_hdr_reg <= SYNC_CTRL;
-            end
-            OUTPUT_TYPE_TERM_2: begin
-                encoded_tx_data_reg <= {{5{CTRL_IDLE}}, 5'd0, output_data_reg[15:0], BLOCK_TYPE_TERM_2};
-                encoded_tx_hdr_reg <= SYNC_CTRL;
-            end
-            OUTPUT_TYPE_TERM_3: begin
-                encoded_tx_data_reg <= {{4{CTRL_IDLE}}, 4'd0, output_data_reg[23:0], BLOCK_TYPE_TERM_3};
-                encoded_tx_hdr_reg <= SYNC_CTRL;
-            end
-            OUTPUT_TYPE_TERM_4: begin
-                encoded_tx_data_reg <= {{3{CTRL_IDLE}}, 3'd0, output_data_reg[31:0], BLOCK_TYPE_TERM_4};
-                encoded_tx_hdr_reg <= SYNC_CTRL;
-            end
-            OUTPUT_TYPE_TERM_5: begin
-                encoded_tx_data_reg <= {{2{CTRL_IDLE}}, 2'd0, output_data_reg[39:0], BLOCK_TYPE_TERM_5};
-                encoded_tx_hdr_reg <= SYNC_CTRL;
-            end
-            OUTPUT_TYPE_TERM_6: begin
-                encoded_tx_data_reg <= {{1{CTRL_IDLE}}, 1'd0, output_data_reg[47:0], BLOCK_TYPE_TERM_6};
-                encoded_tx_hdr_reg <= SYNC_CTRL;
-            end
-            OUTPUT_TYPE_TERM_7: begin
-                encoded_tx_data_reg <= {output_data_reg[55:0], BLOCK_TYPE_TERM_7};
-                encoded_tx_hdr_reg <= SYNC_CTRL;
-            end
-            default: begin
-                encoded_tx_data_reg <= {{8{CTRL_ERROR}}, BLOCK_TYPE_CTRL};
-                encoded_tx_hdr_reg <= SYNC_CTRL;
-            end
-        endcase
-
-        // datapath
-        if (reset_crc) begin
-            crc_state <= 32'hFFFFFFFF;
-        end else if (update_crc) begin
-            crc_state <= crc_next7;
-        end
     end
-
-    s_tdata_reg <= s_tdata_next;
-    s_tkeep_reg <= s_tkeep_next;
-
-    m_axis_ptp_ts_reg <= m_axis_ptp_ts_next;
-    m_axis_ptp_ts_tag_reg <= m_axis_ptp_ts_tag_next;
-
-    swap_data <= output_data_next[63:32];
-
-    delay_type <= output_type_next ^ 4'd4;
 end
 
 endmodule

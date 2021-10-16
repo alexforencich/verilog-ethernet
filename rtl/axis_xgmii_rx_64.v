@@ -422,6 +422,106 @@ always @* begin
 end
 
 always @(posedge clk) begin
+    state_reg <= state_next;
+
+    m_axis_tdata_reg <= m_axis_tdata_next;
+    m_axis_tkeep_reg <= m_axis_tkeep_next;
+    m_axis_tvalid_reg <= m_axis_tvalid_next;
+    m_axis_tlast_reg <= m_axis_tlast_next;
+    m_axis_tuser_reg <= m_axis_tuser_next;
+
+    start_packet_reg <= 2'b00;
+    error_bad_frame_reg <= error_bad_frame_next;
+    error_bad_fcs_reg <= error_bad_fcs_next;
+
+    last_cycle_tkeep_reg <= last_cycle_tkeep_next;
+
+    detect_term_save <= detect_term;
+
+    swap_rxd <= xgmii_rxd[63:32];
+    swap_rxc <= xgmii_rxc[7:4];
+
+    if (PTP_TS_WIDTH == 96 && $signed({1'b0, ptp_ts_reg[45:16]}) - $signed(31'd1000000000) > 0) begin
+        // ns field rollover
+        ptp_ts_reg[45:16] <= $signed({1'b0, ptp_ts_reg[45:16]}) - $signed(31'd1000000000);
+        ptp_ts_reg[95:48] <= ptp_ts_reg[95:48] + 1;
+    end
+
+    if (xgmii_rxc[0] && xgmii_rxd[7:0] == XGMII_START) begin
+        lanes_swapped <= 1'b0;
+        start_packet_reg <= 2'b01;
+        xgmii_rxd_d0 <= xgmii_rxd;
+        xgmii_rxd_crc <= xgmii_rxd;
+        xgmii_rxc_d0 <= xgmii_rxc;
+        
+        for (i = 0; i < 8; i = i + 1) begin
+            detect_term[i] <= xgmii_rxc[i] && (xgmii_rxd[i*8 +: 8] == XGMII_TERM);
+        end
+
+        if (PTP_TS_WIDTH == 96) begin
+            ptp_ts_reg[45:0] <= ptp_ts[45:0] + (PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS);
+            ptp_ts_reg[95:48] <= ptp_ts[95:48];
+        end else begin
+            ptp_ts_reg <= ptp_ts + (PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS);
+        end
+    end else if (xgmii_rxc[4] && xgmii_rxd[39:32] == XGMII_START) begin
+        lanes_swapped <= 1'b1;
+        start_packet_reg <= 2'b10;
+        xgmii_rxd_d0 <= {xgmii_rxd[31:0], swap_rxd};
+        xgmii_rxd_crc <= {xgmii_rxd[31:0], swap_rxd};
+        xgmii_rxc_d0 <= {xgmii_rxc[3:0], swap_rxc};
+
+        for (i = 0; i < 4; i = i + 1) begin
+            detect_term[i] <= swap_rxc[i] && (swap_rxd[i*8 +: 8] == XGMII_TERM);
+            detect_term[i+4] <= xgmii_rxc[i] && (xgmii_rxd[i*8 +: 8] == XGMII_TERM);
+        end
+
+        if (PTP_TS_WIDTH == 96) begin
+            ptp_ts_reg[45:0] <= ptp_ts[45:0] + (((PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS) * 3) >> 1);
+            ptp_ts_reg[95:48] <= ptp_ts[95:48];
+        end else begin
+            ptp_ts_reg <= ptp_ts + (((PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS) * 3) >> 1);
+        end
+    end else if (lanes_swapped) begin
+        xgmii_rxd_d0 <= {xgmii_rxd[31:0], swap_rxd};
+        xgmii_rxd_crc <= {xgmii_rxd[31:0], swap_rxd};
+        xgmii_rxc_d0 <= {xgmii_rxc[3:0], swap_rxc};
+
+        for (i = 0; i < 4; i = i + 1) begin
+            detect_term[i] <= swap_rxc[i] && (swap_rxd[i*8 +: 8] == XGMII_TERM);
+            detect_term[i+4] <= xgmii_rxc[i] && (xgmii_rxd[i*8 +: 8] == XGMII_TERM);
+        end
+    end else begin
+        xgmii_rxd_d0 <= xgmii_rxd;
+        xgmii_rxd_crc <= xgmii_rxd;
+        xgmii_rxc_d0 <= xgmii_rxc;
+
+        for (i = 0; i < 8; i = i + 1) begin
+            detect_term[i] <= xgmii_rxc[i] && (xgmii_rxd[i*8 +: 8] == XGMII_TERM);
+        end
+    end
+
+    if (reset_crc) begin
+        crc_state <= 32'hFFFFFFFF;
+    end else begin
+        crc_state <= crc_next7;
+    end
+
+    if (update_crc_last) begin
+        crc_state3 <= crc_next3;
+    end else begin
+        crc_state3 <= crc_next7;
+    end
+
+    crc_valid7_save <= crc_valid7;
+
+    if (state_next == STATE_LAST) begin
+        xgmii_rxd_crc[31:0] <= xgmii_rxd_crc[63:32];
+    end
+
+    xgmii_rxd_d1 <= xgmii_rxd_d0;
+    xgmii_rxc_d1 <= xgmii_rxc_d0;
+
     if (rst) begin
         state_reg <= STATE_IDLE;
 
@@ -438,118 +538,7 @@ always @(posedge clk) begin
         xgmii_rxc_d1 <= {CTRL_WIDTH{1'b0}};
 
         lanes_swapped <= 1'b0;
-    end else begin
-        state_reg <= state_next;
-
-        m_axis_tvalid_reg <= m_axis_tvalid_next;
-
-        start_packet_reg <= 2'b00;
-        error_bad_frame_reg <= error_bad_frame_next;
-        error_bad_fcs_reg <= error_bad_fcs_next;
-
-        if (xgmii_rxc[0] && xgmii_rxd[7:0] == XGMII_START) begin
-            lanes_swapped <= 1'b0;
-            start_packet_reg <= 2'b01;
-            xgmii_rxc_d0 <= xgmii_rxc;
-        end else if (xgmii_rxc[4] && xgmii_rxd[39:32] == XGMII_START) begin
-            lanes_swapped <= 1'b1;
-            start_packet_reg <= 2'b10;
-            xgmii_rxc_d0 <= {xgmii_rxc[3:0], swap_rxc};
-        end else if (lanes_swapped) begin
-            xgmii_rxc_d0 <= {xgmii_rxc[3:0], swap_rxc};
-        end else begin
-            xgmii_rxc_d0 <= xgmii_rxc;
-        end
-
-        xgmii_rxc_d1 <= xgmii_rxc_d0;
-
-        // datapath
-        if (reset_crc) begin
-            crc_state <= 32'hFFFFFFFF;
-        end else begin
-            crc_state <= crc_next7;
-        end
-
-        if (update_crc_last) begin
-            crc_state3 <= crc_next3;
-        end else begin
-            crc_state3 <= crc_next7;
-        end
     end
-
-    if (PTP_TS_WIDTH == 96 && $signed({1'b0, ptp_ts_reg[45:16]}) - $signed(31'd1000000000) > 0) begin
-        // ns field rollover
-        ptp_ts_reg[45:16] <= $signed({1'b0, ptp_ts_reg[45:16]}) - $signed(31'd1000000000);
-        ptp_ts_reg[95:48] <= ptp_ts_reg[95:48] + 1;
-    end
-
-    if (xgmii_rxc[0] && xgmii_rxd[7:0] == XGMII_START) begin
-        if (PTP_TS_WIDTH == 96) begin
-            ptp_ts_reg[45:0] <= ptp_ts[45:0] + (PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS);
-            ptp_ts_reg[95:48] <= ptp_ts[95:48];
-        end else begin
-            ptp_ts_reg <= ptp_ts + (PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS);
-        end
-    end else if (xgmii_rxc[4] && xgmii_rxd[39:32] == XGMII_START) begin
-        if (PTP_TS_WIDTH == 96) begin
-            ptp_ts_reg[45:0] <= ptp_ts[45:0] + (((PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS) * 3) >> 1);
-            ptp_ts_reg[95:48] <= ptp_ts[95:48];
-        end else begin
-            ptp_ts_reg <= ptp_ts + (((PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS) * 3) >> 1);
-        end
-    end
-
-    m_axis_tdata_reg <= m_axis_tdata_next;
-    m_axis_tkeep_reg <= m_axis_tkeep_next;
-    m_axis_tlast_reg <= m_axis_tlast_next;
-    m_axis_tuser_reg <= m_axis_tuser_next;
-
-    last_cycle_tkeep_reg <= last_cycle_tkeep_next;
-
-    detect_term_save <= detect_term;
-
-    swap_rxd <= xgmii_rxd[63:32];
-    swap_rxc <= xgmii_rxc[7:4];
-
-    if (xgmii_rxc[0] && xgmii_rxd[7:0] == XGMII_START) begin
-        xgmii_rxd_d0 <= xgmii_rxd;
-        xgmii_rxd_crc <= xgmii_rxd;
-        
-        for (i = 0; i < 8; i = i + 1) begin
-            detect_term[i] <= xgmii_rxc[i] && (xgmii_rxd[i*8 +: 8] == XGMII_TERM);
-        end
-    end else if (xgmii_rxc[4] && xgmii_rxd[39:32] == XGMII_START) begin
-        xgmii_rxd_d0 <= {xgmii_rxd[31:0], swap_rxd};
-        xgmii_rxd_crc <= {xgmii_rxd[31:0], swap_rxd};
-
-        for (i = 0; i < 4; i = i + 1) begin
-            detect_term[i] <= swap_rxc[i] && (swap_rxd[i*8 +: 8] == XGMII_TERM);
-            detect_term[i+4] <= xgmii_rxc[i] && (xgmii_rxd[i*8 +: 8] == XGMII_TERM);
-        end
-    end else if (lanes_swapped) begin
-        xgmii_rxd_d0 <= {xgmii_rxd[31:0], swap_rxd};
-        xgmii_rxd_crc <= {xgmii_rxd[31:0], swap_rxd};
-
-        for (i = 0; i < 4; i = i + 1) begin
-            detect_term[i] <= swap_rxc[i] && (swap_rxd[i*8 +: 8] == XGMII_TERM);
-            detect_term[i+4] <= xgmii_rxc[i] && (xgmii_rxd[i*8 +: 8] == XGMII_TERM);
-        end
-    end else begin
-        xgmii_rxd_d0 <= xgmii_rxd;
-        xgmii_rxd_crc <= xgmii_rxd;
-
-        for (i = 0; i < 8; i = i + 1) begin
-            detect_term[i] <= xgmii_rxc[i] && (xgmii_rxd[i*8 +: 8] == XGMII_TERM);
-        end
-    end
-
-    crc_valid7_save <= crc_valid7;
-
-    if (state_next == STATE_LAST) begin
-        xgmii_rxd_crc[31:0] <= xgmii_rxd_crc[63:32];
-    end
-
-    xgmii_rxd_d1 <= xgmii_rxd_d0;
 end
 
 endmodule
