@@ -143,6 +143,10 @@ always @* begin
                     encoded_ctrl[7*i +: 7] = CTRL_IDLE;
                     encode_err[i] = 1'b0;
                 end
+                XGMII_LPI: begin
+                    encoded_ctrl[7*i +: 7] = CTRL_LPI;
+                    encode_err[i] = 1'b0;
+                end
                 XGMII_ERROR: begin
                     encoded_ctrl[7*i +: 7] = CTRL_ERROR;
                     encode_err[i] = 1'b0;

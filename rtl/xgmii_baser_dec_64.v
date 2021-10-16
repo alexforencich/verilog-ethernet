@@ -152,6 +152,10 @@ always @* begin
                 decoded_ctrl[8*i +: 8] = XGMII_IDLE;
                 decode_err[i] = 1'b0;
             end
+            CTRL_LPI: begin
+                decoded_ctrl[8*i +: 8] = XGMII_LPI;
+                decode_err[i] = 1'b0;
+            end
             CTRL_ERROR: begin
                 decoded_ctrl[8*i +: 8] = XGMII_ERROR;
                 decode_err[i] = 1'b0;
