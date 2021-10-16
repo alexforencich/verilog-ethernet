@@ -213,13 +213,13 @@ always @* begin
                 // D7 D6 D5 O4 C3 C2 C1 C0 BT
                 xgmii_rxd_next[31:0] = decoded_ctrl[31:0];
                 xgmii_rxc_next[3:0] = 4'hf;
+                xgmii_rxd_next[63:40] = encoded_rx_data[63:40];
+                xgmii_rxc_next[7:4] = 4'h1;
                 if (encoded_rx_data[39:36] == O_SEQ_OS) begin
-                    xgmii_rxd_next[63:32] = {encoded_rx_data[63:40], XGMII_SEQ_OS};
-                    xgmii_rxc_next[7:4] = 4'h1;
+                    xgmii_rxd_next[39:32] = XGMII_SEQ_OS;
                     rx_bad_block_next = decode_err[3:0] != 0;
                 end else begin
-                    xgmii_rxd_next[63:32] = {4{XGMII_ERROR}};
-                    xgmii_rxc_next[7:4] = 4'hf;
+                    xgmii_rxd_next[39:32] = XGMII_ERROR;
                     rx_bad_block_next = 1'b1;
                 end
             end
@@ -233,13 +233,13 @@ always @* begin
             end
             BLOCK_TYPE_OS_START: begin
                 // D7 D6 D5    O0 D3 D2 D1 BT
+                xgmii_rxd_next[31:8] = encoded_rx_data[31:8];
+                xgmii_rxc_next[3:0] = 4'hf;
                 if (encoded_rx_data[35:32] == O_SEQ_OS) begin
-                    xgmii_rxd_next[31:0] = {encoded_rx_data[31:8], XGMII_SEQ_OS};
-                    xgmii_rxc_next[3:0] = 4'h1;
+                    xgmii_rxd_next[7:0] = XGMII_SEQ_OS;
                     rx_bad_block_next = 1'b0;
                 end else begin
-                    xgmii_rxd_next[31:0] = {4{XGMII_ERROR}};
-                    xgmii_rxc_next[3:0] = 4'hf;
+                    xgmii_rxd_next[7:0] = XGMII_ERROR;
                     rx_bad_block_next = 1'b1;
                 end
                 xgmii_rxd_next[63:32] = {encoded_rx_data[63:40], XGMII_START};
@@ -250,20 +250,20 @@ always @* begin
             BLOCK_TYPE_OS_04: begin
                 // D7 D6 D5 O4 O0 D3 D2 D1 BT
                 rx_bad_block_next = 1'b0;
+                xgmii_rxd_next[31:8] = encoded_rx_data[31:8];
+                xgmii_rxc_next[3:0] = 4'h1;
                 if (encoded_rx_data[35:32] == O_SEQ_OS) begin
-                    xgmii_rxd_next[31:0] = {encoded_rx_data[31:8], XGMII_SEQ_OS};
-                    xgmii_rxc_next[3:0] = 4'h1;
+                    xgmii_rxd_next[7:0] = XGMII_SEQ_OS;
                 end else begin
-                    xgmii_rxd_next[31:0] = {4{XGMII_ERROR}};
-                    xgmii_rxc_next[3:0] = 4'hf;
+                    xgmii_rxd_next[7:0] = XGMII_ERROR;
                     rx_bad_block_next = 1'b1;
                 end
+                xgmii_rxd_next[63:40] = encoded_rx_data[63:40];
+                xgmii_rxc_next[7:4] = 4'h1;
                 if (encoded_rx_data[39:36] == O_SEQ_OS) begin
-                    xgmii_rxd_next[63:32] = {encoded_rx_data[63:40], XGMII_SEQ_OS};
-                    xgmii_rxc_next[7:4] = 4'h1;
+                    xgmii_rxd_next[39:32] = XGMII_SEQ_OS;
                 end else begin
-                    xgmii_rxd_next[63:32] = {4{XGMII_ERROR}};
-                    xgmii_rxc_next[7:4] = 4'hf;
+                    xgmii_rxd_next[39:32] = XGMII_ERROR;
                     rx_bad_block_next = 1'b1;
                 end
             end
@@ -277,13 +277,13 @@ always @* begin
             end
             BLOCK_TYPE_OS_0: begin
                 // C7 C6 C5 C4 O0 D3 D2 D1 BT
+                xgmii_rxd_next[31:8] = encoded_rx_data[31:8];
+                xgmii_rxc_next[3:0] = 4'h1;
                 if (encoded_rx_data[35:32] == O_SEQ_OS) begin
-                    xgmii_rxd_next[31:0] = {encoded_rx_data[31:8], XGMII_SEQ_OS};
-                    xgmii_rxc_next[3:0] = 4'h1;
+                    xgmii_rxd_next[7:0] = XGMII_SEQ_OS;
                     rx_bad_block_next = decode_err[7:4] != 0;
                 end else begin
-                    xgmii_rxd_next[31:0] = {4{XGMII_ERROR}};
-                    xgmii_rxc_next[3:0] = 4'hf;
+                    xgmii_rxd_next[7:0] = XGMII_ERROR;
                     rx_bad_block_next = 1'b1;
                 end
                 xgmii_rxd_next[63:32] = decoded_ctrl[63:32];
