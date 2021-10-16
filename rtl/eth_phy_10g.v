@@ -69,6 +69,7 @@ module eth_phy_10g #
     /*
      * Status
      */
+    output wire                  tx_bad_block,
     output wire [6:0]            rx_error_count,
     output wire                  rx_bad_block,
     output wire                  rx_sequence_error,
@@ -126,6 +127,7 @@ eth_phy_10g_tx_inst (
     .xgmii_txc(xgmii_txc),
     .serdes_tx_data(serdes_tx_data),
     .serdes_tx_hdr(serdes_tx_hdr),
+    .tx_bad_block(tx_bad_block),
     .tx_prbs31_enable(tx_prbs31_enable)
 );
 

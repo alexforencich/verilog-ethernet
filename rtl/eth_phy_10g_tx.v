@@ -56,6 +56,11 @@ module eth_phy_10g_tx #
     output wire [HDR_WIDTH-1:0]  serdes_tx_hdr,
 
     /*
+     * Status
+     */
+    output wire                  tx_bad_block,
+
+    /*
      * Configuration
      */
     input  wire                  tx_prbs31_enable
@@ -93,7 +98,8 @@ xgmii_baser_enc_inst (
     .xgmii_txd(xgmii_txd),
     .xgmii_txc(xgmii_txc),
     .encoded_tx_data(encoded_tx_data),
-    .encoded_tx_hdr(encoded_tx_hdr)
+    .encoded_tx_hdr(encoded_tx_hdr),
+    .tx_bad_block(tx_bad_block)
 );
 
 eth_phy_10g_tx_if #(
