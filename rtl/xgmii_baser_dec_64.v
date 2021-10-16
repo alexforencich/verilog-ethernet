@@ -54,7 +54,8 @@ module xgmii_baser_dec_64 #
     /*
      * Status
      */
-    output wire                  rx_bad_block
+    output wire                  rx_bad_block,
+    output wire                  rx_sequence_error
 );
 
 // bus width assertions
@@ -133,11 +134,14 @@ reg [DATA_WIDTH-1:0] xgmii_rxd_reg = {DATA_WIDTH{1'b0}}, xgmii_rxd_next;
 reg [CTRL_WIDTH-1:0] xgmii_rxc_reg = {CTRL_WIDTH{1'b0}}, xgmii_rxc_next;
 
 reg rx_bad_block_reg = 1'b0, rx_bad_block_next;
+reg rx_sequence_error_reg = 1'b0, rx_sequence_error_next;
+reg frame_reg = 1'b0, frame_next;
 
 assign xgmii_rxd = xgmii_rxd_reg;
 assign xgmii_rxc = xgmii_rxc_reg;
 
 assign rx_bad_block = rx_bad_block_reg;
+assign rx_sequence_error = rx_sequence_error_reg;
 
 integer i;
 
@@ -145,6 +149,8 @@ always @* begin
     xgmii_rxd_next = {8{XGMII_ERROR}};
     xgmii_rxc_next = 8'hff;
     rx_bad_block_next = 1'b0;
+    rx_sequence_error_next = 1'b0;
+    frame_next = frame_reg;
 
     for (i = 0; i < CTRL_WIDTH; i = i + 1) begin
         case (encoded_rx_data[7*i+8 +: 7])
@@ -222,6 +228,8 @@ always @* begin
                 xgmii_rxd_next = {encoded_rx_data[63:40], XGMII_START, decoded_ctrl[31:0]};
                 xgmii_rxc_next = 8'h1f;
                 rx_bad_block_next = decode_err[3:0] != 0;
+                rx_sequence_error_next = frame_reg;
+                frame_next = 1'b1;
             end
             BLOCK_TYPE_OS_START: begin
                 // D7 D6 D5    O0 D3 D2 D1 BT
@@ -236,6 +244,8 @@ always @* begin
                 end
                 xgmii_rxd_next[63:32] = {encoded_rx_data[63:40], XGMII_START};
                 xgmii_rxc_next[7:4] = 4'h1;
+                rx_sequence_error_next = frame_reg;
+                frame_next = 1'b1;
             end
             BLOCK_TYPE_OS_04: begin
                 // D7 D6 D5 O4 O0 D3 D2 D1 BT
@@ -262,6 +272,8 @@ always @* begin
                 xgmii_rxd_next = {encoded_rx_data[63:8], XGMII_START};
                 xgmii_rxc_next = 8'h01;
                 rx_bad_block_next = 1'b0;
+                rx_sequence_error_next = frame_reg;
+                frame_next = 1'b1;
             end
             BLOCK_TYPE_OS_0: begin
                 // C7 C6 C5 C4 O0 D3 D2 D1 BT
@@ -282,48 +294,64 @@ always @* begin
                 xgmii_rxd_next = {decoded_ctrl[63:8], XGMII_TERM};
                 xgmii_rxc_next = 8'hff;
                 rx_bad_block_next = decode_err[7:1] != 0;
+                rx_sequence_error_next = !frame_reg;
+                frame_next = 1'b0;
             end
             BLOCK_TYPE_TERM_1: begin
                 // C7 C6 C5 C4 C3 C2    D0 BT
                 xgmii_rxd_next = {decoded_ctrl[63:16], XGMII_TERM, encoded_rx_data[15:8]};
                 xgmii_rxc_next = 8'hfe;
                 rx_bad_block_next = decode_err[7:2] != 0;
+                rx_sequence_error_next = !frame_reg;
+                frame_next = 1'b0;
             end
             BLOCK_TYPE_TERM_2: begin
                 // C7 C6 C5 C4 C3    D1 D0 BT
                 xgmii_rxd_next = {decoded_ctrl[63:24], XGMII_TERM, encoded_rx_data[23:8]};
                 xgmii_rxc_next = 8'hfc;
                 rx_bad_block_next = decode_err[7:3] != 0;
+                rx_sequence_error_next = !frame_reg;
+                frame_next = 1'b0;
             end
             BLOCK_TYPE_TERM_3: begin
                 // C7 C6 C5 C4    D2 D1 D0 BT
                 xgmii_rxd_next = {decoded_ctrl[63:32], XGMII_TERM, encoded_rx_data[31:8]};
                 xgmii_rxc_next = 8'hf8;
                 rx_bad_block_next = decode_err[7:4] != 0;
+                rx_sequence_error_next = !frame_reg;
+                frame_next = 1'b0;
             end
             BLOCK_TYPE_TERM_4: begin
                 // C7 C6 C5    D3 D2 D1 D0 BT
                 xgmii_rxd_next = {decoded_ctrl[63:40], XGMII_TERM, encoded_rx_data[39:8]};
                 xgmii_rxc_next = 8'hf0;
                 rx_bad_block_next = decode_err[7:5] != 0;
+                rx_sequence_error_next = !frame_reg;
+                frame_next = 1'b0;
             end
             BLOCK_TYPE_TERM_5: begin
                 // C7 C6    D4 D3 D2 D1 D0 BT
                 xgmii_rxd_next = {decoded_ctrl[63:48], XGMII_TERM, encoded_rx_data[47:8]};
                 xgmii_rxc_next = 8'he0;
                 rx_bad_block_next = decode_err[7:6] != 0;
+                rx_sequence_error_next = !frame_reg;
+                frame_next = 1'b0;
             end
             BLOCK_TYPE_TERM_6: begin
                 // C7    D5 D4 D3 D2 D1 D0 BT
                 xgmii_rxd_next = {decoded_ctrl[63:56], XGMII_TERM, encoded_rx_data[55:8]};
                 xgmii_rxc_next = 8'hc0;
                 rx_bad_block_next = decode_err[7] != 0;
+                rx_sequence_error_next = !frame_reg;
+                frame_next = 1'b0;
             end
             BLOCK_TYPE_TERM_7: begin
                 //    D6 D5 D4 D3 D2 D1 D0 BT
                 xgmii_rxd_next = {XGMII_TERM, encoded_rx_data[63:8]};
                 xgmii_rxc_next = 8'h80;
                 rx_bad_block_next = 1'b0;
+                rx_sequence_error_next = !frame_reg;
+                frame_next = 1'b0;
             end
             default: begin
                 // invalid block type
@@ -345,6 +373,12 @@ always @(posedge clk) begin
     xgmii_rxc_reg <= xgmii_rxc_next;
 
     rx_bad_block_reg <= rx_bad_block_next;
+    rx_sequence_error_reg <= rx_sequence_error_next;
+    frame_reg <= frame_next;
+
+    if (rst) begin
+        frame_reg <= 1'b0;
+    end
 end
 
 endmodule

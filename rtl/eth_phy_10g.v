@@ -71,6 +71,7 @@ module eth_phy_10g #
      */
     output wire [6:0]            rx_error_count,
     output wire                  rx_bad_block,
+    output wire                  rx_sequence_error,
     output wire                  rx_block_lock,
     output wire                  rx_high_ber,
 
@@ -103,6 +104,7 @@ eth_phy_10g_rx_inst (
     .serdes_rx_bitslip(serdes_rx_bitslip),
     .rx_error_count(rx_error_count),
     .rx_bad_block(rx_bad_block),
+    .rx_sequence_error(rx_sequence_error),
     .rx_block_lock(rx_block_lock),
     .rx_high_ber(rx_high_ber),
     .rx_prbs31_enable(rx_prbs31_enable)
