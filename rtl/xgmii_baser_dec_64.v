@@ -194,12 +194,14 @@ always @* begin
     if (encoded_rx_hdr == SYNC_DATA) begin
         xgmii_rxd_next = encoded_rx_data;
         xgmii_rxc_next = 8'h00;
+        rx_bad_block_next = 1'b0;
     end else if (encoded_rx_hdr == SYNC_CTRL) begin
         case (encoded_rx_data[7:0])
             BLOCK_TYPE_CTRL: begin
                 // C7 C6 C5 C4 C3 C2 C1 C0 BT
                 xgmii_rxd_next = decoded_ctrl;
                 xgmii_rxc_next = 8'hff;
+                rx_bad_block_next = decode_err != 0;
             end
             BLOCK_TYPE_OS_4: begin
                 // D7 D6 D5 O4 C3 C2 C1 C0 BT
@@ -208,36 +210,43 @@ always @* begin
                 if (encoded_rx_data[39:36] == O_SEQ_OS) begin
                     xgmii_rxd_next[63:32] = {encoded_rx_data[63:40], XGMII_SEQ_OS};
                     xgmii_rxc_next[7:4] = 4'h1;
+                    rx_bad_block_next = decode_err[3:0] != 0;
                 end else begin
                     xgmii_rxd_next[63:32] = {4{XGMII_ERROR}};
                     xgmii_rxc_next[7:4] = 4'hf;
+                    rx_bad_block_next = 1'b1;
                 end
             end
             BLOCK_TYPE_START_4: begin
                 // D7 D6 D5    C3 C2 C1 C0 BT
                 xgmii_rxd_next = {encoded_rx_data[63:40], XGMII_START, decoded_ctrl[31:0]};
                 xgmii_rxc_next = 8'h1f;
+                rx_bad_block_next = decode_err[3:0] != 0;
             end
             BLOCK_TYPE_OS_START: begin
                 // D7 D6 D5    O0 D3 D2 D1 BT
                 if (encoded_rx_data[35:32] == O_SEQ_OS) begin
                     xgmii_rxd_next[31:0] = {encoded_rx_data[31:8], XGMII_SEQ_OS};
                     xgmii_rxc_next[3:0] = 4'h1;
+                    rx_bad_block_next = 1'b0;
                 end else begin
                     xgmii_rxd_next[31:0] = {4{XGMII_ERROR}};
                     xgmii_rxc_next[3:0] = 4'hf;
+                    rx_bad_block_next = 1'b1;
                 end
                 xgmii_rxd_next[63:32] = {encoded_rx_data[63:40], XGMII_START};
                 xgmii_rxc_next[7:4] = 4'h1;
             end
             BLOCK_TYPE_OS_04: begin
                 // D7 D6 D5 O4 O0 D3 D2 D1 BT
+                rx_bad_block_next = 1'b0;
                 if (encoded_rx_data[35:32] == O_SEQ_OS) begin
                     xgmii_rxd_next[31:0] = {encoded_rx_data[31:8], XGMII_SEQ_OS};
                     xgmii_rxc_next[3:0] = 4'h1;
                 end else begin
                     xgmii_rxd_next[31:0] = {4{XGMII_ERROR}};
                     xgmii_rxc_next[3:0] = 4'hf;
+                    rx_bad_block_next = 1'b1;
                 end
                 if (encoded_rx_data[39:36] == O_SEQ_OS) begin
                     xgmii_rxd_next[63:32] = {encoded_rx_data[63:40], XGMII_SEQ_OS};
@@ -245,21 +254,25 @@ always @* begin
                 end else begin
                     xgmii_rxd_next[63:32] = {4{XGMII_ERROR}};
                     xgmii_rxc_next[7:4] = 4'hf;
+                    rx_bad_block_next = 1'b1;
                 end
             end
             BLOCK_TYPE_START_0: begin
                 // D7 D6 D5 D4 D3 D2 D1    BT
                 xgmii_rxd_next = {encoded_rx_data[63:8], XGMII_START};
                 xgmii_rxc_next = 8'h01;
+                rx_bad_block_next = 1'b0;
             end
             BLOCK_TYPE_OS_0: begin
                 // C7 C6 C5 C4 O0 D3 D2 D1 BT
                 if (encoded_rx_data[35:32] == O_SEQ_OS) begin
                     xgmii_rxd_next[31:0] = {encoded_rx_data[31:8], XGMII_SEQ_OS};
                     xgmii_rxc_next[3:0] = 4'h1;
+                    rx_bad_block_next = decode_err[7:4] != 0;
                 end else begin
                     xgmii_rxd_next[31:0] = {4{XGMII_ERROR}};
                     xgmii_rxc_next[3:0] = 4'hf;
+                    rx_bad_block_next = 1'b1;
                 end
                 xgmii_rxd_next[63:32] = decoded_ctrl[63:32];
                 xgmii_rxc_next[7:4] = 4'hf;
@@ -268,41 +281,49 @@ always @* begin
                 // C7 C6 C5 C4 C3 C2 C1    BT
                 xgmii_rxd_next = {decoded_ctrl[63:8], XGMII_TERM};
                 xgmii_rxc_next = 8'hff;
+                rx_bad_block_next = decode_err[7:1] != 0;
             end
             BLOCK_TYPE_TERM_1: begin
                 // C7 C6 C5 C4 C3 C2    D0 BT
                 xgmii_rxd_next = {decoded_ctrl[63:16], XGMII_TERM, encoded_rx_data[15:8]};
                 xgmii_rxc_next = 8'hfe;
+                rx_bad_block_next = decode_err[7:2] != 0;
             end
             BLOCK_TYPE_TERM_2: begin
                 // C7 C6 C5 C4 C3    D1 D0 BT
                 xgmii_rxd_next = {decoded_ctrl[63:24], XGMII_TERM, encoded_rx_data[23:8]};
                 xgmii_rxc_next = 8'hfc;
+                rx_bad_block_next = decode_err[7:3] != 0;
             end
             BLOCK_TYPE_TERM_3: begin
                 // C7 C6 C5 C4    D2 D1 D0 BT
                 xgmii_rxd_next = {decoded_ctrl[63:32], XGMII_TERM, encoded_rx_data[31:8]};
                 xgmii_rxc_next = 8'hf8;
+                rx_bad_block_next = decode_err[7:4] != 0;
             end
             BLOCK_TYPE_TERM_4: begin
                 // C7 C6 C5    D3 D2 D1 D0 BT
                 xgmii_rxd_next = {decoded_ctrl[63:40], XGMII_TERM, encoded_rx_data[39:8]};
                 xgmii_rxc_next = 8'hf0;
+                rx_bad_block_next = decode_err[7:5] != 0;
             end
             BLOCK_TYPE_TERM_5: begin
                 // C7 C6    D4 D3 D2 D1 D0 BT
                 xgmii_rxd_next = {decoded_ctrl[63:48], XGMII_TERM, encoded_rx_data[47:8]};
                 xgmii_rxc_next = 8'he0;
+                rx_bad_block_next = decode_err[7:6] != 0;
             end
             BLOCK_TYPE_TERM_6: begin
                 // C7    D5 D4 D3 D2 D1 D0 BT
                 xgmii_rxd_next = {decoded_ctrl[63:56], XGMII_TERM, encoded_rx_data[55:8]};
                 xgmii_rxc_next = 8'hc0;
+                rx_bad_block_next = decode_err[7] != 0;
             end
             BLOCK_TYPE_TERM_7: begin
                 //    D6 D5 D4 D3 D2 D1 D0 BT
                 xgmii_rxd_next = {XGMII_TERM, encoded_rx_data[63:8]};
                 xgmii_rxc_next = 8'h80;
+                rx_bad_block_next = 1'b0;
             end
             default: begin
                 // invalid block type
