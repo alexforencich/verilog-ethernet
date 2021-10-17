@@ -488,6 +488,10 @@ always @(posedge m_clk) begin
     wr_ptr_update_sync2_reg <= wr_ptr_update_sync1_reg;
     wr_ptr_update_sync3_reg <= wr_ptr_update_sync2_reg;
 
+    if (FRAME_FIFO && m_rst_sync3_reg) begin
+        wr_ptr_gray_sync1_reg <= {ADDR_WIDTH+1{1'b0}};
+    end
+
     if (m_rst) begin
         wr_ptr_gray_sync1_reg <= {ADDR_WIDTH+1{1'b0}};
         wr_ptr_gray_sync2_reg <= {ADDR_WIDTH+1{1'b0}};
