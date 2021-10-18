@@ -35,6 +35,7 @@ VERILOG_SOURCES += ../../rtl/$(DUT)_tx.v
 VERILOG_SOURCES += ../../rtl/eth_phy_10g_rx_if.v
 VERILOG_SOURCES += ../../rtl/eth_phy_10g_rx_ber_mon.v
 VERILOG_SOURCES += ../../rtl/eth_phy_10g_rx_frame_sync.v
+VERILOG_SOURCES += ../../rtl/eth_phy_10g_rx_watchdog.v
 VERILOG_SOURCES += ../../rtl/eth_phy_10g_tx_if.v
 VERILOG_SOURCES += ../../rtl/axis_baser_rx_64.v
 VERILOG_SOURCES += ../../rtl/axis_baser_tx_64.v

@@ -35,6 +35,7 @@ VERILOG_SOURCES += ../../rtl/$(DUT)_rx.v
 VERILOG_SOURCES += ../../rtl/$(DUT)_rx_if.v
 VERILOG_SOURCES += ../../rtl/$(DUT)_rx_ber_mon.v
 VERILOG_SOURCES += ../../rtl/$(DUT)_rx_frame_sync.v
+VERILOG_SOURCES += ../../rtl/$(DUT)_rx_watchdog.v
 VERILOG_SOURCES += ../../rtl/$(DUT)_tx.v
 VERILOG_SOURCES += ../../rtl/$(DUT)_tx_if.v
 VERILOG_SOURCES += ../../rtl/xgmii_baser_dec_64.v

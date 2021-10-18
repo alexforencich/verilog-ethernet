@@ -226,6 +226,7 @@ def test_eth_phy_10g(request):
         os.path.join(rtl_dir, f"{dut}_rx_if.v"),
         os.path.join(rtl_dir, f"{dut}_rx_ber_mon.v"),
         os.path.join(rtl_dir, f"{dut}_rx_frame_sync.v"),
+        os.path.join(rtl_dir, f"{dut}_rx_watchdog.v"),
         os.path.join(rtl_dir, f"{dut}_tx.v"),
         os.path.join(rtl_dir, f"{dut}_tx_if.v"),
         os.path.join(rtl_dir, "xgmii_baser_dec_64.v"),

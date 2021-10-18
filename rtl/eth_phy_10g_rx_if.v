@@ -57,10 +57,13 @@ module eth_phy_10g_rx_if #
     input  wire [DATA_WIDTH-1:0] serdes_rx_data,
     input  wire [HDR_WIDTH-1:0]  serdes_rx_hdr,
     output wire                  serdes_rx_bitslip,
+    output wire                  serdes_rx_reset_req,
 
     /*
      * Status
      */
+    input  wire                  rx_bad_block,
+    input  wire                  rx_sequence_error,
     output wire [6:0]            rx_error_count,
     output wire                  rx_block_lock,
     output wire                  rx_high_ber,
@@ -215,7 +218,9 @@ assign encoded_rx_hdr = encoded_rx_hdr_reg;
 assign rx_error_count = rx_error_count_reg;
 
 wire serdes_rx_bitslip_int;
+wire serdes_rx_reset_req_int;
 assign serdes_rx_bitslip = serdes_rx_bitslip_int && !(PRBS31_ENABLE && rx_prbs31_enable);
+assign serdes_rx_reset_req = serdes_rx_reset_req_int && !(PRBS31_ENABLE && rx_prbs31_enable);
 
 eth_phy_10g_rx_frame_sync #(
     .HDR_WIDTH(HDR_WIDTH),
@@ -238,6 +243,21 @@ eth_phy_10g_rx_ber_mon_inst (
     .clk(clk),
     .rst(rst),
     .serdes_rx_hdr(serdes_rx_hdr_int),
+    .rx_high_ber(rx_high_ber)
+);
+
+eth_phy_10g_rx_watchdog #(
+    .HDR_WIDTH(HDR_WIDTH),
+    .COUNT_125US(COUNT_125US)
+)
+eth_phy_10g_rx_watchdog_inst (
+    .clk(clk),
+    .rst(rst),
+    .serdes_rx_hdr(serdes_rx_hdr_int),
+    .serdes_rx_reset_req(serdes_rx_reset_req_int),
+    .rx_bad_block(rx_bad_block),
+    .rx_sequence_error(rx_sequence_error),
+    .rx_block_lock(rx_block_lock),
     .rx_high_ber(rx_high_ber)
 );
 

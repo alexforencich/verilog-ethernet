@@ -65,6 +65,7 @@ module eth_phy_10g #
     input  wire [DATA_WIDTH-1:0] serdes_rx_data,
     input  wire [HDR_WIDTH-1:0]  serdes_rx_hdr,
     output wire                  serdes_rx_bitslip,
+    output wire                  serdes_rx_reset_req,
 
     /*
      * Status
@@ -103,6 +104,7 @@ eth_phy_10g_rx_inst (
     .serdes_rx_data(serdes_rx_data),
     .serdes_rx_hdr(serdes_rx_hdr),
     .serdes_rx_bitslip(serdes_rx_bitslip),
+    .serdes_rx_reset_req(serdes_rx_reset_req),
     .rx_error_count(rx_error_count),
     .rx_bad_block(rx_bad_block),
     .rx_sequence_error(rx_sequence_error),
