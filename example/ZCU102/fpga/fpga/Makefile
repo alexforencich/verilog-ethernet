@@ -18,6 +18,7 @@ SYN_FILES += lib/eth/rtl/eth_phy_10g_rx.v
 SYN_FILES += lib/eth/rtl/eth_phy_10g_rx_if.v
 SYN_FILES += lib/eth/rtl/eth_phy_10g_rx_frame_sync.v
 SYN_FILES += lib/eth/rtl/eth_phy_10g_rx_ber_mon.v
+SYN_FILES += lib/eth/rtl/eth_phy_10g_rx_watchdog.v
 SYN_FILES += lib/eth/rtl/eth_phy_10g_tx.v
 SYN_FILES += lib/eth/rtl/eth_phy_10g_tx_if.v
 SYN_FILES += lib/eth/rtl/xgmii_baser_dec_64.v
