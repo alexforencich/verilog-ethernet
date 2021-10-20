@@ -7,6 +7,7 @@ FPGA_ARCH = virtexuplus
 # Files for synthesis
 SYN_FILES = rtl/fpga.v
 SYN_FILES += rtl/fpga_core.v
+SYN_FILES += rtl/eth_xcvr_phy_wrapper.v
 SYN_FILES += rtl/debounce_switch.v
 SYN_FILES += rtl/sync_signal.v
 SYN_FILES += rtl/mdio_master.v
@@ -64,7 +65,7 @@ XDC_FILES += lib/eth/lib/axis/syn/vivado/sync_reset.tcl
 
 # IP
 IP_TCL_FILES = ip/gig_ethernet_pcs_pma_0.tcl
-IP_TCL_FILES += ip/gtwizard_ultrascale_0.tcl
+IP_TCL_FILES += ip/eth_xcvr_gt.tcl
 
 include ../common/vivado.mk
 
