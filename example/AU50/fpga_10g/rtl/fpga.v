@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014-2018 Alex Forencich
+Copyright (c) 2014-2021 Alex Forencich
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -190,12 +190,15 @@ wire        qsfp_rx_rst_4_int;
 wire [63:0] qsfp_rxd_4_int;
 wire [7:0]  qsfp_rxc_4_int;
 
+assign clk_156mhz_int = qsfp_tx_clk_1_int;
+assign rst_156mhz_int = qsfp_tx_rst_1_int;
+
 wire qsfp_rx_block_lock_1;
 wire qsfp_rx_block_lock_2;
 wire qsfp_rx_block_lock_3;
 wire qsfp_rx_block_lock_4;
 
-wire [3:0] qsfp_gtpowergood;
+wire qsfp_gtpowergood;
 
 wire qsfp_mgt_refclk_0;
 wire qsfp_mgt_refclk_0_int;
@@ -203,36 +206,16 @@ wire qsfp_mgt_refclk_0_bufg;
 
 assign clk_161mhz_ref_int = qsfp_mgt_refclk_0_bufg;
 
-wire [3:0] gt_txclkout;
-wire gt_txusrclk;
-
-wire [3:0] gt_rxclkout;
-wire [3:0] gt_rxusrclk;
-
-wire gt_reset_tx_done;
-wire gt_reset_rx_done;
-
-wire [3:0] gt_txprgdivresetdone;
-wire [3:0] gt_txpmaresetdone;
-wire [3:0] gt_rxprgdivresetdone;
-wire [3:0] gt_rxpmaresetdone;
-
-wire gt_tx_reset = ~((&gt_txprgdivresetdone) & (&gt_txpmaresetdone));
-wire gt_rx_reset = ~&gt_rxpmaresetdone;
-
-reg gt_userclk_tx_active = 1'b0;
-reg [3:0] gt_userclk_rx_active = 1'b0;
-
 IBUFDS_GTE4 ibufds_gte4_qsfp_mgt_refclk_0_inst (
-    .I             (qsfp_mgt_refclk_0_p),
-    .IB            (qsfp_mgt_refclk_0_n),
-    .CEB           (1'b0),
-    .O             (qsfp_mgt_refclk_0),
-    .ODIV2         (qsfp_mgt_refclk_0_int)
+    .I     (qsfp_mgt_refclk_0_p),
+    .IB    (qsfp_mgt_refclk_0_n),
+    .CEB   (1'b0),
+    .O     (qsfp_mgt_refclk_0),
+    .ODIV2 (qsfp_mgt_refclk_0_int)
 );
 
 BUFG_GT bufg_gt_refclk_inst (
-    .CE      (&qsfp_gtpowergood),
+    .CE      (qsfp_gtpowergood),
     .CEMASK  (1'b1),
     .CLR     (1'b0),
     .CLRMASK (1'b1),
@@ -241,306 +224,192 @@ BUFG_GT bufg_gt_refclk_inst (
     .O       (qsfp_mgt_refclk_0_bufg)
 );
 
-BUFG_GT bufg_gt_tx_usrclk_inst (
-    .CE      (1'b1),
-    .CEMASK  (1'b0),
-    .CLR     (gt_tx_reset),
-    .CLRMASK (1'b0),
-    .DIV     (3'd0),
-    .I       (gt_txclkout[0]),
-    .O       (gt_txusrclk)
-);
+wire qsfp_qpll0lock;
+wire qsfp_qpll0outclk;
+wire qsfp_qpll0outrefclk;
 
-assign clk_156mhz_int = gt_txusrclk;
-
-always @(posedge gt_txusrclk, posedge gt_tx_reset) begin
-    if (gt_tx_reset) begin
-        gt_userclk_tx_active <= 1'b0;
-    end else begin
-        gt_userclk_tx_active <= 1'b1;
-    end
-end
-
-genvar n;
-
-generate
-
-for (n = 0; n < 4; n = n + 1) begin
-
-    BUFG_GT bufg_gt_rx_usrclk_inst (
-        .CE      (1'b1),
-        .CEMASK  (1'b0),
-        .CLR     (gt_rx_reset),
-        .CLRMASK (1'b0),
-        .DIV     (3'd0),
-        .I       (gt_rxclkout[n]),
-        .O       (gt_rxusrclk[n])
-    );
-
-    always @(posedge gt_rxusrclk[n], posedge gt_rx_reset) begin
-        if (gt_rx_reset) begin
-            gt_userclk_rx_active[n] <= 1'b0;
-        end else begin
-            gt_userclk_rx_active[n] <= 1'b1;
-        end
-    end
-
-end
-
-endgenerate
-
-sync_reset #(
-    .N(4)
-)
-sync_reset_156mhz_inst (
-    .clk(clk_156mhz_int),
-    .rst(~gt_reset_tx_done),
-    .out(rst_156mhz_int)
-);
-
-wire [5:0] qsfp_gt_txheader_1;
-wire [63:0] qsfp_gt_txdata_1;
-wire qsfp_gt_rxgearboxslip_1;
-wire [5:0] qsfp_gt_rxheader_1;
-wire [1:0] qsfp_gt_rxheadervalid_1;
-wire [63:0] qsfp_gt_rxdata_1;
-wire [1:0] qsfp_gt_rxdatavalid_1;
-
-wire [5:0] qsfp_gt_txheader_2;
-wire [63:0] qsfp_gt_txdata_2;
-wire qsfp_gt_rxgearboxslip_2;
-wire [5:0] qsfp_gt_rxheader_2;
-wire [1:0] qsfp_gt_rxheadervalid_2;
-wire [63:0] qsfp_gt_rxdata_2;
-wire [1:0] qsfp_gt_rxdatavalid_2;
-
-wire [5:0] qsfp_gt_txheader_3;
-wire [63:0] qsfp_gt_txdata_3;
-wire qsfp_gt_rxgearboxslip_3;
-wire [5:0] qsfp_gt_rxheader_3;
-wire [1:0] qsfp_gt_rxheadervalid_3;
-wire [63:0] qsfp_gt_rxdata_3;
-wire [1:0] qsfp_gt_rxdatavalid_3;
-
-wire [5:0] qsfp_gt_txheader_4;
-wire [63:0] qsfp_gt_txdata_4;
-wire qsfp_gt_rxgearboxslip_4;
-wire [5:0] qsfp_gt_rxheader_4;
-wire [1:0] qsfp_gt_rxheadervalid_4;
-wire [63:0] qsfp_gt_rxdata_4;
-wire [1:0] qsfp_gt_rxdatavalid_4;
-
-gtwizard_ultrascale_0
-qsfp_gty_inst (
-    .gtwiz_userclk_tx_active_in(&gt_userclk_tx_active),
-    .gtwiz_userclk_rx_active_in(&gt_userclk_rx_active),
-
-    .gtwiz_reset_clk_freerun_in(clk_125mhz_int),
-    .gtwiz_reset_all_in(rst_125mhz_int),
-
-    .gtwiz_reset_tx_pll_and_datapath_in(1'b0),
-    .gtwiz_reset_tx_datapath_in(1'b0),
-
-    .gtwiz_reset_rx_pll_and_datapath_in(1'b0),
-    .gtwiz_reset_rx_datapath_in(1'b0),
-
-    .gtwiz_reset_rx_cdr_stable_out(),
-
-    .gtwiz_reset_tx_done_out(gt_reset_tx_done),
-    .gtwiz_reset_rx_done_out(gt_reset_rx_done),
-
-    .gtrefclk00_in(qsfp_mgt_refclk_0),
-
-    .qpll0outclk_out(),
-    .qpll0outrefclk_out(),
-
-    .gtyrxn_in({qsfp_rx4_n, qsfp_rx3_n, qsfp_rx2_n, qsfp_rx1_n}),
-    .gtyrxp_in({qsfp_rx4_p, qsfp_rx3_p, qsfp_rx2_p, qsfp_rx1_p}),
-
-    .rxusrclk_in(gt_rxusrclk),
-    .rxusrclk2_in(gt_rxusrclk),
-
-    .gtwiz_userdata_tx_in({qsfp_gt_txdata_4, qsfp_gt_txdata_3, qsfp_gt_txdata_2, qsfp_gt_txdata_1}),
-    .txheader_in({qsfp_gt_txheader_4, qsfp_gt_txheader_3, qsfp_gt_txheader_2, qsfp_gt_txheader_1}),
-    .txsequence_in({4{1'b0}}),
-
-    .txusrclk_in({4{gt_txusrclk}}),
-    .txusrclk2_in({4{gt_txusrclk}}),
-
-    .gtpowergood_out(qsfp_gtpowergood),
-
-    .gtytxn_out({qsfp_tx4_n, qsfp_tx3_n, qsfp_tx2_n, qsfp_tx1_n}),
-    .gtytxp_out({qsfp_tx4_p, qsfp_tx3_p, qsfp_tx2_p, qsfp_tx1_p}),
-
-    .rxgearboxslip_in({qsfp_gt_rxgearboxslip_4, qsfp_gt_rxgearboxslip_3, qsfp_gt_rxgearboxslip_2, qsfp_gt_rxgearboxslip_1}),
-    .gtwiz_userdata_rx_out({qsfp_gt_rxdata_4, qsfp_gt_rxdata_3, qsfp_gt_rxdata_2, qsfp_gt_rxdata_1}),
-    .rxdatavalid_out({qsfp_gt_rxdatavalid_4, qsfp_gt_rxdatavalid_3, qsfp_gt_rxdatavalid_2, qsfp_gt_rxdatavalid_1}),
-    .rxheader_out({qsfp_gt_rxheader_4, qsfp_gt_rxheader_3, qsfp_gt_rxheader_2, qsfp_gt_rxheader_1}),
-    .rxheadervalid_out({qsfp_gt_rxheadervalid_4, qsfp_gt_rxheadervalid_3, qsfp_gt_rxheadervalid_2, qsfp_gt_rxheadervalid_1}),
-    .rxoutclk_out(gt_rxclkout),
-    .rxpmaresetdone_out(gt_rxpmaresetdone),
-    .rxprgdivresetdone_out(gt_rxprgdivresetdone),
-    .rxstartofseq_out(),
-
-    .txoutclk_out(gt_txclkout),
-    .txpmaresetdone_out(gt_txpmaresetdone),
-    .txprgdivresetdone_out(gt_txprgdivresetdone)
-);
-
-assign qsfp_tx_clk_1_int = clk_156mhz_int;
-assign qsfp_tx_rst_1_int = rst_156mhz_int;
-
-assign qsfp_rx_clk_1_int = gt_rxusrclk[0];
-
-sync_reset #(
-    .N(4)
-)
-qsfp_rx_rst_1_reset_sync_inst (
-    .clk(qsfp_rx_clk_1_int),
-    .rst(~gt_reset_rx_done),
-    .out(qsfp_rx_rst_1_int)
-);
-
-eth_phy_10g #(
-    .BIT_REVERSE(1),
-    .PRBS31_ENABLE(1)
+eth_xcvr_phy_wrapper #(
+    .HAS_COMMON(1)
 )
 qsfp_phy_1_inst (
-    .tx_clk(qsfp_tx_clk_1_int),
-    .tx_rst(qsfp_tx_rst_1_int),
-    .rx_clk(qsfp_rx_clk_1_int),
-    .rx_rst(qsfp_rx_rst_1_int),
-    .xgmii_txd(qsfp_txd_1_int),
-    .xgmii_txc(qsfp_txc_1_int),
-    .xgmii_rxd(qsfp_rxd_1_int),
-    .xgmii_rxc(qsfp_rxc_1_int),
-    .serdes_tx_data(qsfp_gt_txdata_1),
-    .serdes_tx_hdr(qsfp_gt_txheader_1),
-    .serdes_rx_data(qsfp_gt_rxdata_1),
-    .serdes_rx_hdr(qsfp_gt_rxheader_1),
-    .serdes_rx_bitslip(qsfp_gt_rxgearboxslip_1),
-    .rx_error_count(qsfp_rx_error_count_1_int),
-    .rx_block_lock(qsfp_rx_block_lock_1),
-    .rx_high_ber(),
-    .tx_prbs31_enable(qsfp_tx_prbs31_enable_1_int),
-    .rx_prbs31_enable(qsfp_rx_prbs31_enable_1_int)
+    .xcvr_ctrl_clk(clk_125mhz_int),
+    .xcvr_ctrl_rst(rst_125mhz_int),
+
+    // Common
+    .xcvr_gtpowergood_out(qsfp_gtpowergood),
+
+    // PLL out
+    .xcvr_gtrefclk00_in(qsfp_mgt_refclk_0),
+    .xcvr_qpll0lock_out(qsfp_qpll0lock),
+    .xcvr_qpll0outclk_out(qsfp_qpll0outclk),
+    .xcvr_qpll0outrefclk_out(qsfp_qpll0outrefclk),
+
+    // PLL in
+    .xcvr_qpll0lock_in(1'b0),
+    .xcvr_qpll0reset_out(),
+    .xcvr_qpll0clk_in(1'b0),
+    .xcvr_qpll0refclk_in(1'b0),
+
+    // Serial data
+    .xcvr_txp(qsfp_tx1_p),
+    .xcvr_txn(qsfp_tx1_n),
+    .xcvr_rxp(qsfp_rx1_p),
+    .xcvr_rxn(qsfp_rx1_n),
+
+    // PHY connections
+    .phy_tx_clk(qsfp_tx_clk_1_int),
+    .phy_tx_rst(qsfp_tx_rst_1_int),
+    .phy_xgmii_txd(qsfp_txd_1_int),
+    .phy_xgmii_txc(qsfp_txc_1_int),
+    .phy_rx_clk(qsfp_rx_clk_1_int),
+    .phy_rx_rst(qsfp_rx_rst_1_int),
+    .phy_xgmii_rxd(qsfp_rxd_1_int),
+    .phy_xgmii_rxc(qsfp_rxc_1_int),
+    .phy_rx_error_count(),
+    .phy_rx_bad_block(),
+    .phy_rx_sequence_error(),
+    .phy_rx_block_lock(qsfp_rx_block_lock_1),
+    .phy_rx_high_ber(),
+    .phy_tx_prbs31_enable(),
+    .phy_rx_prbs31_enable()
 );
 
-assign qsfp_tx_clk_2_int = clk_156mhz_int;
-assign qsfp_tx_rst_2_int = rst_156mhz_int;
-
-assign qsfp_rx_clk_2_int = gt_rxusrclk[1];
-
-sync_reset #(
-    .N(4)
-)
-qsfp_rx_rst_2_reset_sync_inst (
-    .clk(qsfp_rx_clk_2_int),
-    .rst(~gt_reset_rx_done),
-    .out(qsfp_rx_rst_2_int)
-);
-
-eth_phy_10g #(
-    .BIT_REVERSE(1),
-    .PRBS31_ENABLE(1)
+eth_xcvr_phy_wrapper #(
+    .HAS_COMMON(0)
 )
 qsfp_phy_2_inst (
-    .tx_clk(qsfp_tx_clk_2_int),
-    .tx_rst(qsfp_tx_rst_2_int),
-    .rx_clk(qsfp_rx_clk_2_int),
-    .rx_rst(qsfp_rx_rst_2_int),
-    .xgmii_txd(qsfp_txd_2_int),
-    .xgmii_txc(qsfp_txc_2_int),
-    .xgmii_rxd(qsfp_rxd_2_int),
-    .xgmii_rxc(qsfp_rxc_2_int),
-    .serdes_tx_data(qsfp_gt_txdata_2),
-    .serdes_tx_hdr(qsfp_gt_txheader_2),
-    .serdes_rx_data(qsfp_gt_rxdata_2),
-    .serdes_rx_hdr(qsfp_gt_rxheader_2),
-    .serdes_rx_bitslip(qsfp_gt_rxgearboxslip_2),
-    .rx_error_count(qsfp_rx_error_count_2_int),
-    .rx_block_lock(qsfp_rx_block_lock_2),
-    .rx_high_ber(),
-    .tx_prbs31_enable(qsfp_tx_prbs31_enable_2_int),
-    .rx_prbs31_enable(qsfp_rx_prbs31_enable_2_int)
+    .xcvr_ctrl_clk(clk_125mhz_int),
+    .xcvr_ctrl_rst(rst_125mhz_int),
+
+    // Common
+    .xcvr_gtpowergood_out(),
+
+    // PLL out
+    .xcvr_gtrefclk00_in(1'b0),
+    .xcvr_qpll0lock_out(),
+    .xcvr_qpll0outclk_out(),
+    .xcvr_qpll0outrefclk_out(),
+
+    // PLL in
+    .xcvr_qpll0lock_in(qsfp_qpll0lock),
+    .xcvr_qpll0reset_out(),
+    .xcvr_qpll0clk_in(qsfp_qpll0outclk),
+    .xcvr_qpll0refclk_in(qsfp_qpll0outrefclk),
+
+    // Serial data
+    .xcvr_txp(qsfp_tx2_p),
+    .xcvr_txn(qsfp_tx2_n),
+    .xcvr_rxp(qsfp_rx2_p),
+    .xcvr_rxn(qsfp_rx2_n),
+
+    // PHY connections
+    .phy_tx_clk(qsfp_tx_clk_2_int),
+    .phy_tx_rst(qsfp_tx_rst_2_int),
+    .phy_xgmii_txd(qsfp_txd_2_int),
+    .phy_xgmii_txc(qsfp_txc_2_int),
+    .phy_rx_clk(qsfp_rx_clk_2_int),
+    .phy_rx_rst(qsfp_rx_rst_2_int),
+    .phy_xgmii_rxd(qsfp_rxd_2_int),
+    .phy_xgmii_rxc(qsfp_rxc_2_int),
+    .phy_rx_error_count(),
+    .phy_rx_bad_block(),
+    .phy_rx_sequence_error(),
+    .phy_rx_block_lock(qsfp_rx_block_lock_2),
+    .phy_rx_high_ber(),
+    .phy_tx_prbs31_enable(),
+    .phy_rx_prbs31_enable()
 );
 
-assign qsfp_tx_clk_3_int = clk_156mhz_int;
-assign qsfp_tx_rst_3_int = rst_156mhz_int;
-
-assign qsfp_rx_clk_3_int = gt_rxusrclk[2];
-
-sync_reset #(
-    .N(4)
-)
-qsfp_rx_rst_3_reset_sync_inst (
-    .clk(qsfp_rx_clk_3_int),
-    .rst(~gt_reset_rx_done),
-    .out(qsfp_rx_rst_3_int)
-);
-
-eth_phy_10g #(
-    .BIT_REVERSE(1),
-    .PRBS31_ENABLE(1)
+eth_xcvr_phy_wrapper #(
+    .HAS_COMMON(0)
 )
 qsfp_phy_3_inst (
-    .tx_clk(qsfp_tx_clk_3_int),
-    .tx_rst(qsfp_tx_rst_3_int),
-    .rx_clk(qsfp_rx_clk_3_int),
-    .rx_rst(qsfp_rx_rst_3_int),
-    .xgmii_txd(qsfp_txd_3_int),
-    .xgmii_txc(qsfp_txc_3_int),
-    .xgmii_rxd(qsfp_rxd_3_int),
-    .xgmii_rxc(qsfp_rxc_3_int),
-    .serdes_tx_data(qsfp_gt_txdata_3),
-    .serdes_tx_hdr(qsfp_gt_txheader_3),
-    .serdes_rx_data(qsfp_gt_rxdata_3),
-    .serdes_rx_hdr(qsfp_gt_rxheader_3),
-    .serdes_rx_bitslip(qsfp_gt_rxgearboxslip_3),
-    .rx_error_count(qsfp_rx_error_count_3_int),
-    .rx_block_lock(qsfp_rx_block_lock_3),
-    .rx_high_ber(),
-    .tx_prbs31_enable(qsfp_tx_prbs31_enable_3_int),
-    .rx_prbs31_enable(qsfp_rx_prbs31_enable_3_int)
+    .xcvr_ctrl_clk(clk_125mhz_int),
+    .xcvr_ctrl_rst(rst_125mhz_int),
+
+    // Common
+    .xcvr_gtpowergood_out(),
+
+    // PLL out
+    .xcvr_gtrefclk00_in(1'b0),
+    .xcvr_qpll0lock_out(),
+    .xcvr_qpll0outclk_out(),
+    .xcvr_qpll0outrefclk_out(),
+
+    // PLL in
+    .xcvr_qpll0lock_in(qsfp_qpll0lock),
+    .xcvr_qpll0reset_out(),
+    .xcvr_qpll0clk_in(qsfp_qpll0outclk),
+    .xcvr_qpll0refclk_in(qsfp_qpll0outrefclk),
+
+    // Serial data
+    .xcvr_txp(qsfp_tx3_p),
+    .xcvr_txn(qsfp_tx3_n),
+    .xcvr_rxp(qsfp_rx3_p),
+    .xcvr_rxn(qsfp_rx3_n),
+
+    // PHY connections
+    .phy_tx_clk(qsfp_tx_clk_3_int),
+    .phy_tx_rst(qsfp_tx_rst_3_int),
+    .phy_xgmii_txd(qsfp_txd_3_int),
+    .phy_xgmii_txc(qsfp_txc_3_int),
+    .phy_rx_clk(qsfp_rx_clk_3_int),
+    .phy_rx_rst(qsfp_rx_rst_3_int),
+    .phy_xgmii_rxd(qsfp_rxd_3_int),
+    .phy_xgmii_rxc(qsfp_rxc_3_int),
+    .phy_rx_error_count(),
+    .phy_rx_bad_block(),
+    .phy_rx_sequence_error(),
+    .phy_rx_block_lock(qsfp_rx_block_lock_3),
+    .phy_rx_high_ber(),
+    .phy_tx_prbs31_enable(),
+    .phy_rx_prbs31_enable()
 );
 
-assign qsfp_tx_clk_4_int = clk_156mhz_int;
-assign qsfp_tx_rst_4_int = rst_156mhz_int;
-
-assign qsfp_rx_clk_4_int = gt_rxusrclk[3];
-
-sync_reset #(
-    .N(4)
-)
-qsfp_rx_rst_4_reset_sync_inst (
-    .clk(qsfp_rx_clk_4_int),
-    .rst(~gt_reset_rx_done),
-    .out(qsfp_rx_rst_4_int)
-);
-
-eth_phy_10g #(
-    .BIT_REVERSE(1),
-    .PRBS31_ENABLE(1)
+eth_xcvr_phy_wrapper #(
+    .HAS_COMMON(0)
 )
 qsfp_phy_4_inst (
-    .tx_clk(qsfp_tx_clk_4_int),
-    .tx_rst(qsfp_tx_rst_4_int),
-    .rx_clk(qsfp_rx_clk_4_int),
-    .rx_rst(qsfp_rx_rst_4_int),
-    .xgmii_txd(qsfp_txd_4_int),
-    .xgmii_txc(qsfp_txc_4_int),
-    .xgmii_rxd(qsfp_rxd_4_int),
-    .xgmii_rxc(qsfp_rxc_4_int),
-    .serdes_tx_data(qsfp_gt_txdata_4),
-    .serdes_tx_hdr(qsfp_gt_txheader_4),
-    .serdes_rx_data(qsfp_gt_rxdata_4),
-    .serdes_rx_hdr(qsfp_gt_rxheader_4),
-    .serdes_rx_bitslip(qsfp_gt_rxgearboxslip_4),
-    .rx_error_count(qsfp_rx_error_count_4_int),
-    .rx_block_lock(qsfp_rx_block_lock_4),
-    .rx_high_ber(),
-    .tx_prbs31_enable(qsfp_tx_prbs31_enable_4_int),
-    .rx_prbs31_enable(qsfp_rx_prbs31_enable_4_int)
+    .xcvr_ctrl_clk(clk_125mhz_int),
+    .xcvr_ctrl_rst(rst_125mhz_int),
+
+    // Common
+    .xcvr_gtpowergood_out(),
+
+    // PLL out
+    .xcvr_gtrefclk00_in(1'b0),
+    .xcvr_qpll0lock_out(),
+    .xcvr_qpll0outclk_out(),
+    .xcvr_qpll0outrefclk_out(),
+
+    // PLL in
+    .xcvr_qpll0lock_in(qsfp_qpll0lock),
+    .xcvr_qpll0reset_out(),
+    .xcvr_qpll0clk_in(qsfp_qpll0outclk),
+    .xcvr_qpll0refclk_in(qsfp_qpll0outrefclk),
+
+    // Serial data
+    .xcvr_txp(qsfp_tx4_p),
+    .xcvr_txn(qsfp_tx4_n),
+    .xcvr_rxp(qsfp_rx4_p),
+    .xcvr_rxn(qsfp_rx4_n),
+
+    // PHY connections
+    .phy_tx_clk(qsfp_tx_clk_4_int),
+    .phy_tx_rst(qsfp_tx_rst_4_int),
+    .phy_xgmii_txd(qsfp_txd_4_int),
+    .phy_xgmii_txc(qsfp_txc_4_int),
+    .phy_rx_clk(qsfp_rx_clk_4_int),
+    .phy_rx_rst(qsfp_rx_rst_4_int),
+    .phy_xgmii_rxd(qsfp_rxd_4_int),
+    .phy_xgmii_rxc(qsfp_rxc_4_int),
+    .phy_rx_error_count(),
+    .phy_rx_bad_block(),
+    .phy_rx_sequence_error(),
+    .phy_rx_block_lock(qsfp_rx_block_lock_4),
+    .phy_rx_high_ber(),
+    .phy_tx_prbs31_enable(),
+    .phy_rx_prbs31_enable()
 );
 
 fpga_core
