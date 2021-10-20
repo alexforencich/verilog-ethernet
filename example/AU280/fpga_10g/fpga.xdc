@@ -112,8 +112,8 @@ set_property -dict {LOC A49 } [get_ports qsfp1_tx4_p] ;# MGTYTXP3_135 GTYE4_CHAN
 set_property -dict {LOC A50 } [get_ports qsfp1_tx4_n] ;# MGTYTXN3_135 GTYE4_CHANNEL_X0Y47 / GTYE4_COMMON_X0Y11
 #set_property -dict {LOC P42 } [get_ports qsfp1_mgt_refclk_0_p] ;# MGTREFCLK0P_135 from SI570
 #set_property -dict {LOC P43 } [get_ports qsfp1_mgt_refclk_0_n] ;# MGTREFCLK0N_135 from SI570
-#set_property -dict {LOC M42 } [get_ports qsfp1_mgt_refclk_1_p] ;# MGTREFCLK1P_135 from SI546
-#set_property -dict {LOC M43 } [get_ports qsfp1_mgt_refclk_1_n] ;# MGTREFCLK1N_135 from SI546
+set_property -dict {LOC M42 } [get_ports qsfp1_mgt_refclk_1_p] ;# MGTREFCLK1P_135 from SI546
+set_property -dict {LOC M43 } [get_ports qsfp1_mgt_refclk_1_n] ;# MGTREFCLK1N_135 from SI546
 set_property -dict {LOC H30 IOSTANDARD LVCMOS18} [get_ports qsfp1_refclk_oe_b]
 set_property -dict {LOC G33 IOSTANDARD LVCMOS18} [get_ports qsfp1_refclk_fs]
 
@@ -124,7 +124,7 @@ set_property -dict {LOC G33 IOSTANDARD LVCMOS18} [get_ports qsfp1_refclk_fs]
 #create_clock -period 6.400 -name qsfp1_mgt_refclk_1 [get_ports qsfp1_mgt_refclk_1_p]
 
 # 161.1328125 MHz MGT reference clock (from SI546, fs = 1)
-#create_clock -period 6.206 -name qsfp1_mgt_refclk_1 [get_ports qsfp1_mgt_refclk_1_p]
+create_clock -period 6.206 -name qsfp1_mgt_refclk_1 [get_ports qsfp1_mgt_refclk_1_p]
 
 set_false_path -to [get_ports {qsfp1_refclk_oe_b qsfp1_refclk_fs}]
 set_output_delay 0 [get_ports {qsfp1_refclk_oe_b qsfp1_refclk_fs}]
