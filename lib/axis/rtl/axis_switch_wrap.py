@@ -67,7 +67,9 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
+`resetall
 `timescale 1ns / 1ps
+`default_nettype none
 
 /*
  * AXI4-Stream {{m}}x{{n}} switch (wrapper)
@@ -196,6 +198,8 @@ axis_switch_inst (
 );
 
 endmodule
+
+`resetall
 
 """)
 

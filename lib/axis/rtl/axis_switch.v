@@ -24,7 +24,9 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
+`resetall
 `timescale 1ns / 1ps
+`default_nettype none
 
 /*
  * AXI4-Stream switch
@@ -371,3 +373,5 @@ generate
 endgenerate
 
 endmodule
+
+`resetall
