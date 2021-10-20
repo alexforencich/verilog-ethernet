@@ -24,7 +24,9 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
+`resetall
 `timescale 1ns / 1ps
+`default_nettype none
 
 /*
  * Priority encoder module
@@ -86,3 +88,5 @@ assign output_encoded = stage_enc[LEVELS-1];
 assign output_unencoded = 1 << output_encoded;
 
 endmodule
+
+`resetall

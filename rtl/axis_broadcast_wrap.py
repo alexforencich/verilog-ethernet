@@ -61,7 +61,9 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
+`resetall
 `timescale 1ns / 1ps
+`default_nettype none
 
 /*
  * AXI4-Stream {{n}} port broadcast (wrapper)
@@ -157,6 +159,8 @@ axis_broadcast_inst (
 );
 
 endmodule
+
+`resetall
 
 """)
 
