@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014-2018 Alex Forencich
+Copyright (c) 2014-2021 Alex Forencich
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -38,16 +38,16 @@ module fpga_core #
      * Clock: 156.25MHz
      * Synchronous reset
      */
-    input  wire       clk,
-    input  wire       rst,
+    input  wire        clk,
+    input  wire        rst,
 
     /*
      * GPIO
      */
-    output wire [7:0] led_red,
-    output wire [7:0] led_green,
-    output wire [1:0] led_bmc,
-    output wire [1:0] led_exp,
+    output wire [7:0]  led_red,
+    output wire [7:0]  led_green,
+    output wire [1:0]  led_bmc,
+    output wire [1:0]  led_exp,
 
     /*
      * Ethernet: QSFP28
