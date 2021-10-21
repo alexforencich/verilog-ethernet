@@ -281,6 +281,8 @@ assign rst_156mhz_int = sfp0_tx_rst_int;
 
 wire sfp0_rx_block_lock;
 wire sfp1_rx_block_lock;
+wire sfp2_rx_block_lock;
+wire sfp3_rx_block_lock;
 
 wire sfp_mgt_refclk_0;
 

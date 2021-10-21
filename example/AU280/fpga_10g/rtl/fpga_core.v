@@ -344,9 +344,6 @@ always @(posedge clk) begin
     end
 end
 
-//assign led = sw;
-assign led = led_reg;
-
 assign qsfp0_txd_2 = 64'h0707070707070707;
 assign qsfp0_txc_2 = 8'hff;
 assign qsfp0_txd_3 = 64'h0707070707070707;

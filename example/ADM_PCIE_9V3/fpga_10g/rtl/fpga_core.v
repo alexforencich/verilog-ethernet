@@ -356,8 +356,6 @@ assign user_led_g = ~led_reg[1:0];
 assign user_led_r = 1'b1;
 assign front_led = 2'b00;
 
-assign phy_reset_n = !rst;
-
 assign qsfp_0_txd_1 = 64'h0707070707070707;
 assign qsfp_0_txc_1 = 8'hff;
 assign qsfp_0_txd_2 = 64'h0707070707070707;

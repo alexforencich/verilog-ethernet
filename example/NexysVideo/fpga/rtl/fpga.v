@@ -211,6 +211,8 @@ debounce_switch_inst (
         sw_int})
 );
 
+wire uart_rxd_int;
+
 sync_signal #(
     .WIDTH(1),
     .N(2)

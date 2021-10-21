@@ -160,11 +160,14 @@ module fpga (
 
 wire ref_clk_ibufg;
 
-wire clk_125mhz_mmcm_out;
-
 // Internal 125 MHz clock
+wire clk_125mhz_mmcm_out;
 wire clk_125mhz_int;
 wire rst_125mhz_int;
+
+// Internal 156.25 MHz clock
+wire clk_156mhz_int;
+wire rst_156mhz_int;
 
 wire mmcm_rst = ~btn[0];
 wire mmcm_locked;

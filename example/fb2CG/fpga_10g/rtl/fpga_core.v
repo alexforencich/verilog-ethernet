@@ -357,8 +357,6 @@ assign led_green = led_reg;
 assign led_bmc = 2'b00;
 assign led_exp = 2'b11;
 
-assign phy_reset_n = !rst;
-
 assign qsfp_0_txd_1 = 64'h0707070707070707;
 assign qsfp_0_txc_1 = 8'hff;
 assign qsfp_0_txd_2 = 64'h0707070707070707;

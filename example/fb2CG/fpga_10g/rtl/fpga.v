@@ -324,7 +324,7 @@ eth_xcvr_phy_wrapper #(
 )
 qsfp_0_phy_0_inst (
     .xcvr_ctrl_clk(clk_125mhz_int),
-    .xcvr_ctrl_rst(qsfp_0_reset),
+    .xcvr_ctrl_rst(qsfp_0_rst),
 
     // Common
     .xcvr_gtpowergood_out(qsfp_0_gtpowergood),
@@ -370,7 +370,7 @@ eth_xcvr_phy_wrapper #(
 )
 qsfp_0_phy_1_inst (
     .xcvr_ctrl_clk(clk_125mhz_int),
-    .xcvr_ctrl_rst(qsfp_0_reset),
+    .xcvr_ctrl_rst(qsfp_0_rst),
 
     // Common
     .xcvr_gtpowergood_out(),
@@ -416,7 +416,7 @@ eth_xcvr_phy_wrapper #(
 )
 qsfp_0_phy_2_inst (
     .xcvr_ctrl_clk(clk_125mhz_int),
-    .xcvr_ctrl_rst(qsfp_0_reset),
+    .xcvr_ctrl_rst(qsfp_0_rst),
 
     // Common
     .xcvr_gtpowergood_out(),
@@ -462,7 +462,7 @@ eth_xcvr_phy_wrapper #(
 )
 qsfp_0_phy_3_inst (
     .xcvr_ctrl_clk(clk_125mhz_int),
-    .xcvr_ctrl_rst(qsfp_0_reset),
+    .xcvr_ctrl_rst(qsfp_0_rst),
 
     // Common
     .xcvr_gtpowergood_out(),

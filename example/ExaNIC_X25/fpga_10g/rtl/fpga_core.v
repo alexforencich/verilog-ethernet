@@ -300,7 +300,7 @@ always @(posedge clk) begin
     end
 end
 
-assign led = led_reg;
+assign sma_led = led_reg;
 
 assign sfp_2_txd = 64'h0707070707070707;
 assign sfp_2_txc = 8'hff;

@@ -85,6 +85,9 @@ sync_reset_100mhz_inst (
     .out(rst_100mhz)
 );
 
+wire clk_156mhz_int;
+wire rst_156mhz_int;
+
 // XGMII 10G PHY
 assign qsfp0_modsel_l = 1'b0;
 assign qsfp0_reset_l = 1'b1;
