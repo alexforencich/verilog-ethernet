@@ -24,7 +24,9 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
+`resetall
 `timescale 1ns / 1ps
+`default_nettype none
 
 /*
  * Transceiver and PHY wrapper
@@ -161,3 +163,5 @@ phy_inst (
 );
 
 endmodule
+
+`resetall

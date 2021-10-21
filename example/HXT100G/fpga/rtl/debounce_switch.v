@@ -24,7 +24,9 @@ THE SOFTWARE.
 
 // Language: Verilog-2001
 
+`resetall
 `timescale 1 ns / 1 ps
+`default_nettype none
 
 /*
  * Synchronizes switch and button inputs with a slow sampled shift register
@@ -87,3 +89,5 @@ always @(posedge clk) begin
 end
 
 endmodule
+
+`resetall

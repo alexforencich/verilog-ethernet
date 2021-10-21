@@ -24,7 +24,9 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
+`resetall
 `timescale 1 ns / 1 ps
+`default_nettype none
 
 module fpga_core
 (
@@ -459,3 +461,5 @@ always @(posedge clk) begin
 end
 
 endmodule
+
+`resetall

@@ -24,7 +24,9 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
+`resetall
 `timescale 1ns / 1ps
+`default_nettype none
 
 /*
  * 10G Ethernet PHY
@@ -134,3 +136,5 @@ eth_phy_10g_tx_inst (
 );
 
 endmodule
+
+`resetall

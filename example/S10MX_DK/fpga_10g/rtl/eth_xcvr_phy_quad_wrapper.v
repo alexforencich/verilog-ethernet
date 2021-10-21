@@ -24,7 +24,9 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
+`resetall
 `timescale 1ns / 1ps
+`default_nettype none
 
 /*
  * Transceiver and PHY quad wrapper
@@ -267,3 +269,5 @@ eth_xcvr_phy_wrapper eth_xcvr_phy_4 (
 );
 
 endmodule
+
+`resetall

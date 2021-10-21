@@ -24,7 +24,9 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
+`resetall
 `timescale 1ns / 1ps
+`default_nettype none
 
 /*
  * IPv4 and ARP block, ethernet frame interface
@@ -438,3 +440,5 @@ arp_inst (
 );
 
 endmodule
+
+`resetall

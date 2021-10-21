@@ -24,7 +24,9 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
+`resetall
 `timescale 1ns / 1ps
+`default_nettype none
 
 /*
  * 7 segment display hexadecimal encoding
@@ -68,3 +70,5 @@ end
 assign out = INVERT ? ~enc : enc;
 
 endmodule
+
+`resetall
