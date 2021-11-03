@@ -1,8 +1,8 @@
+# Timing constraints for the Intel Stratix 10 DX FPGA development board
 
+set_time_format -unit ns -decimal_places 3
 
-derive_pll_clocks
-derive_clock_uncertainty
-
+# Clock constraints
 create_clock -period 7.519 -name {clk_133m_ddr4_1} [ get_ports {clk_133m_ddr4_1_p} ]
 create_clock -period 7.519 -name {clk_133m_ddr4_0} [ get_ports {clk_133m_ddr4_0_p} ]
 create_clock -period 7.519 -name {clk_133m_dimm_1} [ get_ports {clk_133m_dimm_1_p} ]
@@ -34,6 +34,8 @@ create_clock -period 6.4 -name {clk_156p25m_qsfp0} [ get_ports {clk_156p25m_qsfp
 create_clock -period 3.2 -name {clk_312p5m_qsfp1} [ get_ports {clk_312p5m_qsfp1_p} ]
 create_clock -period 6.4 -name {clk_156p25m_qsfp1} [ get_ports {clk_156p25m_qsfp1_p} ]
 create_clock -period 3.2 -name {clk_312p5m_qsfp2} [ get_ports {clk_312p5m_qsfp2_p} ]
+
+derive_clock_uncertainty
 
 set_clock_groups -asynchronous -group [ get_clocks {clk_133m_ddr4_1} ]
 set_clock_groups -asynchronous -group [ get_clocks {clk_133m_ddr4_0} ]
@@ -67,16 +69,17 @@ set_clock_groups -asynchronous -group [ get_clocks {clk_312p5m_qsfp1} ]
 set_clock_groups -asynchronous -group [ get_clocks {clk_156p25m_qsfp1} ]
 set_clock_groups -asynchronous -group [ get_clocks {clk_312p5m_qsfp2} ]
 
-# JTAG Signal Constraints
-create_clock -name {altera_reserved_tck} -period 40.800 -waveform { 0.000 20.400 } [get_ports { altera_reserved_tck }]
-set_input_delay -clock altera_reserved_tck 8 [get_ports altera_reserved_tdi]
-set_input_delay -clock altera_reserved_tck 8 [get_ports altera_reserved_tms]
-set_output_delay -clock altera_reserved_tck -clock_fall -max 5 [get_ports altera_reserved_tdo]
-set_false_path -from [get_keepers {altera_reserved_ntrst}]
+# JTAG constraints
+create_clock -name {altera_reserved_tck} -period 40.800 {altera_reserved_tck}
+
 set_clock_groups -asynchronous -group [get_clocks {altera_reserved_tck}]
 
-set_false_path -from [get_ports cpu_resetn] -to *
-set_false_path -from * -to [get_ports {user_led_g[*]}]
+# IO constraints
+set_false_path -from "cpu_resetn"
+set_false_path -to   "user_led_g[*]"
+
+set_false_path -from "pcie_rst_n"
+
 
 source ../lib/eth/lib/axis/syn/quartus_pro/sync_reset.sdc
 source ../lib/eth/lib/axis/syn/quartus_pro/axis_async_fifo.sdc
