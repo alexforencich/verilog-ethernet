@@ -207,6 +207,7 @@ reg m_rst_sync2_reg = 1'b1;
 (* SHREG_EXTRACT = "NO" *)
 reg m_rst_sync3_reg = 1'b1;
 
+(* ramstyle = "no_rw_check" *)
 reg [WIDTH-1:0] mem[(2**ADDR_WIDTH)-1:0];
 reg [WIDTH-1:0] mem_read_data_reg;
 reg mem_read_data_valid_reg = 1'b0;
