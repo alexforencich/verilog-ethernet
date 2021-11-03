@@ -91,6 +91,8 @@ wire clk_156mhz_int;
 wire rst_156mhz_int;
 
 // XGMII 10G PHY
+
+// QSFP0
 assign qsfp0_modsel_l = 1'b0;
 assign qsfp0_reset_l = 1'b1;
 assign qsfp0_lpmode = 1'b0;
@@ -128,43 +130,6 @@ wire        qsfp0_rx_rst_4_int;
 wire [63:0] qsfp0_rxd_4_int;
 wire [7:0]  qsfp0_rxc_4_int;
 
-assign qsfp1_modsel_l = 1'b0;
-assign qsfp1_reset_l = 1'b1;
-assign qsfp1_lpmode = 1'b0;
-
-wire        qsfp1_tx_clk_1_int;
-wire        qsfp1_tx_rst_1_int;
-wire [63:0] qsfp1_txd_1_int;
-wire [7:0]  qsfp1_txc_1_int;
-wire        qsfp1_rx_clk_1_int;
-wire        qsfp1_rx_rst_1_int;
-wire [63:0] qsfp1_rxd_1_int;
-wire [7:0]  qsfp1_rxc_1_int;
-wire        qsfp1_tx_clk_2_int;
-wire        qsfp1_tx_rst_2_int;
-wire [63:0] qsfp1_txd_2_int;
-wire [7:0]  qsfp1_txc_2_int;
-wire        qsfp1_rx_clk_2_int;
-wire        qsfp1_rx_rst_2_int;
-wire [63:0] qsfp1_rxd_2_int;
-wire [7:0]  qsfp1_rxc_2_int;
-wire        qsfp1_tx_clk_3_int;
-wire        qsfp1_tx_rst_3_int;
-wire [63:0] qsfp1_txd_3_int;
-wire [7:0]  qsfp1_txc_3_int;
-wire        qsfp1_rx_clk_3_int;
-wire        qsfp1_rx_rst_3_int;
-wire [63:0] qsfp1_rxd_3_int;
-wire [7:0]  qsfp1_rxc_3_int;
-wire        qsfp1_tx_clk_4_int;
-wire        qsfp1_tx_rst_4_int;
-wire [63:0] qsfp1_txd_4_int;
-wire [7:0]  qsfp1_txc_4_int;
-wire        qsfp1_rx_clk_4_int;
-wire        qsfp1_rx_rst_4_int;
-wire [63:0] qsfp1_rxd_4_int;
-wire [7:0]  qsfp1_rxc_4_int;
-
 assign clk_156mhz_int = qsfp0_tx_clk_1_int;
 assign rst_156mhz_int = qsfp0_tx_rst_1_int;
 
@@ -172,11 +137,6 @@ wire qsfp0_rx_block_lock_1;
 wire qsfp0_rx_block_lock_2;
 wire qsfp0_rx_block_lock_3;
 wire qsfp0_rx_block_lock_4;
-
-wire qsfp1_rx_block_lock_1;
-wire qsfp1_rx_block_lock_2;
-wire qsfp1_rx_block_lock_3;
-wire qsfp1_rx_block_lock_4;
 
 eth_xcvr_phy_quad_wrapper qsfp0_eth_xcvr_phy_quad (
     .xcvr_ctrl_clk(clk_100mhz),
@@ -226,6 +186,49 @@ eth_xcvr_phy_quad_wrapper qsfp0_eth_xcvr_phy_quad (
     .phy_4_rx_block_lock(qsfp0_rx_block_lock_4),
     .phy_4_rx_high_ber()
 );
+
+// QSFP1
+assign qsfp1_modsel_l = 1'b0;
+assign qsfp1_reset_l = 1'b1;
+assign qsfp1_lpmode = 1'b0;
+
+wire        qsfp1_tx_clk_1_int;
+wire        qsfp1_tx_rst_1_int;
+wire [63:0] qsfp1_txd_1_int;
+wire [7:0]  qsfp1_txc_1_int;
+wire        qsfp1_rx_clk_1_int;
+wire        qsfp1_rx_rst_1_int;
+wire [63:0] qsfp1_rxd_1_int;
+wire [7:0]  qsfp1_rxc_1_int;
+wire        qsfp1_tx_clk_2_int;
+wire        qsfp1_tx_rst_2_int;
+wire [63:0] qsfp1_txd_2_int;
+wire [7:0]  qsfp1_txc_2_int;
+wire        qsfp1_rx_clk_2_int;
+wire        qsfp1_rx_rst_2_int;
+wire [63:0] qsfp1_rxd_2_int;
+wire [7:0]  qsfp1_rxc_2_int;
+wire        qsfp1_tx_clk_3_int;
+wire        qsfp1_tx_rst_3_int;
+wire [63:0] qsfp1_txd_3_int;
+wire [7:0]  qsfp1_txc_3_int;
+wire        qsfp1_rx_clk_3_int;
+wire        qsfp1_rx_rst_3_int;
+wire [63:0] qsfp1_rxd_3_int;
+wire [7:0]  qsfp1_rxc_3_int;
+wire        qsfp1_tx_clk_4_int;
+wire        qsfp1_tx_rst_4_int;
+wire [63:0] qsfp1_txd_4_int;
+wire [7:0]  qsfp1_txc_4_int;
+wire        qsfp1_rx_clk_4_int;
+wire        qsfp1_rx_rst_4_int;
+wire [63:0] qsfp1_rxd_4_int;
+wire [7:0]  qsfp1_rxc_4_int;
+
+wire qsfp1_rx_block_lock_1;
+wire qsfp1_rx_block_lock_2;
+wire qsfp1_rx_block_lock_3;
+wire qsfp1_rx_block_lock_4;
 
 eth_xcvr_phy_quad_wrapper qsfp1_eth_xcvr_phy_quad (
     .xcvr_ctrl_clk(clk_100mhz),
