@@ -37,6 +37,7 @@ Example designs implementing a simple UDP echo server are included for the
 following boards:
 
 *  Alpha Data ADM-PCIE-9V3 (Xilinx Virtex UltraScale+ XCVU3P)
+*  BittWare 520N-MX (Intel Stratix 10 MX 1SM21CHU2F53E2VG)
 *  Digilent Arty A7 (Xilinx Artix 7 XC7A35T)
 *  Digilent Atlys (Xilinx Spartan 6 XC6SLX45)
 *  Intel Cyclone 10 LP (Intel Cyclone 10 10CL025YU256I7G)
