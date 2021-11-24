@@ -132,7 +132,7 @@ always @* begin
     if (!frame_reg && s_axis_tvalid && s_axis_tready) begin
         // start of frame, grab select value
         select_ctl = select;
-        drop_ctl = drop;
+        drop_ctl = drop || select >= M_COUNT;
         frame_ctl = 1'b1;
         if (!(s_axis_tready && s_axis_tvalid && s_axis_tlast)) begin
             select_next = select_ctl;
