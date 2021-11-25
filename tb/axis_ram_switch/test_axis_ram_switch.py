@@ -335,8 +335,10 @@ def test_axis_ram_switch(request, s_count, m_count, s_data_width, m_data_width):
     parameters['M_KEEP_ENABLE'] = int(parameters['M_DATA_WIDTH'] > 8)
     parameters['M_KEEP_WIDTH'] = parameters['M_DATA_WIDTH'] // 8
     parameters['ID_ENABLE'] = 1
-    parameters['ID_WIDTH'] = 16
-    parameters['DEST_WIDTH'] = 8
+    parameters['S_ID_WIDTH'] = 16
+    parameters['M_ID_WIDTH'] = parameters['S_ID_WIDTH'] + (s_count-1).bit_length()
+    parameters['M_DEST_WIDTH'] = 8
+    parameters['S_DEST_WIDTH'] = parameters['M_DEST_WIDTH'] + (m_count-1).bit_length()
     parameters['USER_ENABLE'] = 1
     parameters['USER_WIDTH'] = 1
     parameters['USER_BAD_FRAME_VALUE'] = 1

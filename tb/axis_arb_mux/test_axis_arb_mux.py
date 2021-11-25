@@ -316,7 +316,8 @@ def test_axis_arb_mux(request, ports, data_width, round_robin):
     parameters['KEEP_ENABLE'] = int(parameters['DATA_WIDTH'] > 8)
     parameters['KEEP_WIDTH'] = parameters['DATA_WIDTH'] // 8
     parameters['ID_ENABLE'] = 1
-    parameters['ID_WIDTH'] = 8
+    parameters['S_ID_WIDTH'] = 8
+    parameters['M_ID_WIDTH'] = parameters['S_ID_WIDTH'] + (ports-1).bit_length()
     parameters['DEST_ENABLE'] = 1
     parameters['DEST_WIDTH'] = 8
     parameters['USER_ENABLE'] = 1

@@ -183,7 +183,8 @@ def test_axis_demux(request, ports, data_width):
     parameters['ID_ENABLE'] = 1
     parameters['ID_WIDTH'] = 8
     parameters['DEST_ENABLE'] = 1
-    parameters['DEST_WIDTH'] = 8
+    parameters['M_DEST_WIDTH'] = 8
+    parameters['S_DEST_WIDTH'] = parameters['M_DEST_WIDTH'] + (ports-1).bit_length()
     parameters['USER_ENABLE'] = 1
     parameters['USER_WIDTH'] = 1
 

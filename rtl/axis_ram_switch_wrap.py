@@ -100,11 +100,15 @@ module {{name}} #
     parameter M_KEEP_WIDTH = (M_DATA_WIDTH/8),
     // Propagate tid signal
     parameter ID_ENABLE = 0,
-    // tid signal width
-    parameter ID_WIDTH = 8,
-    // tdest signal width
+    // input tid signal width
+    parameter S_ID_WIDTH = 8,
+    // output tid signal width
+    parameter M_ID_WIDTH = S_ID_WIDTH+{{cm}},
+    // output tdest signal width
+    parameter M_DEST_WIDTH = 1,
+    // input tdest signal width
     // must be wide enough to uniquely address outputs
-    parameter DEST_WIDTH = {{cn}},
+    parameter S_DEST_WIDTH = M_DEST_WIDTH+{{cn}},
     // Propagate tuser signal
     parameter USER_ENABLE = 1,
     // tuser signal width
@@ -143,27 +147,27 @@ module {{name}} #
      * AXI Stream inputs
      */
 {%- for p in range(m) %}
-    input  wire [S_DATA_WIDTH-1:0] s{{'%02d'%p}}_axis_tdata,
-    input  wire [S_KEEP_WIDTH-1:0] s{{'%02d'%p}}_axis_tkeep,
-    input  wire                    s{{'%02d'%p}}_axis_tvalid,
-    output wire                    s{{'%02d'%p}}_axis_tready,
-    input  wire                    s{{'%02d'%p}}_axis_tlast,
-    input  wire [ID_WIDTH-1:0]     s{{'%02d'%p}}_axis_tid,
-    input  wire [DEST_WIDTH-1:0]   s{{'%02d'%p}}_axis_tdest,
-    input  wire [USER_WIDTH-1:0]   s{{'%02d'%p}}_axis_tuser,
+    input  wire [S_DATA_WIDTH-1:0]  s{{'%02d'%p}}_axis_tdata,
+    input  wire [S_KEEP_WIDTH-1:0]  s{{'%02d'%p}}_axis_tkeep,
+    input  wire                     s{{'%02d'%p}}_axis_tvalid,
+    output wire                     s{{'%02d'%p}}_axis_tready,
+    input  wire                     s{{'%02d'%p}}_axis_tlast,
+    input  wire [S_ID_WIDTH-1:0]    s{{'%02d'%p}}_axis_tid,
+    input  wire [S_DEST_WIDTH-1:0]  s{{'%02d'%p}}_axis_tdest,
+    input  wire [USER_WIDTH-1:0]    s{{'%02d'%p}}_axis_tuser,
 {% endfor %}
     /*
      * AXI Stream outputs
      */
 {%- for p in range(n) %}
-    output wire [M_DATA_WIDTH-1:0] m{{'%02d'%p}}_axis_tdata,
-    output wire [M_KEEP_WIDTH-1:0] m{{'%02d'%p}}_axis_tkeep,
-    output wire                    m{{'%02d'%p}}_axis_tvalid,
-    input  wire                    m{{'%02d'%p}}_axis_tready,
-    output wire                    m{{'%02d'%p}}_axis_tlast,
-    output wire [ID_WIDTH-1:0]     m{{'%02d'%p}}_axis_tid,
-    output wire [DEST_WIDTH-1:0]   m{{'%02d'%p}}_axis_tdest,
-    output wire [USER_WIDTH-1:0]   m{{'%02d'%p}}_axis_tuser,
+    output wire [M_DATA_WIDTH-1:0]  m{{'%02d'%p}}_axis_tdata,
+    output wire [M_KEEP_WIDTH-1:0]  m{{'%02d'%p}}_axis_tkeep,
+    output wire                     m{{'%02d'%p}}_axis_tvalid,
+    input  wire                     m{{'%02d'%p}}_axis_tready,
+    output wire                     m{{'%02d'%p}}_axis_tlast,
+    output wire [M_ID_WIDTH-1:0]    m{{'%02d'%p}}_axis_tid,
+    output wire [M_DEST_WIDTH-1:0]  m{{'%02d'%p}}_axis_tdest,
+    output wire [USER_WIDTH-1:0]    m{{'%02d'%p}}_axis_tuser,
 {% endfor %}
     /*
      * Status
@@ -174,7 +178,7 @@ module {{name}} #
 );
 
 // parameter sizing helpers
-function [DEST_WIDTH-1:0] w_dw(input [DEST_WIDTH-1:0] val);
+function [S_DEST_WIDTH-1:0] w_dw(input [S_DEST_WIDTH-1:0] val);
     w_dw = val;
 endfunction
 
@@ -195,8 +199,10 @@ axis_ram_switch #(
     .M_KEEP_ENABLE(M_KEEP_ENABLE),
     .M_KEEP_WIDTH(M_KEEP_WIDTH),
     .ID_ENABLE(ID_ENABLE),
-    .ID_WIDTH(ID_WIDTH),
-    .DEST_WIDTH(DEST_WIDTH),
+    .S_ID_WIDTH(S_ID_WIDTH),
+    .M_ID_WIDTH(M_ID_WIDTH),
+    .S_DEST_WIDTH(S_DEST_WIDTH),
+    .M_DEST_WIDTH(M_DEST_WIDTH),
     .USER_ENABLE(USER_ENABLE),
     .USER_WIDTH(USER_WIDTH),
     .USER_BAD_FRAME_VALUE(USER_BAD_FRAME_VALUE),
