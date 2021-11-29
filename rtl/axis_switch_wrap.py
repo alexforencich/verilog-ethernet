@@ -107,6 +107,8 @@ module {{name}} #
     // Interface connection control
     parameter M{{'%02d'%p}}_CONNECT = {{m}}'b{% for p in range(m) %}1{% endfor %},
 {%- endfor %}
+    // Update tid with routing information
+    parameter UPDATE_TID = 0,
     // Input interface register type
     // 0 to bypass, 1 for simple buffer, 2 for skid buffer
     parameter S_REG_TYPE = 0,
@@ -175,6 +177,7 @@ axis_switch #(
     .M_BASE({ {% for p in range(n-1,-1,-1) %}w_dw(M{{'%02d'%p}}_BASE){% if not loop.last %}, {% endif %}{% endfor %} }),
     .M_TOP({ {% for p in range(n-1,-1,-1) %}w_dw(M{{'%02d'%p}}_TOP){% if not loop.last %}, {% endif %}{% endfor %} }),
     .M_CONNECT({ {% for p in range(n-1,-1,-1) %}w_s(M{{'%02d'%p}}_CONNECT){% if not loop.last %}, {% endif %}{% endfor %} }),
+    .UPDATE_TID(UPDATE_TID),
     .S_REG_TYPE(S_REG_TYPE),
     .M_REG_TYPE(M_REG_TYPE),
     .ARB_TYPE_ROUND_ROBIN(ARB_TYPE_ROUND_ROBIN),

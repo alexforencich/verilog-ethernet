@@ -71,6 +71,8 @@ module axis_switch #
     // Interface connection control
     // M_COUNT concatenated fields of S_COUNT bits
     parameter M_CONNECT = {M_COUNT{{S_COUNT{1'b1}}}},
+    // Update tid with routing information
+    parameter UPDATE_TID = 0,
     // Input interface register type
     // 0 to bypass, 1 for simple buffer, 2 for skid buffer
     parameter S_REG_TYPE = 0,
@@ -121,6 +123,18 @@ initial begin
     if (S_DEST_WIDTH < CL_M_COUNT) begin
         $error("Error: S_DEST_WIDTH too small for port count (instance %m)");
         $finish;
+    end
+
+    if (UPDATE_TID) begin
+        if (!ID_ENABLE) begin
+            $error("Error: UPDATE_TID set requires ID_ENABLE set (instance %m)");
+            $finish;
+        end
+
+        if (M_ID_WIDTH < CL_S_COUNT) begin
+            $error("Error: M_ID_WIDTH too small for port count (instance %m)");
+            $finish;
+        end
     end
 
     if (M_BASE == 0) begin
@@ -320,14 +334,27 @@ generate
         );
 
         // mux
-        wire [DATA_WIDTH-1:0]    m_axis_tdata_mux   = int_s_axis_tdata[grant_encoded*DATA_WIDTH +: DATA_WIDTH];
-        wire [KEEP_WIDTH-1:0]    m_axis_tkeep_mux   = int_s_axis_tkeep[grant_encoded*KEEP_WIDTH +: KEEP_WIDTH];
-        wire                     m_axis_tvalid_mux  = int_axis_tvalid[grant_encoded*M_COUNT+n] && grant_valid;
+        reg  [DATA_WIDTH-1:0]    m_axis_tdata_mux;
+        reg  [KEEP_WIDTH-1:0]    m_axis_tkeep_mux;
+        reg                      m_axis_tvalid_mux;
         wire                     m_axis_tready_mux;
-        wire                     m_axis_tlast_mux   = int_s_axis_tlast[grant_encoded];
-        wire [M_ID_WIDTH-1:0]    m_axis_tid_mux     = int_s_axis_tid[grant_encoded*S_ID_WIDTH +: S_ID_WIDTH];
-        wire [M_DEST_WIDTH-1:0]  m_axis_tdest_mux   = int_s_axis_tdest[grant_encoded*S_DEST_WIDTH +: S_DEST_WIDTH];
-        wire [USER_WIDTH-1:0]    m_axis_tuser_mux   = int_s_axis_tuser[grant_encoded*USER_WIDTH +: USER_WIDTH];
+        reg                      m_axis_tlast_mux;
+        reg  [M_ID_WIDTH-1:0]    m_axis_tid_mux;
+        reg  [M_DEST_WIDTH-1:0]  m_axis_tdest_mux;
+        reg  [USER_WIDTH-1:0]    m_axis_tuser_mux;
+
+        always @* begin
+            m_axis_tdata_mux   = int_s_axis_tdata[grant_encoded*DATA_WIDTH +: DATA_WIDTH];
+            m_axis_tkeep_mux   = int_s_axis_tkeep[grant_encoded*KEEP_WIDTH +: KEEP_WIDTH];
+            m_axis_tvalid_mux  = int_axis_tvalid[grant_encoded*M_COUNT+n] && grant_valid;
+            m_axis_tlast_mux   = int_s_axis_tlast[grant_encoded];
+            m_axis_tid_mux     = int_s_axis_tid[grant_encoded*S_ID_WIDTH +: S_ID_WIDTH];
+            if (UPDATE_TID && S_COUNT > 1) begin
+                m_axis_tid_mux[M_ID_WIDTH-1:M_ID_WIDTH-CL_S_COUNT] = grant_encoded;
+            end
+            m_axis_tdest_mux   = int_s_axis_tdest[grant_encoded*S_DEST_WIDTH +: S_DEST_WIDTH];
+            m_axis_tuser_mux   = int_s_axis_tuser[grant_encoded*USER_WIDTH +: USER_WIDTH];
+        end
 
         assign int_axis_tready[n*S_COUNT +: S_COUNT] = (grant_valid && m_axis_tready_mux) << grant_encoded;
 

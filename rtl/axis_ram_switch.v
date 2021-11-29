@@ -96,6 +96,8 @@ module axis_ram_switch #
     // Interface connection control
     // M_COUNT concatenated fields of S_COUNT bits
     parameter M_CONNECT = {M_COUNT{{S_COUNT{1'b1}}}},
+    // Update tid with routing information
+    parameter UPDATE_TID = 0,
     // select round robin arbitration
     parameter ARB_TYPE_ROUND_ROBIN = 1,
     // LSB priority selection
@@ -186,6 +188,18 @@ initial begin
     if (S_DEST_WIDTH < CL_M_COUNT) begin
         $error("Error: S_DEST_WIDTH too small for port count (instance %m)");
         $finish;
+    end
+
+    if (UPDATE_TID) begin
+        if (!ID_ENABLE) begin
+            $error("Error: UPDATE_TID set requires ID_ENABLE set (instance %m)");
+            $finish;
+        end
+
+        if (M_ID_WIDTH < CL_S_COUNT) begin
+            $error("Error: M_ID_WIDTH too small for port count (instance %m)");
+            $finish;
+        end
     end
 
     if (M_BASE == 0) begin
@@ -825,15 +839,29 @@ generate
         );
 
         // mux
-        wire [RAM_ADDR_WIDTH-1:0] cmd_addr_mux  = int_cmd_addr[grant_encoded*RAM_ADDR_WIDTH +: RAM_ADDR_WIDTH];
-        wire [ADDR_WIDTH-1:0]     cmd_len_mux   = int_cmd_len[grant_encoded*ADDR_WIDTH +: ADDR_WIDTH];
-        wire [CMD_ADDR_WIDTH-1:0] cmd_id_mux    = int_cmd_id[grant_encoded*CMD_ADDR_WIDTH +: CMD_ADDR_WIDTH];
-        wire [KEEP_WIDTH-1:0]     cmd_tkeep_mux = int_cmd_tkeep[grant_encoded*KEEP_WIDTH +: KEEP_WIDTH];
-        wire [M_ID_WIDTH-1:0]     cmd_tid_mux   = int_cmd_tid[grant_encoded*S_ID_WIDTH +: S_ID_WIDTH];
-        wire [M_DEST_WIDTH-1:0]   cmd_tdest_mux = int_cmd_tdest[grant_encoded*S_DEST_WIDTH +: S_DEST_WIDTH];
-        wire [USER_WIDTH-1:0]     cmd_tuser_mux = int_cmd_tuser[grant_encoded*USER_WIDTH +: USER_WIDTH];
-        wire                      cmd_valid_mux = int_cmd_valid[grant_encoded*M_COUNT+n] && grant_valid;
+        reg  [RAM_ADDR_WIDTH-1:0] cmd_addr_mux;
+        reg  [ADDR_WIDTH-1:0]     cmd_len_mux;
+        reg  [CMD_ADDR_WIDTH-1:0] cmd_id_mux;
+        reg  [KEEP_WIDTH-1:0]     cmd_tkeep_mux;
+        reg  [M_ID_WIDTH-1:0]     cmd_tid_mux;
+        reg  [M_DEST_WIDTH-1:0]   cmd_tdest_mux;
+        reg  [USER_WIDTH-1:0]     cmd_tuser_mux;
+        reg                       cmd_valid_mux;
         wire                      cmd_ready_mux;
+
+        always @* begin
+            cmd_addr_mux  = int_cmd_addr[grant_encoded*RAM_ADDR_WIDTH +: RAM_ADDR_WIDTH];
+            cmd_len_mux   = int_cmd_len[grant_encoded*ADDR_WIDTH +: ADDR_WIDTH];
+            cmd_id_mux    = int_cmd_id[grant_encoded*CMD_ADDR_WIDTH +: CMD_ADDR_WIDTH];
+            cmd_tkeep_mux = int_cmd_tkeep[grant_encoded*KEEP_WIDTH +: KEEP_WIDTH];
+            cmd_tid_mux   = int_cmd_tid[grant_encoded*S_ID_WIDTH +: S_ID_WIDTH];
+            if (UPDATE_TID && S_COUNT > 1) begin
+                cmd_tid_mux[M_ID_WIDTH-1:M_ID_WIDTH-CL_S_COUNT] = grant_encoded;
+            end
+            cmd_tdest_mux = int_cmd_tdest[grant_encoded*S_DEST_WIDTH +: S_DEST_WIDTH];
+            cmd_tuser_mux = int_cmd_tuser[grant_encoded*USER_WIDTH +: USER_WIDTH];
+            cmd_valid_mux = int_cmd_valid[grant_encoded*M_COUNT+n] && grant_valid;
+        end
 
         assign int_cmd_ready[n*S_COUNT +: S_COUNT] = (grant_valid && cmd_ready_mux) << grant_encoded;
 

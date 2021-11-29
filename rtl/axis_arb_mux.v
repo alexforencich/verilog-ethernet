@@ -57,6 +57,8 @@ module axis_arb_mux #
     parameter USER_WIDTH = 1,
     // Propagate tlast signal
     parameter LAST_ENABLE = 1,
+    // Update tid with routing information
+    parameter UPDATE_TID = 0,
     // select round robin arbitration
     parameter ARB_TYPE_ROUND_ROBIN = 0,
     // LSB priority selection
@@ -92,6 +94,21 @@ module axis_arb_mux #
 );
 
 parameter CL_S_COUNT = $clog2(S_COUNT);
+
+// check configuration
+initial begin
+    if (UPDATE_TID) begin
+        if (!ID_ENABLE) begin
+            $error("Error: UPDATE_TID set requires ID_ENABLE set (instance %m)");
+            $finish;
+        end
+
+        if (M_ID_WIDTH < CL_S_COUNT) begin
+            $error("Error: M_ID_WIDTH too small for port count (instance %m)");
+            $finish;
+        end
+    end
+end
 
 wire [S_COUNT-1:0] request;
 wire [S_COUNT-1:0] acknowledge;
@@ -150,6 +167,9 @@ always @* begin
     m_axis_tvalid_int = current_s_tvalid && m_axis_tready_int_reg && grant_valid;
     m_axis_tlast_int  = current_s_tlast;
     m_axis_tid_int    = current_s_tid;
+    if (UPDATE_TID && S_COUNT > 1) begin
+        m_axis_tid_int[M_ID_WIDTH-1:M_ID_WIDTH-CL_S_COUNT] = grant_encoded;
+    end
     m_axis_tdest_int  = current_s_tdest;
     m_axis_tuser_int  = current_s_tuser;
 end
