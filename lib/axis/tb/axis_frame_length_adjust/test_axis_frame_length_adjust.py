@@ -74,10 +74,10 @@ class TB(object):
         self.dut.rst.setimmediatevalue(0)
         await RisingEdge(self.dut.clk)
         await RisingEdge(self.dut.clk)
-        self.dut.rst <= 1
+        self.dut.rst.value = 1
         await RisingEdge(self.dut.clk)
         await RisingEdge(self.dut.clk)
-        self.dut.rst <= 0
+        self.dut.rst.value = 0
         await RisingEdge(self.dut.clk)
         await RisingEdge(self.dut.clk)
 
@@ -102,8 +102,8 @@ async def run_test(dut, payload_lengths=None, payload_data=None, idle_inserter=N
             tb.log.info("length_min %d, length_max %d", length_min, length_max)
 
             await RisingEdge(dut.clk)
-            tb.dut.length_min <= length_min
-            tb.dut.length_max <= length_max
+            tb.dut.length_min.value = length_min
+            tb.dut.length_max.value = length_max
             await RisingEdge(dut.clk)
 
             test_frames = []

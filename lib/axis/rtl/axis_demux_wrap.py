@@ -82,49 +82,52 @@ module {{name}} #
     parameter ID_WIDTH = 8,
     // Propagate tdest signal
     parameter DEST_ENABLE = 0,
-    // tdest signal width
-    parameter DEST_WIDTH = 8,
+    // output tdest signal width
+    parameter M_DEST_WIDTH = 1,
+    // input tdest signal width
+    parameter S_DEST_WIDTH = M_DEST_WIDTH+{{cn}},
     // Propagate tuser signal
     parameter USER_ENABLE = 1,
     // tuser signal width
-    parameter USER_WIDTH = 1
+    parameter USER_WIDTH = 1,
+    // route via tdest
+    parameter TDEST_ROUTE = 0
 )
 (
-    input  wire                  clk,
-    input  wire                  rst,
+    input  wire                     clk,
+    input  wire                     rst,
 
     /*
      * AXI Stream input
      */
-    input  wire [DATA_WIDTH-1:0] s_axis_tdata,
-    input  wire [KEEP_WIDTH-1:0] s_axis_tkeep,
-    input  wire                  s_axis_tvalid,
-    output wire                  s_axis_tready,
-    input  wire                  s_axis_tlast,
-    input  wire [ID_WIDTH-1:0]   s_axis_tid,
-    input  wire [DEST_WIDTH-1:0] s_axis_tdest,
-    input  wire [USER_WIDTH-1:0] s_axis_tuser,
+    input  wire [DATA_WIDTH-1:0]    s_axis_tdata,
+    input  wire [KEEP_WIDTH-1:0]    s_axis_tkeep,
+    input  wire                     s_axis_tvalid,
+    output wire                     s_axis_tready,
+    input  wire                     s_axis_tlast,
+    input  wire [ID_WIDTH-1:0]      s_axis_tid,
+    input  wire [S_DEST_WIDTH-1:0]  s_axis_tdest,
+    input  wire [USER_WIDTH-1:0]    s_axis_tuser,
 
     /*
      * AXI Stream outputs
      */
 {%- for p in range(n) %}
-    output wire [DATA_WIDTH-1:0] m{{'%02d'%p}}_axis_tdata,
-    output wire [KEEP_WIDTH-1:0] m{{'%02d'%p}}_axis_tkeep,
-    output wire                  m{{'%02d'%p}}_axis_tvalid,
-    input  wire                  m{{'%02d'%p}}_axis_tready,
-    output wire                  m{{'%02d'%p}}_axis_tlast,
-    output wire [ID_WIDTH-1:0]   m{{'%02d'%p}}_axis_tid,
-    output wire [DEST_WIDTH-1:0] m{{'%02d'%p}}_axis_tdest,
-    output wire [USER_WIDTH-1:0] m{{'%02d'%p}}_axis_tuser,
-{% endfor -%}
-
+    output wire [DATA_WIDTH-1:0]    m{{'%02d'%p}}_axis_tdata,
+    output wire [KEEP_WIDTH-1:0]    m{{'%02d'%p}}_axis_tkeep,
+    output wire                     m{{'%02d'%p}}_axis_tvalid,
+    input  wire                     m{{'%02d'%p}}_axis_tready,
+    output wire                     m{{'%02d'%p}}_axis_tlast,
+    output wire [ID_WIDTH-1:0]      m{{'%02d'%p}}_axis_tid,
+    output wire [M_DEST_WIDTH-1:0]  m{{'%02d'%p}}_axis_tdest,
+    output wire [USER_WIDTH-1:0]    m{{'%02d'%p}}_axis_tuser,
+{% endfor %}
     /*
      * Control
      */
-    input  wire                  enable,
-    input  wire                  drop,
-    input  wire [{{cn-1}}:0]            select
+    input  wire                     enable,
+    input  wire                     drop,
+    input  wire [{{cn-1}}:0]               select
 );
 
 axis_demux #(
@@ -135,9 +138,11 @@ axis_demux #(
     .ID_ENABLE(ID_ENABLE),
     .ID_WIDTH(ID_WIDTH),
     .DEST_ENABLE(DEST_ENABLE),
-    .DEST_WIDTH(DEST_WIDTH),
+    .S_DEST_WIDTH(S_DEST_WIDTH),
+    .M_DEST_WIDTH(M_DEST_WIDTH),
     .USER_ENABLE(USER_ENABLE),
-    .USER_WIDTH(USER_WIDTH)
+    .USER_WIDTH(USER_WIDTH),
+    .TDEST_ROUTE(TDEST_ROUTE)
 )
 axis_demux_inst (
     .clk(clk),

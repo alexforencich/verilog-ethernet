@@ -43,8 +43,10 @@ module axis_arb_mux #
     parameter KEEP_WIDTH = (DATA_WIDTH/8),
     // Propagate tid signal
     parameter ID_ENABLE = 0,
-    // tid signal width
-    parameter ID_WIDTH = 8,
+    // input tid signal width
+    parameter S_ID_WIDTH = 8,
+    // output tid signal width
+    parameter M_ID_WIDTH = S_ID_WIDTH+$clog2(S_COUNT),
     // Propagate tdest signal
     parameter DEST_ENABLE = 0,
     // tdest signal width
@@ -55,6 +57,8 @@ module axis_arb_mux #
     parameter USER_WIDTH = 1,
     // Propagate tlast signal
     parameter LAST_ENABLE = 1,
+    // Update tid with routing information
+    parameter UPDATE_TID = 0,
     // select round robin arbitration
     parameter ARB_TYPE_ROUND_ROBIN = 0,
     // LSB priority selection
@@ -67,29 +71,46 @@ module axis_arb_mux #
     /*
      * AXI Stream inputs
      */
-    input  wire [S_COUNT*DATA_WIDTH-1:0] s_axis_tdata,
-    input  wire [S_COUNT*KEEP_WIDTH-1:0] s_axis_tkeep,
-    input  wire [S_COUNT-1:0]            s_axis_tvalid,
-    output wire [S_COUNT-1:0]            s_axis_tready,
-    input  wire [S_COUNT-1:0]            s_axis_tlast,
-    input  wire [S_COUNT*ID_WIDTH-1:0]   s_axis_tid,
-    input  wire [S_COUNT*DEST_WIDTH-1:0] s_axis_tdest,
-    input  wire [S_COUNT*USER_WIDTH-1:0] s_axis_tuser,
+    input  wire [S_COUNT*DATA_WIDTH-1:0]  s_axis_tdata,
+    input  wire [S_COUNT*KEEP_WIDTH-1:0]  s_axis_tkeep,
+    input  wire [S_COUNT-1:0]             s_axis_tvalid,
+    output wire [S_COUNT-1:0]             s_axis_tready,
+    input  wire [S_COUNT-1:0]             s_axis_tlast,
+    input  wire [S_COUNT*S_ID_WIDTH-1:0]  s_axis_tid,
+    input  wire [S_COUNT*DEST_WIDTH-1:0]  s_axis_tdest,
+    input  wire [S_COUNT*USER_WIDTH-1:0]  s_axis_tuser,
 
     /*
      * AXI Stream output
      */
-    output wire [DATA_WIDTH-1:0]         m_axis_tdata,
-    output wire [KEEP_WIDTH-1:0]         m_axis_tkeep,
-    output wire                          m_axis_tvalid,
-    input  wire                          m_axis_tready,
-    output wire                          m_axis_tlast,
-    output wire [ID_WIDTH-1:0]           m_axis_tid,
-    output wire [DEST_WIDTH-1:0]         m_axis_tdest,
-    output wire [USER_WIDTH-1:0]         m_axis_tuser
+    output wire [DATA_WIDTH-1:0]          m_axis_tdata,
+    output wire [KEEP_WIDTH-1:0]          m_axis_tkeep,
+    output wire                           m_axis_tvalid,
+    input  wire                           m_axis_tready,
+    output wire                           m_axis_tlast,
+    output wire [M_ID_WIDTH-1:0]          m_axis_tid,
+    output wire [DEST_WIDTH-1:0]          m_axis_tdest,
+    output wire [USER_WIDTH-1:0]          m_axis_tuser
 );
 
 parameter CL_S_COUNT = $clog2(S_COUNT);
+
+parameter S_ID_WIDTH_INT = S_ID_WIDTH > 0 ? S_ID_WIDTH : 1;
+
+// check configuration
+initial begin
+    if (UPDATE_TID) begin
+        if (!ID_ENABLE) begin
+            $error("Error: UPDATE_TID set requires ID_ENABLE set (instance %m)");
+            $finish;
+        end
+
+        if (M_ID_WIDTH < CL_S_COUNT) begin
+            $error("Error: M_ID_WIDTH too small for port count (instance %m)");
+            $finish;
+        end
+    end
+end
 
 wire [S_COUNT-1:0] request;
 wire [S_COUNT-1:0] acknowledge;
@@ -103,7 +124,7 @@ reg  [KEEP_WIDTH-1:0] m_axis_tkeep_int;
 reg                   m_axis_tvalid_int;
 reg                   m_axis_tready_int_reg = 1'b0;
 reg                   m_axis_tlast_int;
-reg  [ID_WIDTH-1:0]   m_axis_tid_int;
+reg  [M_ID_WIDTH-1:0] m_axis_tid_int;
 reg  [DEST_WIDTH-1:0] m_axis_tdest_int;
 reg  [USER_WIDTH-1:0] m_axis_tuser_int;
 wire                  m_axis_tready_int_early;
@@ -116,7 +137,7 @@ wire [KEEP_WIDTH-1:0] current_s_tkeep  = s_axis_tkeep[grant_encoded*KEEP_WIDTH +
 wire                  current_s_tvalid = s_axis_tvalid[grant_encoded];
 wire                  current_s_tready = s_axis_tready[grant_encoded];
 wire                  current_s_tlast  = s_axis_tlast[grant_encoded];
-wire [ID_WIDTH-1:0]   current_s_tid    = s_axis_tid[grant_encoded*ID_WIDTH +: ID_WIDTH];
+wire [S_ID_WIDTH-1:0] current_s_tid    = s_axis_tid[grant_encoded*S_ID_WIDTH +: S_ID_WIDTH_INT];
 wire [DEST_WIDTH-1:0] current_s_tdest  = s_axis_tdest[grant_encoded*DEST_WIDTH +: DEST_WIDTH];
 wire [USER_WIDTH-1:0] current_s_tuser  = s_axis_tuser[grant_encoded*USER_WIDTH +: USER_WIDTH];
 
@@ -148,6 +169,9 @@ always @* begin
     m_axis_tvalid_int = current_s_tvalid && m_axis_tready_int_reg && grant_valid;
     m_axis_tlast_int  = current_s_tlast;
     m_axis_tid_int    = current_s_tid;
+    if (UPDATE_TID && S_COUNT > 1) begin
+        m_axis_tid_int[M_ID_WIDTH-1:M_ID_WIDTH-CL_S_COUNT] = grant_encoded;
+    end
     m_axis_tdest_int  = current_s_tdest;
     m_axis_tuser_int  = current_s_tuser;
 end
@@ -157,7 +181,7 @@ reg [DATA_WIDTH-1:0] m_axis_tdata_reg  = {DATA_WIDTH{1'b0}};
 reg [KEEP_WIDTH-1:0] m_axis_tkeep_reg  = {KEEP_WIDTH{1'b0}};
 reg                  m_axis_tvalid_reg = 1'b0, m_axis_tvalid_next;
 reg                  m_axis_tlast_reg  = 1'b0;
-reg [ID_WIDTH-1:0]   m_axis_tid_reg    = {ID_WIDTH{1'b0}};
+reg [M_ID_WIDTH-1:0] m_axis_tid_reg    = {M_ID_WIDTH{1'b0}};
 reg [DEST_WIDTH-1:0] m_axis_tdest_reg  = {DEST_WIDTH{1'b0}};
 reg [USER_WIDTH-1:0] m_axis_tuser_reg  = {USER_WIDTH{1'b0}};
 
@@ -165,7 +189,7 @@ reg [DATA_WIDTH-1:0] temp_m_axis_tdata_reg  = {DATA_WIDTH{1'b0}};
 reg [KEEP_WIDTH-1:0] temp_m_axis_tkeep_reg  = {KEEP_WIDTH{1'b0}};
 reg                  temp_m_axis_tvalid_reg = 1'b0, temp_m_axis_tvalid_next;
 reg                  temp_m_axis_tlast_reg  = 1'b0;
-reg [ID_WIDTH-1:0]   temp_m_axis_tid_reg    = {ID_WIDTH{1'b0}};
+reg [M_ID_WIDTH-1:0] temp_m_axis_tid_reg    = {M_ID_WIDTH{1'b0}};
 reg [DEST_WIDTH-1:0] temp_m_axis_tdest_reg  = {DEST_WIDTH{1'b0}};
 reg [USER_WIDTH-1:0] temp_m_axis_tuser_reg  = {USER_WIDTH{1'b0}};
 
@@ -178,7 +202,7 @@ assign m_axis_tdata  = m_axis_tdata_reg;
 assign m_axis_tkeep  = KEEP_ENABLE ? m_axis_tkeep_reg : {KEEP_WIDTH{1'b1}};
 assign m_axis_tvalid = m_axis_tvalid_reg;
 assign m_axis_tlast  = LAST_ENABLE ? m_axis_tlast_reg : 1'b1;
-assign m_axis_tid    = ID_ENABLE   ? m_axis_tid_reg   : {ID_WIDTH{1'b0}};
+assign m_axis_tid    = ID_ENABLE   ? m_axis_tid_reg   : {M_ID_WIDTH{1'b0}};
 assign m_axis_tdest  = DEST_ENABLE ? m_axis_tdest_reg : {DEST_WIDTH{1'b0}};
 assign m_axis_tuser  = USER_ENABLE ? m_axis_tuser_reg : {USER_WIDTH{1'b0}};
 

@@ -61,11 +61,15 @@ module axis_ram_switch #
     parameter M_KEEP_WIDTH = (M_DATA_WIDTH/8),
     // Propagate tid signal
     parameter ID_ENABLE = 0,
-    // tid signal width
-    parameter ID_WIDTH = 8,
-    // tdest signal width
+    // input tid signal width
+    parameter S_ID_WIDTH = 8,
+    // output tid signal width
+    parameter M_ID_WIDTH = S_ID_WIDTH+$clog2(S_COUNT),
+    // output tdest signal width
+    parameter M_DEST_WIDTH = 1,
+    // input tdest signal width
     // must be wide enough to uniquely address outputs
-    parameter DEST_WIDTH = $clog2(M_COUNT),
+    parameter S_DEST_WIDTH = M_DEST_WIDTH+$clog2(M_COUNT),
     // Propagate tuser signal
     parameter USER_ENABLE = 1,
     // tuser signal width
@@ -80,18 +84,20 @@ module axis_ram_switch #
     // When set, s_axis_tready is always asserted
     parameter DROP_WHEN_FULL = 0,
     // Output interface routing base tdest selection
-    // Concatenate M_COUNT DEST_WIDTH sized constants
+    // Concatenate M_COUNT S_DEST_WIDTH sized constants
     // Port selected if M_BASE <= tdest <= M_TOP
     // set to zero for default routing with tdest MSBs as port index
     parameter M_BASE = 0,
     // Output interface routing top tdest selection
-    // Concatenate M_COUNT DEST_WIDTH sized constants
+    // Concatenate M_COUNT S_DEST_WIDTH sized constants
     // Port selected if M_BASE <= tdest <= M_TOP
     // set to zero to inherit from M_BASE
     parameter M_TOP = 0,
     // Interface connection control
     // M_COUNT concatenated fields of S_COUNT bits
     parameter M_CONNECT = {M_COUNT{{S_COUNT{1'b1}}}},
+    // Update tid with routing information
+    parameter UPDATE_TID = 0,
     // select round robin arbitration
     parameter ARB_TYPE_ROUND_ROBIN = 1,
     // LSB priority selection
@@ -100,43 +106,46 @@ module axis_ram_switch #
     parameter RAM_PIPELINE = 2
 )
 (
-    input  wire                            clk,
-    input  wire                            rst,
+    input  wire                             clk,
+    input  wire                             rst,
 
     /*
      * AXI Stream inputs
      */
-    input  wire [S_COUNT*S_DATA_WIDTH-1:0] s_axis_tdata,
-    input  wire [S_COUNT*S_KEEP_WIDTH-1:0] s_axis_tkeep,
-    input  wire [S_COUNT-1:0]              s_axis_tvalid,
-    output wire [S_COUNT-1:0]              s_axis_tready,
-    input  wire [S_COUNT-1:0]              s_axis_tlast,
-    input  wire [S_COUNT*ID_WIDTH-1:0]     s_axis_tid,
-    input  wire [S_COUNT*DEST_WIDTH-1:0]   s_axis_tdest,
-    input  wire [S_COUNT*USER_WIDTH-1:0]   s_axis_tuser,
+    input  wire [S_COUNT*S_DATA_WIDTH-1:0]  s_axis_tdata,
+    input  wire [S_COUNT*S_KEEP_WIDTH-1:0]  s_axis_tkeep,
+    input  wire [S_COUNT-1:0]               s_axis_tvalid,
+    output wire [S_COUNT-1:0]               s_axis_tready,
+    input  wire [S_COUNT-1:0]               s_axis_tlast,
+    input  wire [S_COUNT*S_ID_WIDTH-1:0]    s_axis_tid,
+    input  wire [S_COUNT*S_DEST_WIDTH-1:0]  s_axis_tdest,
+    input  wire [S_COUNT*USER_WIDTH-1:0]    s_axis_tuser,
 
     /*
      * AXI Stream outputs
      */
-    output wire [M_COUNT*M_DATA_WIDTH-1:0] m_axis_tdata,
-    output wire [M_COUNT*M_KEEP_WIDTH-1:0] m_axis_tkeep,
-    output wire [M_COUNT-1:0]              m_axis_tvalid,
-    input  wire [M_COUNT-1:0]              m_axis_tready,
-    output wire [M_COUNT-1:0]              m_axis_tlast,
-    output wire [M_COUNT*ID_WIDTH-1:0]     m_axis_tid,
-    output wire [M_COUNT*DEST_WIDTH-1:0]   m_axis_tdest,
-    output wire [M_COUNT*USER_WIDTH-1:0]   m_axis_tuser,
+    output wire [M_COUNT*M_DATA_WIDTH-1:0]  m_axis_tdata,
+    output wire [M_COUNT*M_KEEP_WIDTH-1:0]  m_axis_tkeep,
+    output wire [M_COUNT-1:0]               m_axis_tvalid,
+    input  wire [M_COUNT-1:0]               m_axis_tready,
+    output wire [M_COUNT-1:0]               m_axis_tlast,
+    output wire [M_COUNT*M_ID_WIDTH-1:0]    m_axis_tid,
+    output wire [M_COUNT*M_DEST_WIDTH-1:0]  m_axis_tdest,
+    output wire [M_COUNT*USER_WIDTH-1:0]    m_axis_tuser,
 
     /*
      * Status
      */
-    output wire [S_COUNT-1:0]              status_overflow,
-    output wire [S_COUNT-1:0]              status_bad_frame,
-    output wire [S_COUNT-1:0]              status_good_frame
+    output wire [S_COUNT-1:0]               status_overflow,
+    output wire [S_COUNT-1:0]               status_bad_frame,
+    output wire [S_COUNT-1:0]               status_good_frame
 );
 
 parameter CL_S_COUNT = $clog2(S_COUNT);
 parameter CL_M_COUNT = $clog2(M_COUNT);
+
+parameter S_ID_WIDTH_INT = S_ID_WIDTH > 0 ? S_ID_WIDTH : 1;
+parameter M_DEST_WIDTH_INT = M_DEST_WIDTH > 0 ? M_DEST_WIDTH : 1;
 
 // force keep width to 1 when disabled
 parameter S_KEEP_WIDTH_INT = S_KEEP_ENABLE ? S_KEEP_WIDTH : 1;
@@ -179,30 +188,42 @@ initial begin
         $finish;
     end
 
-    if (DEST_WIDTH < CL_M_COUNT) begin
-        $error("Error: DEST_WIDTH too small for port count (instance %m)");
+    if (S_DEST_WIDTH < CL_M_COUNT) begin
+        $error("Error: S_DEST_WIDTH too small for port count (instance %m)");
         $finish;
+    end
+
+    if (UPDATE_TID) begin
+        if (!ID_ENABLE) begin
+            $error("Error: UPDATE_TID set requires ID_ENABLE set (instance %m)");
+            $finish;
+        end
+
+        if (M_ID_WIDTH < CL_S_COUNT) begin
+            $error("Error: M_ID_WIDTH too small for port count (instance %m)");
+            $finish;
+        end
     end
 
     if (M_BASE == 0) begin
         // M_BASE is zero, route with tdest as port index
         $display("Addressing configuration for axis_switch instance %m");
         for (i = 0; i < M_COUNT; i = i + 1) begin
-            $display("%d: %08x-%08x (connect mask %b)", i, i << (DEST_WIDTH-CL_M_COUNT), ((i+1) << (DEST_WIDTH-CL_M_COUNT))-1, M_CONNECT[i*S_COUNT +: S_COUNT]);
+            $display("%d: %08x-%08x (connect mask %b)", i, i << (S_DEST_WIDTH-CL_M_COUNT), ((i+1) << (S_DEST_WIDTH-CL_M_COUNT))-1, M_CONNECT[i*S_COUNT +: S_COUNT]);
         end
 
     end else if (M_TOP == 0) begin
         // M_TOP is zero, assume equal to M_BASE
         $display("Addressing configuration for axis_switch instance %m");
         for (i = 0; i < M_COUNT; i = i + 1) begin
-            $display("%d: %08x (connect mask %b)", i, M_BASE[i*DEST_WIDTH +: DEST_WIDTH], M_CONNECT[i*S_COUNT +: S_COUNT]);
+            $display("%d: %08x (connect mask %b)", i, M_BASE[i*S_DEST_WIDTH +: S_DEST_WIDTH], M_CONNECT[i*S_COUNT +: S_COUNT]);
         end
 
         for (i = 0; i < M_COUNT; i = i + 1) begin
             for (j = i+1; j < M_COUNT; j = j + 1) begin
-                if (M_BASE[i*DEST_WIDTH +: DEST_WIDTH] == M_BASE[j*DEST_WIDTH +: DEST_WIDTH]) begin
-                    $display("%d: %08x", i, M_BASE[i*DEST_WIDTH +: DEST_WIDTH]);
-                    $display("%d: %08x", j, M_BASE[j*DEST_WIDTH +: DEST_WIDTH]);
+                if (M_BASE[i*S_DEST_WIDTH +: S_DEST_WIDTH] == M_BASE[j*S_DEST_WIDTH +: S_DEST_WIDTH]) begin
+                    $display("%d: %08x", i, M_BASE[i*S_DEST_WIDTH +: S_DEST_WIDTH]);
+                    $display("%d: %08x", j, M_BASE[j*S_DEST_WIDTH +: S_DEST_WIDTH]);
                     $error("Error: ranges overlap (instance %m)");
                     $finish;
                 end
@@ -211,11 +232,11 @@ initial begin
     end else begin
         $display("Addressing configuration for axis_switch instance %m");
         for (i = 0; i < M_COUNT; i = i + 1) begin
-            $display("%d: %08x-%08x (connect mask %b)", i, M_BASE[i*DEST_WIDTH +: DEST_WIDTH], M_TOP[i*DEST_WIDTH +: DEST_WIDTH], M_CONNECT[i*S_COUNT +: S_COUNT]);
+            $display("%d: %08x-%08x (connect mask %b)", i, M_BASE[i*S_DEST_WIDTH +: S_DEST_WIDTH], M_TOP[i*S_DEST_WIDTH +: S_DEST_WIDTH], M_CONNECT[i*S_COUNT +: S_COUNT]);
         end
 
         for (i = 0; i < M_COUNT; i = i + 1) begin
-            if (M_BASE[i*DEST_WIDTH +: DEST_WIDTH] > M_TOP[i*DEST_WIDTH +: DEST_WIDTH]) begin
+            if (M_BASE[i*S_DEST_WIDTH +: S_DEST_WIDTH] > M_TOP[i*S_DEST_WIDTH +: S_DEST_WIDTH]) begin
                 $error("Error: invalid range (instance %m)");
                 $finish;
             end
@@ -223,9 +244,9 @@ initial begin
 
         for (i = 0; i < M_COUNT; i = i + 1) begin
             for (j = i+1; j < M_COUNT; j = j + 1) begin
-                if (M_BASE[i*DEST_WIDTH +: DEST_WIDTH] <= M_TOP[j*DEST_WIDTH +: DEST_WIDTH] && M_BASE[j*DEST_WIDTH +: DEST_WIDTH] <= M_TOP[i*DEST_WIDTH +: DEST_WIDTH]) begin
-                    $display("%d: %08x-%08x", i, M_BASE[i*DEST_WIDTH +: DEST_WIDTH], M_TOP[i*DEST_WIDTH +: DEST_WIDTH]);
-                    $display("%d: %08x-%08x", j, M_BASE[j*DEST_WIDTH +: DEST_WIDTH], M_TOP[j*DEST_WIDTH +: DEST_WIDTH]);
+                if (M_BASE[i*S_DEST_WIDTH +: S_DEST_WIDTH] <= M_TOP[j*S_DEST_WIDTH +: S_DEST_WIDTH] && M_BASE[j*S_DEST_WIDTH +: S_DEST_WIDTH] <= M_TOP[i*S_DEST_WIDTH +: S_DEST_WIDTH]) begin
+                    $display("%d: %08x-%08x", i, M_BASE[i*S_DEST_WIDTH +: S_DEST_WIDTH], M_TOP[i*S_DEST_WIDTH +: S_DEST_WIDTH]);
+                    $display("%d: %08x-%08x", j, M_BASE[j*S_DEST_WIDTH +: S_DEST_WIDTH], M_TOP[j*S_DEST_WIDTH +: S_DEST_WIDTH]);
                     $error("Error: ranges overlap (instance %m)");
                     $finish;
                 end
@@ -349,21 +370,21 @@ always @(posedge clk) begin
 end
 
 // Interconnect
-wire [S_COUNT*RAM_ADDR_WIDTH-1:0] int_cmd_addr;
-wire [S_COUNT*ADDR_WIDTH-1:0]     int_cmd_len;
-wire [S_COUNT*CMD_ADDR_WIDTH-1:0] int_cmd_id;
-wire [S_COUNT*KEEP_WIDTH-1:0]     int_cmd_tkeep;
-wire [S_COUNT*ID_WIDTH-1:0]       int_cmd_tid;
-wire [S_COUNT*DEST_WIDTH-1:0]     int_cmd_tdest;
-wire [S_COUNT*USER_WIDTH-1:0]     int_cmd_tuser;
+wire [S_COUNT*RAM_ADDR_WIDTH-1:0]  int_cmd_addr;
+wire [S_COUNT*ADDR_WIDTH-1:0]      int_cmd_len;
+wire [S_COUNT*CMD_ADDR_WIDTH-1:0]  int_cmd_id;
+wire [S_COUNT*KEEP_WIDTH-1:0]      int_cmd_tkeep;
+wire [S_COUNT*S_ID_WIDTH-1:0]      int_cmd_tid;
+wire [S_COUNT*S_DEST_WIDTH-1:0]    int_cmd_tdest;
+wire [S_COUNT*USER_WIDTH-1:0]      int_cmd_tuser;
 
-wire [S_COUNT*M_COUNT-1:0]        int_cmd_valid;
-wire [M_COUNT*S_COUNT-1:0]        int_cmd_ready;
+wire [S_COUNT*M_COUNT-1:0]         int_cmd_valid;
+wire [M_COUNT*S_COUNT-1:0]         int_cmd_ready;
 
-wire [M_COUNT*CMD_ADDR_WIDTH-1:0] int_cmd_status_id;
+wire [M_COUNT*CMD_ADDR_WIDTH-1:0]  int_cmd_status_id;
 
-wire [M_COUNT*S_COUNT-1:0]        int_cmd_status_valid;
-wire [S_COUNT*M_COUNT-1:0]        int_cmd_status_ready;
+wire [M_COUNT*S_COUNT-1:0]         int_cmd_status_valid;
+wire [S_COUNT*M_COUNT-1:0]         int_cmd_status_ready;
 
 generate
 
@@ -371,14 +392,14 @@ generate
 
     for (m = 0; m < S_COUNT; m = m + 1) begin : s_ifaces
 
-        wire [DATA_WIDTH-1:0] port_axis_tdata;
-        wire [KEEP_WIDTH-1:0] port_axis_tkeep;
-        wire                  port_axis_tvalid;
-        wire                  port_axis_tready;
-        wire                  port_axis_tlast;
-        wire [ID_WIDTH-1:0]   port_axis_tid;
-        wire [DEST_WIDTH-1:0] port_axis_tdest;
-        wire [USER_WIDTH-1:0] port_axis_tuser;
+        wire [DATA_WIDTH-1:0]    port_axis_tdata;
+        wire [KEEP_WIDTH-1:0]    port_axis_tkeep;
+        wire                     port_axis_tvalid;
+        wire                     port_axis_tready;
+        wire                     port_axis_tlast;
+        wire [S_ID_WIDTH-1:0]    port_axis_tid;
+        wire [S_DEST_WIDTH-1:0]  port_axis_tdest;
+        wire [USER_WIDTH-1:0]    port_axis_tuser;
 
         axis_adapter #(
             .S_DATA_WIDTH(S_DATA_WIDTH),
@@ -387,10 +408,10 @@ generate
             .M_DATA_WIDTH(DATA_WIDTH),
             .M_KEEP_ENABLE(1),
             .M_KEEP_WIDTH(KEEP_WIDTH),
-            .ID_ENABLE(ID_ENABLE),
-            .ID_WIDTH(ID_WIDTH),
+            .ID_ENABLE(ID_ENABLE && S_ID_WIDTH > 0),
+            .ID_WIDTH(S_ID_WIDTH_INT),
             .DEST_ENABLE(1),
-            .DEST_WIDTH(DEST_WIDTH),
+            .DEST_WIDTH(S_DEST_WIDTH),
             .USER_ENABLE(USER_ENABLE),
             .USER_WIDTH(USER_WIDTH)
         )
@@ -403,8 +424,8 @@ generate
             .s_axis_tvalid(s_axis_tvalid[m]),
             .s_axis_tready(s_axis_tready[m]),
             .s_axis_tlast(s_axis_tlast[m]),
-            .s_axis_tid(s_axis_tid[ID_WIDTH*m +: ID_WIDTH]),
-            .s_axis_tdest(s_axis_tdest[DEST_WIDTH*m +: DEST_WIDTH]),
+            .s_axis_tid(s_axis_tid[S_ID_WIDTH*m +: S_ID_WIDTH_INT]),
+            .s_axis_tdest(s_axis_tdest[S_DEST_WIDTH*m +: S_DEST_WIDTH]),
             .s_axis_tuser(s_axis_tuser[USER_WIDTH*m +: USER_WIDTH]),
             // AXI output
             .m_axis_tdata(port_axis_tdata),
@@ -442,7 +463,7 @@ generate
                             drop_next = 1'b0;
                         end else begin
                             // M_BASE is zero, route with $clog2(M_COUNT) MSBs of tdest as port index
-                            if (port_axis_tdest[DEST_WIDTH-CL_M_COUNT +: CL_M_COUNT] == k && (M_CONNECT & (1 << (m+k*S_COUNT)))) begin
+                            if (port_axis_tdest[S_DEST_WIDTH-CL_M_COUNT +: CL_M_COUNT] == k && (M_CONNECT & (1 << (m+k*S_COUNT)))) begin
                                 select_next = k;
                                 select_valid_next = 1'b1;
                                 drop_next = 1'b0;
@@ -450,13 +471,13 @@ generate
                         end
                     end else if (M_TOP == 0) begin
                         // M_TOP is zero, assume equal to M_BASE
-                        if (port_axis_tdest == M_BASE[k*DEST_WIDTH +: DEST_WIDTH] && (M_CONNECT & (1 << (m+k*S_COUNT)))) begin
+                        if (port_axis_tdest == M_BASE[k*S_DEST_WIDTH +: S_DEST_WIDTH] && (M_CONNECT & (1 << (m+k*S_COUNT)))) begin
                             select_next = k;
                             select_valid_next = 1'b1;
                             drop_next = 1'b0;
                         end
                     end else begin
-                        if (port_axis_tdest >= M_BASE[k*DEST_WIDTH +: DEST_WIDTH] && port_axis_tdest <= M_TOP[k*DEST_WIDTH +: DEST_WIDTH] && (M_CONNECT & (1 << (m+k*S_COUNT)))) begin
+                        if (port_axis_tdest >= M_BASE[k*S_DEST_WIDTH +: S_DEST_WIDTH] && port_axis_tdest <= M_TOP[k*S_DEST_WIDTH +: S_DEST_WIDTH] && (M_CONNECT & (1 << (m+k*S_COUNT)))) begin
                             select_next = k;
                             select_valid_next = 1'b1;
                             drop_next = 1'b0;
@@ -542,8 +563,8 @@ generate
         reg [ADDR_WIDTH-1:0] cmd_table_len[2**CMD_ADDR_WIDTH-1:0];
         reg [CL_M_COUNT-1:0] cmd_table_select[2**CMD_ADDR_WIDTH-1:0];
         reg [KEEP_WIDTH-1:0] cmd_table_tkeep[2**CMD_ADDR_WIDTH-1:0];
-        reg [ID_WIDTH-1:0] cmd_table_tid[2**CMD_ADDR_WIDTH-1:0];
-        reg [DEST_WIDTH-1:0] cmd_table_tdest[2**CMD_ADDR_WIDTH-1:0];
+        reg [S_ID_WIDTH-1:0] cmd_table_tid[2**CMD_ADDR_WIDTH-1:0];
+        reg [S_DEST_WIDTH-1:0] cmd_table_tdest[2**CMD_ADDR_WIDTH-1:0];
         reg [USER_WIDTH-1:0] cmd_table_tuser[2**CMD_ADDR_WIDTH-1:0];
 
         reg [CMD_ADDR_WIDTH+1-1:0] cmd_table_start_ptr_reg = 0;
@@ -552,8 +573,8 @@ generate
         reg [ADDR_WIDTH-1:0] cmd_table_start_len;
         reg [CL_M_COUNT-1:0] cmd_table_start_select;
         reg [KEEP_WIDTH-1:0] cmd_table_start_tkeep;
-        reg [ID_WIDTH-1:0] cmd_table_start_tid;
-        reg [DEST_WIDTH-1:0] cmd_table_start_tdest;
+        reg [S_ID_WIDTH-1:0] cmd_table_start_tid;
+        reg [S_DEST_WIDTH-1:0] cmd_table_start_tdest;
         reg [USER_WIDTH-1:0] cmd_table_start_tuser;
         reg cmd_table_start_en;
         reg [CMD_ADDR_WIDTH+1-1:0] cmd_table_read_ptr_reg = 0;
@@ -563,14 +584,14 @@ generate
         reg [CMD_ADDR_WIDTH+1-1:0] cmd_table_finish_ptr_reg = 0;
         reg cmd_table_finish_en;
 
-        reg [RAM_ADDR_WIDTH-1:0] cmd_addr_reg = {RAM_ADDR_WIDTH{1'b0}}, cmd_addr_next;
-        reg [ADDR_WIDTH-1:0]     cmd_len_reg = {ADDR_WIDTH{1'b0}}, cmd_len_next;
-        reg [CMD_ADDR_WIDTH-1:0] cmd_id_reg = {CMD_ADDR_WIDTH{1'b0}}, cmd_id_next;
-        reg [KEEP_WIDTH-1:0]     cmd_tkeep_reg = {KEEP_WIDTH{1'b0}}, cmd_tkeep_next;
-        reg [ID_WIDTH-1:0]       cmd_tid_reg = {ID_WIDTH{1'b0}}, cmd_tid_next;
-        reg [DEST_WIDTH-1:0]     cmd_tdest_reg = {DEST_WIDTH{1'b0}}, cmd_tdest_next;
-        reg [USER_WIDTH-1:0]     cmd_tuser_reg = {USER_WIDTH{1'b0}}, cmd_tuser_next;
-        reg [M_COUNT-1:0]        cmd_valid_reg = 0, cmd_valid_next;
+        reg [RAM_ADDR_WIDTH-1:0]  cmd_addr_reg = {RAM_ADDR_WIDTH{1'b0}}, cmd_addr_next;
+        reg [ADDR_WIDTH-1:0]      cmd_len_reg = {ADDR_WIDTH{1'b0}}, cmd_len_next;
+        reg [CMD_ADDR_WIDTH-1:0]  cmd_id_reg = {CMD_ADDR_WIDTH{1'b0}}, cmd_id_next;
+        reg [KEEP_WIDTH-1:0]      cmd_tkeep_reg = {KEEP_WIDTH{1'b0}}, cmd_tkeep_next;
+        reg [S_ID_WIDTH-1:0]      cmd_tid_reg = {S_ID_WIDTH_INT{1'b0}}, cmd_tid_next;
+        reg [S_DEST_WIDTH-1:0]    cmd_tdest_reg = {S_DEST_WIDTH{1'b0}}, cmd_tdest_next;
+        reg [USER_WIDTH-1:0]      cmd_tuser_reg = {USER_WIDTH{1'b0}}, cmd_tuser_next;
+        reg [M_COUNT-1:0]         cmd_valid_reg = 0, cmd_valid_next;
 
         reg cmd_status_ready_reg = 1'b0, cmd_status_ready_next;
 
@@ -590,8 +611,8 @@ generate
         assign int_cmd_len[m*ADDR_WIDTH +: ADDR_WIDTH] = cmd_len_reg;
         assign int_cmd_id[m*CMD_ADDR_WIDTH +: CMD_ADDR_WIDTH] = cmd_id_reg;
         assign int_cmd_tkeep[m*KEEP_WIDTH +: KEEP_WIDTH] = cmd_tkeep_reg;
-        assign int_cmd_tid[m*ID_WIDTH +: ID_WIDTH] = cmd_tid_reg;
-        assign int_cmd_tdest[m*DEST_WIDTH +: DEST_WIDTH] = cmd_tdest_reg;
+        assign int_cmd_tid[m*S_ID_WIDTH +: S_ID_WIDTH_INT] = cmd_tid_reg;
+        assign int_cmd_tdest[m*S_DEST_WIDTH +: S_DEST_WIDTH] = cmd_tdest_reg;
         assign int_cmd_tuser[m*USER_WIDTH +: USER_WIDTH] = cmd_tuser_reg;
         assign int_cmd_valid[m*M_COUNT +: M_COUNT] = cmd_valid_reg;
 
@@ -821,15 +842,29 @@ generate
         );
 
         // mux
-        wire [RAM_ADDR_WIDTH-1:0] cmd_addr_mux  = int_cmd_addr[grant_encoded*RAM_ADDR_WIDTH +: RAM_ADDR_WIDTH];
-        wire [ADDR_WIDTH-1:0]     cmd_len_mux   = int_cmd_len[grant_encoded*ADDR_WIDTH +: ADDR_WIDTH];
-        wire [CMD_ADDR_WIDTH-1:0] cmd_id_mux    = int_cmd_id[grant_encoded*CMD_ADDR_WIDTH +: CMD_ADDR_WIDTH];
-        wire [KEEP_WIDTH-1:0]     cmd_tkeep_mux = int_cmd_tkeep[grant_encoded*KEEP_WIDTH +: KEEP_WIDTH];
-        wire [ID_WIDTH-1:0]       cmd_tid_mux   = int_cmd_tid[grant_encoded*ID_WIDTH +: ID_WIDTH];
-        wire [DEST_WIDTH-1:0]     cmd_tdest_mux = int_cmd_tdest[grant_encoded*DEST_WIDTH +: DEST_WIDTH];
-        wire [USER_WIDTH-1:0]     cmd_tuser_mux = int_cmd_tuser[grant_encoded*USER_WIDTH +: USER_WIDTH];
-        wire                      cmd_valid_mux = int_cmd_valid[grant_encoded*M_COUNT+n] && grant_valid;
+        reg  [RAM_ADDR_WIDTH-1:0] cmd_addr_mux;
+        reg  [ADDR_WIDTH-1:0]     cmd_len_mux;
+        reg  [CMD_ADDR_WIDTH-1:0] cmd_id_mux;
+        reg  [KEEP_WIDTH-1:0]     cmd_tkeep_mux;
+        reg  [M_ID_WIDTH-1:0]     cmd_tid_mux;
+        reg  [M_DEST_WIDTH-1:0]   cmd_tdest_mux;
+        reg  [USER_WIDTH-1:0]     cmd_tuser_mux;
+        reg                       cmd_valid_mux;
         wire                      cmd_ready_mux;
+
+        always @* begin
+            cmd_addr_mux  = int_cmd_addr[grant_encoded*RAM_ADDR_WIDTH +: RAM_ADDR_WIDTH];
+            cmd_len_mux   = int_cmd_len[grant_encoded*ADDR_WIDTH +: ADDR_WIDTH];
+            cmd_id_mux    = int_cmd_id[grant_encoded*CMD_ADDR_WIDTH +: CMD_ADDR_WIDTH];
+            cmd_tkeep_mux = int_cmd_tkeep[grant_encoded*KEEP_WIDTH +: KEEP_WIDTH];
+            cmd_tid_mux   = int_cmd_tid[grant_encoded*S_ID_WIDTH +: S_ID_WIDTH_INT];
+            if (UPDATE_TID && S_COUNT > 1) begin
+                cmd_tid_mux[M_ID_WIDTH-1:M_ID_WIDTH-CL_S_COUNT] = grant_encoded;
+            end
+            cmd_tdest_mux = int_cmd_tdest[grant_encoded*S_DEST_WIDTH +: S_DEST_WIDTH];
+            cmd_tuser_mux = int_cmd_tuser[grant_encoded*USER_WIDTH +: USER_WIDTH];
+            cmd_valid_mux = int_cmd_valid[grant_encoded*M_COUNT+n] && grant_valid;
+        end
 
         assign int_cmd_ready[n*S_COUNT +: S_COUNT] = (grant_valid && cmd_ready_mux) << grant_encoded;
 
@@ -846,18 +881,18 @@ generate
         reg [CMD_ADDR_WIDTH-1:0] id_reg = 0, id_next;
 
         reg [KEEP_WIDTH-1:0] last_cycle_tkeep_reg = {KEEP_WIDTH{1'b0}}, last_cycle_tkeep_next;
-        reg [ID_WIDTH-1:0] tid_reg = {ID_WIDTH{1'b0}}, tid_next;
-        reg [DEST_WIDTH-1:0] tdest_reg = {DEST_WIDTH{1'b0}}, tdest_next;
+        reg [M_ID_WIDTH-1:0] tid_reg = {M_ID_WIDTH{1'b0}}, tid_next;
+        reg [M_DEST_WIDTH-1:0] tdest_reg = {M_DEST_WIDTH_INT{1'b0}}, tdest_next;
         reg [USER_WIDTH-1:0] tuser_reg = {USER_WIDTH{1'b0}}, tuser_next;
 
-        reg [DATA_WIDTH-1:0] out_axis_tdata_reg = {DATA_WIDTH{1'b0}}, out_axis_tdata_next;
-        reg [KEEP_WIDTH-1:0] out_axis_tkeep_reg = {KEEP_WIDTH{1'b0}}, out_axis_tkeep_next;
-        reg                  out_axis_tvalid_reg = 1'b0, out_axis_tvalid_next;
-        wire                 out_axis_tready;
-        reg                  out_axis_tlast_reg = 1'b0, out_axis_tlast_next;
-        reg [ID_WIDTH-1:0]   out_axis_tid_reg   = {ID_WIDTH{1'b0}}, out_axis_tid_next;
-        reg [DEST_WIDTH-1:0] out_axis_tdest_reg = {DEST_WIDTH{1'b0}}, out_axis_tdest_next;
-        reg [USER_WIDTH-1:0] out_axis_tuser_reg = {USER_WIDTH{1'b0}}, out_axis_tuser_next;
+        reg [DATA_WIDTH-1:0]    out_axis_tdata_reg = {DATA_WIDTH{1'b0}}, out_axis_tdata_next;
+        reg [KEEP_WIDTH-1:0]    out_axis_tkeep_reg = {KEEP_WIDTH{1'b0}}, out_axis_tkeep_next;
+        reg                     out_axis_tvalid_reg = 1'b0, out_axis_tvalid_next;
+        wire                    out_axis_tready;
+        reg                     out_axis_tlast_reg = 1'b0, out_axis_tlast_next;
+        reg [M_ID_WIDTH-1:0]    out_axis_tid_reg   = {M_ID_WIDTH{1'b0}}, out_axis_tid_next;
+        reg [M_DEST_WIDTH-1:0]  out_axis_tdest_reg = {M_DEST_WIDTH_INT{1'b0}}, out_axis_tdest_next;
+        reg [USER_WIDTH-1:0]    out_axis_tuser_reg = {USER_WIDTH{1'b0}}, out_axis_tuser_next;
 
         reg  [RAM_ADDR_WIDTH-1:0] ram_rd_addr_reg = {RAM_ADDR_WIDTH{1'b0}}, ram_rd_addr_next;
         reg                       ram_rd_en_reg = 1'b0, ram_rd_en_next;
@@ -878,8 +913,8 @@ generate
         reg [DATA_WIDTH-1:0] out_fifo_tdata[31:0];
         reg [KEEP_WIDTH-1:0] out_fifo_tkeep[31:0];
         reg out_fifo_tlast[31:0];
-        reg [ID_WIDTH-1:0] out_fifo_tid[31:0];
-        reg [DEST_WIDTH-1:0] out_fifo_tdest[31:0];
+        reg [M_ID_WIDTH-1:0] out_fifo_tid[31:0];
+        reg [M_DEST_WIDTH-1:0] out_fifo_tdest[31:0];
         reg [USER_WIDTH-1:0] out_fifo_tuser[31:0];
 
         reg [5:0] out_fifo_data_wr_ptr_reg = 0;
@@ -888,8 +923,8 @@ generate
         reg [5:0] out_fifo_ctrl_wr_ptr_reg = 0;
         reg [KEEP_WIDTH-1:0] out_fifo_ctrl_wr_tkeep;
         reg out_fifo_ctrl_wr_tlast;
-        reg [ID_WIDTH-1:0] out_fifo_ctrl_wr_tid;
-        reg [DEST_WIDTH-1:0] out_fifo_ctrl_wr_tdest;
+        reg [M_ID_WIDTH-1:0] out_fifo_ctrl_wr_tid;
+        reg [M_DEST_WIDTH-1:0] out_fifo_ctrl_wr_tdest;
         reg [USER_WIDTH-1:0] out_fifo_ctrl_wr_tuser;
         reg out_fifo_ctrl_wr_en;
         reg [5:0] out_fifo_rd_ptr_reg = 0;
@@ -1071,9 +1106,9 @@ generate
             .M_KEEP_ENABLE(M_KEEP_ENABLE),
             .M_KEEP_WIDTH(M_KEEP_WIDTH),
             .ID_ENABLE(ID_ENABLE),
-            .ID_WIDTH(ID_WIDTH),
-            .DEST_ENABLE(1),
-            .DEST_WIDTH(DEST_WIDTH),
+            .ID_WIDTH(M_ID_WIDTH),
+            .DEST_ENABLE(M_DEST_WIDTH > 0),
+            .DEST_WIDTH(M_DEST_WIDTH_INT),
             .USER_ENABLE(USER_ENABLE),
             .USER_WIDTH(USER_WIDTH)
         )
@@ -1095,8 +1130,8 @@ generate
             .m_axis_tvalid(m_axis_tvalid[n]),
             .m_axis_tready(m_axis_tready[n]),
             .m_axis_tlast(m_axis_tlast[n]),
-            .m_axis_tid(m_axis_tid[ID_WIDTH*n +: ID_WIDTH]),
-            .m_axis_tdest(m_axis_tdest[DEST_WIDTH*n +: DEST_WIDTH]),
+            .m_axis_tid(m_axis_tid[M_ID_WIDTH*n +: M_ID_WIDTH]),
+            .m_axis_tdest(m_axis_tdest[M_DEST_WIDTH*n +: M_DEST_WIDTH_INT]),
             .m_axis_tuser(m_axis_tuser[USER_WIDTH*n +: USER_WIDTH])
         );
     end // m_ifaces
