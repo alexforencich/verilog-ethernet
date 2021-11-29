@@ -342,8 +342,6 @@ def test_axis_arb_mux(request, ports, data_width, round_robin):
 
     parameters = {}
 
-    parameters['PORTS'] = ports
-
     parameters['DATA_WIDTH'] = data_width
     parameters['KEEP_ENABLE'] = int(parameters['DATA_WIDTH'] > 8)
     parameters['KEEP_WIDTH'] = parameters['DATA_WIDTH'] // 8
@@ -360,6 +358,8 @@ def test_axis_arb_mux(request, ports, data_width, round_robin):
     parameters['ARB_LSB_HIGH_PRIORITY'] = 1
 
     extra_env = {f'PARAM_{k}': str(v) for k, v in parameters.items()}
+
+    extra_env['PORTS'] = str(ports)
 
     sim_build = os.path.join(tests_dir, "sim_build",
         request.node.name.replace('[', '-').replace(']', ''))

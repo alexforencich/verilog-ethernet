@@ -26,11 +26,11 @@ WAVES ?= 0
 COCOTB_HDL_TIMEUNIT = 1ns
 COCOTB_HDL_TIMEPRECISION = 1ps
 
-export PARAM_S_COUNT ?= 4
-export PARAM_M_COUNT ?= 4
+export S_COUNT ?= 4
+export M_COUNT ?= 4
 
 DUT      = axis_switch
-WRAPPER  = $(DUT)_wrap_$(PARAM_S_COUNT)x$(PARAM_M_COUNT)
+WRAPPER  = $(DUT)_wrap_$(S_COUNT)x$(M_COUNT)
 TOPLEVEL = $(WRAPPER)
 MODULE   = test_$(DUT)
 VERILOG_SOURCES += $(WRAPPER).v
@@ -45,9 +45,9 @@ export PARAM_KEEP_ENABLE ?= $(shell expr $(PARAM_DATA_WIDTH) \> 8 )
 export PARAM_KEEP_WIDTH ?= $(shell expr $(PARAM_DATA_WIDTH) / 8 )
 export PARAM_ID_ENABLE ?= 1
 export PARAM_S_ID_WIDTH ?= 16
-export PARAM_M_ID_WIDTH ?= $(shell python -c "print($(PARAM_S_ID_WIDTH) + ($(PARAM_S_COUNT)-1).bit_length())")
+export PARAM_M_ID_WIDTH ?= $(shell python -c "print($(PARAM_S_ID_WIDTH) + ($(S_COUNT)-1).bit_length())")
 export PARAM_M_DEST_WIDTH ?= 8
-export PARAM_S_DEST_WIDTH ?= $(shell python -c "print($(PARAM_M_DEST_WIDTH) + ($(PARAM_M_COUNT)-1).bit_length())")
+export PARAM_S_DEST_WIDTH ?= $(shell python -c "print($(PARAM_M_DEST_WIDTH) + ($(M_COUNT)-1).bit_length())")
 export PARAM_USER_ENABLE ?= 1
 export PARAM_USER_WIDTH ?= 1
 export PARAM_UPDATE_TID ?= 1
@@ -106,7 +106,7 @@ endif
 include $(shell cocotb-config --makefiles)/Makefile.sim
 
 $(WRAPPER).v: ../../rtl/$(DUT)_wrap.py
-	$< -p $(PARAM_S_COUNT) $(PARAM_M_COUNT)
+	$< -p $(S_COUNT) $(M_COUNT)
 
 iverilog_dump.v:
 	echo 'module iverilog_dump();' > $@

@@ -26,10 +26,10 @@ WAVES ?= 0
 COCOTB_HDL_TIMEUNIT = 1ns
 COCOTB_HDL_TIMEPRECISION = 1ps
 
-export PARAM_PORTS ?= 4
+export PORTS ?= 4
 
 DUT      = axis_arb_mux
-WRAPPER  = $(DUT)_wrap_$(PARAM_PORTS)
+WRAPPER  = $(DUT)_wrap_$(PORTS)
 TOPLEVEL = $(WRAPPER)
 MODULE   = test_$(DUT)
 VERILOG_SOURCES += $(WRAPPER).v
@@ -43,7 +43,7 @@ export PARAM_KEEP_ENABLE ?= $(shell expr $(PARAM_DATA_WIDTH) \> 8 )
 export PARAM_KEEP_WIDTH ?= $(shell expr $(PARAM_DATA_WIDTH) / 8 )
 export PARAM_ID_ENABLE ?= 1
 export PARAM_S_ID_WIDTH ?= 8
-export PARAM_M_ID_WIDTH ?= $(shell python -c "print($(PARAM_S_ID_WIDTH) + ($(PARAM_PORTS)-1).bit_length())")
+export PARAM_M_ID_WIDTH ?= $(shell python -c "print($(PARAM_S_ID_WIDTH) + ($(PORTS)-1).bit_length())")
 export PARAM_DEST_ENABLE ?= 1
 export PARAM_DEST_WIDTH ?= 8
 export PARAM_USER_ENABLE ?= 1
@@ -101,7 +101,7 @@ endif
 include $(shell cocotb-config --makefiles)/Makefile.sim
 
 $(WRAPPER).v: ../../rtl/$(DUT)_wrap.py
-	$< -p $(PARAM_PORTS)
+	$< -p $(PORTS)
 
 iverilog_dump.v:
 	echo 'module iverilog_dump();' > $@

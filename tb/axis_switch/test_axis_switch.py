@@ -349,9 +349,6 @@ def test_axis_switch(request, s_count, m_count, data_width):
 
     parameters = {}
 
-    parameters['S_COUNT'] = s_count
-    parameters['M_COUNT'] = m_count
-
     parameters['DATA_WIDTH'] = data_width
     parameters['KEEP_ENABLE'] = int(parameters['DATA_WIDTH'] > 8)
     parameters['KEEP_WIDTH'] = parameters['DATA_WIDTH'] // 8
@@ -369,6 +366,9 @@ def test_axis_switch(request, s_count, m_count, data_width):
     parameters['ARB_LSB_HIGH_PRIORITY'] = 1
 
     extra_env = {f'PARAM_{k}': str(v) for k, v in parameters.items()}
+
+    extra_env['S_COUNT'] = str(s_count)
+    extra_env['M_COUNT'] = str(m_count)
 
     sim_build = os.path.join(tests_dir, "sim_build",
         request.node.name.replace('[', '-').replace(']', ''))

@@ -351,9 +351,6 @@ def test_axis_ram_switch(request, s_count, m_count, s_data_width, m_data_width):
 
     parameters = {}
 
-    parameters['S_COUNT'] = s_count
-    parameters['M_COUNT'] = m_count
-
     parameters['FIFO_DEPTH'] = 4096
     parameters['CMD_FIFO_DEPTH'] = 32
     parameters['SPEEDUP'] = 0
@@ -380,6 +377,9 @@ def test_axis_ram_switch(request, s_count, m_count, s_data_width, m_data_width):
     parameters['RAM_PIPELINE'] = 2
 
     extra_env = {f'PARAM_{k}': str(v) for k, v in parameters.items()}
+
+    extra_env['S_COUNT'] = str(s_count)
+    extra_env['M_COUNT'] = str(m_count)
 
     sim_build = os.path.join(tests_dir, "sim_build",
         request.node.name.replace('[', '-').replace(']', ''))
