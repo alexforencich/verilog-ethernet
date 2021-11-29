@@ -54,7 +54,9 @@ module axis_demux #
     // Propagate tuser signal
     parameter USER_ENABLE = 1,
     // tuser signal width
-    parameter USER_WIDTH = 1
+    parameter USER_WIDTH = 1,
+    // route via tdest
+    parameter TDEST_ROUTE = 0
 )
 (
     input  wire                             clk,
@@ -93,6 +95,21 @@ module axis_demux #
 );
 
 parameter CL_M_COUNT = $clog2(M_COUNT);
+
+// check configuration
+initial begin
+    if (TDEST_ROUTE) begin
+        if (!DEST_ENABLE) begin
+            $error("Error: TDEST_ROUTE set requires DEST_ENABLE set (instance %m)");
+            $finish;
+        end
+
+        if (S_DEST_WIDTH < CL_M_COUNT) begin
+            $error("Error: S_DEST_WIDTH too small for port count (instance %m)");
+            $finish;
+        end
+    end
+end
 
 reg [CL_M_COUNT-1:0] select_reg = {CL_M_COUNT{1'b0}}, select_ctl, select_next;
 reg drop_reg = 1'b0, drop_ctl, drop_next;
@@ -133,8 +150,18 @@ always @* begin
 
     if (!frame_reg && s_axis_tvalid && s_axis_tready) begin
         // start of frame, grab select value
-        select_ctl = select;
-        drop_ctl = drop || select >= M_COUNT;
+        if (TDEST_ROUTE) begin
+            if (M_COUNT > 1) begin
+                select_ctl = s_axis_tdest[S_DEST_WIDTH-1:S_DEST_WIDTH-CL_M_COUNT];
+                drop_ctl = s_axis_tdest[S_DEST_WIDTH-1:S_DEST_WIDTH-CL_M_COUNT] >= M_COUNT;
+            end else begin
+                select_ctl = 0;
+                drop_ctl = 1'b0;
+            end
+        end else begin
+            select_ctl = select;
+            drop_ctl = drop || select >= M_COUNT;
+        end
         frame_ctl = 1'b1;
         if (!(s_axis_tready && s_axis_tvalid && s_axis_tlast)) begin
             select_next = select_ctl;

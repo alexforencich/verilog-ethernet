@@ -89,7 +89,9 @@ module {{name}} #
     // Propagate tuser signal
     parameter USER_ENABLE = 1,
     // tuser signal width
-    parameter USER_WIDTH = 1
+    parameter USER_WIDTH = 1,
+    // route via tdest
+    parameter TDEST_ROUTE = 0
 )
 (
     input  wire                     clk,
@@ -139,7 +141,8 @@ axis_demux #(
     .S_DEST_WIDTH(S_DEST_WIDTH),
     .M_DEST_WIDTH(M_DEST_WIDTH),
     .USER_ENABLE(USER_ENABLE),
-    .USER_WIDTH(USER_WIDTH)
+    .USER_WIDTH(USER_WIDTH),
+    .TDEST_ROUTE(TDEST_ROUTE)
 )
 axis_demux_inst (
     .clk(clk),
