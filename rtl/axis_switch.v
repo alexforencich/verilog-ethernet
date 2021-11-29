@@ -116,6 +116,9 @@ module axis_switch #
 parameter CL_S_COUNT = $clog2(S_COUNT);
 parameter CL_M_COUNT = $clog2(M_COUNT);
 
+parameter S_ID_WIDTH_INT = S_ID_WIDTH > 0 ? S_ID_WIDTH : 1;
+parameter M_DEST_WIDTH_INT = M_DEST_WIDTH > 0 ? M_DEST_WIDTH : 1;
+
 integer i, j;
 
 // check configuration
@@ -275,8 +278,8 @@ generate
             .KEEP_ENABLE(KEEP_ENABLE),
             .KEEP_WIDTH(KEEP_WIDTH),
             .LAST_ENABLE(1),
-            .ID_ENABLE(ID_ENABLE),
-            .ID_WIDTH(S_ID_WIDTH),
+            .ID_ENABLE(ID_ENABLE && S_ID_WIDTH > 0),
+            .ID_WIDTH(S_ID_WIDTH_INT),
             .DEST_ENABLE(1),
             .DEST_WIDTH(S_DEST_WIDTH),
             .USER_ENABLE(USER_ENABLE),
@@ -292,7 +295,7 @@ generate
             .s_axis_tvalid(s_axis_tvalid[m]),
             .s_axis_tready(s_axis_tready[m]),
             .s_axis_tlast(s_axis_tlast[m]),
-            .s_axis_tid(s_axis_tid[m*S_ID_WIDTH +: S_ID_WIDTH]),
+            .s_axis_tid(s_axis_tid[m*S_ID_WIDTH +: S_ID_WIDTH_INT]),
             .s_axis_tdest(s_axis_tdest[m*S_DEST_WIDTH +: S_DEST_WIDTH]),
             .s_axis_tuser(s_axis_tuser[m*USER_WIDTH +: USER_WIDTH]),
             // AXI output
@@ -301,7 +304,7 @@ generate
             .m_axis_tvalid(int_s_axis_tvalid[m]),
             .m_axis_tready(int_s_axis_tready[m]),
             .m_axis_tlast(int_s_axis_tlast[m]),
-            .m_axis_tid(int_s_axis_tid[m*S_ID_WIDTH +: S_ID_WIDTH]),
+            .m_axis_tid(int_s_axis_tid[m*S_ID_WIDTH +: S_ID_WIDTH_INT]),
             .m_axis_tdest(int_s_axis_tdest[m*S_DEST_WIDTH +: S_DEST_WIDTH]),
             .m_axis_tuser(int_s_axis_tuser[m*USER_WIDTH +: USER_WIDTH])
         );
@@ -348,7 +351,7 @@ generate
             m_axis_tkeep_mux   = int_s_axis_tkeep[grant_encoded*KEEP_WIDTH +: KEEP_WIDTH];
             m_axis_tvalid_mux  = int_axis_tvalid[grant_encoded*M_COUNT+n] && grant_valid;
             m_axis_tlast_mux   = int_s_axis_tlast[grant_encoded];
-            m_axis_tid_mux     = int_s_axis_tid[grant_encoded*S_ID_WIDTH +: S_ID_WIDTH];
+            m_axis_tid_mux     = int_s_axis_tid[grant_encoded*S_ID_WIDTH +: S_ID_WIDTH_INT];
             if (UPDATE_TID && S_COUNT > 1) begin
                 m_axis_tid_mux[M_ID_WIDTH-1:M_ID_WIDTH-CL_S_COUNT] = grant_encoded;
             end
@@ -371,8 +374,8 @@ generate
             .LAST_ENABLE(1),
             .ID_ENABLE(ID_ENABLE),
             .ID_WIDTH(M_ID_WIDTH),
-            .DEST_ENABLE(1),
-            .DEST_WIDTH(M_DEST_WIDTH),
+            .DEST_ENABLE(M_DEST_WIDTH > 0),
+            .DEST_WIDTH(M_DEST_WIDTH_INT),
             .USER_ENABLE(USER_ENABLE),
             .USER_WIDTH(USER_WIDTH),
             .REG_TYPE(M_REG_TYPE)
@@ -396,7 +399,7 @@ generate
             .m_axis_tready(m_axis_tready[n]),
             .m_axis_tlast(m_axis_tlast[n]),
             .m_axis_tid(m_axis_tid[n*M_ID_WIDTH +: M_ID_WIDTH]),
-            .m_axis_tdest(m_axis_tdest[n*M_DEST_WIDTH +: M_DEST_WIDTH]),
+            .m_axis_tdest(m_axis_tdest[n*M_DEST_WIDTH +: M_DEST_WIDTH_INT]),
             .m_axis_tuser(m_axis_tuser[n*USER_WIDTH +: USER_WIDTH])
         );
     end // m_ifaces

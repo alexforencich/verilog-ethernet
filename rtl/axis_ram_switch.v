@@ -144,6 +144,9 @@ module axis_ram_switch #
 parameter CL_S_COUNT = $clog2(S_COUNT);
 parameter CL_M_COUNT = $clog2(M_COUNT);
 
+parameter S_ID_WIDTH_INT = S_ID_WIDTH > 0 ? S_ID_WIDTH : 1;
+parameter M_DEST_WIDTH_INT = M_DEST_WIDTH > 0 ? M_DEST_WIDTH : 1;
+
 // force keep width to 1 when disabled
 parameter S_KEEP_WIDTH_INT = S_KEEP_ENABLE ? S_KEEP_WIDTH : 1;
 parameter M_KEEP_WIDTH_INT = M_KEEP_ENABLE ? M_KEEP_WIDTH : 1;
@@ -405,8 +408,8 @@ generate
             .M_DATA_WIDTH(DATA_WIDTH),
             .M_KEEP_ENABLE(1),
             .M_KEEP_WIDTH(KEEP_WIDTH),
-            .ID_ENABLE(ID_ENABLE),
-            .ID_WIDTH(S_ID_WIDTH),
+            .ID_ENABLE(ID_ENABLE && S_ID_WIDTH > 0),
+            .ID_WIDTH(S_ID_WIDTH_INT),
             .DEST_ENABLE(1),
             .DEST_WIDTH(S_DEST_WIDTH),
             .USER_ENABLE(USER_ENABLE),
@@ -421,7 +424,7 @@ generate
             .s_axis_tvalid(s_axis_tvalid[m]),
             .s_axis_tready(s_axis_tready[m]),
             .s_axis_tlast(s_axis_tlast[m]),
-            .s_axis_tid(s_axis_tid[S_ID_WIDTH*m +: S_ID_WIDTH]),
+            .s_axis_tid(s_axis_tid[S_ID_WIDTH*m +: S_ID_WIDTH_INT]),
             .s_axis_tdest(s_axis_tdest[S_DEST_WIDTH*m +: S_DEST_WIDTH]),
             .s_axis_tuser(s_axis_tuser[USER_WIDTH*m +: USER_WIDTH]),
             // AXI output
@@ -585,7 +588,7 @@ generate
         reg [ADDR_WIDTH-1:0]      cmd_len_reg = {ADDR_WIDTH{1'b0}}, cmd_len_next;
         reg [CMD_ADDR_WIDTH-1:0]  cmd_id_reg = {CMD_ADDR_WIDTH{1'b0}}, cmd_id_next;
         reg [KEEP_WIDTH-1:0]      cmd_tkeep_reg = {KEEP_WIDTH{1'b0}}, cmd_tkeep_next;
-        reg [S_ID_WIDTH-1:0]      cmd_tid_reg = {S_ID_WIDTH{1'b0}}, cmd_tid_next;
+        reg [S_ID_WIDTH-1:0]      cmd_tid_reg = {S_ID_WIDTH_INT{1'b0}}, cmd_tid_next;
         reg [S_DEST_WIDTH-1:0]    cmd_tdest_reg = {S_DEST_WIDTH{1'b0}}, cmd_tdest_next;
         reg [USER_WIDTH-1:0]      cmd_tuser_reg = {USER_WIDTH{1'b0}}, cmd_tuser_next;
         reg [M_COUNT-1:0]         cmd_valid_reg = 0, cmd_valid_next;
@@ -608,7 +611,7 @@ generate
         assign int_cmd_len[m*ADDR_WIDTH +: ADDR_WIDTH] = cmd_len_reg;
         assign int_cmd_id[m*CMD_ADDR_WIDTH +: CMD_ADDR_WIDTH] = cmd_id_reg;
         assign int_cmd_tkeep[m*KEEP_WIDTH +: KEEP_WIDTH] = cmd_tkeep_reg;
-        assign int_cmd_tid[m*S_ID_WIDTH +: S_ID_WIDTH] = cmd_tid_reg;
+        assign int_cmd_tid[m*S_ID_WIDTH +: S_ID_WIDTH_INT] = cmd_tid_reg;
         assign int_cmd_tdest[m*S_DEST_WIDTH +: S_DEST_WIDTH] = cmd_tdest_reg;
         assign int_cmd_tuser[m*USER_WIDTH +: USER_WIDTH] = cmd_tuser_reg;
         assign int_cmd_valid[m*M_COUNT +: M_COUNT] = cmd_valid_reg;
@@ -854,7 +857,7 @@ generate
             cmd_len_mux   = int_cmd_len[grant_encoded*ADDR_WIDTH +: ADDR_WIDTH];
             cmd_id_mux    = int_cmd_id[grant_encoded*CMD_ADDR_WIDTH +: CMD_ADDR_WIDTH];
             cmd_tkeep_mux = int_cmd_tkeep[grant_encoded*KEEP_WIDTH +: KEEP_WIDTH];
-            cmd_tid_mux   = int_cmd_tid[grant_encoded*S_ID_WIDTH +: S_ID_WIDTH];
+            cmd_tid_mux   = int_cmd_tid[grant_encoded*S_ID_WIDTH +: S_ID_WIDTH_INT];
             if (UPDATE_TID && S_COUNT > 1) begin
                 cmd_tid_mux[M_ID_WIDTH-1:M_ID_WIDTH-CL_S_COUNT] = grant_encoded;
             end
@@ -879,7 +882,7 @@ generate
 
         reg [KEEP_WIDTH-1:0] last_cycle_tkeep_reg = {KEEP_WIDTH{1'b0}}, last_cycle_tkeep_next;
         reg [M_ID_WIDTH-1:0] tid_reg = {M_ID_WIDTH{1'b0}}, tid_next;
-        reg [M_DEST_WIDTH-1:0] tdest_reg = {M_DEST_WIDTH{1'b0}}, tdest_next;
+        reg [M_DEST_WIDTH-1:0] tdest_reg = {M_DEST_WIDTH_INT{1'b0}}, tdest_next;
         reg [USER_WIDTH-1:0] tuser_reg = {USER_WIDTH{1'b0}}, tuser_next;
 
         reg [DATA_WIDTH-1:0]    out_axis_tdata_reg = {DATA_WIDTH{1'b0}}, out_axis_tdata_next;
@@ -888,7 +891,7 @@ generate
         wire                    out_axis_tready;
         reg                     out_axis_tlast_reg = 1'b0, out_axis_tlast_next;
         reg [M_ID_WIDTH-1:0]    out_axis_tid_reg   = {M_ID_WIDTH{1'b0}}, out_axis_tid_next;
-        reg [M_DEST_WIDTH-1:0]  out_axis_tdest_reg = {M_DEST_WIDTH{1'b0}}, out_axis_tdest_next;
+        reg [M_DEST_WIDTH-1:0]  out_axis_tdest_reg = {M_DEST_WIDTH_INT{1'b0}}, out_axis_tdest_next;
         reg [USER_WIDTH-1:0]    out_axis_tuser_reg = {USER_WIDTH{1'b0}}, out_axis_tuser_next;
 
         reg  [RAM_ADDR_WIDTH-1:0] ram_rd_addr_reg = {RAM_ADDR_WIDTH{1'b0}}, ram_rd_addr_next;
@@ -1104,8 +1107,8 @@ generate
             .M_KEEP_WIDTH(M_KEEP_WIDTH),
             .ID_ENABLE(ID_ENABLE),
             .ID_WIDTH(M_ID_WIDTH),
-            .DEST_ENABLE(1),
-            .DEST_WIDTH(M_DEST_WIDTH),
+            .DEST_ENABLE(M_DEST_WIDTH > 0),
+            .DEST_WIDTH(M_DEST_WIDTH_INT),
             .USER_ENABLE(USER_ENABLE),
             .USER_WIDTH(USER_WIDTH)
         )
@@ -1128,7 +1131,7 @@ generate
             .m_axis_tready(m_axis_tready[n]),
             .m_axis_tlast(m_axis_tlast[n]),
             .m_axis_tid(m_axis_tid[M_ID_WIDTH*n +: M_ID_WIDTH]),
-            .m_axis_tdest(m_axis_tdest[M_DEST_WIDTH*n +: M_DEST_WIDTH]),
+            .m_axis_tdest(m_axis_tdest[M_DEST_WIDTH*n +: M_DEST_WIDTH_INT]),
             .m_axis_tuser(m_axis_tuser[USER_WIDTH*n +: USER_WIDTH])
         );
     end // m_ifaces

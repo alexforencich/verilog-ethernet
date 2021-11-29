@@ -95,6 +95,8 @@ module axis_arb_mux #
 
 parameter CL_S_COUNT = $clog2(S_COUNT);
 
+parameter S_ID_WIDTH_INT = S_ID_WIDTH > 0 ? S_ID_WIDTH : 1;
+
 // check configuration
 initial begin
     if (UPDATE_TID) begin
@@ -135,7 +137,7 @@ wire [KEEP_WIDTH-1:0] current_s_tkeep  = s_axis_tkeep[grant_encoded*KEEP_WIDTH +
 wire                  current_s_tvalid = s_axis_tvalid[grant_encoded];
 wire                  current_s_tready = s_axis_tready[grant_encoded];
 wire                  current_s_tlast  = s_axis_tlast[grant_encoded];
-wire [S_ID_WIDTH-1:0] current_s_tid    = s_axis_tid[grant_encoded*S_ID_WIDTH +: S_ID_WIDTH];
+wire [S_ID_WIDTH-1:0] current_s_tid    = s_axis_tid[grant_encoded*S_ID_WIDTH +: S_ID_WIDTH_INT];
 wire [DEST_WIDTH-1:0] current_s_tdest  = s_axis_tdest[grant_encoded*DEST_WIDTH +: DEST_WIDTH];
 wire [USER_WIDTH-1:0] current_s_tuser  = s_axis_tuser[grant_encoded*USER_WIDTH +: USER_WIDTH];
 

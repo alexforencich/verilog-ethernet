@@ -96,6 +96,8 @@ module axis_demux #
 
 parameter CL_M_COUNT = $clog2(M_COUNT);
 
+parameter M_DEST_WIDTH_INT = M_DEST_WIDTH > 0 ? M_DEST_WIDTH : 1;
+
 // check configuration
 initial begin
     if (TDEST_ROUTE) begin
@@ -201,7 +203,7 @@ reg [KEEP_WIDTH-1:0]    m_axis_tkeep_reg  = {KEEP_WIDTH{1'b0}};
 reg [M_COUNT-1:0]       m_axis_tvalid_reg = {M_COUNT{1'b0}}, m_axis_tvalid_next;
 reg                     m_axis_tlast_reg  = 1'b0;
 reg [ID_WIDTH-1:0]      m_axis_tid_reg    = {ID_WIDTH{1'b0}};
-reg [M_DEST_WIDTH-1:0]  m_axis_tdest_reg  = {M_DEST_WIDTH{1'b0}};
+reg [M_DEST_WIDTH-1:0]  m_axis_tdest_reg  = {M_DEST_WIDTH_INT{1'b0}};
 reg [USER_WIDTH-1:0]    m_axis_tuser_reg  = {USER_WIDTH{1'b0}};
 
 reg [DATA_WIDTH-1:0]    temp_m_axis_tdata_reg  = {DATA_WIDTH{1'b0}};
@@ -209,7 +211,7 @@ reg [KEEP_WIDTH-1:0]    temp_m_axis_tkeep_reg  = {KEEP_WIDTH{1'b0}};
 reg [M_COUNT-1:0]       temp_m_axis_tvalid_reg = {M_COUNT{1'b0}}, temp_m_axis_tvalid_next;
 reg                     temp_m_axis_tlast_reg  = 1'b0;
 reg [ID_WIDTH-1:0]      temp_m_axis_tid_reg    = {ID_WIDTH{1'b0}};
-reg [M_DEST_WIDTH-1:0]  temp_m_axis_tdest_reg  = {M_DEST_WIDTH{1'b0}};
+reg [M_DEST_WIDTH-1:0]  temp_m_axis_tdest_reg  = {M_DEST_WIDTH_INT{1'b0}};
 reg [USER_WIDTH-1:0]    temp_m_axis_tuser_reg  = {USER_WIDTH{1'b0}};
 
 // datapath control
@@ -222,7 +224,7 @@ assign m_axis_tkeep  = KEEP_ENABLE ? {M_COUNT{m_axis_tkeep_reg}} : {M_COUNT*KEEP
 assign m_axis_tvalid = m_axis_tvalid_reg;
 assign m_axis_tlast  = {M_COUNT{m_axis_tlast_reg}};
 assign m_axis_tid    = ID_ENABLE   ? {M_COUNT{m_axis_tid_reg}}   : {M_COUNT*ID_WIDTH{1'b0}};
-assign m_axis_tdest  = DEST_ENABLE ? {M_COUNT{m_axis_tdest_reg}} : {M_COUNT*M_DEST_WIDTH{1'b0}};
+assign m_axis_tdest  = DEST_ENABLE ? {M_COUNT{m_axis_tdest_reg}} : {M_COUNT*M_DEST_WIDTH_INT{1'b0}};
 assign m_axis_tuser  = USER_ENABLE ? {M_COUNT{m_axis_tuser_reg}} : {M_COUNT*USER_WIDTH{1'b0}};
 
 // enable ready input next cycle if output is ready or the temp reg will not be filled on the next cycle (output reg empty or no input)
