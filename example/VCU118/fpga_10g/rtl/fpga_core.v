@@ -639,7 +639,7 @@ axis_switch #(
     .DATA_WIDTH(64),
     .KEEP_WIDTH(8),
     .ID_ENABLE(0),
-    .DEST_WIDTH(2),
+    .S_DEST_WIDTH(2),
     .USER_ENABLE(1),
     .USER_WIDTH(1),
     .M_BASE({2'd2, 2'd1, 2'd0}),
