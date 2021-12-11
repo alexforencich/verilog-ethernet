@@ -49,8 +49,8 @@ class TB(object):
         s_clk = int(os.getenv("S_CLK", "10"))
         m_clk = int(os.getenv("M_CLK", "11"))
 
-        cocotb.fork(Clock(dut.s_clk, s_clk, units="ns").start())
-        cocotb.fork(Clock(dut.m_clk, m_clk, units="ns").start())
+        cocotb.start_soon(Clock(dut.s_clk, s_clk, units="ns").start())
+        cocotb.start_soon(Clock(dut.m_clk, m_clk, units="ns").start())
 
         self.source = AxiStreamSource(AxiStreamBus.from_prefix(dut, "s_axis"), dut.s_clk, dut.s_rst)
         self.sink = AxiStreamSink(AxiStreamBus.from_prefix(dut, "m_axis"), dut.m_clk, dut.m_rst)
