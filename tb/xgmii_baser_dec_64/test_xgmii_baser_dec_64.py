@@ -55,7 +55,7 @@ class TB:
         self.log = logging.getLogger("cocotb.tb")
         self.log.setLevel(logging.DEBUG)
 
-        cocotb.fork(Clock(dut.clk, 6.4, units="ns").start())
+        cocotb.start_soon(Clock(dut.clk, 6.4, units="ns").start())
 
         self.source = BaseRSerdesSource(dut.encoded_rx_data, dut.encoded_rx_hdr, dut.clk, scramble=False)
         self.sink = XgmiiSink(dut.xgmii_rxd, dut.xgmii_rxc, dut.clk, dut.rst)

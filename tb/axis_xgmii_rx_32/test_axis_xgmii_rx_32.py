@@ -45,7 +45,7 @@ class TB:
         self.log = logging.getLogger("cocotb.tb")
         self.log.setLevel(logging.DEBUG)
 
-        cocotb.fork(Clock(dut.clk, 3.2, units="ns").start())
+        cocotb.start_soon(Clock(dut.clk, 3.2, units="ns").start())
 
         self.source = XgmiiSource(dut.xgmii_rxd, dut.xgmii_rxc, dut.clk, dut.rst)
         self.sink = AxiStreamSink(AxiStreamBus.from_prefix(dut, "m_axis"), dut.clk, dut.rst)

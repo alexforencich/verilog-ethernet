@@ -55,8 +55,8 @@ class TB:
         self.log = logging.getLogger("cocotb.tb")
         self.log.setLevel(logging.DEBUG)
 
-        cocotb.fork(Clock(dut.tx_clk, 6.4, units="ns").start())
-        cocotb.fork(Clock(dut.rx_clk, 6.4, units="ns").start())
+        cocotb.start_soon(Clock(dut.tx_clk, 6.4, units="ns").start())
+        cocotb.start_soon(Clock(dut.rx_clk, 6.4, units="ns").start())
 
         self.xgmii_source = XgmiiSource(dut.xgmii_txd, dut.xgmii_txc, dut.tx_clk, dut.tx_rst)
         self.xgmii_sink = XgmiiSink(dut.xgmii_rxd, dut.xgmii_rxc, dut.rx_clk, dut.rx_rst)

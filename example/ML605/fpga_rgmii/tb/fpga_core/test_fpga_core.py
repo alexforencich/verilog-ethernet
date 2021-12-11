@@ -59,7 +59,7 @@ class TB:
         dut.clk_125mhz.setimmediatevalue(0)
         dut.clk90_125mhz.setimmediatevalue(0)
 
-        cocotb.fork(self._run_clk_125mhz())
+        cocotb.start_soon(self._run_clk_125mhz())
 
     async def init(self):
 

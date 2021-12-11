@@ -41,7 +41,7 @@ class TB:
         self.log = logging.getLogger("cocotb.tb")
         self.log.setLevel(logging.DEBUG)
 
-        cocotb.fork(Clock(dut.clk, 6.4, units="ns").start())
+        cocotb.start_soon(Clock(dut.clk, 6.4, units="ns").start())
 
         dut.input_ts_96.setimmediatevalue(0)
         dut.input_ts_96_valid.setimmediatevalue(0)

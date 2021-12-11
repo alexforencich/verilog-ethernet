@@ -45,7 +45,7 @@ class TB:
         self.log = logging.getLogger("cocotb.tb")
         self.log.setLevel(logging.DEBUG)
 
-        cocotb.fork(Clock(dut.logic_clk, 8, units="ns").start())
+        cocotb.start_soon(Clock(dut.logic_clk, 8, units="ns").start())
 
         self.rgmii_phy = RgmiiPhy(dut.rgmii_txd, dut.rgmii_tx_ctl, dut.rgmii_tx_clk,
             dut.rgmii_rxd, dut.rgmii_rx_ctl, dut.rgmii_rx_clk, speed=speed)
@@ -58,7 +58,7 @@ class TB:
         dut.gtx_clk.setimmediatevalue(0)
         dut.gtx_clk90.setimmediatevalue(0)
 
-        cocotb.fork(self._run_gtx_clk())
+        cocotb.start_soon(self._run_gtx_clk())
 
     async def reset(self):
         self.dut.gtx_rst.setimmediatevalue(0)

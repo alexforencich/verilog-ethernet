@@ -46,10 +46,10 @@ class TB:
         self.log = SimLog("cocotb.tb")
         self.log.setLevel(logging.DEBUG)
 
-        cocotb.fork(Clock(dut.clk, 6.4, units="ns").start())
+        cocotb.start_soon(Clock(dut.clk, 6.4, units="ns").start())
 
         # Ethernet
-        cocotb.fork(Clock(dut.phy_gmii_clk, 8, units="ns").start())
+        cocotb.start_soon(Clock(dut.phy_gmii_clk, 8, units="ns").start())
 
         self.gmii_source = GmiiSource(dut.phy_gmii_rxd, dut.phy_gmii_rx_er, dut.phy_gmii_rx_dv,
             dut.phy_gmii_clk, dut.phy_gmii_rst, dut.phy_gmii_clk_en)
@@ -58,44 +58,44 @@ class TB:
 
         dut.phy_gmii_clk_en.setimmediatevalue(1)
 
-        cocotb.fork(Clock(dut.qsfp1_rx_clk_1, 6.4, units="ns").start())
+        cocotb.start_soon(Clock(dut.qsfp1_rx_clk_1, 6.4, units="ns").start())
         self.qsfp1_1_source = XgmiiSource(dut.qsfp1_rxd_1, dut.qsfp1_rxc_1, dut.qsfp1_rx_clk_1, dut.qsfp1_rx_rst_1)
-        cocotb.fork(Clock(dut.qsfp1_tx_clk_1, 6.4, units="ns").start())
+        cocotb.start_soon(Clock(dut.qsfp1_tx_clk_1, 6.4, units="ns").start())
         self.qsfp1_1_sink = XgmiiSink(dut.qsfp1_txd_1, dut.qsfp1_txc_1, dut.qsfp1_tx_clk_1, dut.qsfp1_tx_rst_1)
 
-        cocotb.fork(Clock(dut.qsfp1_rx_clk_2, 6.4, units="ns").start())
+        cocotb.start_soon(Clock(dut.qsfp1_rx_clk_2, 6.4, units="ns").start())
         self.qsfp1_2_source = XgmiiSource(dut.qsfp1_rxd_2, dut.qsfp1_rxc_2, dut.qsfp1_rx_clk_2, dut.qsfp1_rx_rst_2)
-        cocotb.fork(Clock(dut.qsfp1_tx_clk_2, 6.4, units="ns").start())
+        cocotb.start_soon(Clock(dut.qsfp1_tx_clk_2, 6.4, units="ns").start())
         self.qsfp1_2_sink = XgmiiSink(dut.qsfp1_txd_2, dut.qsfp1_txc_2, dut.qsfp1_tx_clk_2, dut.qsfp1_tx_rst_2)
 
-        cocotb.fork(Clock(dut.qsfp1_rx_clk_3, 6.4, units="ns").start())
+        cocotb.start_soon(Clock(dut.qsfp1_rx_clk_3, 6.4, units="ns").start())
         self.qsfp1_3_source = XgmiiSource(dut.qsfp1_rxd_3, dut.qsfp1_rxc_3, dut.qsfp1_rx_clk_3, dut.qsfp1_rx_rst_3)
-        cocotb.fork(Clock(dut.qsfp1_tx_clk_3, 6.4, units="ns").start())
+        cocotb.start_soon(Clock(dut.qsfp1_tx_clk_3, 6.4, units="ns").start())
         self.qsfp1_3_sink = XgmiiSink(dut.qsfp1_txd_3, dut.qsfp1_txc_3, dut.qsfp1_tx_clk_3, dut.qsfp1_tx_rst_3)
 
-        cocotb.fork(Clock(dut.qsfp1_rx_clk_4, 6.4, units="ns").start())
+        cocotb.start_soon(Clock(dut.qsfp1_rx_clk_4, 6.4, units="ns").start())
         self.qsfp1_4_source = XgmiiSource(dut.qsfp1_rxd_4, dut.qsfp1_rxc_4, dut.qsfp1_rx_clk_4, dut.qsfp1_rx_rst_4)
-        cocotb.fork(Clock(dut.qsfp1_tx_clk_4, 6.4, units="ns").start())
+        cocotb.start_soon(Clock(dut.qsfp1_tx_clk_4, 6.4, units="ns").start())
         self.qsfp1_4_sink = XgmiiSink(dut.qsfp1_txd_4, dut.qsfp1_txc_4, dut.qsfp1_tx_clk_4, dut.qsfp1_tx_rst_4)
 
-        cocotb.fork(Clock(dut.qsfp2_rx_clk_1, 6.4, units="ns").start())
+        cocotb.start_soon(Clock(dut.qsfp2_rx_clk_1, 6.4, units="ns").start())
         self.qsfp2_1_source = XgmiiSource(dut.qsfp2_rxd_1, dut.qsfp2_rxc_1, dut.qsfp2_rx_clk_1, dut.qsfp2_rx_rst_1)
-        cocotb.fork(Clock(dut.qsfp2_tx_clk_1, 6.4, units="ns").start())
+        cocotb.start_soon(Clock(dut.qsfp2_tx_clk_1, 6.4, units="ns").start())
         self.qsfp2_1_sink = XgmiiSink(dut.qsfp2_txd_1, dut.qsfp2_txc_1, dut.qsfp2_tx_clk_1, dut.qsfp2_tx_rst_1)
 
-        cocotb.fork(Clock(dut.qsfp2_rx_clk_2, 6.4, units="ns").start())
+        cocotb.start_soon(Clock(dut.qsfp2_rx_clk_2, 6.4, units="ns").start())
         self.qsfp2_2_source = XgmiiSource(dut.qsfp2_rxd_2, dut.qsfp2_rxc_2, dut.qsfp2_rx_clk_2, dut.qsfp2_rx_rst_2)
-        cocotb.fork(Clock(dut.qsfp2_tx_clk_2, 6.4, units="ns").start())
+        cocotb.start_soon(Clock(dut.qsfp2_tx_clk_2, 6.4, units="ns").start())
         self.qsfp2_2_sink = XgmiiSink(dut.qsfp2_txd_2, dut.qsfp2_txc_2, dut.qsfp2_tx_clk_2, dut.qsfp2_tx_rst_2)
 
-        cocotb.fork(Clock(dut.qsfp2_rx_clk_3, 6.4, units="ns").start())
+        cocotb.start_soon(Clock(dut.qsfp2_rx_clk_3, 6.4, units="ns").start())
         self.qsfp2_3_source = XgmiiSource(dut.qsfp2_rxd_3, dut.qsfp2_rxc_3, dut.qsfp2_rx_clk_3, dut.qsfp2_rx_rst_3)
-        cocotb.fork(Clock(dut.qsfp2_tx_clk_3, 6.4, units="ns").start())
+        cocotb.start_soon(Clock(dut.qsfp2_tx_clk_3, 6.4, units="ns").start())
         self.qsfp2_3_sink = XgmiiSink(dut.qsfp2_txd_3, dut.qsfp2_txc_3, dut.qsfp2_tx_clk_3, dut.qsfp2_tx_rst_3)
 
-        cocotb.fork(Clock(dut.qsfp2_rx_clk_4, 6.4, units="ns").start())
+        cocotb.start_soon(Clock(dut.qsfp2_rx_clk_4, 6.4, units="ns").start())
         self.qsfp2_4_source = XgmiiSource(dut.qsfp2_rxd_4, dut.qsfp2_rxc_4, dut.qsfp2_rx_clk_4, dut.qsfp2_rx_rst_4)
-        cocotb.fork(Clock(dut.qsfp2_tx_clk_4, 6.4, units="ns").start())
+        cocotb.start_soon(Clock(dut.qsfp2_tx_clk_4, 6.4, units="ns").start())
         self.qsfp2_4_sink = XgmiiSink(dut.qsfp2_txd_4, dut.qsfp2_txc_4, dut.qsfp2_tx_clk_4, dut.qsfp2_tx_rst_4)
 
         dut.btnu.setimmediatevalue(0)

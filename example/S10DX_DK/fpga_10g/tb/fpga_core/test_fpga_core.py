@@ -46,11 +46,11 @@ class TB:
         self.log = SimLog("cocotb.tb")
         self.log.setLevel(logging.DEBUG)
 
-        cocotb.fork(Clock(dut.clk, 6.206, units="ns").start())
+        cocotb.start_soon(Clock(dut.clk, 6.206, units="ns").start())
 
         # Ethernet
-        cocotb.fork(Clock(dut.qsfp1_mac_1_rx_clk, 6.206, units="ns").start())
-        cocotb.fork(Clock(dut.qsfp1_mac_1_tx_clk, 6.206, units="ns").start())
+        cocotb.start_soon(Clock(dut.qsfp1_mac_1_rx_clk, 6.206, units="ns").start())
+        cocotb.start_soon(Clock(dut.qsfp1_mac_1_tx_clk, 6.206, units="ns").start())
 
         self.qsfp1_mac_1 = EthMac(
             tx_clk=dut.qsfp1_mac_1_tx_clk,
@@ -62,8 +62,8 @@ class TB:
             ifg=12, speed=10e9
         )
 
-        cocotb.fork(Clock(dut.qsfp1_mac_2_rx_clk, 6.206, units="ns").start())
-        cocotb.fork(Clock(dut.qsfp1_mac_2_tx_clk, 6.206, units="ns").start())
+        cocotb.start_soon(Clock(dut.qsfp1_mac_2_rx_clk, 6.206, units="ns").start())
+        cocotb.start_soon(Clock(dut.qsfp1_mac_2_tx_clk, 6.206, units="ns").start())
 
         self.qsfp1_mac_2 = EthMac(
             tx_clk=dut.qsfp1_mac_2_tx_clk,
@@ -75,8 +75,8 @@ class TB:
             ifg=12, speed=10e9
         )
 
-        cocotb.fork(Clock(dut.qsfp1_mac_3_rx_clk, 6.206, units="ns").start())
-        cocotb.fork(Clock(dut.qsfp1_mac_3_tx_clk, 6.206, units="ns").start())
+        cocotb.start_soon(Clock(dut.qsfp1_mac_3_rx_clk, 6.206, units="ns").start())
+        cocotb.start_soon(Clock(dut.qsfp1_mac_3_tx_clk, 6.206, units="ns").start())
 
         self.qsfp1_mac_3 = EthMac(
             tx_clk=dut.qsfp1_mac_3_tx_clk,
@@ -88,8 +88,8 @@ class TB:
             ifg=12, speed=10e9
         )
 
-        cocotb.fork(Clock(dut.qsfp1_mac_4_rx_clk, 6.206, units="ns").start())
-        cocotb.fork(Clock(dut.qsfp1_mac_4_tx_clk, 6.206, units="ns").start())
+        cocotb.start_soon(Clock(dut.qsfp1_mac_4_rx_clk, 6.206, units="ns").start())
+        cocotb.start_soon(Clock(dut.qsfp1_mac_4_tx_clk, 6.206, units="ns").start())
 
         self.qsfp1_mac_4 = EthMac(
             tx_clk=dut.qsfp1_mac_4_tx_clk,
@@ -101,8 +101,8 @@ class TB:
             ifg=12, speed=10e9
         )
 
-        cocotb.fork(Clock(dut.qsfp2_mac_1_rx_clk, 6.206, units="ns").start())
-        cocotb.fork(Clock(dut.qsfp2_mac_1_tx_clk, 6.206, units="ns").start())
+        cocotb.start_soon(Clock(dut.qsfp2_mac_1_rx_clk, 6.206, units="ns").start())
+        cocotb.start_soon(Clock(dut.qsfp2_mac_1_tx_clk, 6.206, units="ns").start())
 
         self.qsfp2_mac_1 = EthMac(
             tx_clk=dut.qsfp2_mac_1_tx_clk,
@@ -114,8 +114,8 @@ class TB:
             ifg=12, speed=10e9
         )
 
-        cocotb.fork(Clock(dut.qsfp2_mac_2_rx_clk, 6.206, units="ns").start())
-        cocotb.fork(Clock(dut.qsfp2_mac_2_tx_clk, 6.206, units="ns").start())
+        cocotb.start_soon(Clock(dut.qsfp2_mac_2_rx_clk, 6.206, units="ns").start())
+        cocotb.start_soon(Clock(dut.qsfp2_mac_2_tx_clk, 6.206, units="ns").start())
 
         self.qsfp2_mac_2 = EthMac(
             tx_clk=dut.qsfp2_mac_2_tx_clk,
@@ -127,8 +127,8 @@ class TB:
             ifg=12, speed=10e9
         )
 
-        cocotb.fork(Clock(dut.qsfp2_mac_3_rx_clk, 6.206, units="ns").start())
-        cocotb.fork(Clock(dut.qsfp2_mac_3_tx_clk, 6.206, units="ns").start())
+        cocotb.start_soon(Clock(dut.qsfp2_mac_3_rx_clk, 6.206, units="ns").start())
+        cocotb.start_soon(Clock(dut.qsfp2_mac_3_tx_clk, 6.206, units="ns").start())
 
         self.qsfp2_mac_3 = EthMac(
             tx_clk=dut.qsfp2_mac_3_tx_clk,
@@ -140,8 +140,8 @@ class TB:
             ifg=12, speed=10e9
         )
 
-        cocotb.fork(Clock(dut.qsfp2_mac_4_rx_clk, 6.206, units="ns").start())
-        cocotb.fork(Clock(dut.qsfp2_mac_4_tx_clk, 6.206, units="ns").start())
+        cocotb.start_soon(Clock(dut.qsfp2_mac_4_rx_clk, 6.206, units="ns").start())
+        cocotb.start_soon(Clock(dut.qsfp2_mac_4_tx_clk, 6.206, units="ns").start())
 
         self.qsfp2_mac_4 = EthMac(
             tx_clk=dut.qsfp2_mac_4_tx_clk,

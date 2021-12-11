@@ -58,11 +58,11 @@ class TB:
         self.log.setLevel(logging.DEBUG)
 
         if len(dut.serdes_tx_data) == 64:
-            cocotb.fork(Clock(dut.rx_clk, 6.4, units="ns").start())
-            cocotb.fork(Clock(dut.tx_clk, 6.4, units="ns").start())
+            cocotb.start_soon(Clock(dut.rx_clk, 6.4, units="ns").start())
+            cocotb.start_soon(Clock(dut.tx_clk, 6.4, units="ns").start())
         else:
-            cocotb.fork(Clock(dut.rx_clk, 3.2, units="ns").start())
-            cocotb.fork(Clock(dut.tx_clk, 3.2, units="ns").start())
+            cocotb.start_soon(Clock(dut.rx_clk, 3.2, units="ns").start())
+            cocotb.start_soon(Clock(dut.tx_clk, 3.2, units="ns").start())
 
         self.serdes_source = BaseRSerdesSource(dut.serdes_rx_data, dut.serdes_rx_hdr, dut.rx_clk, slip=dut.serdes_rx_bitslip)
         self.serdes_sink = BaseRSerdesSink(dut.serdes_tx_data, dut.serdes_tx_hdr, dut.tx_clk)

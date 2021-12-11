@@ -45,7 +45,7 @@ class TB:
         self.log = SimLog("cocotb.tb")
         self.log.setLevel(logging.DEBUG)
 
-        cocotb.fork(Clock(dut.clk, 6.4, units="ns").start())
+        cocotb.start_soon(Clock(dut.clk, 6.4, units="ns").start())
 
         # Ethernet
         self.sfp_a_source = XgmiiSource(dut.sfp_a_rxd, dut.sfp_a_rxc, dut.clk, dut.rst)

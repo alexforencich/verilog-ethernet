@@ -87,7 +87,7 @@ class BaseRSerdesSource():
         self.data.setimmediatevalue(0)
         self.header.setimmediatevalue(0)
 
-        self._run_cr = cocotb.fork(self._run())
+        self._run_cr = cocotb.start_soon(self._run())
 
     async def send(self, frame):
         while self.full():
@@ -398,7 +398,7 @@ class BaseRSerdesSink:
         self.log.info("  Enable scrambler: %s", self.scramble)
         self.log.info("  Bit reverse: %s", self.reverse)
 
-        self._run_cr = cocotb.fork(self._run())
+        self._run_cr = cocotb.start_soon(self._run())
 
     def _recv(self, frame, compact=True):
         if self.queue.empty():
