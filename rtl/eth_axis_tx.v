@@ -207,14 +207,15 @@ always @* begin
     if (send_eth_payload_reg) begin
         s_eth_payload_axis_tready_next = m_axis_tready_int_early && shift_eth_payload_axis_input_tready;
 
+        m_axis_tdata_int = shift_eth_payload_axis_tdata;
+        m_axis_tkeep_int = shift_eth_payload_axis_tkeep;
+        m_axis_tlast_int = shift_eth_payload_axis_tlast;
+        m_axis_tuser_int = shift_eth_payload_axis_tuser;
+
         if ((s_eth_payload_axis_tready && s_eth_payload_axis_tvalid) || (m_axis_tready_int_reg && shift_eth_payload_axis_extra_cycle_reg)) begin
             transfer_in_save = 1'b1;
 
-            m_axis_tdata_int = shift_eth_payload_axis_tdata;
-            m_axis_tkeep_int = shift_eth_payload_axis_tkeep;
             m_axis_tvalid_int = 1'b1;
-            m_axis_tlast_int = shift_eth_payload_axis_tlast;
-            m_axis_tuser_int = shift_eth_payload_axis_tuser;
 
             if (shift_eth_payload_axis_tlast) begin
                 flush_save = 1'b1;
