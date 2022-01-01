@@ -298,13 +298,13 @@ always @* begin
             s_ip_payload_axis_tready_next = m_eth_payload_axis_tready_int_early;
 
             m_eth_payload_axis_tdata_int = s_ip_payload_axis_tdata;
-            m_eth_payload_axis_tvalid_int = s_ip_payload_axis_tvalid;
             m_eth_payload_axis_tlast_int = s_ip_payload_axis_tlast;
             m_eth_payload_axis_tuser_int = s_ip_payload_axis_tuser;
 
             if (s_ip_payload_axis_tready && s_ip_payload_axis_tvalid) begin
                 // word transfer through
                 word_count_next = word_count_reg - 6'd1;
+                m_eth_payload_axis_tvalid_int = 1'b1;
                 if (s_ip_payload_axis_tlast) begin
                     if (word_count_reg != 16'd1) begin
                         // end of frame, but length does not match
@@ -332,7 +332,6 @@ always @* begin
             s_ip_payload_axis_tready_next = m_eth_payload_axis_tready_int_early;
 
             m_eth_payload_axis_tdata_int = last_word_data_reg;
-            m_eth_payload_axis_tvalid_int = s_ip_payload_axis_tvalid && s_ip_payload_axis_tlast;
             m_eth_payload_axis_tlast_int = s_ip_payload_axis_tlast;
             m_eth_payload_axis_tuser_int = s_ip_payload_axis_tuser;
 
@@ -340,6 +339,7 @@ always @* begin
                 if (s_ip_payload_axis_tlast) begin
                     s_ip_hdr_ready_next = !m_eth_hdr_valid_next;
                     s_ip_payload_axis_tready_next = 1'b0;
+                    m_eth_payload_axis_tvalid_int = 1'b1;
                     state_next = STATE_IDLE;
                 end else begin
                     state_next = STATE_WRITE_PAYLOAD_LAST;
