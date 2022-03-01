@@ -59,7 +59,7 @@ class TB:
         dut.clk.setimmediatevalue(0)
         dut.clk90.setimmediatevalue(0)
 
-        cocotb.fork(self._run_clk())
+        cocotb.start_soon(self._run_clk())
 
     async def init(self):
 

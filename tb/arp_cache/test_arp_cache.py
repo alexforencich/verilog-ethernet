@@ -49,7 +49,7 @@ class TB:
         self.log = logging.getLogger("cocotb.tb")
         self.log.setLevel(logging.DEBUG)
 
-        cocotb.fork(Clock(dut.clk, 8, units="ns").start())
+        cocotb.start_soon(Clock(dut.clk, 8, units="ns").start())
 
         self.query_request_source = CacheOpSource(CacheOpBus.from_prefix(dut, "query_request"), dut.clk, dut.rst)
         self.query_response_sink = CacheOpSink(CacheOpBus.from_prefix(dut, "query_response"), dut.clk, dut.rst)

@@ -23,8 +23,10 @@ THE SOFTWARE.
 */
 
 // Language: Verilog 2001
-`default_nettype none   //do not allow undeclared wires
+
+`resetall
 `timescale 1ns / 1ps
+`default_nettype none
 
 /*
  * Ethernet arbitrated multiplexer
@@ -309,3 +311,5 @@ always @(posedge clk) begin
 end
 
 endmodule
+
+`resetall

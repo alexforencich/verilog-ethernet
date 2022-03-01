@@ -24,7 +24,9 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
+`resetall
 `timescale 1ns / 1ps
+`default_nettype none
 
 /*
  * 10M/100M Ethernet MAC with MII interface and TX and RX FIFOs
@@ -327,3 +329,5 @@ rx_fifo (
 );
 
 endmodule
+
+`resetall

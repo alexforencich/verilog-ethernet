@@ -24,7 +24,9 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
+`resetall
 `timescale 1ns / 1ps
+`default_nettype none
 
 /*
  * AXI4-Stream XGMII frame transmitter (AXI in, XGMII out)
@@ -714,6 +716,45 @@ always @* begin
 end
 
 always @(posedge clk) begin
+    state_reg <= state_next;
+
+    frame_ptr_reg <= frame_ptr_next;
+
+    ifg_count_reg <= ifg_count_next;
+    deficit_idle_count_reg <= deficit_idle_count_next;
+
+    s_tdata_reg <= s_tdata_next;
+    s_tkeep_reg <= s_tkeep_next;
+
+    s_axis_tready_reg <= s_axis_tready_next;
+
+    m_axis_ptp_ts_reg <= m_axis_ptp_ts_next;
+    m_axis_ptp_ts_tag_reg <= m_axis_ptp_ts_tag_next;
+    m_axis_ptp_ts_valid_reg <= m_axis_ptp_ts_valid_next;
+    m_axis_ptp_ts_valid_int_reg <= m_axis_ptp_ts_valid_int_next;
+
+    if (reset_crc) begin
+        crc_state <= 32'hFFFFFFFF;
+    end else if (update_crc) begin
+        crc_state <= crc_next7;
+    end
+
+    swap_txd <= xgmii_txd_next[63:32];
+    swap_txc <= xgmii_txc_next[7:4];
+
+    if (swap_lanes || (lanes_swapped && !unswap_lanes)) begin
+        lanes_swapped <= 1'b1;
+        xgmii_txd_reg <= {xgmii_txd_next[31:0], swap_txd};
+        xgmii_txc_reg <= {xgmii_txc_next[3:0], swap_txc};
+    end else begin
+        lanes_swapped <= 1'b0;
+        xgmii_txd_reg <= xgmii_txd_next;
+        xgmii_txc_reg <= xgmii_txc_next;
+    end
+
+    start_packet_reg <= start_packet_next;
+    error_underflow_reg <= error_underflow_next;
+
     if (rst) begin
         state_reg <= STATE_IDLE;
 
@@ -736,48 +777,9 @@ always @(posedge clk) begin
         crc_state <= 32'hFFFFFFFF;
 
         lanes_swapped <= 1'b0;
-    end else begin
-        state_reg <= state_next;
-
-        frame_ptr_reg <= frame_ptr_next;
-
-        ifg_count_reg <= ifg_count_next;
-        deficit_idle_count_reg <= deficit_idle_count_next;
-
-        s_axis_tready_reg <= s_axis_tready_next;
-    
-        m_axis_ptp_ts_valid_reg <= m_axis_ptp_ts_valid_next;
-        m_axis_ptp_ts_valid_int_reg <= m_axis_ptp_ts_valid_int_next;
-
-        start_packet_reg <= start_packet_next;
-        error_underflow_reg <= error_underflow_next;
-
-        if (swap_lanes || (lanes_swapped && !unswap_lanes)) begin
-            lanes_swapped <= 1'b1;
-            xgmii_txd_reg <= {xgmii_txd_next[31:0], swap_txd};
-            xgmii_txc_reg <= {xgmii_txc_next[3:0], swap_txc};
-        end else begin
-            lanes_swapped <= 1'b0;
-            xgmii_txd_reg <= xgmii_txd_next;
-            xgmii_txc_reg <= xgmii_txc_next;
-        end
-
-        // datapath
-        if (reset_crc) begin
-            crc_state <= 32'hFFFFFFFF;
-        end else if (update_crc) begin
-            crc_state <= crc_next7;
-        end
     end
-
-    s_tdata_reg <= s_tdata_next;
-    s_tkeep_reg <= s_tkeep_next;
-
-    m_axis_ptp_ts_reg <= m_axis_ptp_ts_next;
-    m_axis_ptp_ts_tag_reg <= m_axis_ptp_ts_tag_next;
-
-    swap_txd <= xgmii_txd_next[63:32];
-    swap_txc <= xgmii_txc_next[7:4];
 end
 
 endmodule
+
+`resetall

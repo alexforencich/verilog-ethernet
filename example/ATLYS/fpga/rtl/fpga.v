@@ -24,7 +24,9 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
+`resetall
 `timescale 1ns / 1ps
+`default_nettype none
 
 /*
  * FPGA top-level module
@@ -169,6 +171,8 @@ debounce_switch_inst (
         sw_int})
 );
 
+wire uart_rxd_int;
+
 sync_signal #(
     .WIDTH(1),
     .N(2)
@@ -220,3 +224,5 @@ core_inst (
 );
 
 endmodule
+
+`resetall

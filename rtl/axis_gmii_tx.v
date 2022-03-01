@@ -24,7 +24,9 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
+`resetall
 `timescale 1ns / 1ps
+`default_nettype none
 
 /*
  * AXI4-Stream GMII frame transmitter (AXI in, GMII out)
@@ -395,6 +397,34 @@ always @* begin
 end
 
 always @(posedge clk) begin
+    state_reg <= state_next;
+
+    frame_ptr_reg <= frame_ptr_next;
+
+    m_axis_ptp_ts_reg <= m_axis_ptp_ts_next;
+    m_axis_ptp_ts_tag_reg <= m_axis_ptp_ts_tag_next;
+    m_axis_ptp_ts_valid_reg <= m_axis_ptp_ts_valid_next;
+
+    mii_odd_reg <= mii_odd_next;
+    mii_msn_reg <= mii_msn_next;
+
+    s_tdata_reg <= s_tdata_next;
+
+    s_axis_tready_reg <= s_axis_tready_next;
+
+    gmii_txd_reg <= gmii_txd_next;
+    gmii_tx_en_reg <= gmii_tx_en_next;
+    gmii_tx_er_reg <= gmii_tx_er_next;
+
+    if (reset_crc) begin
+        crc_state <= 32'hFFFFFFFF;
+    end else if (update_crc) begin
+        crc_state <= crc_next;
+    end
+
+    start_packet_reg <= start_packet_next;
+    error_underflow_reg <= error_underflow_next;
+
     if (rst) begin
         state_reg <= STATE_IDLE;
 
@@ -411,38 +441,9 @@ always @(posedge clk) begin
         error_underflow_reg <= 1'b0;
 
         crc_state <= 32'hFFFFFFFF;
-    end else begin
-        state_reg <= state_next;
-
-        frame_ptr_reg <= frame_ptr_next;
-
-        s_axis_tready_reg <= s_axis_tready_next;
-    
-        m_axis_ptp_ts_valid_reg <= m_axis_ptp_ts_valid_next;
-
-        gmii_tx_en_reg <= gmii_tx_en_next;
-        gmii_tx_er_reg <= gmii_tx_er_next;
-
-        start_packet_reg <= start_packet_next;
-        error_underflow_reg <= error_underflow_next;
-
-        // datapath
-        if (reset_crc) begin
-            crc_state <= 32'hFFFFFFFF;
-        end else if (update_crc) begin
-            crc_state <= crc_next;
-        end
     end
-
-    m_axis_ptp_ts_reg <= m_axis_ptp_ts_next;
-    m_axis_ptp_ts_tag_reg <= m_axis_ptp_ts_tag_next;
-
-    mii_odd_reg <= mii_odd_next;
-    mii_msn_reg <= mii_msn_next;
-
-    s_tdata_reg <= s_tdata_next;
-
-    gmii_txd_reg <= gmii_txd_next;
 end
 
 endmodule
+
+`resetall

@@ -24,7 +24,9 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
+`resetall
 `timescale 1ns / 1ps
+`default_nettype none
 
 /*
  * 10G Ethernet MAC/PHY combination with TX and RX FIFOs
@@ -201,6 +203,9 @@ end
 
 wire rx_error_bad_frame_int;
 wire rx_error_bad_fcs_int;
+wire rx_bad_block_int;
+wire rx_block_lock_int;
+wire rx_high_ber_int;
 
 reg [4:0] rx_sync_reg_1 = 5'd0;
 reg [4:0] rx_sync_reg_2 = 5'd0;
@@ -518,3 +523,5 @@ rx_fifo (
 );
 
 endmodule
+
+`resetall

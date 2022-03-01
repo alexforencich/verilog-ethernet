@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014-2018 Alex Forencich
+Copyright (c) 2014-2021 Alex Forencich
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,9 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
+`resetall
 `timescale 1ns / 1ps
+`default_nettype none
 
 /*
  * FPGA core logic
@@ -356,8 +358,6 @@ assign user_led_g = ~led_reg[1:0];
 assign user_led_r = 1'b1;
 assign front_led = 2'b00;
 
-assign phy_reset_n = !rst;
-
 assign qsfp_0_txd_1 = 64'h0707070707070707;
 assign qsfp_0_txc_1 = 8'hff;
 assign qsfp_0_txd_2 = 64'h0707070707070707;
@@ -661,3 +661,5 @@ udp_payload_fifo (
 );
 
 endmodule
+
+`resetall

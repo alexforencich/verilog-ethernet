@@ -24,7 +24,9 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
+`resetall
 `timescale 1ns / 1ps
+`default_nettype none
 
 /*
  * IP ethernet frame transmitter (IP frame in, Ethernet frame out, 64 bit datapath)
@@ -406,7 +408,6 @@ always @* begin
 
             m_eth_payload_axis_tdata_int = shift_ip_payload_axis_tdata;
             m_eth_payload_axis_tkeep_int = shift_ip_payload_axis_tkeep;
-            m_eth_payload_axis_tvalid_int = shift_ip_payload_axis_tvalid;
             m_eth_payload_axis_tlast_int = shift_ip_payload_axis_tlast;
             m_eth_payload_axis_tuser_int = shift_ip_payload_axis_tuser;
 
@@ -416,6 +417,7 @@ always @* begin
                 // word transfer through
                 word_count_next = word_count_reg - 16'd8;
                 transfer_in_save = 1'b1;
+                m_eth_payload_axis_tvalid_int = 1'b1;
                 if (word_count_reg <= 8) begin
                     // have entire payload
                     m_eth_payload_axis_tkeep_int = count2keep(word_count_reg);
@@ -456,7 +458,6 @@ always @* begin
 
             m_eth_payload_axis_tdata_int = last_word_data_reg;
             m_eth_payload_axis_tkeep_int = last_word_keep_reg;
-            m_eth_payload_axis_tvalid_int = shift_ip_payload_axis_tvalid && shift_ip_payload_axis_tlast;
             m_eth_payload_axis_tlast_int = shift_ip_payload_axis_tlast;
             m_eth_payload_axis_tuser_int = shift_ip_payload_axis_tuser;
 
@@ -465,6 +466,7 @@ always @* begin
                 if (shift_ip_payload_axis_tlast) begin
                     s_ip_hdr_ready_next = !m_eth_hdr_valid_next;
                     s_ip_payload_axis_tready_next = 1'b0;
+                    m_eth_payload_axis_tvalid_int = 1'b1;
                     state_next = STATE_IDLE;
                 end else begin
                     state_next = STATE_WRITE_PAYLOAD_LAST;
@@ -646,3 +648,5 @@ always @(posedge clk) begin
 end
 
 endmodule
+
+`resetall

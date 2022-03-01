@@ -43,12 +43,12 @@ class TB(object):
     def __init__(self, dut):
         self.dut = dut
 
-        ports = int(os.getenv("PORTS"))
+        ports = len(dut.axis_demux_inst.m_axis_tvalid)
 
         self.log = logging.getLogger("cocotb.tb")
         self.log.setLevel(logging.DEBUG)
 
-        cocotb.fork(Clock(dut.clk, 10, units="ns").start())
+        cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
 
         self.source = AxiStreamSource(AxiStreamBus.from_prefix(dut, "s_axis"), dut.clk, dut.rst)
         self.sink = [AxiStreamSink(AxiStreamBus.from_prefix(dut, f"m{k:02d}_axis"), dut.clk, dut.rst) for k in range(ports)]
@@ -70,10 +70,10 @@ class TB(object):
         self.dut.rst.setimmediatevalue(0)
         await RisingEdge(self.dut.clk)
         await RisingEdge(self.dut.clk)
-        self.dut.rst <= 1
+        self.dut.rst.value = 1
         await RisingEdge(self.dut.clk)
         await RisingEdge(self.dut.clk)
-        self.dut.rst <= 0
+        self.dut.rst.value = 0
         await RisingEdge(self.dut.clk)
         await RisingEdge(self.dut.clk)
 
@@ -82,7 +82,13 @@ async def run_test(dut, payload_lengths=None, payload_data=None, idle_inserter=N
 
     tb = TB(dut)
 
-    id_count = 2**len(tb.source.bus.tid)
+    id_width = len(tb.source.bus.tid)
+    id_count = 2**id_width
+    id_mask = id_count-1
+
+    dest_width = len(tb.sink[0].bus.tid)
+    dest_count = 2**dest_width
+    dest_mask = dest_count-1
 
     cur_id = 1
 
@@ -100,7 +106,7 @@ async def run_test(dut, payload_lengths=None, payload_data=None, idle_inserter=N
     for test_data in [payload_data(x) for x in payload_lengths()]:
         test_frame = AxiStreamFrame(test_data)
         test_frame.tid = cur_id
-        test_frame.tdest = cur_id
+        test_frame.tdest = cur_id | (port << dest_width)
 
         test_frames.append(test_frame)
         await tb.source.send(test_frame)
@@ -112,7 +118,7 @@ async def run_test(dut, payload_lengths=None, payload_data=None, idle_inserter=N
 
         assert rx_frame.tdata == test_frame.tdata
         assert rx_frame.tid == test_frame.tid
-        assert rx_frame.tdest == test_frame.tdest
+        assert rx_frame.tdest == (test_frame.tdest & dest_mask)
         assert not rx_frame.tuser
 
     assert tb.sink[port].empty()
@@ -137,7 +143,7 @@ def incrementing_payload(length):
 
 if cocotb.SIM_NAME:
 
-    ports = int(os.getenv("PORTS"))
+    ports = len(cocotb.top.axis_demux_inst.m_axis_tvalid)
 
     factory = TestFactory(run_test)
     factory.add_option("payload_lengths", [size_list])
@@ -154,9 +160,10 @@ tests_dir = os.path.dirname(__file__)
 rtl_dir = os.path.abspath(os.path.join(tests_dir, '..', '..', 'rtl'))
 
 
+@pytest.mark.parametrize("tdest_route", [0, 1])
 @pytest.mark.parametrize("data_width", [8, 16, 32])
 @pytest.mark.parametrize("ports", [4])
-def test_axis_demux(request, ports, data_width):
+def test_axis_demux(request, ports, data_width, tdest_route):
     dut = "axis_demux"
     wrapper = f"{dut}_wrap_{ports}"
     module = os.path.splitext(os.path.basename(__file__))[0]
@@ -183,9 +190,11 @@ def test_axis_demux(request, ports, data_width):
     parameters['ID_ENABLE'] = 1
     parameters['ID_WIDTH'] = 8
     parameters['DEST_ENABLE'] = 1
-    parameters['DEST_WIDTH'] = 8
+    parameters['M_DEST_WIDTH'] = 8
+    parameters['S_DEST_WIDTH'] = parameters['M_DEST_WIDTH'] + (ports-1).bit_length()
     parameters['USER_ENABLE'] = 1
     parameters['USER_WIDTH'] = 1
+    parameters['TDEST_ROUTE'] = tdest_route
 
     extra_env = {f'PARAM_{k}': str(v) for k, v in parameters.items()}
 

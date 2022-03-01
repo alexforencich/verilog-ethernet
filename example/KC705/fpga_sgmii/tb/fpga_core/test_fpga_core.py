@@ -45,8 +45,8 @@ class TB:
         self.log = SimLog("cocotb.tb")
         self.log.setLevel(logging.DEBUG)
 
-        cocotb.fork(Clock(dut.clk, 6.4, units="ns").start())
-        cocotb.fork(Clock(dut.phy_gmii_clk, 8, units="ns").start())
+        cocotb.start_soon(Clock(dut.clk, 6.4, units="ns").start())
+        cocotb.start_soon(Clock(dut.phy_gmii_clk, 8, units="ns").start())
 
         self.gmii_source = GmiiSource(dut.phy_gmii_rxd, dut.phy_gmii_rx_er, dut.phy_gmii_rx_dv,
             dut.phy_gmii_clk, dut.phy_gmii_rst, dut.phy_gmii_clk_en)

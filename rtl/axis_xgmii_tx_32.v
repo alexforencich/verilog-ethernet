@@ -24,7 +24,9 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
+`resetall
 `timescale 1ns / 1ps
+`default_nettype none
 
 /*
  * AXI4-Stream XGMII frame transmitter (AXI in, XGMII out)
@@ -571,6 +573,34 @@ always @* begin
 end
 
 always @(posedge clk) begin
+    state_reg <= state_next;
+
+    frame_ptr_reg <= frame_ptr_next;
+
+    ifg_count_reg <= ifg_count_next;
+    deficit_idle_count_reg <= deficit_idle_count_next;
+
+    s_tdata_reg <= s_tdata_next;
+    s_tkeep_reg <= s_tkeep_next;
+
+    s_axis_tready_reg <= s_axis_tready_next;
+
+    m_axis_ptp_ts_reg <= m_axis_ptp_ts_next;
+    m_axis_ptp_ts_tag_reg <= m_axis_ptp_ts_tag_next;
+    m_axis_ptp_ts_valid_reg <= m_axis_ptp_ts_valid_next;
+
+    if (reset_crc) begin
+        crc_state <= 32'hFFFFFFFF;
+    end else if (update_crc) begin
+        crc_state <= crc_next3;
+    end
+
+    xgmii_txd_reg <= xgmii_txd_next;
+    xgmii_txc_reg <= xgmii_txc_next;
+
+    start_packet_reg <= start_packet_next;
+    error_underflow_reg <= error_underflow_next;
+
     if (rst) begin
         state_reg <= STATE_IDLE;
 
@@ -590,37 +620,9 @@ always @(posedge clk) begin
         error_underflow_reg <= 1'b0;
 
         crc_state <= 32'hFFFFFFFF;
-    end else begin
-        state_reg <= state_next;
-
-        frame_ptr_reg <= frame_ptr_next;
-
-        ifg_count_reg <= ifg_count_next;
-        deficit_idle_count_reg <= deficit_idle_count_next;
-
-        s_axis_tready_reg <= s_axis_tready_next;
-    
-        m_axis_ptp_ts_valid_reg <= m_axis_ptp_ts_valid_next;
-
-        xgmii_txd_reg <= xgmii_txd_next;
-        xgmii_txc_reg <= xgmii_txc_next;
-
-        start_packet_reg <= start_packet_next;
-        error_underflow_reg <= error_underflow_next;
-
-        // datapath
-        if (reset_crc) begin
-            crc_state <= 32'hFFFFFFFF;
-        end else if (update_crc) begin
-            crc_state <= crc_next3;
-        end
     end
-
-    s_tdata_reg <= s_tdata_next;
-    s_tkeep_reg <= s_tkeep_next;
-
-    m_axis_ptp_ts_reg <= m_axis_ptp_ts_next;
-    m_axis_ptp_ts_tag_reg <= m_axis_ptp_ts_tag_next;
 end
 
 endmodule
+
+`resetall

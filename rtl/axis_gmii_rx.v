@@ -24,7 +24,9 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
+`resetall
 `timescale 1ns / 1ps
+`default_nettype none
 
 /*
  * AXI4-Stream GMII frame receiver (GMII in, AXI out)
@@ -242,6 +244,80 @@ always @* begin
 end
 
 always @(posedge clk) begin
+    state_reg <= state_next;
+
+    ptp_ts_reg <= ptp_ts_next;
+
+    m_axis_tdata_reg <= m_axis_tdata_next;
+    m_axis_tvalid_reg <= m_axis_tvalid_next;
+    m_axis_tlast_reg <= m_axis_tlast_next;
+    m_axis_tuser_reg <= m_axis_tuser_next;
+
+    if (clk_enable) begin
+        if (mii_select) begin
+            mii_odd <= !mii_odd;
+
+            if (mii_locked) begin
+                mii_locked <= gmii_rx_dv;
+            end else if (gmii_rx_dv && {gmii_rxd[3:0], gmii_rxd_d0[7:4]} == ETH_SFD) begin
+                mii_locked <= 1'b1;
+                mii_odd <= 1'b1;
+            end
+
+            gmii_rxd_d0 <= {gmii_rxd[3:0], gmii_rxd_d0[7:4]};
+
+            if (mii_odd) begin
+                gmii_rxd_d1 <= gmii_rxd_d0;
+                gmii_rxd_d2 <= gmii_rxd_d1;
+                gmii_rxd_d3 <= gmii_rxd_d2;
+                gmii_rxd_d4 <= gmii_rxd_d3;
+
+                gmii_rx_dv_d0 <= gmii_rx_dv & gmii_rx_dv_d0;
+                gmii_rx_dv_d1 <= gmii_rx_dv_d0 & gmii_rx_dv;
+                gmii_rx_dv_d2 <= gmii_rx_dv_d1 & gmii_rx_dv;
+                gmii_rx_dv_d3 <= gmii_rx_dv_d2 & gmii_rx_dv;
+                gmii_rx_dv_d4 <= gmii_rx_dv_d3 & gmii_rx_dv;
+
+                gmii_rx_er_d0 <= gmii_rx_er | gmii_rx_er_d0;
+                gmii_rx_er_d1 <= gmii_rx_er_d0;
+                gmii_rx_er_d2 <= gmii_rx_er_d1;
+                gmii_rx_er_d3 <= gmii_rx_er_d2;
+                gmii_rx_er_d4 <= gmii_rx_er_d3;
+            end else begin
+                gmii_rx_dv_d0 <= gmii_rx_dv;
+                gmii_rx_er_d0 <= gmii_rx_er;
+            end
+        end else begin
+            gmii_rxd_d0 <= gmii_rxd;
+            gmii_rxd_d1 <= gmii_rxd_d0;
+            gmii_rxd_d2 <= gmii_rxd_d1;
+            gmii_rxd_d3 <= gmii_rxd_d2;
+            gmii_rxd_d4 <= gmii_rxd_d3;
+
+            gmii_rx_dv_d0 <= gmii_rx_dv;
+            gmii_rx_dv_d1 <= gmii_rx_dv_d0 & gmii_rx_dv;
+            gmii_rx_dv_d2 <= gmii_rx_dv_d1 & gmii_rx_dv;
+            gmii_rx_dv_d3 <= gmii_rx_dv_d2 & gmii_rx_dv;
+            gmii_rx_dv_d4 <= gmii_rx_dv_d3 & gmii_rx_dv;
+
+            gmii_rx_er_d0 <= gmii_rx_er;
+            gmii_rx_er_d1 <= gmii_rx_er_d0;
+            gmii_rx_er_d2 <= gmii_rx_er_d1;
+            gmii_rx_er_d3 <= gmii_rx_er_d2;
+            gmii_rx_er_d4 <= gmii_rx_er_d3;
+        end
+    end
+
+    if (reset_crc) begin
+        crc_state <= 32'hFFFFFFFF;
+    end else if (update_crc) begin
+        crc_state <= crc_next;
+    end
+
+    start_packet_reg <= start_packet_next;
+    error_bad_frame_reg <= error_bad_frame_next;
+    error_bad_fcs_reg <= error_bad_fcs_next;
+
     if (rst) begin
         state_reg <= STATE_IDLE;
 
@@ -261,91 +337,9 @@ always @(posedge clk) begin
         gmii_rx_dv_d2 <= 1'b0;
         gmii_rx_dv_d3 <= 1'b0;
         gmii_rx_dv_d4 <= 1'b0;
-    end else begin
-        state_reg <= state_next;
-
-        m_axis_tvalid_reg <= m_axis_tvalid_next;
-
-        start_packet_reg <= start_packet_next;
-        error_bad_frame_reg <= error_bad_frame_next;
-        error_bad_fcs_reg <= error_bad_fcs_next;
-
-        // datapath
-        if (reset_crc) begin
-            crc_state <= 32'hFFFFFFFF;
-        end else if (update_crc) begin
-            crc_state <= crc_next;
-        end
-
-        if (clk_enable) begin
-            if (mii_select) begin
-                mii_odd <= !mii_odd;
-
-                if (mii_locked) begin
-                    mii_locked <= gmii_rx_dv;
-                end else if (gmii_rx_dv && {gmii_rxd[3:0], gmii_rxd_d0[7:4]} == ETH_SFD) begin
-                    mii_locked <= 1'b1;
-                    mii_odd <= 1'b1;
-                end
-
-                if (mii_odd) begin
-                    gmii_rx_dv_d0 <= gmii_rx_dv & gmii_rx_dv_d0;
-                    gmii_rx_dv_d1 <= gmii_rx_dv_d0 & gmii_rx_dv;
-                    gmii_rx_dv_d2 <= gmii_rx_dv_d1 & gmii_rx_dv;
-                    gmii_rx_dv_d3 <= gmii_rx_dv_d2 & gmii_rx_dv;
-                    gmii_rx_dv_d4 <= gmii_rx_dv_d3 & gmii_rx_dv;
-                end else begin
-                    gmii_rx_dv_d0 <= gmii_rx_dv;
-                end
-            end else begin
-                gmii_rx_dv_d0 <= gmii_rx_dv;
-                gmii_rx_dv_d1 <= gmii_rx_dv_d0 & gmii_rx_dv;
-                gmii_rx_dv_d2 <= gmii_rx_dv_d1 & gmii_rx_dv;
-                gmii_rx_dv_d3 <= gmii_rx_dv_d2 & gmii_rx_dv;
-                gmii_rx_dv_d4 <= gmii_rx_dv_d3 & gmii_rx_dv;
-            end
-        end
-    end
-
-    ptp_ts_reg <= ptp_ts_next;
-
-    m_axis_tdata_reg <= m_axis_tdata_next;
-    m_axis_tlast_reg <= m_axis_tlast_next;
-    m_axis_tuser_reg <= m_axis_tuser_next;
-
-    // delay input
-    if (clk_enable) begin
-        if (mii_select) begin
-            gmii_rxd_d0 <= {gmii_rxd[3:0], gmii_rxd_d0[7:4]};
-
-            if (mii_odd) begin
-                gmii_rxd_d1 <= gmii_rxd_d0;
-                gmii_rxd_d2 <= gmii_rxd_d1;
-                gmii_rxd_d3 <= gmii_rxd_d2;
-                gmii_rxd_d4 <= gmii_rxd_d3;
-
-                gmii_rx_er_d0 <= gmii_rx_er | gmii_rx_er_d0;
-                gmii_rx_er_d1 <= gmii_rx_er_d0;
-                gmii_rx_er_d2 <= gmii_rx_er_d1;
-                gmii_rx_er_d3 <= gmii_rx_er_d2;
-                gmii_rx_er_d4 <= gmii_rx_er_d3;
-            end else begin
-                gmii_rx_er_d0 <= gmii_rx_er;
-            end
-        end else begin
-            gmii_rxd_d0 <= gmii_rxd;
-            gmii_rxd_d1 <= gmii_rxd_d0;
-            gmii_rxd_d2 <= gmii_rxd_d1;
-            gmii_rxd_d3 <= gmii_rxd_d2;
-            gmii_rxd_d4 <= gmii_rxd_d3;
-
-            gmii_rx_er_d0 <= gmii_rx_er;
-            gmii_rx_er_d1 <= gmii_rx_er_d0;
-            gmii_rx_er_d2 <= gmii_rx_er_d1;
-            gmii_rx_er_d3 <= gmii_rx_er_d2;
-            gmii_rx_er_d4 <= gmii_rx_er_d3;
-        end
     end
 end
 
 endmodule
+
+`resetall

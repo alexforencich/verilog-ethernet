@@ -22,6 +22,12 @@ THE SOFTWARE.
 
 */
 
+// Language: Verilog 2001
+
+`resetall
+`timescale 1 ns / 1 ps
+`default_nettype none
+
 module eth_gth_phy_quad (
     /*
      * Clock and reset
@@ -567,3 +573,5 @@ mgmt_arb_inst
 );
 
 endmodule
+
+`resetall

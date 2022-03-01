@@ -55,7 +55,7 @@ class TB:
         dut.gtx_clk.setimmediatevalue(0)
         dut.gtx_clk90.setimmediatevalue(0)
 
-        cocotb.fork(self._run_gtx_clk())
+        cocotb.start_soon(self._run_gtx_clk())
 
     async def reset(self):
         self.dut.gtx_rst.setimmediatevalue(0)

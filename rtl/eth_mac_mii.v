@@ -24,7 +24,9 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
+`resetall
 `timescale 1ns / 1ps
+`default_nettype none
 
 /*
  * 10M/100M Ethernet MAC with MII interface
@@ -164,3 +166,5 @@ eth_mac_1g_inst (
 );
 
 endmodule
+
+`resetall

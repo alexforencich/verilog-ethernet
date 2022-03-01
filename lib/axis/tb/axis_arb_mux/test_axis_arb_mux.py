@@ -49,7 +49,7 @@ class TB(object):
         self.log = logging.getLogger("cocotb.tb")
         self.log.setLevel(logging.DEBUG)
 
-        cocotb.fork(Clock(dut.clk, 10, units="ns").start())
+        cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
 
         self.source = [AxiStreamSource(AxiStreamBus.from_prefix(dut, f"s{k:02d}_axis"), dut.clk, dut.rst) for k in range(ports)]
         self.sink = AxiStreamSink(AxiStreamBus.from_prefix(dut, "m_axis"), dut.clk, dut.rst)
@@ -67,10 +67,10 @@ class TB(object):
         self.dut.rst.setimmediatevalue(0)
         await RisingEdge(self.dut.clk)
         await RisingEdge(self.dut.clk)
-        self.dut.rst <= 1
+        self.dut.rst.value = 1
         await RisingEdge(self.dut.clk)
         await RisingEdge(self.dut.clk)
-        self.dut.rst <= 0
+        self.dut.rst.value = 0
         await RisingEdge(self.dut.clk)
         await RisingEdge(self.dut.clk)
 
@@ -79,7 +79,15 @@ async def run_test(dut, payload_lengths=None, payload_data=None, idle_inserter=N
 
     tb = TB(dut)
 
-    id_count = 2**len(tb.source[port].bus.tid)
+    id_width = len(tb.source[0].bus.tid)
+    id_count = 2**id_width
+    id_mask = id_count-1
+
+    src_width = (len(tb.source)-1).bit_length()
+    src_mask = 2**src_width-1 if src_width else 0
+    src_shift = id_width-src_width
+    max_count = 2**src_shift
+    count_mask = max_count-1
 
     cur_id = 1
 
@@ -92,19 +100,21 @@ async def run_test(dut, payload_lengths=None, payload_data=None, idle_inserter=N
 
     for test_data in [payload_data(x) for x in payload_lengths()]:
         test_frame = AxiStreamFrame(test_data)
-        test_frame.tid = cur_id
+        test_frame.tid = cur_id | (port << src_shift)
         test_frame.tdest = cur_id
 
         test_frames.append(test_frame)
         await tb.source[port].send(test_frame)
 
-        cur_id = (cur_id + 1) % id_count
+        cur_id = (cur_id + 1) % max_count
 
     for test_frame in test_frames:
         rx_frame = await tb.sink.recv()
 
         assert rx_frame.tdata == test_frame.tdata
-        assert rx_frame.tid == test_frame.tid
+        assert (rx_frame.tid & id_mask) == test_frame.tid
+        assert ((rx_frame.tid >> src_shift) & src_mask) == port
+        assert (rx_frame.tid >> id_width) == port
         assert rx_frame.tdest == test_frame.tdest
         assert not rx_frame.tuser
 
@@ -140,7 +150,15 @@ async def run_arb_test(dut):
     tb = TB(dut)
 
     byte_lanes = tb.source[0].byte_lanes
-    id_count = 2**len(tb.source[0].bus.tid)
+    id_width = len(tb.source[0].bus.tid)
+    id_count = 2**id_width
+    id_mask = id_count-1
+
+    src_width = (len(tb.source)-1).bit_length()
+    src_mask = 2**src_width-1 if src_width else 0
+    src_shift = id_width-src_width
+    max_count = 2**src_shift
+    count_mask = max_count-1
 
     cur_id = 1
 
@@ -153,29 +171,34 @@ async def run_arb_test(dut):
 
     for k in range(5):
         test_frame = AxiStreamFrame(test_data, tx_complete=Event())
-        test_frame.tid = cur_id
+
+        src_ind = 0
 
         if k == 0:
-            test_frame.tdest = 0
+            src_ind = 0
         elif k == 4:
             await test_frames[1].tx_complete.wait()
             for j in range(8):
                 await RisingEdge(dut.clk)
-            test_frame.tdest = 0
+            src_ind = 0
         else:
-            test_frame.tdest = 1
+            src_ind = 1
+
+        test_frame.tid = cur_id | (src_ind << src_shift)
+        test_frame.tdest = 0
 
         test_frames.append(test_frame)
-        await tb.source[test_frame.tdest].send(test_frame)
+        await tb.source[src_ind].send(test_frame)
 
-        cur_id = (cur_id + 1) % id_count
+        cur_id = (cur_id + 1) % max_count
 
     for k in [0, 1, 2, 4, 3]:
         test_frame = test_frames[k]
         rx_frame = await tb.sink.recv()
 
         assert rx_frame.tdata == test_frame.tdata
-        assert rx_frame.tid == test_frame.tid
+        assert (rx_frame.tid & id_mask) == test_frame.tid
+        assert ((rx_frame.tid >> src_shift) & src_mask) == (rx_frame.tid >> id_width)
         assert rx_frame.tdest == test_frame.tdest
         assert not rx_frame.tuser
 
@@ -190,7 +213,15 @@ async def run_stress_test(dut, idle_inserter=None, backpressure_inserter=None):
     tb = TB(dut)
 
     byte_lanes = tb.source[0].byte_lanes
-    id_count = 2**len(tb.source[0].bus.tid)
+    id_width = len(tb.source[0].bus.tid)
+    id_count = 2**id_width
+    id_mask = id_count-1
+
+    src_width = (len(tb.source)-1).bit_length()
+    src_mask = 2**src_width-1 if src_width else 0
+    src_shift = id_width-src_width
+    max_count = 2**src_shift
+    count_mask = max_count-1
 
     cur_id = 1
 
@@ -206,13 +237,13 @@ async def run_stress_test(dut, idle_inserter=None, backpressure_inserter=None):
             length = random.randint(1, byte_lanes*16)
             test_data = bytearray(itertools.islice(itertools.cycle(range(256)), length))
             test_frame = AxiStreamFrame(test_data)
-            test_frame.tid = p
+            test_frame.tid = cur_id | (p << src_shift)
             test_frame.tdest = cur_id
 
             test_frames[p].append(test_frame)
             await tb.source[p].send(test_frame)
 
-            cur_id = (cur_id + 1) % id_count
+            cur_id = (cur_id + 1) % max_count
 
     while any(test_frames):
         rx_frame = await tb.sink.recv()
@@ -220,14 +251,15 @@ async def run_stress_test(dut, idle_inserter=None, backpressure_inserter=None):
         test_frame = None
 
         for lst in test_frames:
-            if lst and lst[0].tid == rx_frame.tid:
+            if lst and lst[0].tid == (rx_frame.tid & id_mask):
                 test_frame = lst.pop(0)
                 break
 
         assert test_frame is not None
 
         assert rx_frame.tdata == test_frame.tdata
-        assert rx_frame.tid == test_frame.tid
+        assert (rx_frame.tid & id_mask) == test_frame.tid
+        assert ((rx_frame.tid >> src_shift) & src_mask) == (rx_frame.tid >> id_width)
         assert rx_frame.tdest == test_frame.tdest
         assert not rx_frame.tuser
 
@@ -310,22 +342,24 @@ def test_axis_arb_mux(request, ports, data_width, round_robin):
 
     parameters = {}
 
-    parameters['PORTS'] = ports
-
     parameters['DATA_WIDTH'] = data_width
     parameters['KEEP_ENABLE'] = int(parameters['DATA_WIDTH'] > 8)
     parameters['KEEP_WIDTH'] = parameters['DATA_WIDTH'] // 8
     parameters['ID_ENABLE'] = 1
-    parameters['ID_WIDTH'] = 8
+    parameters['S_ID_WIDTH'] = 8
+    parameters['M_ID_WIDTH'] = parameters['S_ID_WIDTH'] + (ports-1).bit_length()
     parameters['DEST_ENABLE'] = 1
     parameters['DEST_WIDTH'] = 8
     parameters['USER_ENABLE'] = 1
     parameters['USER_WIDTH'] = 1
     parameters['LAST_ENABLE'] = 1
+    parameters['UPDATE_TID'] = 1
     parameters['ARB_TYPE_ROUND_ROBIN'] = round_robin
     parameters['ARB_LSB_HIGH_PRIORITY'] = 1
 
     extra_env = {f'PARAM_{k}': str(v) for k, v in parameters.items()}
+
+    extra_env['PORTS'] = str(ports)
 
     sim_build = os.path.join(tests_dir, "sim_build",
         request.node.name.replace('[', '-').replace(']', ''))
