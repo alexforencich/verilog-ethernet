@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014-2018 Alex Forencich
+Copyright (c) 2014-2021 Alex Forencich
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,9 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
+`resetall
 `timescale 1ns / 1ps
+`default_nettype none
 
 /*
  * FPGA core logic
@@ -38,16 +40,16 @@ module fpga_core #
      * Clock: 156.25MHz
      * Synchronous reset
      */
-    input  wire       clk,
-    input  wire       rst,
+    input  wire        clk,
+    input  wire        rst,
 
     /*
      * GPIO
      */
-    output wire [7:0] led_red,
-    output wire [7:0] led_green,
-    output wire [1:0] led_bmc,
-    output wire [1:0] led_exp,
+    output wire [7:0]  led_red,
+    output wire [7:0]  led_green,
+    output wire [1:0]  led_bmc,
+    output wire [1:0]  led_exp,
 
     /*
      * Ethernet: QSFP28
@@ -357,8 +359,6 @@ assign led_green = led_reg;
 assign led_bmc = 2'b00;
 assign led_exp = 2'b11;
 
-assign phy_reset_n = !rst;
-
 assign qsfp_0_txd_1 = 64'h0707070707070707;
 assign qsfp_0_txc_1 = 8'hff;
 assign qsfp_0_txd_2 = 64'h0707070707070707;
@@ -662,3 +662,5 @@ udp_payload_fifo (
 );
 
 endmodule
+
+`resetall

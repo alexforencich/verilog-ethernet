@@ -26,12 +26,12 @@ proc constrain_axis_async_fifo_inst { inst } {
     # reset synchronization
     set_false_path -from * -to [get_registers "$inst|s_rst_sync*_reg $inst|m_rst_sync*_reg"]
 
-    if {[get_collection_size [get_registers -nowarn "$inst|s_rst_sync2_reg"]]} {
-        set_data_delay -from [get_registers "$inst|s_rst_sync2_reg"] -to [get_registers "$inst|s_rst_sync3_reg"] -override -get_value_from_clock_period min_clock_period -value_multiplier 0.8
+    if {[get_collection_size [get_registers -nowarn "$inst|s_rst_sync1_reg"]]} {
+        set_data_delay -from [get_registers "$inst|s_rst_sync1_reg"] -to [get_registers "$inst|s_rst_sync2_reg"] -override -get_value_from_clock_period min_clock_period -value_multiplier 0.8
     }
 
-    if {[get_collection_size [get_registers -nowarn "$inst|m_rst_sync2_reg"]]} {
-        set_data_delay -from [get_registers "$inst|m_rst_sync2_reg"] -to [get_registers "$inst|m_rst_sync3_reg"] -override -get_value_from_clock_period min_clock_period -value_multiplier 0.8
+    if {[get_collection_size [get_registers -nowarn "$inst|m_rst_sync1_reg"]]} {
+        set_data_delay -from [get_registers "$inst|m_rst_sync1_reg"] -to [get_registers "$inst|m_rst_sync2_reg"] -override -get_value_from_clock_period min_clock_period -value_multiplier 0.8
     }
 
     # pointer synchronization

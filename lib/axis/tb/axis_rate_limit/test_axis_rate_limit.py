@@ -45,7 +45,7 @@ class TB(object):
         self.log = logging.getLogger("cocotb.tb")
         self.log.setLevel(logging.DEBUG)
 
-        cocotb.fork(Clock(dut.clk, 10, units="ns").start())
+        cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
 
         self.source = AxiStreamSource(AxiStreamBus.from_prefix(dut, "s_axis"), dut.clk, dut.rst)
         self.sink = AxiStreamSink(AxiStreamBus.from_prefix(dut, "m_axis"), dut.clk, dut.rst)
@@ -66,10 +66,10 @@ class TB(object):
         self.dut.rst.setimmediatevalue(0)
         await RisingEdge(self.dut.clk)
         await RisingEdge(self.dut.clk)
-        self.dut.rst <= 1
+        self.dut.rst.value = 1
         await RisingEdge(self.dut.clk)
         await RisingEdge(self.dut.clk)
-        self.dut.rst <= 0
+        self.dut.rst.value = 0
         await RisingEdge(self.dut.clk)
         await RisingEdge(self.dut.clk)
 
@@ -87,8 +87,8 @@ async def run_test(dut, payload_lengths=None, payload_data=None, idle_inserter=N
     tb.set_idle_generator(idle_inserter)
     tb.set_backpressure_generator(backpressure_inserter)
 
-    dut.rate_num <= rate[0]
-    dut.rate_denom <= rate[1]
+    dut.rate_num.value = rate[0]
+    dut.rate_denom.value = rate[1]
     await RisingEdge(dut.clk)
 
     test_frames = []

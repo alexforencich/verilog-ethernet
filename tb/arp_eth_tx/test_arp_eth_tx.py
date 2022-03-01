@@ -59,7 +59,7 @@ class TB:
         self.log = logging.getLogger("cocotb.tb")
         self.log.setLevel(logging.DEBUG)
 
-        cocotb.fork(Clock(dut.clk, 8, units="ns").start())
+        cocotb.start_soon(Clock(dut.clk, 8, units="ns").start())
 
         self.source = ArpHdrSource(ArpHdrBus.from_prefix(dut, "s"), dut.clk, dut.rst)
 

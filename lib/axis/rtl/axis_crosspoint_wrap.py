@@ -67,7 +67,9 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
+`resetall
 `timescale 1ns / 1ps
+`default_nettype none
 
 /*
  * AXI4-Stream {{m}}x{{n}} crosspoint (wrapper)
@@ -169,6 +171,8 @@ axis_crosspoint_inst (
 );
 
 endmodule
+
+`resetall
 
 """)
 

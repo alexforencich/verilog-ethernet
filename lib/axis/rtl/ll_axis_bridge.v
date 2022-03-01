@@ -24,7 +24,9 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
+`resetall
 `timescale 1ns / 1ps
+`default_nettype none
 
 /*
  * LocalLink to AXI4-Stream bridge
@@ -62,3 +64,5 @@ assign m_axis_tlast = !ll_eof_in_n;
 assign ll_dst_rdy_out_n = !m_axis_tready;
 
 endmodule
+
+`resetall

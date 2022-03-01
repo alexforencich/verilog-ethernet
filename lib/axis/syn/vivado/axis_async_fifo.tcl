@@ -33,21 +33,34 @@ foreach fifo_inst [get_cells -hier -filter {(ORIG_REF_NAME == axis_async_fifo ||
     set min_clk_period [expr $read_clk_period < $write_clk_period ? $read_clk_period : $write_clk_period]
 
     # reset synchronization
-    set reset_ffs [get_cells -quiet -hier -regexp ".*/(s|m)_rst_sync\[123\]_reg_reg" -filter "PARENT == $fifo_inst"]
+    set reset_ffs [get_cells -quiet -hier -regexp ".*/s_rst_sync\[23\]_reg_reg" -filter "PARENT == $fifo_inst"]
 
     if {[llength $reset_ffs]} {
         set_property ASYNC_REG TRUE $reset_ffs
-        set_false_path -to [get_pins -of_objects $reset_ffs -filter {IS_PRESET || IS_RESET}]
+
+        # hunt down source
+        set dest [get_cells $fifo_inst/s_rst_sync2_reg_reg]
+        set dest_pins [get_pins -of_objects $dest -filter {REF_PIN_NAME == D}]
+        set net [get_nets -segments -of_objects $dest_pins]
+        set source_pins [get_pins -of_objects $net -filter {IS_LEAF && DIRECTION == OUT}]
+        set source [get_cells -of_objects $source_pins]
+
+        set_max_delay -from $source -to $dest -datapath_only $read_clk_period
     }
 
-    if {[llength [get_cells -quiet $fifo_inst/s_rst_sync2_reg_reg]]} {
-        set_false_path -to [get_pins $fifo_inst/s_rst_sync2_reg_reg/D]
-        set_max_delay  -from [get_cells $fifo_inst/s_rst_sync2_reg_reg] -to [get_cells $fifo_inst/s_rst_sync3_reg_reg] $min_clk_period
-    }
+    set reset_ffs [get_cells -quiet -hier -regexp ".*/m_rst_sync\[23\]_reg_reg" -filter "PARENT == $fifo_inst"]
 
-    if {[llength [get_cells -quiet $fifo_inst/m_rst_sync2_reg_reg]]} {
-        set_false_path -to [get_pins $fifo_inst/m_rst_sync2_reg_reg/D]
-        set_max_delay  -from [get_cells $fifo_inst/m_rst_sync2_reg_reg] -to [get_cells $fifo_inst/m_rst_sync3_reg_reg] $min_clk_period
+    if {[llength $reset_ffs]} {
+        set_property ASYNC_REG TRUE $reset_ffs
+
+        # hunt down source
+        set dest [get_cells $fifo_inst/m_rst_sync2_reg_reg]
+        set dest_pins [get_pins -of_objects $dest -filter {REF_PIN_NAME == D}]
+        set net [get_nets -segments -of_objects $dest_pins]
+        set source_pins [get_pins -of_objects $net -filter {IS_LEAF && DIRECTION == OUT}]
+        set source [get_cells -of_objects $source_pins]
+
+        set_max_delay -from $source -to $dest -datapath_only $write_clk_period
     }
 
     # pointer synchronization

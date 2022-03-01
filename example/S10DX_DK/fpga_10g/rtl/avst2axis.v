@@ -24,7 +24,9 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
+`resetall
 `timescale 1ns / 1ps
+`default_nettype none
 
 /*
  * Avalon-ST to AXI stream
@@ -81,3 +83,5 @@ assign axis_tlast = avst_endofpacket;
 assign axis_tuser = avst_error;
 
 endmodule
+
+`resetall

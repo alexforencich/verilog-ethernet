@@ -24,7 +24,9 @@ THE SOFTWARE.
 
 // Language: Verilog-2001
 
+`resetall
 `timescale 1 ns / 1 ps
+`default_nettype none
 
 /*
  * Synchronizes an asyncronous signal to a given clock by using a pipeline of
@@ -56,3 +58,5 @@ always @(posedge clk) begin
 end
 
 endmodule
+
+`resetall

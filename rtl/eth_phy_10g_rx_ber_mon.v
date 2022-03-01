@@ -24,7 +24,9 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
+`resetall
 `timescale 1ns / 1ps
+`default_nettype none
 
 /*
  * 10G Ethernet PHY BER monitor
@@ -63,7 +65,7 @@ localparam [1:0]
     SYNC_DATA = 2'b10,
     SYNC_CTRL = 2'b01;
 
-reg [COUNT_WIDTH-1:0] time_count_reg = 0, time_count_next;
+reg [COUNT_WIDTH-1:0] time_count_reg = COUNT_125US, time_count_next;
 reg [3:0] ber_count_reg = 4'd0, ber_count_next;
 
 reg rx_high_ber_reg = 1'b0, rx_high_ber_next;
@@ -106,15 +108,17 @@ always @* begin
 end
 
 always @(posedge clk) begin
+    time_count_reg <= time_count_next;
+    ber_count_reg <= ber_count_next;
+    rx_high_ber_reg <= rx_high_ber_next;
+
     if (rst) begin
         time_count_reg <= COUNT_125US;
         ber_count_reg <= 4'd0;
         rx_high_ber_reg <= 1'b0;
-    end else begin
-        time_count_reg <= time_count_next;
-        ber_count_reg <= ber_count_next;
-        rx_high_ber_reg <= rx_high_ber_next;
     end
 end
 
 endmodule
+
+`resetall

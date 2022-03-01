@@ -23,8 +23,10 @@ THE SOFTWARE.
 */
 
 // Language: Verilog 2001
-`default_nettype none   //do not allow undeclared wires
+
+`resetall
 `timescale 1ns / 1ps
+`default_nettype none
 
 /*
  * AXI4-Stream FIFO
@@ -159,6 +161,7 @@ reg [ADDR_WIDTH:0] wr_ptr_reg = {ADDR_WIDTH+1{1'b0}};
 reg [ADDR_WIDTH:0] wr_ptr_cur_reg = {ADDR_WIDTH+1{1'b0}};
 reg [ADDR_WIDTH:0] rd_ptr_reg = {ADDR_WIDTH+1{1'b0}};
 
+(* ramstyle = "no_rw_check" *)
 reg [WIDTH-1:0] mem[(2**ADDR_WIDTH)-1:0];
 reg [WIDTH-1:0] mem_read_data_reg;
 reg mem_read_data_valid_reg = 1'b0;
@@ -301,3 +304,5 @@ always @(posedge clk) begin
 end
 
 endmodule
+
+`resetall

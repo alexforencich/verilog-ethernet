@@ -24,7 +24,9 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
+`resetall
 `timescale 1ns / 1ps
+`default_nettype none
 
 /*
  * FPGA top-level module
@@ -218,6 +220,13 @@ debounce_switch_inst (
 );
 
 // I2C
+wire i2c_scl_i;
+wire i2c_scl_o;
+wire i2c_scl_t;
+wire i2c_sda_i;
+wire i2c_sda_o;
+wire i2c_sda_t;
+
 assign i2c_scl_i = i2c_scl;
 assign i2c_scl = i2c_scl_t ? 1'bz : i2c_scl_o;
 assign i2c_sda_i = i2c_sda;
@@ -705,3 +714,5 @@ core_inst (
 );
 
 endmodule
+
+`resetall

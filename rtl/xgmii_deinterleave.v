@@ -24,7 +24,9 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
+`resetall
 `timescale 1ns / 1ps
+`default_nettype none
 
 /*
  * XGMII control/data deinterleave
@@ -55,3 +57,5 @@ assign output_xgmii_d[63:56] = input_xgmii_dc[70:63];
 assign output_xgmii_c[7] = input_xgmii_dc[71];
 
 endmodule
+
+`resetall

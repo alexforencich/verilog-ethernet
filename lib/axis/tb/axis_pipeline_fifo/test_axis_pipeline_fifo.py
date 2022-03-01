@@ -46,7 +46,7 @@ class TB(object):
         self.log = logging.getLogger("cocotb.tb")
         self.log.setLevel(logging.DEBUG)
 
-        cocotb.fork(Clock(dut.clk, 10, units="ns").start())
+        cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
 
         self.source = AxiStreamSource(AxiStreamBus.from_prefix(dut, "s_axis"), dut.clk, dut.rst)
         self.sink = AxiStreamSink(AxiStreamBus.from_prefix(dut, "m_axis"), dut.clk, dut.rst)
@@ -63,10 +63,10 @@ class TB(object):
         self.dut.rst.setimmediatevalue(0)
         await RisingEdge(self.dut.clk)
         await RisingEdge(self.dut.clk)
-        self.dut.rst <= 1
+        self.dut.rst.value = 1
         await RisingEdge(self.dut.clk)
         await RisingEdge(self.dut.clk)
-        self.dut.rst <= 0
+        self.dut.rst.value = 0
         await RisingEdge(self.dut.clk)
         await RisingEdge(self.dut.clk)
 
@@ -124,6 +124,90 @@ async def run_test_tuser_assert(dut):
 
     assert rx_frame.tdata == test_data
     assert rx_frame.tuser
+
+    assert tb.sink.empty()
+
+    await RisingEdge(dut.clk)
+    await RisingEdge(dut.clk)
+
+
+async def run_test_init_sink_pause(dut):
+
+    tb = TB(dut)
+
+    await tb.reset()
+
+    tb.sink.pause = True
+
+    test_data = bytearray(itertools.islice(itertools.cycle(range(256)), 32))
+    test_frame = AxiStreamFrame(test_data)
+    await tb.source.send(test_frame)
+
+    for k in range(64):
+        await RisingEdge(dut.clk)
+
+    tb.sink.pause = False
+
+    rx_frame = await tb.sink.recv()
+
+    assert rx_frame.tdata == test_data
+    assert not rx_frame.tuser
+
+    assert tb.sink.empty()
+
+    await RisingEdge(dut.clk)
+    await RisingEdge(dut.clk)
+
+
+async def run_test_init_sink_pause_reset(dut):
+
+    tb = TB(dut)
+
+    await tb.reset()
+
+    tb.sink.pause = True
+
+    test_data = bytearray(itertools.islice(itertools.cycle(range(256)), 32))
+    test_frame = AxiStreamFrame(test_data)
+    await tb.source.send(test_frame)
+
+    for k in range(64):
+        await RisingEdge(dut.clk)
+
+    await tb.reset()
+
+    tb.sink.pause = False
+
+    for k in range(64):
+        await RisingEdge(dut.clk)
+
+    assert tb.sink.empty()
+
+    await RisingEdge(dut.clk)
+    await RisingEdge(dut.clk)
+
+
+async def run_test_overflow(dut):
+
+    tb = TB(dut)
+
+    await tb.reset()
+
+    tb.sink.pause = True
+
+    test_data = bytearray(itertools.islice(itertools.cycle(range(256)), 2048))
+    test_frame = AxiStreamFrame(test_data)
+    await tb.source.send(test_frame)
+
+    for k in range(2048):
+        await RisingEdge(dut.clk)
+
+    tb.sink.pause = False
+
+    rx_frame = await tb.sink.recv()
+
+    assert rx_frame.tdata == test_data
+    assert not rx_frame.tuser
 
     assert tb.sink.empty()
 
@@ -196,7 +280,13 @@ if cocotb.SIM_NAME:
     factory.add_option("backpressure_inserter", [None, cycle_pause])
     factory.generate_tests()
 
-    for test in [run_test_tuser_assert]:
+    for test in [
+                run_test_tuser_assert,
+                run_test_init_sink_pause,
+                run_test_init_sink_pause_reset,
+                run_test_overflow
+            ]:
+
         factory = TestFactory(test)
         factory.generate_tests()
 

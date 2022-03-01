@@ -24,7 +24,9 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
+`resetall
 `timescale 1ns / 1ps
+`default_nettype none
 
 /*
  * Generic source synchronous DDR output
@@ -117,3 +119,5 @@ end
 endgenerate
 
 endmodule
+
+`resetall

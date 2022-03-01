@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014-2018 Alex Forencich
+Copyright (c) 2014-2021 Alex Forencich
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,9 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
+`resetall
 `timescale 1ns / 1ps
+`default_nettype none
 
 /*
  * FPGA core logic
@@ -637,7 +639,7 @@ axis_switch #(
     .DATA_WIDTH(64),
     .KEEP_WIDTH(8),
     .ID_ENABLE(0),
-    .DEST_WIDTH(2),
+    .S_DEST_WIDTH(2),
     .USER_ENABLE(1),
     .USER_WIDTH(1),
     .M_BASE({2'd2, 2'd1, 2'd0}),
@@ -910,3 +912,5 @@ udp_payload_fifo (
 );
 
 endmodule
+
+`resetall

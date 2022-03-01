@@ -44,9 +44,9 @@ class TB:
         self.log = logging.getLogger("cocotb.tb")
         self.log.setLevel(logging.DEBUG)
 
-        cocotb.fork(Clock(dut.input_clk, 6.4, units="ns").start())
+        cocotb.start_soon(Clock(dut.input_clk, 6.4, units="ns").start())
 
-        cocotb.fork(Clock(dut.sample_clk, 10, units="ns").start())
+        cocotb.start_soon(Clock(dut.sample_clk, 10, units="ns").start())
 
         if len(dut.input_ts) == 64:
             self.ptp_clock = PtpClock(
@@ -86,7 +86,7 @@ class TB:
         if self._clock_cr is not None:
             self._clock_cr.kill()
 
-        self._clock_cr = cocotb.fork(self._run_clock(period))
+        self._clock_cr = cocotb.start_soon(self._run_clock(period))
 
     async def _run_clock(self, period):
         half_period = get_sim_steps(period / 2.0, 'ns')

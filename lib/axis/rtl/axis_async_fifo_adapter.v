@@ -23,8 +23,10 @@ THE SOFTWARE.
 */
 
 // Language: Verilog 2001
-`default_nettype none   //do not allow undeclared wires
+
+`resetall
 `timescale 1ns / 1ps
+`default_nettype none
 
 /*
  * AXI4-Stream asynchronous FIFO with width converter
@@ -321,10 +323,9 @@ axis_async_fifo #(
     .DROP_WHEN_FULL(DROP_WHEN_FULL)
 )
 fifo_inst (
-    // Common reset
-    .async_rst(s_rst | m_rst),
     // AXI input
     .s_clk(s_clk),
+    .s_rst(s_rst),
     .s_axis_tdata(pre_fifo_axis_tdata),
     .s_axis_tkeep(pre_fifo_axis_tkeep),
     .s_axis_tvalid(pre_fifo_axis_tvalid),
@@ -335,6 +336,7 @@ fifo_inst (
     .s_axis_tuser(pre_fifo_axis_tuser),
     // AXI output
     .m_clk(m_clk),
+    .m_rst(m_rst),
     .m_axis_tdata(post_fifo_axis_tdata),
     .m_axis_tkeep(post_fifo_axis_tkeep),
     .m_axis_tvalid(post_fifo_axis_tvalid),
@@ -353,3 +355,5 @@ fifo_inst (
 );
 
 endmodule
+
+`resetall

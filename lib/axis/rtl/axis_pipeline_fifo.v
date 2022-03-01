@@ -24,7 +24,9 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
+`resetall
 `timescale 1ns / 1ps
+`default_nettype none
 
 /*
  * AXI4-Stream pipeline FIFO
@@ -83,7 +85,7 @@ module axis_pipeline_fifo #
     output wire [USER_WIDTH-1:0]  m_axis_tuser
 );
 
-parameter FIFO_ADDR_WIDTH = LENGTH < 2 ? 3 : $clog2(LENGTH*4);
+parameter FIFO_ADDR_WIDTH = LENGTH < 2 ? 3 : $clog2(LENGTH*4+1);
 
 generate
 
@@ -180,17 +182,17 @@ if (LENGTH > 0) begin
     wire out_fifo_full = out_fifo_wr_ptr_reg == (out_fifo_rd_ptr_reg ^ {1'b1, {FIFO_ADDR_WIDTH{1'b0}}});
     wire out_fifo_empty = out_fifo_wr_ptr_reg == out_fifo_rd_ptr_reg;
 
-    (* ram_style = "distributed" *)
+    (* ram_style = "distributed", ramstyle = "no_rw_check, mlab" *)
     reg [DATA_WIDTH-1:0] out_fifo_tdata[2**FIFO_ADDR_WIDTH-1:0];
-    (* ram_style = "distributed" *)
+    (* ram_style = "distributed", ramstyle = "no_rw_check, mlab" *)
     reg [KEEP_WIDTH-1:0] out_fifo_tkeep[2**FIFO_ADDR_WIDTH-1:0];
-    (* ram_style = "distributed" *)
+    (* ram_style = "distributed", ramstyle = "no_rw_check, mlab" *)
     reg                  out_fifo_tlast[2**FIFO_ADDR_WIDTH-1:0];
-    (* ram_style = "distributed" *)
+    (* ram_style = "distributed", ramstyle = "no_rw_check, mlab" *)
     reg [ID_WIDTH-1:0]   out_fifo_tid[2**FIFO_ADDR_WIDTH-1:0];
-    (* ram_style = "distributed" *)
+    (* ram_style = "distributed", ramstyle = "no_rw_check, mlab" *)
     reg [DEST_WIDTH-1:0] out_fifo_tdest[2**FIFO_ADDR_WIDTH-1:0];
-    (* ram_style = "distributed" *)
+    (* ram_style = "distributed", ramstyle = "no_rw_check, mlab" *)
     reg [USER_WIDTH-1:0] out_fifo_tuser[2**FIFO_ADDR_WIDTH-1:0];
 
     assign m_axis_tready_int = !out_fifo_half_full_reg;
@@ -254,3 +256,5 @@ end
 endgenerate
 
 endmodule
+
+`resetall
