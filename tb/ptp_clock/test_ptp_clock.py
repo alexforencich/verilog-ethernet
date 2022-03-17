@@ -138,6 +138,8 @@ async def run_load_timestamps(dut):
     assert dut.output_ts_64.value.integer == 12345678
     assert dut.output_ts_step.value.integer == 1
 
+    await RisingEdge(dut.clk)
+
     start_time = get_sim_time('sec')
     start_ts_96 = (dut.output_ts_96.value.integer >> 48) + ((dut.output_ts_96.value.integer & 0xffffffffffff)/2**16*1e-9)
     start_ts_64 = dut.output_ts_64.value.integer/2**16*1e-9
@@ -188,6 +190,7 @@ async def run_seconds_increment(dut):
     dut.input_ts_96_valid.value = 0
     dut.input_ts_64_valid.value = 0
 
+    await RisingEdge(dut.clk)
     await RisingEdge(dut.clk)
 
     start_time = get_sim_time('sec')

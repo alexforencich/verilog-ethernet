@@ -184,15 +184,7 @@ always @(posedge clk) begin
     end
 
     // 96 bit timestamp
-    if (input_ts_96_valid) begin
-        // load timestamp
-        {ts_96_ns_inc_reg, ts_96_fns_inc_reg} <= (FNS_WIDTH > 16 ? input_ts_96[45:0] << (FNS_WIDTH-16) : input_ts_96[45:0] >> (16-FNS_WIDTH)) + {ts_inc_ns_reg, ts_inc_fns_reg};
-        {ts_96_ns_ovf_reg, ts_96_fns_ovf_reg} <= (FNS_WIDTH > 16 ? input_ts_96[45:0] << (FNS_WIDTH-16) : input_ts_96[45:0] >> (16-FNS_WIDTH)) + {ts_inc_ns_reg, ts_inc_fns_reg} - {31'd1_000_000_000, {FNS_WIDTH{1'b0}}};
-        ts_96_s_reg <= input_ts_96[95:48];
-        ts_96_ns_reg <= input_ts_96[45:16];
-        ts_96_fns_reg <= FNS_WIDTH > 16 ? input_ts_96[15:0] << (FNS_WIDTH-16) : input_ts_96[15:0] >> (16-FNS_WIDTH);
-        ts_step_reg <= 1;
-    end else if (!ts_96_ns_ovf_reg[30]) begin
+    if (!ts_96_ns_ovf_reg[30]) begin
         // if the overflow lookahead did not borrow, one second has elapsed
         // increment seconds field, pre-compute both normal increment and overflow values
         {ts_96_ns_inc_reg, ts_96_fns_inc_reg} <= {ts_96_ns_ovf_reg, ts_96_fns_ovf_reg} + {ts_inc_ns_reg, ts_inc_fns_reg};
@@ -207,13 +199,25 @@ always @(posedge clk) begin
         ts_96_s_reg <= ts_96_s_reg;
     end
 
+    if (input_ts_96_valid) begin
+        // load timestamp
+        ts_96_s_reg <= input_ts_96[95:48];
+        ts_96_ns_reg <= input_ts_96[45:16];
+        ts_96_ns_inc_reg <= input_ts_96[45:16];
+        ts_96_ns_ovf_reg <= 31'h7fffffff;
+        ts_96_fns_reg <= FNS_WIDTH > 16 ? input_ts_96[15:0] << (FNS_WIDTH-16) : input_ts_96[15:0] >> (16-FNS_WIDTH);
+        ts_96_fns_inc_reg <= FNS_WIDTH > 16 ? input_ts_96[15:0] << (FNS_WIDTH-16) : input_ts_96[15:0] >> (16-FNS_WIDTH);
+        ts_96_fns_ovf_reg <= {FNS_WIDTH{1'b1}};
+        ts_step_reg <= 1;
+    end
+
     // 64 bit timestamp
+    {ts_64_ns_reg, ts_64_fns_reg} <= {ts_64_ns_reg, ts_64_fns_reg} + {ts_inc_ns_reg, ts_inc_fns_reg};
+
     if (input_ts_64_valid) begin
         // load timestamp
         {ts_64_ns_reg, ts_64_fns_reg} <= input_ts_64;
         ts_step_reg <= 1;
-    end else begin
-        {ts_64_ns_reg, ts_64_fns_reg} <= {ts_64_ns_reg, ts_64_fns_reg} + {ts_inc_ns_reg, ts_inc_fns_reg};
     end
 
     pps_reg <= !ts_96_ns_ovf_reg[30];
