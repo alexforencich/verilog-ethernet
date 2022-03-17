@@ -431,7 +431,8 @@ reg sec_mismatch_reg = 1'b0, sec_mismatch_next;
 reg diff_valid_reg = 1'b0, diff_valid_next;
 reg diff_corr_valid_reg = 1'b0, diff_corr_valid_next;
 
-reg [47:0] ts_s_diff_reg = 0, ts_s_diff_next;
+reg ts_s_msb_diff_reg = 1'b0, ts_s_msb_diff_next;
+reg [7:0] ts_s_diff_reg = 0, ts_s_diff_next;
 reg [TS_NS_WIDTH+1-1:0] ts_ns_diff_reg = 0, ts_ns_diff_next;
 reg [FNS_WIDTH-1:0] ts_fns_diff_reg = 0, ts_fns_diff_next;
 
@@ -467,14 +468,15 @@ always @* begin
     sec_mismatch_next = sec_mismatch_reg;
     diff_valid_next = 1'b0;
     diff_corr_valid_next = 1'b0;
-    
+
+    ts_s_msb_diff_next = ts_s_msb_diff_reg;
     ts_s_diff_next = ts_s_diff_reg;
     ts_ns_diff_next = ts_ns_diff_reg;
     ts_fns_diff_next = ts_fns_diff_reg;
 
     ts_ns_diff_corr_next = ts_ns_diff_corr_reg;
     ts_fns_diff_corr_next = ts_fns_diff_corr_reg;
-    
+
     time_err_int_next = time_err_int_reg;
 
     ptp_lock_count_next = ptp_lock_count_reg;
@@ -509,19 +511,23 @@ always @* begin
                 // input stepped
                 sec_mismatch_next = 1'b0;
 
-                {ts_ns_inc_next, ts_fns_inc_next} = {ts_ns_sync_reg, ts_fns_sync_reg} + {period_ns_reg, period_fns_reg};
-                {ts_ns_ovf_next, ts_fns_ovf_next} = {ts_ns_sync_reg, ts_fns_sync_reg} + {period_ns_reg, period_fns_reg} - {31'd1_000_000_000, {FNS_WIDTH{1'b0}}};
                 ts_s_next = ts_s_sync_reg;
                 ts_ns_next = ts_ns_sync_reg;
+                ts_ns_inc_next = ts_ns_sync_reg;
+                ts_ns_ovf_next = {TS_NS_WIDTH+1{1'b1}};
                 ts_fns_next = ts_fns_sync_reg;
+                ts_fns_inc_next = ts_fns_sync_reg;
+                ts_fns_ovf_next = {FNS_WIDTH{1'b1}};
                 ts_step_next = 1;
             end else begin
-                // compute difference
+                // input did not step
                 sec_mismatch_next = 1'b0;
                 diff_valid_next = 1'b1;
-                ts_s_diff_next = ts_s_sync_reg - dest_ts_s_capt_reg;
-                {ts_ns_diff_next, ts_fns_diff_next} = {ts_ns_sync_reg, ts_fns_sync_reg} - {dest_ts_ns_capt_reg, dest_ts_fns_capt_reg};
             end
+            // compute difference
+            ts_s_msb_diff_next = ts_s_sync_reg[47:8] != dest_ts_s_capt_reg[47:8];
+            ts_s_diff_next = ts_s_sync_reg[7:0] - dest_ts_s_capt_reg[7:0];
+            {ts_ns_diff_next, ts_fns_diff_next} = {ts_ns_sync_reg, ts_fns_sync_reg} - {dest_ts_ns_capt_reg, dest_ts_fns_capt_reg};
         end else if (TS_WIDTH == 64) begin
             if (ts_step_sync_reg || sec_mismatch_reg) begin
                 // input stepped
@@ -531,18 +537,19 @@ always @* begin
                 ts_fns_next = ts_fns_sync_reg;
                 ts_step_next = 1;
             end else begin
-                // compute difference
+                // input did not step
                 sec_mismatch_next = 1'b0;
                 diff_valid_next = 1'b1;
-                {ts_ns_diff_next, ts_fns_diff_next} = {ts_ns_sync_reg, ts_fns_sync_reg} - {dest_ts_ns_capt_reg, dest_ts_fns_capt_reg};
             end
+            // compute difference
+            {ts_ns_diff_next, ts_fns_diff_next} = {ts_ns_sync_reg, ts_fns_sync_reg} - {dest_ts_ns_capt_reg, dest_ts_fns_capt_reg};
         end
     end
 
     if (diff_valid_reg) begin
         // seconds field correction
         if (TS_WIDTH == 96) begin
-            if ($signed(ts_s_diff_reg) == 0 && ($signed(ts_ns_diff_reg[30:16]) == 0 || $signed(ts_ns_diff_reg[30:16]) == -1)) begin
+            if ($signed(ts_s_diff_reg) == 0 && ts_s_msb_diff_reg == 0 && ($signed(ts_ns_diff_reg[30:16]) == 0 || $signed(ts_ns_diff_reg[30:16]) == -1)) begin
                 // difference is small and no seconds difference; slew
                 ts_ns_diff_corr_next = ts_ns_diff_reg[16:0];
                 ts_fns_diff_corr_next = ts_fns_diff_reg;
@@ -641,6 +648,7 @@ always @(posedge output_clk) begin
     diff_valid_reg <= diff_valid_next;
     diff_corr_valid_reg <= diff_corr_valid_next;
 
+    ts_s_msb_diff_reg <= ts_s_msb_diff_next;
     ts_s_diff_reg <= ts_s_diff_next;
     ts_ns_diff_reg <= ts_ns_diff_next;
     ts_fns_diff_reg <= ts_fns_diff_next;
