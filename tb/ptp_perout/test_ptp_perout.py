@@ -64,10 +64,10 @@ class TB:
         self.dut.rst.setimmediatevalue(0)
         await RisingEdge(self.dut.clk)
         await RisingEdge(self.dut.clk)
-        self.dut.rst <= 1
+        self.dut.rst.value = 1
         await RisingEdge(self.dut.clk)
         await RisingEdge(self.dut.clk)
-        self.dut.rst <= 0
+        self.dut.rst.value = 0
         await RisingEdge(self.dut.clk)
         await RisingEdge(self.dut.clk)
 
@@ -79,39 +79,39 @@ async def run_test(dut):
 
     await tb.reset()
 
-    dut.enable <= 1
+    dut.enable.value = 1
 
     await RisingEdge(dut.clk)
 
-    dut.input_start <= 100 << 16
-    dut.input_start_valid <= 1
-    dut.input_period <= 100 << 16
-    dut.input_period_valid <= 1
-    dut.input_width <= 50 << 16
-    dut.input_width_valid <= 1
+    dut.input_start.value = 100 << 16
+    dut.input_start_valid.value = 1
+    dut.input_period.value = 100 << 16
+    dut.input_period_valid.value = 1
+    dut.input_width.value = 50 << 16
+    dut.input_width_valid.value = 1
 
     await RisingEdge(dut.clk)
 
-    dut.input_start_valid <= 0
-    dut.input_period_valid <= 0
-    dut.input_width_valid <= 0
+    dut.input_start_valid.value = 0
+    dut.input_period_valid.value = 0
+    dut.input_width_valid.value = 0
 
     await Timer(10000, 'ns')
 
     await RisingEdge(dut.clk)
 
-    dut.input_start <= 0 << 16
-    dut.input_start_valid <= 1
-    dut.input_period <= 100 << 16
-    dut.input_period_valid <= 1
-    dut.input_width <= 50 << 16
-    dut.input_width_valid <= 1
+    dut.input_start.value = 0 << 16
+    dut.input_start_valid.value = 1
+    dut.input_period.value = 100 << 16
+    dut.input_period_valid.value = 1
+    dut.input_width.value = 50 << 16
+    dut.input_width_valid.value = 1
 
     await RisingEdge(dut.clk)
 
-    dut.input_start_valid <= 0
-    dut.input_period_valid <= 0
-    dut.input_width_valid <= 0
+    dut.input_start_valid.value = 0
+    dut.input_period_valid.value = 0
+    dut.input_width_valid.value = 0
 
     await Timer(10000, 'ns')
 

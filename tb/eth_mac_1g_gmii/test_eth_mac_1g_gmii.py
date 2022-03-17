@@ -59,10 +59,10 @@ class TB:
         self.dut.gtx_rst.setimmediatevalue(0)
         await RisingEdge(self.dut.tx_clk)
         await RisingEdge(self.dut.tx_clk)
-        self.dut.gtx_rst <= 1
+        self.dut.gtx_rst.value = 1
         await RisingEdge(self.dut.tx_clk)
         await RisingEdge(self.dut.tx_clk)
-        self.dut.gtx_rst <= 0
+        self.dut.gtx_rst.value = 0
         await RisingEdge(self.dut.tx_clk)
         await RisingEdge(self.dut.tx_clk)
 
@@ -75,7 +75,7 @@ async def run_test_rx(dut, payload_lengths=None, payload_data=None, ifg=12, spee
     tb = TB(dut, speed)
 
     tb.gmii_phy.rx.ifg = ifg
-    tb.dut.ifg_delay <= ifg
+    tb.dut.ifg_delay.value = ifg
 
     tb.set_speed(speed)
 
@@ -114,7 +114,7 @@ async def run_test_tx(dut, payload_lengths=None, payload_data=None, ifg=12, spee
     tb = TB(dut, speed)
 
     tb.gmii_phy.rx.ifg = ifg
-    tb.dut.ifg_delay <= ifg
+    tb.dut.ifg_delay.value = ifg
 
     tb.set_speed(speed)
 

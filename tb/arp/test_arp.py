@@ -93,10 +93,10 @@ class TB:
         self.dut.rst.setimmediatevalue(0)
         await RisingEdge(self.dut.clk)
         await RisingEdge(self.dut.clk)
-        self.dut.rst <= 1
+        self.dut.rst.value = 1
         await RisingEdge(self.dut.clk)
         await RisingEdge(self.dut.clk)
-        self.dut.rst <= 0
+        self.dut.rst.value = 0
         await RisingEdge(self.dut.clk)
         await RisingEdge(self.dut.clk)
 
@@ -138,10 +138,10 @@ async def run_test(dut, idle_inserter=None, backpressure_inserter=None):
     gateway_ip = '192.168.1.1'
     subnet_mask = '255.255.255.0'
 
-    dut.local_mac <= int.from_bytes(mac2str(local_mac), 'big')
-    dut.local_ip <= atol(local_ip)
-    dut.gateway_ip <= atol(gateway_ip)
-    dut.subnet_mask <= atol(subnet_mask)
+    dut.local_mac.value = int.from_bytes(mac2str(local_mac), 'big')
+    dut.local_ip.value = atol(local_ip)
+    dut.gateway_ip.value = atol(gateway_ip)
+    dut.subnet_mask.value = atol(subnet_mask)
 
     for k in range(10):
         await RisingEdge(dut.clk)

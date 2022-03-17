@@ -66,10 +66,10 @@ class TB:
         self.dut.rst.setimmediatevalue(0)
         await RisingEdge(self.dut.clk)
         await RisingEdge(self.dut.clk)
-        self.dut.rst <= 1
+        self.dut.rst.value = 1
         await RisingEdge(self.dut.clk)
         await RisingEdge(self.dut.clk)
-        self.dut.rst <= 0
+        self.dut.rst.value = 0
         await RisingEdge(self.dut.clk)
         await RisingEdge(self.dut.clk)
 
@@ -122,15 +122,15 @@ async def run_load_timestamps(dut):
 
     await RisingEdge(dut.clk)
 
-    dut.input_ts_96 <= 12345678
-    dut.input_ts_96_valid <= 1
-    dut.input_ts_64 <= 12345678
-    dut.input_ts_64_valid <= 1
+    dut.input_ts_96.value = 12345678
+    dut.input_ts_96_valid.value = 1
+    dut.input_ts_64.value = 12345678
+    dut.input_ts_64_valid.value = 1
 
     await RisingEdge(dut.clk)
 
-    dut.input_ts_96_valid <= 0
-    dut.input_ts_64_valid <= 0
+    dut.input_ts_96_valid.value = 0
+    dut.input_ts_64_valid.value = 0
 
     await RisingEdge(dut.clk)
 
@@ -178,15 +178,15 @@ async def run_seconds_increment(dut):
 
     await RisingEdge(dut.clk)
 
-    dut.input_ts_96 <= 999990000*2**16
-    dut.input_ts_96_valid <= 1
-    dut.input_ts_64 <= 999990000*2**16
-    dut.input_ts_64_valid <= 1
+    dut.input_ts_96.value = 999990000*2**16
+    dut.input_ts_96_valid.value = 1
+    dut.input_ts_64.value = 999990000*2**16
+    dut.input_ts_64_valid.value = 1
 
     await RisingEdge(dut.clk)
 
-    dut.input_ts_96_valid <= 0
-    dut.input_ts_64_valid <= 0
+    dut.input_ts_96_valid.value = 0
+    dut.input_ts_64_valid.value = 0
 
     await RisingEdge(dut.clk)
 
@@ -239,13 +239,13 @@ async def run_frequency_adjustment(dut):
 
     await RisingEdge(dut.clk)
 
-    dut.input_period_ns <= 0x6
-    dut.input_period_fns <= 0x6624
-    dut.input_period_valid <= 1
+    dut.input_period_ns.value = 0x6
+    dut.input_period_fns.value = 0x6624
+    dut.input_period_valid.value = 1
 
     await RisingEdge(dut.clk)
 
-    dut.input_period_valid <= 0
+    dut.input_period_valid.value = 0
 
     await RisingEdge(dut.clk)
     await RisingEdge(dut.clk)
@@ -290,14 +290,14 @@ async def run_drift_adjustment(dut):
 
     await tb.reset()
 
-    dut.input_drift_ns <= 0
-    dut.input_drift_fns <= 20
-    dut.input_drift_rate <= 5
-    dut.input_drift_valid <= 1
+    dut.input_drift_ns.value = 0
+    dut.input_drift_fns.value = 20
+    dut.input_drift_rate.value = 5
+    dut.input_drift_valid.value = 1
 
     await RisingEdge(dut.clk)
 
-    dut.input_drift_valid <= 0
+    dut.input_drift_valid.value = 0
 
     await RisingEdge(dut.clk)
     await RisingEdge(dut.clk)

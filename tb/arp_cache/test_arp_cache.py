@@ -62,10 +62,10 @@ class TB:
         self.dut.rst.setimmediatevalue(0)
         await RisingEdge(self.dut.clk)
         await RisingEdge(self.dut.clk)
-        self.dut.rst <= 1
+        self.dut.rst.value = 1
         await RisingEdge(self.dut.clk)
         await RisingEdge(self.dut.clk)
-        self.dut.rst <= 0
+        self.dut.rst.value = 0
         await RisingEdge(self.dut.clk)
         await RisingEdge(self.dut.clk)
 
@@ -195,9 +195,9 @@ async def run_test(dut):
     tb.log.info("Clear cache")
 
     await RisingEdge(dut.clk)
-    dut.clear_cache <= 1
+    dut.clear_cache.value = 1
     await RisingEdge(dut.clk)
-    dut.clear_cache <= 0
+    dut.clear_cache.value = 0
 
     await tb.query_request_source.send(CacheOpTransaction(ip=0xc0a80111))
 

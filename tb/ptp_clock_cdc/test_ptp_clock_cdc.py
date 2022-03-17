@@ -73,12 +73,12 @@ class TB:
         self.dut.output_rst.setimmediatevalue(0)
         await RisingEdge(self.dut.input_clk)
         await RisingEdge(self.dut.input_clk)
-        self.dut.input_rst <= 1
-        self.dut.output_rst <= 1
+        self.dut.input_rst.value = 1
+        self.dut.output_rst.value = 1
         for k in range(10):
             await RisingEdge(self.dut.input_clk)
-        self.dut.input_rst <= 0
-        self.dut.output_rst <= 0
+        self.dut.input_rst.value = 0
+        self.dut.output_rst.value = 0
         for k in range(10):
             await RisingEdge(self.dut.input_clk)
 
@@ -94,9 +94,9 @@ class TB:
 
         while True:
             await t
-            self.dut.output_clk <= 1
+            self.dut.output_clk.value = 1
             await t
-            self.dut.output_clk <= 0
+            self.dut.output_clk.value = 0
 
     def get_input_ts_ns(self):
         ts = self.dut.input_ts.value.integer

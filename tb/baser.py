@@ -358,8 +358,8 @@ class BaseRSerdesSource():
                     data = sum(1 << (63-i) for i in range(64) if (data >> i) & 1)
                     header = sum(1 << (1-i) for i in range(2) if (header >> i) & 1)
 
-                self.data <= data
-                self.header <= header
+                self.data.value = data
+                self.header.value = header
 
 
 class BaseRSerdesSink:

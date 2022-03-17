@@ -81,12 +81,12 @@ class TB:
         self.dut.tx_rst.setimmediatevalue(0)
         await RisingEdge(self.dut.rx_clk)
         await RisingEdge(self.dut.rx_clk)
-        self.dut.rx_rst <= 1
-        self.dut.tx_rst <= 1
+        self.dut.rx_rst.value = 1
+        self.dut.tx_rst.value = 1
         await RisingEdge(self.dut.rx_clk)
         await RisingEdge(self.dut.rx_clk)
-        self.dut.rx_rst <= 0
-        self.dut.tx_rst <= 0
+        self.dut.rx_rst.value = 0
+        self.dut.tx_rst.value = 0
         await RisingEdge(self.dut.rx_clk)
         await RisingEdge(self.dut.rx_clk)
 
@@ -96,7 +96,7 @@ async def run_test_rx(dut, payload_lengths=None, payload_data=None, ifg=12):
     tb = TB(dut)
 
     tb.serdes_source.ifg = ifg
-    tb.dut.ifg_delay <= ifg
+    tb.dut.ifg_delay.value = ifg
 
     await tb.reset()
 
@@ -130,7 +130,7 @@ async def run_test_tx(dut, payload_lengths=None, payload_data=None, ifg=12):
     tb = TB(dut)
 
     tb.serdes_source.ifg = ifg
-    tb.dut.ifg_delay <= ifg
+    tb.dut.ifg_delay.value = ifg
 
     await tb.reset()
 
@@ -160,7 +160,7 @@ async def run_test_tx_alignment(dut, payload_data=None, ifg=12):
     byte_width = tb.axis_source.width // 8
 
     tb.serdes_source.ifg = ifg
-    tb.dut.ifg_delay <= ifg
+    tb.dut.ifg_delay.value = ifg
 
     for length in range(60, 92):
 

@@ -74,14 +74,14 @@ class TB:
         self.dut.tx_rst.setimmediatevalue(0)
         for k in range(10):
             await RisingEdge(self.dut.logic_clk)
-        self.dut.logic_rst <= 1
-        self.dut.rx_rst <= 1
-        self.dut.tx_rst <= 1
+        self.dut.logic_rst.value = 1
+        self.dut.rx_rst.value = 1
+        self.dut.tx_rst.value = 1
         for k in range(10):
             await RisingEdge(self.dut.logic_clk)
-        self.dut.logic_rst <= 0
-        self.dut.rx_rst <= 0
-        self.dut.tx_rst <= 0
+        self.dut.logic_rst.value = 0
+        self.dut.rx_rst.value = 0
+        self.dut.tx_rst.value = 0
         for k in range(10):
             await RisingEdge(self.dut.logic_clk)
 
@@ -113,12 +113,12 @@ class TB:
 
     async def _run_enable_rx(self):
         for val in self._enable_generator_rx:
-            self.dut.rx_clk_enable <= val
+            self.dut.rx_clk_enable.value = val
             await RisingEdge(self.dut.rx_clk)
 
     async def _run_enable_tx(self):
         for val in self._enable_generator_tx:
-            self.dut.tx_clk_enable <= val
+            self.dut.tx_clk_enable.value = val
             await RisingEdge(self.dut.tx_clk)
 
 
@@ -127,9 +127,9 @@ async def run_test_rx(dut, payload_lengths=None, payload_data=None, ifg=12, enab
     tb = TB(dut)
 
     tb.gmii_source.ifg = ifg
-    tb.dut.ifg_delay <= ifg
-    tb.dut.rx_mii_select <= mii_sel
-    tb.dut.tx_mii_select <= mii_sel
+    tb.dut.ifg_delay.value = ifg
+    tb.dut.rx_mii_select.value = mii_sel
+    tb.dut.tx_mii_select.value = mii_sel
 
     if enable_gen is not None:
         tb.set_enable_generator_rx(enable_gen())
@@ -160,9 +160,9 @@ async def run_test_tx(dut, payload_lengths=None, payload_data=None, ifg=12, enab
     tb = TB(dut)
 
     tb.gmii_source.ifg = ifg
-    tb.dut.ifg_delay <= ifg
-    tb.dut.rx_mii_select <= mii_sel
-    tb.dut.tx_mii_select <= mii_sel
+    tb.dut.ifg_delay.value = ifg
+    tb.dut.rx_mii_select.value = mii_sel
+    tb.dut.tx_mii_select.value = mii_sel
 
     if enable_gen is not None:
         tb.set_enable_generator_rx(enable_gen())

@@ -59,10 +59,10 @@ class TB:
         self.dut.logic_rst.setimmediatevalue(0)
         for k in range(10):
             await RisingEdge(self.dut.logic_clk)
-        self.dut.logic_rst <= 1
+        self.dut.logic_rst.value = 1
         for k in range(10):
             await RisingEdge(self.dut.logic_clk)
-        self.dut.logic_rst <= 0
+        self.dut.logic_rst.value = 0
         for k in range(10):
             await RisingEdge(self.dut.logic_clk)
 
@@ -72,7 +72,7 @@ async def run_test_rx(dut, payload_lengths=None, payload_data=None, ifg=12, spee
     tb = TB(dut, speed)
 
     tb.mii_phy.rx.ifg = ifg
-    tb.dut.ifg_delay <= ifg
+    tb.dut.ifg_delay.value = ifg
 
     await tb.reset()
 
@@ -99,7 +99,7 @@ async def run_test_tx(dut, payload_lengths=None, payload_data=None, ifg=12, spee
     tb = TB(dut, speed)
 
     tb.mii_phy.rx.ifg = ifg
-    tb.dut.ifg_delay <= ifg
+    tb.dut.ifg_delay.value = ifg
 
     await tb.reset()
 

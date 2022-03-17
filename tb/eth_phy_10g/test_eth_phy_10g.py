@@ -72,12 +72,12 @@ class TB:
         self.dut.rx_rst.setimmediatevalue(0)
         await RisingEdge(self.dut.tx_clk)
         await RisingEdge(self.dut.tx_clk)
-        self.dut.tx_rst <= 1
-        self.dut.rx_rst <= 1
+        self.dut.tx_rst.value = 1
+        self.dut.rx_rst.value = 1
         await RisingEdge(self.dut.tx_clk)
         await RisingEdge(self.dut.tx_clk)
-        self.dut.tx_rst <= 0
-        self.dut.rx_rst <= 0
+        self.dut.tx_rst.value = 0
+        self.dut.rx_rst.value = 0
         await RisingEdge(self.dut.tx_clk)
         await RisingEdge(self.dut.tx_clk)
 

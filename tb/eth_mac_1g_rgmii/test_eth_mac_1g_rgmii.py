@@ -61,23 +61,23 @@ class TB:
         self.dut.gtx_rst.setimmediatevalue(0)
         await RisingEdge(self.dut.gtx_clk)
         await RisingEdge(self.dut.gtx_clk)
-        self.dut.gtx_rst <= 1
+        self.dut.gtx_rst.value = 1
         await RisingEdge(self.dut.gtx_clk)
         await RisingEdge(self.dut.gtx_clk)
-        self.dut.gtx_rst <= 0
+        self.dut.gtx_rst.value = 0
         await RisingEdge(self.dut.gtx_clk)
         await RisingEdge(self.dut.gtx_clk)
 
     async def _run_gtx_clk(self):
         t = Timer(2, 'ns')
         while True:
-            self.dut.gtx_clk <= 1
+            self.dut.gtx_clk.value = 1
             await t
-            self.dut.gtx_clk90 <= 1
+            self.dut.gtx_clk90.value = 1
             await t
-            self.dut.gtx_clk <= 0
+            self.dut.gtx_clk.value = 0
             await t
-            self.dut.gtx_clk90 <= 0
+            self.dut.gtx_clk90.value = 0
             await t
 
 
@@ -86,7 +86,7 @@ async def run_test_rx(dut, payload_lengths=None, payload_data=None, ifg=12, spee
     tb = TB(dut, speed)
 
     tb.rgmii_phy.rx.ifg = ifg
-    tb.dut.ifg_delay <= ifg
+    tb.dut.ifg_delay.value = ifg
 
     await tb.reset()
 
@@ -123,7 +123,7 @@ async def run_test_tx(dut, payload_lengths=None, payload_data=None, ifg=12, spee
     tb = TB(dut, speed)
 
     tb.rgmii_phy.rx.ifg = ifg
-    tb.dut.ifg_delay <= ifg
+    tb.dut.ifg_delay.value = ifg
 
     await tb.reset()
 

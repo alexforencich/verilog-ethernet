@@ -63,10 +63,10 @@ class TB:
         self.dut.rst.setimmediatevalue(0)
         await RisingEdge(self.dut.clk)
         await RisingEdge(self.dut.clk)
-        self.dut.rst <= 1
+        self.dut.rst.value = 1
         await RisingEdge(self.dut.clk)
         await RisingEdge(self.dut.clk)
-        self.dut.rst <= 0
+        self.dut.rst.value = 0
         await RisingEdge(self.dut.clk)
         await RisingEdge(self.dut.clk)
 
@@ -85,7 +85,7 @@ class TB:
 
     async def _run_enable(self):
         for val in self._enable_generator:
-            self.dut.clk_enable <= val
+            self.dut.clk_enable.value = val
             await RisingEdge(self.dut.clk)
 
 
@@ -93,8 +93,8 @@ async def run_test(dut, payload_lengths=None, payload_data=None, ifg=12, enable_
 
     tb = TB(dut)
 
-    tb.dut.ifg_delay <= ifg
-    tb.dut.mii_select <= mii_sel
+    tb.dut.ifg_delay.value = ifg
+    tb.dut.mii_select.value = mii_sel
 
     if enable_gen is not None:
         tb.set_enable_generator(enable_gen())
