@@ -42,7 +42,8 @@ module ptp_clock #
     parameter DRIFT_ENABLE = 1,
     parameter DRIFT_NS = 4'h0,
     parameter DRIFT_FNS = 16'h0002,
-    parameter DRIFT_RATE = 16'h0005
+    parameter DRIFT_RATE = 16'h0005,
+    parameter PIPELINE_OUTPUT = 0
 )
 (
     input  wire                       clk,
@@ -131,15 +132,78 @@ reg pps_reg = 0;
 
 assign input_adj_active = adj_active_reg;
 
-assign output_ts_96[95:48] = ts_96_s_reg;
-assign output_ts_96[47:46] = 2'b00;
-assign output_ts_96[45:16] = ts_96_ns_reg;
-assign output_ts_96[15:0]  = FNS_WIDTH > 16 ? ts_96_fns_reg >> (FNS_WIDTH-16) : ts_96_fns_reg << (16-FNS_WIDTH);
-assign output_ts_64[63:16] = ts_64_ns_reg;
-assign output_ts_64[15:0]  = FNS_WIDTH > 16 ? ts_64_fns_reg >> (FNS_WIDTH-16) : ts_64_fns_reg << (16-FNS_WIDTH);
-assign output_ts_step = ts_step_reg;
+generate
 
-assign output_pps = pps_reg;
+if (PIPELINE_OUTPUT > 0) begin
+
+    // pipeline
+    (* shreg_extract = "no" *)
+    reg [95:0]  output_ts_96_reg[0:PIPELINE_OUTPUT-1];
+    (* shreg_extract = "no" *)
+    reg [63:0]  output_ts_64_reg[0:PIPELINE_OUTPUT-1];
+    (* shreg_extract = "no" *)
+    reg         output_ts_step_reg[0:PIPELINE_OUTPUT-1];
+    (* shreg_extract = "no" *)
+    reg         output_pps_reg[0:PIPELINE_OUTPUT-1];
+
+    assign output_ts_96 = output_ts_96_reg[PIPELINE_OUTPUT-1];
+    assign output_ts_64 = output_ts_64_reg[PIPELINE_OUTPUT-1];
+    assign output_ts_step = output_ts_step_reg[PIPELINE_OUTPUT-1];
+    assign output_pps = output_pps_reg[PIPELINE_OUTPUT-1];
+
+    integer i;
+
+    initial begin
+        for (i = 0; i < PIPELINE_OUTPUT; i = i + 1) begin
+            output_ts_96_reg[i] = 96'd0;
+            output_ts_64_reg[i] = 64'd0;
+            output_ts_step_reg[i] = 1'b0;
+            output_pps_reg[i] = 1'b0;
+        end
+    end
+
+    always @(posedge clk) begin
+        output_ts_96_reg[0][95:48] <= ts_96_s_reg;
+        output_ts_96_reg[0][47:46] <= 2'b00;
+        output_ts_96_reg[0][45:16] <= ts_96_ns_reg;
+        output_ts_96_reg[0][15:0]  <= {ts_96_fns_reg, 16'd0} >> FNS_WIDTH;
+        output_ts_64_reg[0][63:16] <= ts_64_ns_reg;
+        output_ts_64_reg[0][15:0]  <= {ts_64_fns_reg, 16'd0} >> FNS_WIDTH;
+        output_ts_step_reg[0] <= ts_step_reg;
+        output_pps_reg[0] <= pps_reg;
+
+        for (i = 0; i < PIPELINE_OUTPUT-1; i = i + 1) begin
+            output_ts_96_reg[i+1] <= output_ts_96_reg[i];
+            output_ts_64_reg[i+1] <= output_ts_64_reg[i];
+            output_ts_step_reg[i+1] <= output_ts_step_reg[i];
+            output_pps_reg[i+1] <= output_pps_reg[i];
+        end
+
+        if (rst) begin
+            for (i = 0; i < PIPELINE_OUTPUT; i = i + 1) begin
+                output_ts_96_reg[i] = 96'd0;
+                output_ts_64_reg[i] = 64'd0;
+                output_ts_step_reg[i] = 1'b0;
+                output_pps_reg[i] = 1'b0;
+            end
+        end
+    end
+
+end else begin
+
+    assign output_ts_96[95:48] = ts_96_s_reg;
+    assign output_ts_96[47:46] = 2'b00;
+    assign output_ts_96[45:16] = ts_96_ns_reg;
+    assign output_ts_96[15:0]  = {ts_96_fns_reg, 16'd0} >> FNS_WIDTH;
+    assign output_ts_64[63:16] = ts_64_ns_reg;
+    assign output_ts_64[15:0]  = {ts_64_fns_reg, 16'd0} >> FNS_WIDTH;
+    assign output_ts_step = ts_step_reg;
+
+    assign output_pps = pps_reg;
+
+end
+
+endgenerate
 
 always @(posedge clk) begin
     ts_step_reg <= 0;

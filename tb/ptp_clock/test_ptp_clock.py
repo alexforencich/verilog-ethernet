@@ -367,6 +367,7 @@ def test_ptp_clock(request):
     parameters['DRIFT_NS'] = 0x0
     parameters['DRIFT_FNS'] = 0x0002
     parameters['DRIFT_RATE'] = 0x0005
+    parameters['PIPELINE_OUTPUT'] = 0
 
     extra_env = {f'PARAM_{k}': str(v) for k, v in parameters.items()}
 
