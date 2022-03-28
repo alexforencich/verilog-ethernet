@@ -247,6 +247,7 @@ def test_ptp_clock_cdc(request, ts_width, sample_clock):
     parameters['FNS_WIDTH'] = 16
     parameters['USE_SAMPLE_CLOCK'] = sample_clock
     parameters['LOG_RATE'] = 3
+    parameters['PIPELINE_OUTPUT'] = 0
 
     extra_env = {f'PARAM_{k}': str(v) for k, v in parameters.items()}
 

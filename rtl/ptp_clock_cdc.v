@@ -37,7 +37,8 @@ module ptp_clock_cdc #
     parameter NS_WIDTH = 4,
     parameter FNS_WIDTH = 16,
     parameter USE_SAMPLE_CLOCK = 1,
-    parameter LOG_RATE = 3
+    parameter LOG_RATE = 3,
+    parameter PIPELINE_OUTPUT = 0
 )
 (
     input  wire                 input_clk,
@@ -115,7 +116,13 @@ reg [FNS_WIDTH-1:0] ts_fns_ovf_reg = {FNS_WIDTH{1'b1}}, ts_fns_ovf_next;
 
 reg ts_step_reg = 1'b0, ts_step_next;
 
-reg pps_reg = 0;
+reg pps_reg = 1'b0;
+
+reg [47:0] ts_s_pipe_reg[0:PIPELINE_OUTPUT-1];
+reg [TS_NS_WIDTH-1:0] ts_ns_pipe_reg[0:PIPELINE_OUTPUT-1];
+reg [FNS_WIDTH-1:0] ts_fns_pipe_reg[0:PIPELINE_OUTPUT-1];
+reg ts_step_pipe_reg[0:PIPELINE_OUTPUT-1];
+reg pps_pipe_reg[0:PIPELINE_OUTPUT-1];
 
 reg [PHASE_CNT_WIDTH-1:0] src_phase_reg = {PHASE_CNT_WIDTH{1'b0}};
 reg [PHASE_ACC_WIDTH-1:0] dest_phase_reg = {PHASE_ACC_WIDTH{1'b0}}, dest_phase_next;
@@ -150,21 +157,90 @@ reg sample_update_sync3_reg = 1'b0;
 
 generate
 
-if (TS_WIDTH == 96) begin
-    assign output_ts[95:48] = ts_s_reg;
-    assign output_ts[47:46] = 2'b00;
-    assign output_ts[45:16] = ts_ns_reg;
-    assign output_ts[15:0]  = FNS_WIDTH > 16 ? ts_fns_reg >> (FNS_WIDTH-16) : ts_fns_reg << (16-FNS_WIDTH);
-end else if (TS_WIDTH == 64) begin
-    assign output_ts[63:16] = ts_ns_reg;
-    assign output_ts[15:0]  = FNS_WIDTH > 16 ? ts_fns_reg >> (FNS_WIDTH-16) : ts_fns_reg << (16-FNS_WIDTH);
+if (PIPELINE_OUTPUT > 0) begin
+
+    // pipeline
+    (* shreg_extract = "no" *)
+    reg [TS_WIDTH-1:0]  output_ts_reg[0:PIPELINE_OUTPUT-1];
+    (* shreg_extract = "no" *)
+    reg                 output_ts_step_reg[0:PIPELINE_OUTPUT-1];
+    (* shreg_extract = "no" *)
+    reg                 output_pps_reg[0:PIPELINE_OUTPUT-1];
+
+    assign output_ts = output_ts_reg[PIPELINE_OUTPUT-1];
+    assign output_ts_step = output_ts_step_reg[PIPELINE_OUTPUT-1];
+    assign output_pps = output_pps_reg[PIPELINE_OUTPUT-1];
+
+    integer i;
+
+    initial begin
+        for (i = 0; i < PIPELINE_OUTPUT; i = i + 1) begin
+            output_ts_reg[i] = 0;
+            output_ts_step_reg[i] = 1'b0;
+            output_pps_reg[i] = 1'b0;
+        end
+    end
+
+    always @(posedge output_clk) begin
+        if (TS_WIDTH == 96) begin
+            output_ts_reg[0][95:48] <= ts_s_reg;
+            output_ts_reg[0][47:46] <= 2'b00;
+            output_ts_reg[0][45:16] <= ts_ns_reg;
+            output_ts_reg[0][15:0]  <= {ts_fns_reg, 16'd0} >> FNS_WIDTH;
+        end else if (TS_WIDTH == 64) begin
+            output_ts_reg[0][63:16] <= ts_ns_reg;
+            output_ts_reg[0][15:0]  <= {ts_fns_reg, 16'd0} >> FNS_WIDTH;
+        end
+
+        output_ts_step_reg[0] <= ts_step_reg;
+        output_pps_reg[0] <= pps_reg;
+
+        for (i = 0; i < PIPELINE_OUTPUT-1; i = i + 1) begin
+            output_ts_reg[i+1] <= output_ts_reg[i];
+            output_ts_step_reg[i+1] <= output_ts_step_reg[i];
+            output_pps_reg[i+1] <= output_pps_reg[i];
+        end
+
+        if (output_rst) begin
+            for (i = 0; i < PIPELINE_OUTPUT; i = i + 1) begin
+                output_ts_reg[i] = 0;
+                output_ts_step_reg[i] = 1'b0;
+                output_pps_reg[i] = 1'b0;
+            end
+        end
+    end
+
+end else begin
+
+    if (TS_WIDTH == 96) begin
+        assign output_ts[95:48] = ts_s_reg;
+        assign output_ts[47:46] = 2'b00;
+        assign output_ts[45:16] = ts_ns_reg;
+        assign output_ts[15:0]  = {ts_fns_reg, 16'd0} >> FNS_WIDTH;
+    end else if (TS_WIDTH == 64) begin
+        assign output_ts[63:16] = ts_ns_reg;
+        assign output_ts[15:0]  = {ts_fns_reg, 16'd0} >> FNS_WIDTH;
+    end
+
+    assign output_ts_step = ts_step_reg;
+
+    assign output_pps = pps_reg;
+
 end
 
 endgenerate
 
-assign output_ts_step = ts_step_reg;
+integer i;
 
-assign output_pps = pps_reg;
+initial begin
+    for (i = 0; i < PIPELINE_OUTPUT; i = i + 1) begin
+        ts_s_pipe_reg[i] = 0;
+        ts_ns_pipe_reg[i] = 0;
+        ts_fns_pipe_reg[i] = 0;
+        ts_step_pipe_reg[i] = 1'b0;
+        pps_pipe_reg[i] = 1'b0;
+    end
+end
 
 // source PTP clock capture and sync logic
 reg input_ts_step_reg = 1'b0;
@@ -381,9 +457,15 @@ always @(posedge output_clk) begin
 
     if (dest_update_reg) begin
         // capture local TS
-        dest_ts_s_capt_reg <= ts_s_reg;
-        dest_ts_ns_capt_reg <= ts_ns_reg;
-        dest_ts_fns_capt_reg <= ts_fns_reg;
+        if (PIPELINE_OUTPUT > 0) begin
+            dest_ts_s_capt_reg <= ts_s_pipe_reg[PIPELINE_OUTPUT-1];
+            dest_ts_ns_capt_reg <= ts_ns_pipe_reg[PIPELINE_OUTPUT-1];
+            dest_ts_fns_capt_reg <= ts_fns_pipe_reg[PIPELINE_OUTPUT-1];
+        end else begin
+            dest_ts_s_capt_reg <= ts_s_reg;
+            dest_ts_ns_capt_reg <= ts_ns_reg;
+            dest_ts_fns_capt_reg <= ts_fns_reg;
+        end
 
         dest_sync_reg <= !dest_sync_reg;
         ts_capt_valid_reg <= 1'b1;
@@ -668,6 +750,23 @@ always @(posedge output_clk) begin
         pps_reg <= 1'b0; // not currently implemented for 64 bit timestamp format
     end
 
+    // pipeline
+    if (PIPELINE_OUTPUT > 0) begin
+        ts_s_pipe_reg[0] <= ts_s_reg;
+        ts_ns_pipe_reg[0] <= ts_ns_reg;
+        ts_fns_pipe_reg[0] <= ts_fns_reg;
+        ts_step_pipe_reg[0] <= ts_step_reg;
+        pps_pipe_reg[0] <= pps_reg;
+
+        for (i = 0; i < PIPELINE_OUTPUT-1; i = i + 1) begin
+            ts_s_pipe_reg[i+1] <= ts_s_pipe_reg[i];
+            ts_ns_pipe_reg[i+1] <= ts_ns_pipe_reg[i];
+            ts_fns_pipe_reg[i+1] <= ts_fns_pipe_reg[i];
+            ts_step_pipe_reg[i+1] <= ts_step_pipe_reg[i];
+            pps_pipe_reg[i+1] <= pps_pipe_reg[i];
+        end
+    end
+
     if (output_rst) begin
         period_ns_reg <= 0;
         period_fns_reg <= 0;
@@ -689,6 +788,14 @@ always @(posedge output_clk) begin
 
         ptp_lock_count_reg <= 0;
         ptp_locked_reg <= 1'b0;
+
+        for (i = 0; i < PIPELINE_OUTPUT; i = i + 1) begin
+            ts_s_pipe_reg[i] = 0;
+            ts_ns_pipe_reg[i] = 0;
+            ts_fns_pipe_reg[i] = 0;
+            ts_step_pipe_reg[i] = 1'b0;
+            pps_pipe_reg[i] = 1'b0;
+        end
     end
 end
 
