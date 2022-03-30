@@ -40,7 +40,7 @@ VERILOG_SOURCES += ../../rtl/priority_encoder.v
 # module parameters
 export PARAM_DATA_WIDTH ?= 8
 export PARAM_KEEP_ENABLE ?= $(shell expr $(PARAM_DATA_WIDTH) \> 8 )
-export PARAM_KEEP_WIDTH ?= $(shell expr $(PARAM_DATA_WIDTH) / 8 )
+export PARAM_KEEP_WIDTH ?= $(shell expr \( $(PARAM_DATA_WIDTH) + 7 \) / 8 )
 export PARAM_ID_ENABLE ?= 1
 export PARAM_S_ID_WIDTH ?= 8
 export PARAM_M_ID_WIDTH ?= $(shell python -c "print($(PARAM_S_ID_WIDTH) + ($(PORTS)-1).bit_length())")

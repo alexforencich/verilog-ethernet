@@ -43,14 +43,14 @@ module axis_fifo_adapter #
     // If disabled, tkeep assumed to be 1'b1
     parameter S_KEEP_ENABLE = (S_DATA_WIDTH>8),
     // tkeep signal width (words per cycle) on input interface
-    parameter S_KEEP_WIDTH = (S_DATA_WIDTH/8),
+    parameter S_KEEP_WIDTH = ((S_DATA_WIDTH+7)/8),
     // Width of output AXI stream interface in bits
     parameter M_DATA_WIDTH = 8,
     // Propagate tkeep signal on output interface
     // If disabled, tkeep assumed to be 1'b1
     parameter M_KEEP_ENABLE = (M_DATA_WIDTH>8),
     // tkeep signal width (words per cycle) on output interface
-    parameter M_KEEP_WIDTH = (M_DATA_WIDTH/8),
+    parameter M_KEEP_WIDTH = ((M_DATA_WIDTH+7)/8),
     // Propagate tid signal
     parameter ID_ENABLE = 0,
     // tid signal width

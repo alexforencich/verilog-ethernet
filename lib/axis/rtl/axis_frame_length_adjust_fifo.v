@@ -39,7 +39,7 @@ module axis_frame_length_adjust_fifo #
     // If disabled, tkeep assumed to be 1'b1
     parameter KEEP_ENABLE = (DATA_WIDTH>8),
     // tkeep signal width (words per cycle)
-    parameter KEEP_WIDTH = (DATA_WIDTH/8),
+    parameter KEEP_WIDTH = ((DATA_WIDTH+7)/8),
     // Propagate tid signal
     parameter ID_ENABLE = 0,
     // tid signal width

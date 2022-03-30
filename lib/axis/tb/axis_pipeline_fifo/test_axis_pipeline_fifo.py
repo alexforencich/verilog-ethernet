@@ -317,7 +317,7 @@ def test_axis_pipeline_fifo(request, length, data_width):
 
     parameters['DATA_WIDTH'] = data_width
     parameters['KEEP_ENABLE'] = int(parameters['DATA_WIDTH'] > 8)
-    parameters['KEEP_WIDTH'] = parameters['DATA_WIDTH'] // 8
+    parameters['KEEP_WIDTH'] = (parameters['DATA_WIDTH'] + 7) // 8
     parameters['LAST_ENABLE'] = 1
     parameters['ID_ENABLE'] = 1
     parameters['ID_WIDTH'] = 8
