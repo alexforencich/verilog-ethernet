@@ -329,7 +329,7 @@ def test_axis_fifo(request, data_width, frame_fifo, drop_oversize_frame, drop_ba
     parameters['DEPTH'] = 1024
     parameters['DATA_WIDTH'] = data_width
     parameters['KEEP_ENABLE'] = int(parameters['DATA_WIDTH'] > 8)
-    parameters['KEEP_WIDTH'] = parameters['DATA_WIDTH'] // 8
+    parameters['KEEP_WIDTH'] = (parameters['DATA_WIDTH'] + 7) // 8
     parameters['LAST_ENABLE'] = 1
     parameters['ID_ENABLE'] = 1
     parameters['ID_WIDTH'] = 8

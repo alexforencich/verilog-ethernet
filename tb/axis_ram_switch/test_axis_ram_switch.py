@@ -356,10 +356,10 @@ def test_axis_ram_switch(request, s_count, m_count, s_data_width, m_data_width):
     parameters['SPEEDUP'] = 0
     parameters['S_DATA_WIDTH'] = s_data_width
     parameters['S_KEEP_ENABLE'] = int(parameters['S_DATA_WIDTH'] > 8)
-    parameters['S_KEEP_WIDTH'] = parameters['S_DATA_WIDTH'] // 8
+    parameters['S_KEEP_WIDTH'] = (parameters['S_DATA_WIDTH'] + 7) // 8
     parameters['M_DATA_WIDTH'] = m_data_width
     parameters['M_KEEP_ENABLE'] = int(parameters['M_DATA_WIDTH'] > 8)
-    parameters['M_KEEP_WIDTH'] = parameters['M_DATA_WIDTH'] // 8
+    parameters['M_KEEP_WIDTH'] = (parameters['M_DATA_WIDTH'] + 7) // 8
     parameters['ID_ENABLE'] = 1
     parameters['S_ID_WIDTH'] = 16
     parameters['M_ID_WIDTH'] = parameters['S_ID_WIDTH'] + (s_count-1).bit_length()

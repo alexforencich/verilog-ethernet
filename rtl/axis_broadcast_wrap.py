@@ -75,7 +75,7 @@ module {{name}} #
     // Propagate tkeep signal
     parameter KEEP_ENABLE = (DATA_WIDTH>8),
     // tkeep signal width (words per cycle)
-    parameter KEEP_WIDTH = (DATA_WIDTH/8),
+    parameter KEEP_WIDTH = ((DATA_WIDTH+7)/8),
     // Propagate tlast signal
     parameter LAST_ENABLE = 1,
     // Propagate tid signal

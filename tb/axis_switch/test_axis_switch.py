@@ -351,7 +351,7 @@ def test_axis_switch(request, s_count, m_count, data_width):
 
     parameters['DATA_WIDTH'] = data_width
     parameters['KEEP_ENABLE'] = int(parameters['DATA_WIDTH'] > 8)
-    parameters['KEEP_WIDTH'] = parameters['DATA_WIDTH'] // 8
+    parameters['KEEP_WIDTH'] = (parameters['DATA_WIDTH'] + 7) // 8
     parameters['ID_ENABLE'] = 1
     parameters['S_ID_WIDTH'] = 16
     parameters['M_ID_WIDTH'] = parameters['S_ID_WIDTH'] + (s_count-1).bit_length()

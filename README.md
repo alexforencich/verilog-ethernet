@@ -205,7 +205,7 @@ Parametrizable priority encoder.
 
     DATA_WIDTH           : width of tdata signal
     KEEP_ENABLE          : enable tkeep signal (default DATA_WIDTH>8)
-    KEEP_WIDTH           : width of tkeep signal (default DATA_WIDTH/8)
+    KEEP_WIDTH           : width of tkeep signal (default (DATA_WIDTH+7)/8)
     LAST_ENABLE          : enable tlast signal
     ID_ENABLE            : enable tid signal
     ID_WIDTH             : width of tid signal
