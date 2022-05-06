@@ -50,26 +50,26 @@ foreach inst [get_cells -hier -filter {(ORIG_REF_NAME == ptp_clock_cdc || REF_NA
     }
 
     # sample clock
-    set sync_ffs [get_cells -quiet -hier -regexp ".*/src_sample_sync\[12\]_reg_reg" -filter "PARENT == $inst"]
+    set sync_ffs [get_cells -quiet -hier -regexp ".*/src_sync_sample_sync\[12\]_reg_reg" -filter "PARENT == $inst"]
 
     if {[llength $sync_ffs]} {
         set_property ASYNC_REG TRUE $sync_ffs
 
         set src_clk [get_clocks -of_objects [get_pins "$inst/src_sync_reg_reg/C"]]
-        set dest_clk [get_clocks -of_objects [get_pins "$inst/src_sample_sync1_reg_reg/C"]]
+        set dest_clk [get_clocks -of_objects [get_pins "$inst/src_sync_sample_sync1_reg_reg/C"]]
 
-        set_max_delay -from [get_cells "$inst/src_sync_reg_reg"] -to [get_cells "$inst/src_sample_sync1_reg_reg"] -datapath_only [get_property -min PERIOD $src_clk]
+        set_max_delay -from [get_cells "$inst/src_sync_reg_reg"] -to [get_cells "$inst/src_sync_sample_sync1_reg_reg"] -datapath_only [get_property -min PERIOD $src_clk]
     }
 
-    set sync_ffs [get_cells -quiet -hier -regexp ".*/dest_sample_sync\[12\]_reg_reg" -filter "PARENT == $inst"]
+    set sync_ffs [get_cells -quiet -hier -regexp ".*/dest_sync_sample_sync\[12\]_reg_reg" -filter "PARENT == $inst"]
 
     if {[llength $sync_ffs]} {
         set_property ASYNC_REG TRUE $sync_ffs
 
         set src_clk [get_clocks -of_objects [get_pins "$inst/dest_sync_reg_reg/C"]]
-        set dest_clk [get_clocks -of_objects [get_pins "$inst/dest_sample_sync1_reg_reg/C"]]
+        set dest_clk [get_clocks -of_objects [get_pins "$inst/dest_sync_sample_sync1_reg_reg/C"]]
 
-        set_max_delay -from [get_cells "$inst/dest_sync_reg_reg"] -to [get_cells "$inst/dest_sample_sync1_reg_reg"] -datapath_only [get_property -min PERIOD $src_clk]
+        set_max_delay -from [get_cells "$inst/dest_sync_reg_reg"] -to [get_cells "$inst/dest_sync_sample_sync1_reg_reg"] -datapath_only [get_property -min PERIOD $src_clk]
     }
 
     # sample update sync
