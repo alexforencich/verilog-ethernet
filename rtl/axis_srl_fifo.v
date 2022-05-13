@@ -169,28 +169,28 @@ always @* begin
 end
 
 always @(posedge clk) begin
-    if (rst) begin
-        ptr_reg <= 0;
-        full_reg <= 1'b0;
-        empty_reg <= 1'b1;
+    if (inc) begin
+        ptr_reg <= ptr_reg + 1;
+    end else if (dec) begin
+        ptr_reg <= ptr_reg - 1;
     end else begin
-        if (inc) begin
-            ptr_reg <= ptr_reg + 1;
-        end else if (dec) begin
-            ptr_reg <= ptr_reg - 1;
-        end else begin
-            ptr_reg <= ptr_reg;
-        end
-
-        full_reg <= full_next;
-        empty_reg <= empty_next;
+        ptr_reg <= ptr_reg;
     end
+
+    full_reg <= full_next;
+    empty_reg <= empty_next;
 
     if (shift) begin
         data_reg[0] <= s_axis;
         for (i = 0; i < DEPTH-1; i = i + 1) begin
             data_reg[i+1] <= data_reg[i];
         end
+    end
+
+    if (rst) begin
+        ptr_reg <= 0;
+        full_reg <= 1'b0;
+        empty_reg <= 1'b1;
     end
 end
 

@@ -258,14 +258,13 @@ generate
         end
 
         always @(posedge clk) begin
-            if (rst) begin
-                select_valid_reg <= 1'b0;
-            end else begin
-                select_valid_reg <= select_valid_next;
-            end
-
             select_reg <= select_next;
             drop_reg <= drop_next;
+            select_valid_reg <= select_valid_next;
+
+            if (rst) begin
+                select_valid_reg <= 1'b0;
+            end
         end
 
         // forwarding

@@ -184,16 +184,16 @@ always @* begin
 end
 
 always @(posedge clk) begin
+    select_reg <= select_next;
+    drop_reg <= drop_next;
+    frame_reg <= frame_next;
+    s_axis_tready_reg <= s_axis_tready_next;
+
     if (rst) begin
         select_reg <= 2'd0;
         drop_reg <= 1'b0;
         frame_reg <= 1'b0;
         s_axis_tready_reg <= 1'b0;
-    end else begin
-        select_reg <= select_next;
-        drop_reg <= drop_next;
-        frame_reg <= frame_next;
-        s_axis_tready_reg <= s_axis_tready_next;
     end
 end
 
@@ -259,15 +259,9 @@ always @* begin
 end
 
 always @(posedge clk) begin
-    if (rst) begin
-        m_axis_tvalid_reg <= {M_COUNT{1'b0}};
-        m_axis_tready_int_reg <= 1'b0;
-        temp_m_axis_tvalid_reg <= {M_COUNT{1'b0}};
-    end else begin
-        m_axis_tvalid_reg <= m_axis_tvalid_next;
-        m_axis_tready_int_reg <= m_axis_tready_int_early;
-        temp_m_axis_tvalid_reg <= temp_m_axis_tvalid_next;
-    end
+    m_axis_tvalid_reg <= m_axis_tvalid_next;
+    m_axis_tready_int_reg <= m_axis_tready_int_early;
+    temp_m_axis_tvalid_reg <= temp_m_axis_tvalid_next;
 
     // datapath
     if (store_axis_int_to_output) begin
@@ -293,6 +287,12 @@ always @(posedge clk) begin
         temp_m_axis_tid_reg   <= m_axis_tid_int;
         temp_m_axis_tdest_reg <= m_axis_tdest_int;
         temp_m_axis_tuser_reg <= m_axis_tuser_int;
+    end
+
+    if (rst) begin
+        m_axis_tvalid_reg <= {M_COUNT{1'b0}};
+        m_axis_tready_int_reg <= 1'b0;
+        temp_m_axis_tvalid_reg <= {M_COUNT{1'b0}};
     end
 end
 

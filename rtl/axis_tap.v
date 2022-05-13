@@ -213,18 +213,18 @@ always @* begin
 end
 
 always @(posedge clk) begin
-    if (rst) begin
-        state_reg <= STATE_IDLE;
-        frame_reg <= 1'b0;
-    end else begin
-        state_reg <= state_next;
-        frame_reg <= frame_next;
-    end
+    state_reg <= state_next;
+    frame_reg <= frame_next;
 
     if (store_last_word) begin
         last_word_id_reg   <= tap_axis_tid;
         last_word_dest_reg <= tap_axis_tdest;
         last_word_user_reg <= tap_axis_tuser;
+    end
+
+    if (rst) begin
+        state_reg <= STATE_IDLE;
+        frame_reg <= 1'b0;
     end
 end
 
@@ -290,15 +290,9 @@ always @* begin
 end
 
 always @(posedge clk) begin
-    if (rst) begin
-        m_axis_tvalid_reg <= 1'b0;
-        m_axis_tready_int_reg <= 1'b0;
-        temp_m_axis_tvalid_reg <= 1'b0;
-    end else begin
-        m_axis_tvalid_reg <= m_axis_tvalid_next;
-        m_axis_tready_int_reg <= m_axis_tready_int_early;
-        temp_m_axis_tvalid_reg <= temp_m_axis_tvalid_next;
-    end
+    m_axis_tvalid_reg <= m_axis_tvalid_next;
+    m_axis_tready_int_reg <= m_axis_tready_int_early;
+    temp_m_axis_tvalid_reg <= temp_m_axis_tvalid_next;
 
     // datapath
     if (store_axis_int_to_output) begin
@@ -324,6 +318,12 @@ always @(posedge clk) begin
         temp_m_axis_tid_reg   <= m_axis_tid_int;
         temp_m_axis_tdest_reg <= m_axis_tdest_int;
         temp_m_axis_tuser_reg <= m_axis_tuser_int;
+    end
+
+    if (rst) begin
+        m_axis_tvalid_reg <= 1'b0;
+        m_axis_tready_int_reg <= 1'b0;
+        temp_m_axis_tvalid_reg <= 1'b0;
     end
 end
 
