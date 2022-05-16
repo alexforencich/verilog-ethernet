@@ -471,8 +471,8 @@ assign m_udp_payload_axis_tvalid = m_udp_payload_axis_tvalid_reg;
 assign m_udp_payload_axis_tlast = m_udp_payload_axis_tlast_reg;
 assign m_udp_payload_axis_tuser = m_udp_payload_axis_tuser_reg;
 
-// enable ready input next cycle if output is ready or the temp reg will not be filled on the next cycle (output reg empty or no input)
-assign m_udp_payload_axis_tready_int_early = m_udp_payload_axis_tready || (!temp_m_udp_payload_axis_tvalid_reg && (!m_udp_payload_axis_tvalid_reg || !m_udp_payload_axis_tvalid_int));
+// enable ready input next cycle if output is ready or if both output registers are empty
+assign m_udp_payload_axis_tready_int_early = m_udp_payload_axis_tready || (!temp_m_udp_payload_axis_tvalid_reg && !m_udp_payload_axis_tvalid_reg);
 
 always @* begin
     // transfer sink ready state to source
