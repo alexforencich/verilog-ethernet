@@ -125,7 +125,7 @@ reg [DATA_WIDTH-1:0] m_axis_tdata_reg = {DATA_WIDTH{1'b0}}, m_axis_tdata_next;
 reg [KEEP_WIDTH-1:0] m_axis_tkeep_reg = {KEEP_WIDTH{1'b0}}, m_axis_tkeep_next;
 reg m_axis_tvalid_reg = 1'b0, m_axis_tvalid_next;
 reg m_axis_tlast_reg = 1'b0, m_axis_tlast_next;
-reg m_axis_tuser_reg = 1'b0, m_axis_tuser_next;
+reg [USER_WIDTH-1:0] m_axis_tuser_reg = {USER_WIDTH{1'b0}}, m_axis_tuser_next;
 
 reg [1:0] start_packet_reg = 2'b00;
 reg error_bad_frame_reg = 1'b0, error_bad_frame_next;
@@ -154,7 +154,7 @@ assign m_axis_tdata = m_axis_tdata_reg;
 assign m_axis_tkeep = m_axis_tkeep_reg;
 assign m_axis_tvalid = m_axis_tvalid_reg;
 assign m_axis_tlast = m_axis_tlast_reg;
-assign m_axis_tuser = PTP_TS_ENABLE ? {ptp_ts_reg, m_axis_tuser_reg} : m_axis_tuser_reg;
+assign m_axis_tuser = m_axis_tuser_reg;
 
 assign start_packet = start_packet_reg;
 assign error_bad_frame = error_bad_frame_reg;
@@ -308,7 +308,8 @@ always @* begin
     m_axis_tkeep_next = {KEEP_WIDTH{1'b1}};
     m_axis_tvalid_next = 1'b0;
     m_axis_tlast_next = 1'b0;
-    m_axis_tuser_next = 1'b0;
+    m_axis_tuser_next = m_axis_tuser_reg;
+    m_axis_tuser_next[0] = 1'b0;
 
     error_bad_frame_next = 1'b0;
     error_bad_fcs_next = 1'b0;
@@ -320,13 +321,18 @@ always @* begin
 
             if (xgmii_rxc_d1[0] && xgmii_rxd_d1[7:0] == XGMII_START) begin
                 // start condition
+
+                if (PTP_TS_ENABLE) begin
+                    m_axis_tuser_next[1 +: PTP_TS_WIDTH] = ptp_ts_reg;
+                end
+
                 if (control_masked) begin
                     // control or error characters in first data word
                     m_axis_tdata_next = {DATA_WIDTH{1'b0}};
                     m_axis_tkeep_next = 8'h01;
                     m_axis_tvalid_next = 1'b1;
                     m_axis_tlast_next = 1'b1;
-                    m_axis_tuser_next = 1'b1;
+                    m_axis_tuser_next[0] = 1'b1;
                     error_bad_frame_next = 1'b1;
                     state_next = STATE_IDLE;
                 end else begin
@@ -343,14 +349,14 @@ always @* begin
             m_axis_tkeep_next = {KEEP_WIDTH{1'b1}};
             m_axis_tvalid_next = 1'b1;
             m_axis_tlast_next = 1'b0;
-            m_axis_tuser_next = 1'b0;
+            m_axis_tuser_next[0] = 1'b0;
 
             last_cycle_tkeep_next = {4'b0000, tkeep_mask[7:4]};
 
             if (control_masked) begin
                 // control or error characters in packet
                 m_axis_tlast_next = 1'b1;
-                m_axis_tuser_next = 1'b1;
+                m_axis_tuser_next[0] = 1'b1;
                 error_bad_frame_next = 1'b1;
                 reset_crc = 1'b1;
                 state_next = STATE_IDLE;
@@ -367,7 +373,7 @@ always @* begin
                         (detect_term[4] && crc_valid3)) begin
                         // CRC valid
                     end else begin
-                        m_axis_tuser_next = 1'b1;
+                        m_axis_tuser_next[0] = 1'b1;
                         error_bad_frame_next = 1'b1;
                         error_bad_fcs_next = 1'b1;
                     end
@@ -387,7 +393,7 @@ always @* begin
             m_axis_tkeep_next = last_cycle_tkeep_reg;
             m_axis_tvalid_next = 1'b1;
             m_axis_tlast_next = 1'b1;
-            m_axis_tuser_next = 1'b0;
+            m_axis_tuser_next[0] = 1'b0;
 
             reset_crc = 1'b1;
 
@@ -396,7 +402,7 @@ always @* begin
                 (detect_term_save[7] && crc_valid2)) begin
                 // CRC valid
             end else begin
-                m_axis_tuser_next = 1'b1;
+                m_axis_tuser_next[0] = 1'b1;
                 error_bad_frame_next = 1'b1;
                 error_bad_fcs_next = 1'b1;
             end
@@ -409,7 +415,7 @@ always @* begin
                     m_axis_tkeep_next = 8'h01;
                     m_axis_tvalid_next = 1'b1;
                     m_axis_tlast_next = 1'b1;
-                    m_axis_tuser_next = 1'b1;
+                    m_axis_tuser_next[0] = 1'b1;
                     error_bad_frame_next = 1'b1;
                     state_next = STATE_IDLE;
                 end else begin
