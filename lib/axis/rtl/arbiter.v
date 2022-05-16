@@ -141,16 +141,16 @@ always @* begin
 end
 
 always @(posedge clk) begin
+    grant_reg <= grant_next;
+    grant_valid_reg <= grant_valid_next;
+    grant_encoded_reg <= grant_encoded_next;
+    mask_reg <= mask_next;
+
     if (rst) begin
         grant_reg <= 0;
         grant_valid_reg <= 0;
         grant_encoded_reg <= 0;
         mask_reg <= 0;
-    end else begin
-        grant_reg <= grant_next;
-        grant_valid_reg <= grant_valid_next;
-        grant_encoded_reg <= grant_encoded_next;
-        mask_reg <= mask_next;
     end
 end
 

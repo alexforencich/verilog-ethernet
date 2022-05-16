@@ -411,17 +411,17 @@ always @* begin
 end
 
 always @(posedge clk) begin
-    if (rst) begin
-        input_state_reg <= INPUT_STATE_IDLE;
-        output_state_reg <= OUTPUT_STATE_IDLE;
-    end else begin
-        input_state_reg <= input_state_next;
-        output_state_reg <= output_state_next;
-    end
+    input_state_reg <= input_state_next;
+    output_state_reg <= output_state_next;
 
     input_count_reg <= input_count_next;
     output_count_reg <= output_count_next;
     fail_frame_reg <= fail_frame_next;
+
+    if (rst) begin
+        input_state_reg <= INPUT_STATE_IDLE;
+        output_state_reg <= OUTPUT_STATE_IDLE;
+    end
 end
 
 // output datapath logic
@@ -445,8 +445,8 @@ assign m_axis_tvalid = m_axis_tvalid_reg;
 assign m_axis_tlast = m_axis_tlast_reg;
 assign m_axis_tuser = m_axis_tuser_reg;
 
-// enable ready input next cycle if output is ready or the temp reg will not be filled on the next cycle (output reg empty or no input)
-assign m_axis_tready_int_early = m_axis_tready || (!temp_m_axis_tvalid_reg && (!m_axis_tvalid_reg || !m_axis_tvalid_int));
+// enable ready input next cycle if output is ready or if both output registers are empty
+assign m_axis_tready_int_early = m_axis_tready || (!temp_m_axis_tvalid_reg && !m_axis_tvalid_reg);
 
 always @* begin
     // transfer sink ready state to source
@@ -477,15 +477,9 @@ always @* begin
 end
 
 always @(posedge clk) begin
-    if (rst) begin
-        m_axis_tvalid_reg <= 1'b0;
-        m_axis_tready_int_reg <= 1'b0;
-        temp_m_axis_tvalid_reg <= 1'b0;
-    end else begin
-        m_axis_tvalid_reg <= m_axis_tvalid_next;
-        m_axis_tready_int_reg <= m_axis_tready_int_early;
-        temp_m_axis_tvalid_reg <= temp_m_axis_tvalid_next;
-    end
+    m_axis_tvalid_reg <= m_axis_tvalid_next;
+    m_axis_tready_int_reg <= m_axis_tready_int_early;
+    temp_m_axis_tvalid_reg <= temp_m_axis_tvalid_next;
 
     // datapath
     if (store_axis_int_to_output) begin
@@ -502,6 +496,12 @@ always @(posedge clk) begin
         temp_m_axis_tdata_reg <= m_axis_tdata_int;
         temp_m_axis_tlast_reg <= m_axis_tlast_int;
         temp_m_axis_tuser_reg <= m_axis_tuser_int;
+    end
+
+    if (rst) begin
+        m_axis_tvalid_reg <= 1'b0;
+        m_axis_tready_int_reg <= 1'b0;
+        temp_m_axis_tvalid_reg <= 1'b0;
     end
 end
 

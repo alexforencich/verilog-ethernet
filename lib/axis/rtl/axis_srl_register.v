@@ -129,27 +129,27 @@ initial begin
 end
 
 always @(posedge clk) begin
+    // transfer empty to full
+    full_reg <= !m_axis_tready && m_axis_tvalid;
+
+    // transfer in if not full
+    if (s_axis_tready) begin
+        data_reg[0] <= s_axis;
+        valid_reg[0] <= s_axis_tvalid;
+        for (i = 0; i < 1; i = i + 1) begin
+            data_reg[i+1] <= data_reg[i];
+            valid_reg[i+1] <= valid_reg[i];
+        end
+        ptr_reg <= valid_reg[0];
+    end
+
+    if (m_axis_tready) begin
+        ptr_reg <= 0;
+    end
+
     if (rst) begin
         ptr_reg <= 0;
         full_reg <= 0;
-    end else begin
-        // transfer empty to full
-        full_reg <= !m_axis_tready && m_axis_tvalid;
-
-        // transfer in if not full
-        if (s_axis_tready) begin
-            data_reg[0] <= s_axis;
-            valid_reg[0] <= s_axis_tvalid;
-            for (i = 0; i < 1; i = i + 1) begin
-                data_reg[i+1] <= data_reg[i];
-                valid_reg[i+1] <= valid_reg[i];
-            end
-            ptr_reg <= valid_reg[0];
-        end
-
-        if (m_axis_tready) begin
-            ptr_reg <= 0;
-        end
     end
 end
 

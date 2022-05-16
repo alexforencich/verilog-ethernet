@@ -121,32 +121,30 @@ assign m_axis_tuser  = USER_ENABLE ? m_axis_tuser_reg : {M_COUNT*USER_WIDTH{1'b0
 integer i;
 
 always @(posedge clk) begin
-    if (rst) begin
-        s_axis_tvalid_reg <= {S_COUNT{1'b0}};
-        m_axis_tvalid_reg <= {S_COUNT{1'b0}};
-        select_reg <= {M_COUNT*CL_S_COUNT{1'b0}};
-    end else begin
-        s_axis_tvalid_reg <= s_axis_tvalid;
-        for (i = 0; i < M_COUNT; i = i + 1) begin
-            m_axis_tvalid_reg[i] <= s_axis_tvalid_reg[select_reg[i*CL_S_COUNT +: CL_S_COUNT]];
-        end
-        select_reg <= select;
-    end
-
     s_axis_tdata_reg <= s_axis_tdata;
     s_axis_tkeep_reg <= s_axis_tkeep;
+    s_axis_tvalid_reg <= s_axis_tvalid;
     s_axis_tlast_reg <= s_axis_tlast;
     s_axis_tid_reg   <= s_axis_tid;
     s_axis_tdest_reg <= s_axis_tdest;
     s_axis_tuser_reg <= s_axis_tuser;
 
+    select_reg <= select;
+
     for (i = 0; i < M_COUNT; i = i + 1) begin
         m_axis_tdata_reg[i*DATA_WIDTH +: DATA_WIDTH] <= s_axis_tdata_reg[select_reg[i*CL_S_COUNT +: CL_S_COUNT]*DATA_WIDTH +: DATA_WIDTH];
         m_axis_tkeep_reg[i*KEEP_WIDTH +: KEEP_WIDTH] <= s_axis_tkeep_reg[select_reg[i*CL_S_COUNT +: CL_S_COUNT]*KEEP_WIDTH +: KEEP_WIDTH];
+        m_axis_tvalid_reg[i] <= s_axis_tvalid_reg[select_reg[i*CL_S_COUNT +: CL_S_COUNT]];
         m_axis_tlast_reg[i]                          <= s_axis_tlast_reg[select_reg[i*CL_S_COUNT +: CL_S_COUNT]];
         m_axis_tid_reg[i*ID_WIDTH +: ID_WIDTH]       <= s_axis_tid_reg[select_reg[i*CL_S_COUNT +: CL_S_COUNT]*ID_WIDTH +: ID_WIDTH];
         m_axis_tdest_reg[i*DEST_WIDTH +: DEST_WIDTH] <= s_axis_tdest_reg[select_reg[i*CL_S_COUNT +: CL_S_COUNT]*DEST_WIDTH +: DEST_WIDTH];
         m_axis_tuser_reg[i*USER_WIDTH +: USER_WIDTH] <= s_axis_tuser_reg[select_reg[i*CL_S_COUNT +: CL_S_COUNT]*USER_WIDTH +: USER_WIDTH];
+    end
+
+    if (rst) begin
+        s_axis_tvalid_reg <= {S_COUNT{1'b0}};
+        m_axis_tvalid_reg <= {S_COUNT{1'b0}};
+        select_reg <= {M_COUNT*CL_S_COUNT{1'b0}};
     end
 end
 
