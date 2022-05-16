@@ -118,6 +118,15 @@ wire [S_COUNT-1:0] grant;
 wire grant_valid;
 wire [CL_S_COUNT-1:0] grant_encoded;
 
+// input registers to pipeline arbitration delay
+reg [S_COUNT*DATA_WIDTH-1:0] s_axis_tdata_reg = 0;
+reg [S_COUNT*KEEP_WIDTH-1:0] s_axis_tkeep_reg = 0;
+reg [S_COUNT-1:0]            s_axis_tvalid_reg = 0;
+reg [S_COUNT-1:0]            s_axis_tlast_reg = 0;
+reg [S_COUNT*S_ID_WIDTH-1:0] s_axis_tid_reg = 0;
+reg [S_COUNT*DEST_WIDTH-1:0] s_axis_tdest_reg = 0;
+reg [S_COUNT*USER_WIDTH-1:0] s_axis_tuser_reg = 0;
+
 // internal datapath
 reg  [DATA_WIDTH-1:0] m_axis_tdata_int;
 reg  [KEEP_WIDTH-1:0] m_axis_tkeep_int;
@@ -129,17 +138,17 @@ reg  [DEST_WIDTH-1:0] m_axis_tdest_int;
 reg  [USER_WIDTH-1:0] m_axis_tuser_int;
 wire                  m_axis_tready_int_early;
 
-assign s_axis_tready = (m_axis_tready_int_reg && grant_valid) << grant_encoded;
+assign s_axis_tready = ~s_axis_tvalid_reg | ({S_COUNT{m_axis_tready_int_reg}} & grant);
 
 // mux for incoming packet
-wire [DATA_WIDTH-1:0] current_s_tdata  = s_axis_tdata[grant_encoded*DATA_WIDTH +: DATA_WIDTH];
-wire [KEEP_WIDTH-1:0] current_s_tkeep  = s_axis_tkeep[grant_encoded*KEEP_WIDTH +: KEEP_WIDTH];
-wire                  current_s_tvalid = s_axis_tvalid[grant_encoded];
+wire [DATA_WIDTH-1:0] current_s_tdata  = s_axis_tdata_reg[grant_encoded*DATA_WIDTH +: DATA_WIDTH];
+wire [KEEP_WIDTH-1:0] current_s_tkeep  = s_axis_tkeep_reg[grant_encoded*KEEP_WIDTH +: KEEP_WIDTH];
+wire                  current_s_tvalid = s_axis_tvalid_reg[grant_encoded];
 wire                  current_s_tready = s_axis_tready[grant_encoded];
-wire                  current_s_tlast  = s_axis_tlast[grant_encoded];
-wire [S_ID_WIDTH-1:0] current_s_tid    = s_axis_tid[grant_encoded*S_ID_WIDTH +: S_ID_WIDTH_INT];
-wire [DEST_WIDTH-1:0] current_s_tdest  = s_axis_tdest[grant_encoded*DEST_WIDTH +: DEST_WIDTH];
-wire [USER_WIDTH-1:0] current_s_tuser  = s_axis_tuser[grant_encoded*USER_WIDTH +: USER_WIDTH];
+wire                  current_s_tlast  = s_axis_tlast_reg[grant_encoded];
+wire [S_ID_WIDTH-1:0] current_s_tid    = s_axis_tid_reg[grant_encoded*S_ID_WIDTH +: S_ID_WIDTH_INT];
+wire [DEST_WIDTH-1:0] current_s_tdest  = s_axis_tdest_reg[grant_encoded*DEST_WIDTH +: DEST_WIDTH];
+wire [USER_WIDTH-1:0] current_s_tuser  = s_axis_tuser_reg[grant_encoded*USER_WIDTH +: USER_WIDTH];
 
 // arbiter instance
 arbiter #(
@@ -159,8 +168,8 @@ arb_inst (
     .grant_encoded(grant_encoded)
 );
 
-assign request = s_axis_tvalid & ~grant;
-assign acknowledge = grant & s_axis_tvalid & s_axis_tready & (LAST_ENABLE ? s_axis_tlast : {S_COUNT{1'b1}});
+assign request = (s_axis_tvalid_reg & ~grant) | (s_axis_tvalid & grant);
+assign acknowledge = grant & s_axis_tvalid_reg & {S_COUNT{m_axis_tready_int_reg}} & (LAST_ENABLE ? s_axis_tlast_reg : {S_COUNT{1'b1}});
 
 always @* begin
     // pass through selected packet data
@@ -174,6 +183,27 @@ always @* begin
     end
     m_axis_tdest_int  = current_s_tdest;
     m_axis_tuser_int  = current_s_tuser;
+end
+
+integer i;
+
+always @(posedge clk) begin
+    // register inputs
+    for (i = 0; i < S_COUNT; i = i + 1) begin
+        if (s_axis_tready[i]) begin
+            s_axis_tdata_reg[i*DATA_WIDTH +: DATA_WIDTH] <= s_axis_tdata[i*DATA_WIDTH +: DATA_WIDTH];
+            s_axis_tkeep_reg[i*KEEP_WIDTH +: KEEP_WIDTH] <= s_axis_tkeep[i*KEEP_WIDTH +: KEEP_WIDTH];
+            s_axis_tvalid_reg[i] <= s_axis_tvalid[i];
+            s_axis_tlast_reg[i] <= s_axis_tlast[i];
+            s_axis_tid_reg[i*S_ID_WIDTH +: S_ID_WIDTH_INT] <= s_axis_tid[i*S_ID_WIDTH +: S_ID_WIDTH_INT];
+            s_axis_tdest_reg[i*DEST_WIDTH +: DEST_WIDTH] <= s_axis_tdest[i*DEST_WIDTH +: DEST_WIDTH];
+            s_axis_tuser_reg[i*USER_WIDTH +: USER_WIDTH] <= s_axis_tuser[i*USER_WIDTH +: USER_WIDTH];
+        end
+    end
+
+    if (rst) begin
+        s_axis_tvalid_reg <= 0;
+    end
 end
 
 // output datapath logic
