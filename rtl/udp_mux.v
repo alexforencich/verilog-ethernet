@@ -380,15 +380,9 @@ always @* begin
 end
 
 always @(posedge clk) begin
-    if (rst) begin
-        m_udp_payload_axis_tvalid_reg <= 1'b0;
-        m_udp_payload_axis_tready_int_reg <= 1'b0;
-        temp_m_udp_payload_axis_tvalid_reg <= 1'b0;
-    end else begin
-        m_udp_payload_axis_tvalid_reg <= m_udp_payload_axis_tvalid_next;
-        m_udp_payload_axis_tready_int_reg <= m_udp_payload_axis_tready_int_early;
-        temp_m_udp_payload_axis_tvalid_reg <= temp_m_udp_payload_axis_tvalid_next;
-    end
+    m_udp_payload_axis_tvalid_reg <= m_udp_payload_axis_tvalid_next;
+    m_udp_payload_axis_tready_int_reg <= m_udp_payload_axis_tready_int_early;
+    temp_m_udp_payload_axis_tvalid_reg <= temp_m_udp_payload_axis_tvalid_next;
 
     // datapath
     if (store_axis_int_to_output) begin
@@ -414,6 +408,12 @@ always @(posedge clk) begin
         temp_m_udp_payload_axis_tid_reg   <= m_udp_payload_axis_tid_int;
         temp_m_udp_payload_axis_tdest_reg <= m_udp_payload_axis_tdest_int;
         temp_m_udp_payload_axis_tuser_reg <= m_udp_payload_axis_tuser_int;
+    end
+
+    if (rst) begin
+        m_udp_payload_axis_tvalid_reg <= 1'b0;
+        m_udp_payload_axis_tready_int_reg <= 1'b0;
+        temp_m_udp_payload_axis_tvalid_reg <= 1'b0;
     end
 end
 

@@ -517,15 +517,9 @@ always @* begin
 end
 
 always @(posedge clk) begin
-    if (rst) begin
-        m_ip_payload_axis_tvalid_reg <= 1'b0;
-        m_ip_payload_axis_tready_int_reg <= 1'b0;
-        temp_m_ip_payload_axis_tvalid_reg <= 1'b0;
-    end else begin
-        m_ip_payload_axis_tvalid_reg <= m_ip_payload_axis_tvalid_next;
-        m_ip_payload_axis_tready_int_reg <= m_ip_payload_axis_tready_int_early;
-        temp_m_ip_payload_axis_tvalid_reg <= temp_m_ip_payload_axis_tvalid_next;
-    end
+    m_ip_payload_axis_tvalid_reg <= m_ip_payload_axis_tvalid_next;
+    m_ip_payload_axis_tready_int_reg <= m_ip_payload_axis_tready_int_early;
+    temp_m_ip_payload_axis_tvalid_reg <= temp_m_ip_payload_axis_tvalid_next;
 
     // datapath
     if (store_ip_payload_int_to_output) begin
@@ -545,6 +539,12 @@ always @(posedge clk) begin
         temp_m_ip_payload_axis_tkeep_reg <= m_ip_payload_axis_tkeep_int;
         temp_m_ip_payload_axis_tlast_reg <= m_ip_payload_axis_tlast_int;
         temp_m_ip_payload_axis_tuser_reg <= m_ip_payload_axis_tuser_int;
+    end
+
+    if (rst) begin
+        m_ip_payload_axis_tvalid_reg <= 1'b0;
+        m_ip_payload_axis_tready_int_reg <= 1'b0;
+        temp_m_ip_payload_axis_tvalid_reg <= 1'b0;
     end
 end
 
