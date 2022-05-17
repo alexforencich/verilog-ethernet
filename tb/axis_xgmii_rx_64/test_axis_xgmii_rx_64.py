@@ -32,9 +32,10 @@ import cocotb_test.simulator
 import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge
+from cocotb.utils import get_time_from_sim_steps
 from cocotb.regression import TestFactory
 
-from cocotbext.eth import XgmiiFrame, XgmiiSource
+from cocotbext.eth import XgmiiFrame, XgmiiSource, PtpClockSimTime
 from cocotbext.axi import AxiStreamBus, AxiStreamSink
 
 
@@ -50,7 +51,7 @@ class TB:
         self.source = XgmiiSource(dut.xgmii_rxd, dut.xgmii_rxc, dut.clk, dut.rst)
         self.sink = AxiStreamSink(AxiStreamBus.from_prefix(dut, "m_axis"), dut.clk, dut.rst)
 
-        dut.ptp_ts.setimmediatevalue(0)
+        self.ptp_clock = PtpClockSimTime(ts_64=dut.ptp_ts, clock=dut.clk)
 
     async def reset(self):
         self.dut.rst.setimmediatevalue(0)
@@ -73,16 +74,32 @@ async def run_test(dut, payload_lengths=None, payload_data=None, ifg=12):
     await tb.reset()
 
     test_frames = [payload_data(x) for x in payload_lengths()]
+    tx_frames = []
 
     for test_data in test_frames:
-        test_frame = XgmiiFrame.from_payload(test_data)
+        test_frame = XgmiiFrame.from_payload(test_data, tx_complete=tx_frames.append)
         await tb.source.send(test_frame)
 
     for test_data in test_frames:
         rx_frame = await tb.sink.recv()
+        tx_frame = tx_frames.pop(0)
+
+        frame_error = rx_frame.tuser & 1
+        ptp_ts = rx_frame.tuser >> 1
+        ptp_ts_ns = ptp_ts / 2**16
+
+        tx_frame_sfd_ns = get_time_from_sim_steps(tx_frame.sim_time_sfd, "ns")
+
+        if tx_frame.start_lane == 4:
+            # start in lane 4 reports 1 full cycle delay, so subtract half clock period
+            tx_frame_sfd_ns -= 3.2
+
+        tb.log.info("RX frame PTP TS: %f ns", ptp_ts_ns)
+        tb.log.info("TX frame SFD sim time: %f ns", tx_frame_sfd_ns)
 
         assert rx_frame.tdata == test_data
-        assert rx_frame.tuser == 0
+        assert frame_error == 0
+        assert abs(ptp_ts_ns - tx_frame_sfd_ns - 6.4) < 0.01
 
     assert tb.sink.empty()
 
@@ -134,7 +151,7 @@ def test_axis_xgmii_rx_64(request):
     parameters['DATA_WIDTH'] = 64
     parameters['KEEP_WIDTH'] = parameters['DATA_WIDTH'] // 8
     parameters['CTRL_WIDTH'] = parameters['DATA_WIDTH'] // 8
-    parameters['PTP_TS_ENABLE'] = 0
+    parameters['PTP_TS_ENABLE'] = 1
     parameters['PTP_TS_WIDTH'] = 96
     parameters['USER_WIDTH'] = (parameters['PTP_TS_WIDTH'] if parameters['PTP_TS_ENABLE'] else 0) + 1
 

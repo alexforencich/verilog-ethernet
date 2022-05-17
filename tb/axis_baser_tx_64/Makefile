@@ -39,12 +39,11 @@ export PARAM_HDR_WIDTH ?= 2
 export PARAM_ENABLE_PADDING ?= 1
 export PARAM_ENABLE_DIC ?= 1
 export PARAM_MIN_FRAME_LENGTH ?= 64
-export PARAM_PTP_TS_ENABLE ?= 0
+export PARAM_PTP_TS_ENABLE ?= 1
 export PARAM_PTP_TS_WIDTH ?= 96
 export PARAM_PTP_TAG_ENABLE ?= $(PARAM_PTP_TS_ENABLE)
 export PARAM_PTP_TAG_WIDTH ?= 16
-#export PARAM_USER_WIDTH ?= (parameters['PTP_TAG_WIDTH'] if parameters['PTP_TAG_ENABLE'] else 0) + 1
-export PARAM_USER_WIDTH ?= 1
+export PARAM_USER_WIDTH ?= $(if $(filter-out 1,$(PARAM_PTP_TS_ENABLE)),1,$(shell expr $(PARAM_PTP_TAG_WIDTH) + 1 ))
 
 ifeq ($(SIM), icarus)
 	PLUSARGS += -fst

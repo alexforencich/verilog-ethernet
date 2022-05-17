@@ -34,9 +34,12 @@ import pytest
 import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge
+from cocotb.utils import get_time_from_sim_steps
 from cocotb.regression import TestFactory
 
+from cocotbext.eth import PtpClockSimTime
 from cocotbext.axi import AxiStreamBus, AxiStreamSource
+from cocotbext.axi.stream import define_stream
 
 try:
     from baser import BaseRSerdesSink
@@ -47,6 +50,12 @@ except ImportError:
         from baser import BaseRSerdesSink
     finally:
         del sys.path[0]
+
+
+PtpTsBus, PtpTsTransaction, PtpTsSource, PtpTsSink, PtpTsMonitor = define_stream("PtpTs",
+    signals=["ts", "ts_valid"],
+    optional_signals=["ts_tag", "ts_ready"]
+)
 
 
 class TB:
@@ -61,8 +70,10 @@ class TB:
         self.source = AxiStreamSource(AxiStreamBus.from_prefix(dut, "s_axis"), dut.clk, dut.rst)
         self.sink = BaseRSerdesSink(dut.encoded_tx_data, dut.encoded_tx_hdr, dut.clk, scramble=False)
 
+        self.ptp_clock = PtpClockSimTime(ts_64=dut.ptp_ts, clock=dut.clk)
+        self.ptp_ts_sink = PtpTsSink(PtpTsBus.from_prefix(dut, "m_axis_ptp"), dut.clk, dut.rst)
+
         dut.ifg_delay.setimmediatevalue(0)
-        dut.ptp_ts.setimmediatevalue(0)
 
     async def reset(self):
         self.dut.rst.setimmediatevalue(0)
@@ -91,9 +102,23 @@ async def run_test(dut, payload_lengths=None, payload_data=None, ifg=12):
 
     for test_data in test_frames:
         rx_frame = await tb.sink.recv()
+        ptp_ts = await tb.ptp_ts_sink.recv()
+
+        ptp_ts_ns = int(ptp_ts.ts) / 2**16
+
+        rx_frame_sfd_ns = get_time_from_sim_steps(rx_frame.sim_time_sfd, "ns")
+
+        if rx_frame.start_lane == 4:
+            # start in lane 4 reports 1 full cycle delay, so subtract half clock period
+            rx_frame_sfd_ns -= 3.2
+
+        tb.log.info("TX frame PTP TS: %f ns", ptp_ts_ns)
+        tb.log.info("RX frame SFD sim time: %f ns", rx_frame_sfd_ns)
 
         assert rx_frame.get_payload() == test_data
         assert rx_frame.check_fcs()
+        assert rx_frame.ctrl is None
+        assert abs(rx_frame_sfd_ns - ptp_ts_ns - 12.8) < 0.01
 
     assert tb.sink.empty()
 
@@ -123,10 +148,23 @@ async def run_test_alignment(dut, payload_data=None, ifg=12):
 
         for test_data in test_frames:
             rx_frame = await tb.sink.recv()
+            ptp_ts = await tb.ptp_ts_sink.recv()
+
+            ptp_ts_ns = int(ptp_ts.ts) / 2**16
+
+            rx_frame_sfd_ns = get_time_from_sim_steps(rx_frame.sim_time_sfd, "ns")
+
+            if rx_frame.start_lane == 4:
+                # start in lane 4 reports 1 full cycle delay, so subtract half clock period
+                rx_frame_sfd_ns -= 3.2
+
+            tb.log.info("TX frame PTP TS: %f ns", ptp_ts_ns)
+            tb.log.info("RX frame SFD sim time: %f ns", rx_frame_sfd_ns)
 
             assert rx_frame.get_payload() == test_data
             assert rx_frame.check_fcs()
             assert rx_frame.ctrl is None
+            assert abs(rx_frame_sfd_ns - ptp_ts_ns - 12.8) < 0.01
 
             start_lane.append(rx_frame.start_lane)
 
@@ -223,7 +261,7 @@ def test_axis_baser_tx_64(request, enable_dic):
     parameters['ENABLE_PADDING'] = 1
     parameters['ENABLE_DIC'] = enable_dic
     parameters['MIN_FRAME_LENGTH'] = 64
-    parameters['PTP_TS_ENABLE'] = 0
+    parameters['PTP_TS_ENABLE'] = 1
     parameters['PTP_TS_WIDTH'] = 96
     parameters['PTP_TAG_ENABLE'] = parameters['PTP_TS_ENABLE']
     parameters['PTP_TAG_WIDTH'] = 16

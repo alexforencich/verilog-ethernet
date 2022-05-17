@@ -36,10 +36,9 @@ VERILOG_SOURCES += ../../rtl/lfsr.v
 export PARAM_DATA_WIDTH ?= 64
 export PARAM_KEEP_WIDTH ?= $(shell expr $(PARAM_DATA_WIDTH) / 8 )
 export PARAM_CTRL_WIDTH ?= $(shell expr $(PARAM_DATA_WIDTH) / 8 )
-export PARAM_PTP_TS_ENABLE ?= 0
+export PARAM_PTP_TS_ENABLE ?= 1
 export PARAM_PTP_TS_WIDTH ?= 96
-#export PARAM_USER_WIDTH ?= (parameters['PTP_TS_WIDTH'] if parameters['PTP_TS_ENABLE'] else 0) + 1
-export PARAM_USER_WIDTH ?= 1
+export PARAM_USER_WIDTH ?= $(if $(filter-out 1,$(PARAM_PTP_TS_ENABLE)),1,$(shell expr $(PARAM_PTP_TS_WIDTH) + 1 ))
 
 ifeq ($(SIM), icarus)
 	PLUSARGS += -fst
