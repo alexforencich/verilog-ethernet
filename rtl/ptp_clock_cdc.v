@@ -376,7 +376,6 @@ always @(posedge output_clk) begin
             sample_acc_reg <= $signed({1'b0, edge_2_reg}) - $signed({1'b0, edge_1_reg});
             sample_acc_sync_reg <= sample_acc_reg;
             if (active_reg != 0) begin
-                sample_update_reg <= !sample_update_reg;
                 sample_acc_sync_valid_reg <= 1'b1;
             end
         end
