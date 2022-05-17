@@ -52,7 +52,12 @@ module eth_phy_10g_rx_watchdog #
     input  wire                  rx_bad_block,
     input  wire                  rx_sequence_error,
     input  wire                  rx_block_lock,
-    input  wire                  rx_high_ber
+    input  wire                  rx_high_ber,
+
+    /*
+     * Status
+     */
+    output wire                  rx_status
 );
 
 // bus width assertions
@@ -71,21 +76,29 @@ localparam [1:0]
 
 reg [COUNT_WIDTH-1:0] time_count_reg = 0, time_count_next;
 reg [3:0] error_count_reg = 0, error_count_next;
+reg [3:0] status_count_reg = 0, status_count_next;
 
 reg saw_ctrl_sh_reg = 1'b0, saw_ctrl_sh_next;
 reg [9:0] block_error_count_reg = 0, block_error_count_next;
 
 reg serdes_rx_reset_req_reg = 1'b0, serdes_rx_reset_req_next;
 
+reg rx_status_reg = 1'b0, rx_status_next;
+
 assign serdes_rx_reset_req = serdes_rx_reset_req_reg;
+
+assign rx_status = rx_status_reg;
 
 always @* begin
     error_count_next = error_count_reg;
+    status_count_next = status_count_reg;
 
     saw_ctrl_sh_next = saw_ctrl_sh_reg;
     block_error_count_next = block_error_count_reg;
 
     serdes_rx_reset_req_next = 1'b0;
+
+    rx_status_next = rx_status_reg;
 
     if (rx_block_lock) begin
         if (serdes_rx_hdr == SYNC_CTRL) begin
@@ -94,6 +107,9 @@ always @* begin
         if ((rx_bad_block || rx_sequence_error) && !(&block_error_count_reg)) begin
             block_error_count_next = block_error_count_reg + 1;
         end
+    end else begin
+        rx_status_next = 1'b0;
+        status_count_next = 0;
     end
 
     if (time_count_reg != 0) begin
@@ -103,13 +119,21 @@ always @* begin
 
         if (!saw_ctrl_sh_reg || &block_error_count_reg) begin
             error_count_next = error_count_reg + 1;
+            status_count_next = 0;
         end else begin
             error_count_next = 0;
+            if (!(&status_count_reg)) begin
+                status_count_next = status_count_reg + 1;
+            end
         end
 
         if (&error_count_reg) begin
             error_count_next = 0;
             serdes_rx_reset_req_next = 1'b1;
+        end
+
+        if (&status_count_reg) begin
+            rx_status_next = 1'b1;
         end
 
         saw_ctrl_sh_next = 1'b0;
@@ -120,14 +144,18 @@ end
 always @(posedge clk) begin
     time_count_reg <= time_count_next;
     error_count_reg <= error_count_next;
+    status_count_reg <= status_count_next;
     saw_ctrl_sh_reg <= saw_ctrl_sh_next;
     block_error_count_reg <= block_error_count_next;
+    rx_status_reg <= rx_status_next;
 
     if (rst) begin
         time_count_reg <= COUNT_125US;
         error_count_reg <= 0;
+        status_count_reg <= 0;
         saw_ctrl_sh_reg <= 1'b0;
         block_error_count_reg <= 0;
+        rx_status_reg <= 1'b0;
     end
 end
 

@@ -131,6 +131,7 @@ module eth_mac_phy_10g_fifo #
     output wire                       rx_bad_block,
     output wire                       rx_block_lock,
     output wire                       rx_high_ber,
+    output wire                       rx_status,
     output wire                       rx_fifo_overflow,
     output wire                       rx_fifo_bad_frame,
     output wire                       rx_fifo_good_frame,
@@ -206,35 +207,38 @@ wire rx_error_bad_fcs_int;
 wire rx_bad_block_int;
 wire rx_block_lock_int;
 wire rx_high_ber_int;
+wire rx_status_int;
 
-reg [4:0] rx_sync_reg_1 = 5'd0;
-reg [4:0] rx_sync_reg_2 = 5'd0;
-reg [4:0] rx_sync_reg_3 = 5'd0;
-reg [4:0] rx_sync_reg_4 = 5'd0;
+reg [5:0] rx_sync_reg_1 = 6'd0;
+reg [5:0] rx_sync_reg_2 = 6'd0;
+reg [5:0] rx_sync_reg_3 = 6'd0;
+reg [5:0] rx_sync_reg_4 = 6'd0;
 
 assign rx_error_bad_frame = rx_sync_reg_3[0] ^ rx_sync_reg_4[0];
 assign rx_error_bad_fcs = rx_sync_reg_3[1] ^ rx_sync_reg_4[1];
 assign rx_bad_block = rx_sync_reg_3[2] ^ rx_sync_reg_4[2];
 assign rx_block_lock = rx_sync_reg_4[3];
 assign rx_high_ber = rx_sync_reg_4[4];
+assign rx_status = rx_sync_reg_4[5];
 
 always @(posedge rx_clk or posedge rx_rst) begin
     if (rx_rst) begin
-        rx_sync_reg_1 <= 5'd0;
+        rx_sync_reg_1 <= 6'd0;
     end else begin
         rx_sync_reg_1[0] <= rx_sync_reg_1[0] ^ rx_error_bad_frame_int;
         rx_sync_reg_1[1] <= rx_sync_reg_1[1] ^ rx_error_bad_fcs_int;
         rx_sync_reg_1[2] <= rx_sync_reg_1[2] ^ rx_bad_block_int;
         rx_sync_reg_1[3] <= rx_block_lock_int;
         rx_sync_reg_1[4] <= rx_high_ber_int;
+        rx_sync_reg_1[5] <= rx_status_int;
     end
 end
 
 always @(posedge logic_clk or posedge logic_rst) begin
     if (logic_rst) begin
-        rx_sync_reg_2 <= 5'd0;
-        rx_sync_reg_3 <= 5'd0;
-        rx_sync_reg_4 <= 5'd0;
+        rx_sync_reg_2 <= 6'd0;
+        rx_sync_reg_3 <= 6'd0;
+        rx_sync_reg_4 <= 6'd0;
     end else begin
         rx_sync_reg_2 <= rx_sync_reg_1;
         rx_sync_reg_3 <= rx_sync_reg_2;
@@ -415,6 +419,7 @@ eth_mac_phy_10g_inst (
     .rx_bad_block(rx_bad_block_int),
     .rx_block_lock(rx_block_lock_int),
     .rx_high_ber(rx_high_ber_int),
+    .rx_status(rx_status_int),
 
     .ifg_delay(ifg_delay),
 

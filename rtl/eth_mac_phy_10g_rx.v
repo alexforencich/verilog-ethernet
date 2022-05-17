@@ -84,6 +84,7 @@ module eth_mac_phy_10g_rx #
     output wire                     rx_bad_block,
     output wire                     rx_block_lock,
     output wire                     rx_high_ber,
+    output wire                     rx_status,
 
     /*
      * Configuration
@@ -134,6 +135,7 @@ eth_phy_10g_rx_if_inst (
     .rx_error_count(rx_error_count),
     .rx_block_lock(rx_block_lock),
     .rx_high_ber(rx_high_ber),
+    .rx_status(rx_status),
     .rx_prbs31_enable(rx_prbs31_enable)
 );
 
