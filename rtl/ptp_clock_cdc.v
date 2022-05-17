@@ -304,7 +304,6 @@ always @(posedge sample_clk) begin
             if (src_sync_sample_sync2_reg && !src_sync_sample_sync3_reg) begin
                 edge_1_reg <= 1'b0;
                 edge_2_reg <= 1'b0;
-                active_reg[0] <= 1'b1;
             end else begin
                 edge_1_reg <= !edge_2_reg;
                 edge_2_reg <= 1'b0;
@@ -312,7 +311,6 @@ always @(posedge sample_clk) begin
         end else if (src_sync_sample_sync2_reg && !src_sync_sample_sync3_reg) begin
             edge_1_reg <= 1'b0;
             edge_2_reg <= !edge_1_reg;
-            active_reg[0] <= 1'b1;
         end
 
         // accumulator
@@ -320,8 +318,12 @@ always @(posedge sample_clk) begin
 
         sample_cnt_reg <= sample_cnt_reg + 1;
 
+        if (src_sync_sample_sync2_reg && !src_sync_sample_sync3_reg) begin
+            active_reg[0] <= 1'b1;
+        end
+
         if (sample_cnt_reg == 0) begin
-            active_reg <= active_reg << 1;
+            active_reg <= {active_reg, src_sync_sample_sync2_reg && !src_sync_sample_sync3_reg};
             sample_acc_reg <= $signed({1'b0, edge_2_reg}) - $signed({1'b0, edge_1_reg});
             sample_acc_out_reg <= sample_acc_reg;
             if (active_reg != 0) begin
@@ -354,7 +356,6 @@ always @(posedge output_clk) begin
             if (src_sync_sync2_reg && !src_sync_sync3_reg) begin
                 edge_1_reg <= 1'b0;
                 edge_2_reg <= 1'b0;
-                active_reg[0] <= 1'b1;
             end else begin
                 edge_1_reg <= !edge_2_reg;
                 edge_2_reg <= 1'b0;
@@ -362,7 +363,6 @@ always @(posedge output_clk) begin
         end else if (src_sync_sync2_reg && !src_sync_sync3_reg) begin
             edge_1_reg <= 1'b0;
             edge_2_reg <= !edge_1_reg;
-            active_reg[0] <= 1'b1;
         end
 
         // accumulator
@@ -370,9 +370,13 @@ always @(posedge output_clk) begin
 
         sample_cnt_reg <= sample_cnt_reg + 1;
 
+        if (src_sync_sync2_reg && !src_sync_sync3_reg) begin
+            active_reg[0] <= 1'b1;
+        end
+
         sample_acc_sync_valid_reg <= 1'b0;
         if (sample_cnt_reg == 0) begin
-            active_reg <= active_reg << 1;
+            active_reg <= {active_reg, src_sync_sync2_reg && !src_sync_sync3_reg};
             sample_acc_reg <= $signed({1'b0, edge_2_reg}) - $signed({1'b0, edge_1_reg});
             sample_acc_sync_reg <= sample_acc_reg;
             if (active_reg != 0) begin
