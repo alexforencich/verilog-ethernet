@@ -221,7 +221,7 @@ end
 // PTP timestamping
 generate
 
-if (TX_PTP_TS_ENABLE) begin
+if (TX_PTP_TS_ENABLE) begin : tx_ptp
     
     ptp_clock_cdc #(
         .TS_WIDTH(PTP_TS_WIDTH),
@@ -298,7 +298,7 @@ end else begin
 
 end
 
-if (RX_PTP_TS_ENABLE) begin
+if (RX_PTP_TS_ENABLE) begin : rx_ptp
 
     ptp_clock_cdc #(
         .TS_WIDTH(PTP_TS_WIDTH),
