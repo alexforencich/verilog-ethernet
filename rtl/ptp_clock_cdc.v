@@ -701,6 +701,13 @@ always @* begin
             {period_ns_next, period_fns_next} = {NS_WIDTH+FNS_WIDTH{1'b1}};
         end
 
+        // adjust period if integrator is saturated
+        if (time_err_int_reg == 0) begin
+            {period_ns_next, period_fns_next} = {NS_WIDTH+FNS_WIDTH{1'b0}};
+        end else if (~time_err_int_reg == 0) begin
+            {period_ns_next, period_fns_next} = {NS_WIDTH+FNS_WIDTH{1'b1}};
+        end
+
         // locked status
         if ($signed(ts_ns_diff_corr_reg[17-1:4]) == 0 || $signed(ts_ns_diff_corr_reg[17-1:4]) == -1) begin
             if (ptp_lock_count_reg == {PTP_LOCK_WIDTH{1'b1}}) begin
