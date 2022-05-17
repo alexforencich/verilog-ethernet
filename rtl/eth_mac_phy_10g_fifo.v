@@ -215,14 +215,18 @@ reg [4:0] rx_sync_reg_4 = 5'd0;
 assign rx_error_bad_frame = rx_sync_reg_3[0] ^ rx_sync_reg_4[0];
 assign rx_error_bad_fcs = rx_sync_reg_3[1] ^ rx_sync_reg_4[1];
 assign rx_bad_block = rx_sync_reg_3[2] ^ rx_sync_reg_4[2];
-assign rx_block_lock = rx_sync_reg_3[3] ^ rx_sync_reg_4[3];
-assign rx_high_ber = rx_sync_reg_3[4] ^ rx_sync_reg_4[4];
+assign rx_block_lock = rx_sync_reg_4[3];
+assign rx_high_ber = rx_sync_reg_4[4];
 
 always @(posedge rx_clk or posedge rx_rst) begin
     if (rx_rst) begin
         rx_sync_reg_1 <= 5'd0;
     end else begin
-        rx_sync_reg_1 <= rx_sync_reg_1 ^ {rx_high_ber_int, rx_block_lock_int, rx_bad_block_int, rx_error_bad_fcs_int, rx_error_bad_frame_int};
+        rx_sync_reg_1[0] <= rx_sync_reg_1[0] ^ rx_error_bad_frame_int;
+        rx_sync_reg_1[1] <= rx_sync_reg_1[1] ^ rx_error_bad_fcs_int;
+        rx_sync_reg_1[2] <= rx_sync_reg_1[2] ^ rx_bad_block_int;
+        rx_sync_reg_1[3] <= rx_block_lock_int;
+        rx_sync_reg_1[4] <= rx_high_ber_int;
     end
 end
 
