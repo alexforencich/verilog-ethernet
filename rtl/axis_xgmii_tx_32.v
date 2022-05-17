@@ -329,6 +329,12 @@ always @* begin
     m_axis_ptp_ts_tag_next = m_axis_ptp_ts_tag_reg;
     m_axis_ptp_ts_valid_next = 1'b0;
 
+    if (start_packet_reg) begin
+        m_axis_ptp_ts_next = ptp_ts;
+        m_axis_ptp_ts_tag_next = s_axis_tuser >> 1;
+        m_axis_ptp_ts_valid_next = 1'b1;
+    end
+
     // XGMII idle
     xgmii_txd_next = {CTRL_WIDTH{XGMII_IDLE}};
     xgmii_txc_next = {CTRL_WIDTH{1'b1}};
@@ -370,9 +376,6 @@ always @* begin
             xgmii_txd_next = {ETH_SFD, {3{ETH_PRE}}};
             xgmii_txc_next = 4'b0000;
             s_axis_tready_next = 1'b1;
-            m_axis_ptp_ts_next = ptp_ts;
-            m_axis_ptp_ts_tag_next = s_axis_tuser >> 1;
-            m_axis_ptp_ts_valid_next = 1'b1;
             start_packet_next = 1'b1;
             state_next = STATE_PAYLOAD;
         end
