@@ -126,8 +126,6 @@ reg start_packet_reg = 1'b0, start_packet_next;
 reg error_bad_frame_reg = 1'b0, error_bad_frame_next;
 reg error_bad_fcs_reg = 1'b0, error_bad_fcs_next;
 
-reg [PTP_TS_WIDTH-1:0] ptp_ts_reg = 0, ptp_ts_next;
-
 reg [31:0] crc_state = 32'hFFFFFFFF;
 
 wire [31:0] crc_next0;
@@ -279,16 +277,10 @@ always @* begin
     error_bad_frame_next = 1'b0;
     error_bad_fcs_next = 1'b0;
 
-    ptp_ts_next = ptp_ts_reg;
-
     case (state_reg)
         STATE_IDLE: begin
             // idle state - wait for packet
             reset_crc = 1'b1;
-
-            if (PTP_TS_ENABLE) begin
-                m_axis_tuser_next[1 +: PTP_TS_WIDTH] = ptp_ts_reg;
-            end
 
             if (xgmii_rxc_d2[0] && xgmii_rxd_d2[7:0] == XGMII_START) begin
                 // start condition
@@ -306,12 +298,14 @@ always @* begin
                     state_next = STATE_PREAMBLE;
                 end
             end else begin
+                if (PTP_TS_ENABLE) begin
+                    m_axis_tuser_next[1 +: PTP_TS_WIDTH] = ptp_ts;
+                end
                 state_next = STATE_IDLE;
             end
         end
         STATE_PREAMBLE: begin
             // drop preamble
-            ptp_ts_next = ptp_ts;
             start_packet_next = 1'b1;
             state_next = STATE_PAYLOAD;
         end
@@ -391,8 +385,6 @@ always @(posedge clk) begin
     start_packet_reg <= start_packet_next;
     error_bad_frame_reg <= error_bad_frame_next;
     error_bad_fcs_reg <= error_bad_fcs_next;
-
-    ptp_ts_reg <= ptp_ts_next;
 
     last_cycle_tkeep_reg <= last_cycle_tkeep_next;
 
