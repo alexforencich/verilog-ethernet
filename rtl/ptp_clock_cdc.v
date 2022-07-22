@@ -203,9 +203,9 @@ if (PIPELINE_OUTPUT > 0) begin
 
         if (output_rst) begin
             for (i = 0; i < PIPELINE_OUTPUT; i = i + 1) begin
-                output_ts_reg[i] = 0;
-                output_ts_step_reg[i] = 1'b0;
-                output_pps_reg[i] = 1'b0;
+                output_ts_reg[i] <= 0;
+                output_ts_step_reg[i] <= 1'b0;
+                output_pps_reg[i] <= 1'b0;
             end
         end
     end
@@ -800,11 +800,11 @@ always @(posedge output_clk) begin
         ptp_locked_reg <= 1'b0;
 
         for (i = 0; i < PIPELINE_OUTPUT; i = i + 1) begin
-            ts_s_pipe_reg[i] = 0;
-            ts_ns_pipe_reg[i] = 0;
-            ts_fns_pipe_reg[i] = 0;
-            ts_step_pipe_reg[i] = 1'b0;
-            pps_pipe_reg[i] = 1'b0;
+            ts_s_pipe_reg[i] <= 0;
+            ts_ns_pipe_reg[i] <= 0;
+            ts_fns_pipe_reg[i] <= 0;
+            ts_step_pipe_reg[i] <= 1'b0;
+            pps_pipe_reg[i] <= 1'b0;
         end
     end
 end
