@@ -82,6 +82,7 @@ async def run_default_rate(dut):
     await tb.reset()
 
     await RisingEdge(dut.clk)
+    await RisingEdge(dut.clk)
     start_time = get_sim_time('sec')
     start_ts_96 = (dut.output_ts_96.value.integer >> 48) + ((dut.output_ts_96.value.integer & 0xffffffffffff)/2**16*1e-9)
     start_ts_64 = dut.output_ts_64.value.integer/2**16*1e-9

@@ -93,6 +93,10 @@ localparam [30:0] NS_PER_S = 31'd1_000_000_000;
 
 reg [NS_WIDTH-1:0] period_ns_reg = 0, period_ns_next;
 reg [FNS_WIDTH-1:0] period_fns_reg = 0, period_fns_next;
+reg [NS_WIDTH-1:0] period_ns_delay_reg = 0, period_ns_delay_next;
+reg [FNS_WIDTH-1:0] period_fns_delay_reg = 0, period_fns_delay_next;
+reg [30:0] period_ns_ovf_reg = 0, period_ns_ovf_next;
+reg [FNS_WIDTH-1:0] period_fns_ovf_reg = 0, period_fns_ovf_next;
 
 reg [47:0] src_ts_s_capt_reg = 0;
 reg [TS_NS_WIDTH-1:0] src_ts_ns_capt_reg = 0;
@@ -570,21 +574,22 @@ always @* begin
     ptp_locked_next = ptp_locked_reg;
 
     // PTP clock
+    {period_ns_delay_next, period_fns_delay_next} = {period_ns_reg, period_fns_reg};
+    {period_ns_ovf_next, period_fns_ovf_next} = {NS_PER_S, {FNS_WIDTH{1'b0}}} - {period_ns_reg, period_fns_reg};
+
     if (TS_WIDTH == 96) begin
         // 96 bit timestamp
+        {ts_ns_inc_next, ts_fns_inc_next} = {ts_ns_inc_reg, ts_fns_inc_reg} + {period_ns_delay_reg, period_fns_delay_reg};
+        {ts_ns_ovf_next, ts_fns_ovf_next} = {ts_ns_inc_reg, ts_fns_inc_reg} - {period_ns_ovf_reg, period_fns_ovf_reg};
+        {ts_ns_next, ts_fns_next} = {ts_ns_inc_reg, ts_fns_inc_reg};
+
         if (!ts_ns_ovf_reg[30]) begin
             // if the overflow lookahead did not borrow, one second has elapsed
-            // increment seconds field, pre-compute both normal increment and overflow values
-            {ts_ns_inc_next, ts_fns_inc_next} = {ts_ns_ovf_reg, ts_fns_ovf_reg} + {period_ns_reg, period_fns_reg};
-            {ts_ns_ovf_next, ts_fns_ovf_next} = {ts_ns_ovf_reg, ts_fns_ovf_reg} + {period_ns_reg, period_fns_reg} - {NS_PER_S, {FNS_WIDTH{1'b0}}};
+            // increment seconds field, pre-compute normal increment, force overflow lookahead borrow bit set
+            {ts_ns_inc_next, ts_fns_inc_next} = {ts_ns_ovf_reg, ts_fns_ovf_reg} + {period_ns_delay_reg, period_fns_delay_reg};
+            ts_ns_ovf_next[30] = 1'b1;
             {ts_ns_next, ts_fns_next} = {ts_ns_ovf_reg, ts_fns_ovf_reg};
-            ts_s_next = ts_s_next + 1;
-        end else begin
-            // no increment seconds field, pre-compute both normal increment and overflow values
-            {ts_ns_inc_next, ts_fns_inc_next} = {ts_ns_inc_reg, ts_fns_inc_reg} + {period_ns_reg, period_fns_reg};
-            {ts_ns_ovf_next, ts_fns_ovf_next} = {ts_ns_inc_reg, ts_fns_inc_reg} + {period_ns_reg, period_fns_reg} - {NS_PER_S, {FNS_WIDTH{1'b0}}};
-            {ts_ns_next, ts_fns_next} = {ts_ns_inc_reg, ts_fns_inc_reg};
-            ts_s_next = ts_s_next;
+            ts_s_next = ts_s_reg + 1;
         end
     end else if (TS_WIDTH == 64) begin
         // 64 bit timestamp
@@ -601,10 +606,9 @@ always @* begin
                 ts_s_next = ts_s_sync_reg;
                 ts_ns_next = ts_ns_sync_reg;
                 ts_ns_inc_next = ts_ns_sync_reg;
-                ts_ns_ovf_next = {TS_NS_WIDTH+1{1'b1}};
+                ts_ns_ovf_next[30] = 1'b1;
                 ts_fns_next = ts_fns_sync_reg;
                 ts_fns_inc_next = ts_fns_sync_reg;
-                ts_fns_ovf_next = {FNS_WIDTH{1'b1}};
                 ts_step_next = 1;
             end else begin
                 // input did not step
@@ -727,6 +731,10 @@ end
 always @(posedge output_clk) begin
     period_ns_reg <= period_ns_next;
     period_fns_reg <= period_fns_next;
+    period_ns_delay_reg <= period_ns_delay_next;
+    period_fns_delay_reg <= period_fns_delay_next;
+    period_ns_ovf_reg <= period_ns_ovf_next;
+    period_fns_ovf_reg <= period_fns_ovf_next;
 
     ts_s_reg <= ts_s_next;
     ts_ns_reg <= ts_ns_next;
@@ -782,13 +790,16 @@ always @(posedge output_clk) begin
     if (output_rst) begin
         period_ns_reg <= 0;
         period_fns_reg <= 0;
+        period_ns_delay_reg <= 0;
+        period_fns_delay_reg <= 0;
+        period_ns_ovf_reg <= 0;
+        period_fns_ovf_reg <= 0;
         ts_s_reg <= 0;
         ts_ns_reg <= 0;
         ts_fns_reg <= 0;
         ts_ns_inc_reg <= 0;
         ts_fns_inc_reg <= 0;
-        ts_ns_ovf_reg <= {TS_NS_WIDTH+1{1'b1}};
-        ts_fns_ovf_reg <= {FNS_WIDTH{1'b1}};
+        ts_ns_ovf_reg[30] <= 1'b1;
         ts_step_reg <= 0;
         pps_reg <= 0;
 

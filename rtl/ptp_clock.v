@@ -112,6 +112,10 @@ reg [15:0] drift_rate_reg = DRIFT_RATE;
 
 reg [INC_NS_WIDTH-1:0] ts_inc_ns_reg = 0;
 reg [FNS_WIDTH-1:0] ts_inc_fns_reg = 0;
+reg [INC_NS_WIDTH-1:0] ts_inc_ns_delay_reg = 0;
+reg [FNS_WIDTH-1:0] ts_inc_fns_delay_reg = 0;
+reg [30:0] ts_inc_ns_ovf_reg = 0;
+reg [FNS_WIDTH-1:0] ts_inc_fns_ovf_reg = 0;
 
 reg [47:0] ts_96_s_reg = 0;
 reg [29:0] ts_96_ns_reg = 0;
@@ -250,19 +254,20 @@ always @(posedge clk) begin
     end
 
     // 96 bit timestamp
+    {ts_inc_ns_delay_reg, ts_inc_fns_delay_reg} <= {ts_inc_ns_reg, ts_inc_fns_reg};
+    {ts_inc_ns_ovf_reg, ts_inc_fns_ovf_reg} <= {NS_PER_S, {FNS_WIDTH{1'b0}}} - {ts_inc_ns_reg, ts_inc_fns_reg};
+
+    {ts_96_ns_inc_reg, ts_96_fns_inc_reg} <= {ts_96_ns_inc_reg, ts_96_fns_inc_reg} + {ts_inc_ns_delay_reg, ts_inc_fns_delay_reg};
+    {ts_96_ns_ovf_reg, ts_96_fns_ovf_reg} <= {ts_96_ns_inc_reg, ts_96_fns_inc_reg} - {ts_inc_ns_ovf_reg, ts_inc_fns_ovf_reg};
+    {ts_96_ns_reg, ts_96_fns_reg} <= {ts_96_ns_inc_reg, ts_96_fns_inc_reg};
+
     if (!ts_96_ns_ovf_reg[30]) begin
         // if the overflow lookahead did not borrow, one second has elapsed
-        // increment seconds field, pre-compute both normal increment and overflow values
-        {ts_96_ns_inc_reg, ts_96_fns_inc_reg} <= {ts_96_ns_ovf_reg, ts_96_fns_ovf_reg} + {ts_inc_ns_reg, ts_inc_fns_reg};
-        {ts_96_ns_ovf_reg, ts_96_fns_ovf_reg} <= {ts_96_ns_ovf_reg, ts_96_fns_ovf_reg} + {ts_inc_ns_reg, ts_inc_fns_reg} - {NS_PER_S, {FNS_WIDTH{1'b0}}};
+        // increment seconds field, pre-compute normal increment, force overflow lookahead borrow bit set
+        {ts_96_ns_inc_reg, ts_96_fns_inc_reg} <= {ts_96_ns_ovf_reg, ts_96_fns_ovf_reg} + {ts_inc_ns_delay_reg, ts_inc_fns_delay_reg};
+        ts_96_ns_ovf_reg[30] <= 1'b1;
         {ts_96_ns_reg, ts_96_fns_reg} <= {ts_96_ns_ovf_reg, ts_96_fns_ovf_reg};
         ts_96_s_reg <= ts_96_s_reg + 1;
-    end else begin
-        // no increment seconds field, pre-compute both normal increment and overflow values
-        {ts_96_ns_inc_reg, ts_96_fns_inc_reg} <= {ts_96_ns_inc_reg, ts_96_fns_inc_reg} + {ts_inc_ns_reg, ts_inc_fns_reg};
-        {ts_96_ns_ovf_reg, ts_96_fns_ovf_reg} <= {ts_96_ns_inc_reg, ts_96_fns_inc_reg} + {ts_inc_ns_reg, ts_inc_fns_reg} - {NS_PER_S, {FNS_WIDTH{1'b0}}};
-        {ts_96_ns_reg, ts_96_fns_reg} <= {ts_96_ns_inc_reg, ts_96_fns_inc_reg};
-        ts_96_s_reg <= ts_96_s_reg;
     end
 
     if (input_ts_96_valid) begin
@@ -270,10 +275,9 @@ always @(posedge clk) begin
         ts_96_s_reg <= input_ts_96[95:48];
         ts_96_ns_reg <= input_ts_96[45:16];
         ts_96_ns_inc_reg <= input_ts_96[45:16];
-        ts_96_ns_ovf_reg <= 31'h7fffffff;
+        ts_96_ns_ovf_reg[30] <= 1'b1;
         ts_96_fns_reg <= FNS_WIDTH > 16 ? input_ts_96[15:0] << (FNS_WIDTH-16) : input_ts_96[15:0] >> (16-FNS_WIDTH);
         ts_96_fns_inc_reg <= FNS_WIDTH > 16 ? input_ts_96[15:0] << (FNS_WIDTH-16) : input_ts_96[15:0] >> (16-FNS_WIDTH);
-        ts_96_fns_ovf_reg <= {FNS_WIDTH{1'b1}};
         ts_step_reg <= 1;
     end
 
@@ -300,13 +304,16 @@ always @(posedge clk) begin
         drift_rate_reg <= DRIFT_RATE;
         ts_inc_ns_reg <= 0;
         ts_inc_fns_reg <= 0;
+        ts_inc_ns_delay_reg <= 0;
+        ts_inc_fns_delay_reg <= 0;
+        ts_inc_ns_ovf_reg <= 0;
+        ts_inc_fns_ovf_reg <= 0;
         ts_96_s_reg <= 0;
         ts_96_ns_reg <= 0;
         ts_96_fns_reg <= 0;
         ts_96_ns_inc_reg <= 0;
         ts_96_fns_inc_reg <= 0;
-        ts_96_ns_ovf_reg <= 31'h7fffffff;
-        ts_96_fns_ovf_reg <= {FNS_WIDTH{1'b1}};
+        ts_96_ns_ovf_reg[30] <= 1'b1;
         ts_64_ns_reg <= 0;
         ts_64_fns_reg <= 0;
         ts_step_reg <= 0;
