@@ -96,6 +96,8 @@ module ptp_clock #
 
 parameter INC_NS_WIDTH = $clog2(2**PERIOD_NS_WIDTH + 2**OFFSET_NS_WIDTH + 2**DRIFT_NS_WIDTH);
 
+localparam [30:0] NS_PER_S = 31'd1_000_000_000;
+
 reg [PERIOD_NS_WIDTH-1:0] period_ns_reg = PERIOD_NS;
 reg [FNS_WIDTH-1:0] period_fns_reg = PERIOD_FNS;
 
@@ -252,13 +254,13 @@ always @(posedge clk) begin
         // if the overflow lookahead did not borrow, one second has elapsed
         // increment seconds field, pre-compute both normal increment and overflow values
         {ts_96_ns_inc_reg, ts_96_fns_inc_reg} <= {ts_96_ns_ovf_reg, ts_96_fns_ovf_reg} + {ts_inc_ns_reg, ts_inc_fns_reg};
-        {ts_96_ns_ovf_reg, ts_96_fns_ovf_reg} <= {ts_96_ns_ovf_reg, ts_96_fns_ovf_reg} + {ts_inc_ns_reg, ts_inc_fns_reg} - {31'd1_000_000_000, {FNS_WIDTH{1'b0}}};
+        {ts_96_ns_ovf_reg, ts_96_fns_ovf_reg} <= {ts_96_ns_ovf_reg, ts_96_fns_ovf_reg} + {ts_inc_ns_reg, ts_inc_fns_reg} - {NS_PER_S, {FNS_WIDTH{1'b0}}};
         {ts_96_ns_reg, ts_96_fns_reg} <= {ts_96_ns_ovf_reg, ts_96_fns_ovf_reg};
         ts_96_s_reg <= ts_96_s_reg + 1;
     end else begin
         // no increment seconds field, pre-compute both normal increment and overflow values
         {ts_96_ns_inc_reg, ts_96_fns_inc_reg} <= {ts_96_ns_inc_reg, ts_96_fns_inc_reg} + {ts_inc_ns_reg, ts_inc_fns_reg};
-        {ts_96_ns_ovf_reg, ts_96_fns_ovf_reg} <= {ts_96_ns_inc_reg, ts_96_fns_inc_reg} + {ts_inc_ns_reg, ts_inc_fns_reg} - {31'd1_000_000_000, {FNS_WIDTH{1'b0}}};
+        {ts_96_ns_ovf_reg, ts_96_fns_ovf_reg} <= {ts_96_ns_inc_reg, ts_96_fns_inc_reg} + {ts_inc_ns_reg, ts_inc_fns_reg} - {NS_PER_S, {FNS_WIDTH{1'b0}}};
         {ts_96_ns_reg, ts_96_fns_reg} <= {ts_96_ns_inc_reg, ts_96_fns_inc_reg};
         ts_96_s_reg <= ts_96_s_reg;
     end

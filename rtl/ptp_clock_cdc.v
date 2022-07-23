@@ -89,6 +89,8 @@ parameter SAMPLE_ACC_WIDTH = LOG_SAMPLE_SYNC_RATE+2;
 parameter DEST_SYNC_LOCK_WIDTH = 7;
 parameter PTP_LOCK_WIDTH = 8;
 
+localparam [30:0] NS_PER_S = 31'd1_000_000_000;
+
 reg [NS_WIDTH-1:0] period_ns_reg = 0, period_ns_next;
 reg [FNS_WIDTH-1:0] period_fns_reg = 0, period_fns_next;
 
@@ -574,13 +576,13 @@ always @* begin
             // if the overflow lookahead did not borrow, one second has elapsed
             // increment seconds field, pre-compute both normal increment and overflow values
             {ts_ns_inc_next, ts_fns_inc_next} = {ts_ns_ovf_reg, ts_fns_ovf_reg} + {period_ns_reg, period_fns_reg};
-            {ts_ns_ovf_next, ts_fns_ovf_next} = {ts_ns_ovf_reg, ts_fns_ovf_reg} + {period_ns_reg, period_fns_reg} - {31'd1_000_000_000, {FNS_WIDTH{1'b0}}};
+            {ts_ns_ovf_next, ts_fns_ovf_next} = {ts_ns_ovf_reg, ts_fns_ovf_reg} + {period_ns_reg, period_fns_reg} - {NS_PER_S, {FNS_WIDTH{1'b0}}};
             {ts_ns_next, ts_fns_next} = {ts_ns_ovf_reg, ts_fns_ovf_reg};
             ts_s_next = ts_s_next + 1;
         end else begin
             // no increment seconds field, pre-compute both normal increment and overflow values
             {ts_ns_inc_next, ts_fns_inc_next} = {ts_ns_inc_reg, ts_fns_inc_reg} + {period_ns_reg, period_fns_reg};
-            {ts_ns_ovf_next, ts_fns_ovf_next} = {ts_ns_inc_reg, ts_fns_inc_reg} + {period_ns_reg, period_fns_reg} - {31'd1_000_000_000, {FNS_WIDTH{1'b0}}};
+            {ts_ns_ovf_next, ts_fns_ovf_next} = {ts_ns_inc_reg, ts_fns_inc_reg} + {period_ns_reg, period_fns_reg} - {NS_PER_S, {FNS_WIDTH{1'b0}}};
             {ts_ns_next, ts_fns_next} = {ts_ns_inc_reg, ts_fns_inc_reg};
             ts_s_next = ts_s_next;
         end
@@ -639,14 +641,14 @@ always @* begin
                 ts_ns_diff_corr_next = ts_ns_diff_reg[16:0];
                 ts_fns_diff_corr_next = ts_fns_diff_reg;
                 diff_corr_valid_next = 1'b1;
-            end else if ($signed(ts_s_diff_reg) == 1 && ts_ns_diff_reg[30:16] == 15'h4465) begin
+            end else if ($signed(ts_s_diff_reg) == 1 && ts_ns_diff_reg[30:16] == ~NS_PER_S[30:16]) begin
                 // difference is small with 1 second difference; adjust and slew
-                ts_ns_diff_corr_next = ts_ns_diff_reg[16:0] + 17'h0ca00;
+                ts_ns_diff_corr_next = ts_ns_diff_reg[16:0] + NS_PER_S[16:0];
                 ts_fns_diff_corr_next = ts_fns_diff_reg;
                 diff_corr_valid_next = 1'b1;
-            end else if ($signed(ts_s_diff_reg) == -1 && ts_ns_diff_reg[30:16] == 15'h3b9a) begin
+            end else if ($signed(ts_s_diff_reg) == -1 && ts_ns_diff_reg[30:16] == NS_PER_S[30:16]) begin
                 // difference is small with 1 second difference; adjust and slew
-                ts_ns_diff_corr_next = ts_ns_diff_reg[16:0] - 17'h0ca00;
+                ts_ns_diff_corr_next = ts_ns_diff_reg[16:0] - NS_PER_S[16:0];
                 ts_fns_diff_corr_next = ts_fns_diff_reg;
                 diff_corr_valid_next = 1'b1;
             end else begin
