@@ -539,9 +539,6 @@ always @(posedge clk) begin
         error_bad_frame_reg <= 1'b0;
         error_bad_fcs_reg <= 1'b0;
 
-        crc_state <= 32'hFFFFFFFF;
-        crc_state3 <= 32'hFFFFFFFF;
-
         xgmii_rxc_d0 <= {CTRL_WIDTH{1'b0}};
         xgmii_rxc_d1 <= {CTRL_WIDTH{1'b0}};
 

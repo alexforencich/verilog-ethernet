@@ -758,8 +758,6 @@ always @(posedge clk) begin
     if (rst) begin
         state_reg <= STATE_IDLE;
 
-        frame_ptr_reg <= 16'd0;
-
         ifg_count_reg <= 8'd0;
         deficit_idle_count_reg <= 2'd0;
 
@@ -773,8 +771,6 @@ always @(posedge clk) begin
 
         start_packet_reg <= 2'b00;
         error_underflow_reg <= 1'b0;
-
-        crc_state <= 32'hFFFFFFFF;
 
         lanes_swapped <= 1'b0;
     end

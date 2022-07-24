@@ -596,9 +596,6 @@ always @(posedge clk) begin
         error_bad_fcs_reg <= 1'b0;
         rx_bad_block_reg <= 1'b0;
 
-        crc_state <= 32'hFFFFFFFF;
-        crc_state3 <= 32'hFFFFFFFF;
-
         input_type_d0 <= INPUT_TYPE_IDLE;
         input_type_d1 <= INPUT_TYPE_IDLE;
 

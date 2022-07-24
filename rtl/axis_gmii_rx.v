@@ -327,8 +327,6 @@ always @(posedge clk) begin
         error_bad_frame_reg <= 1'b0;
         error_bad_fcs_reg <= 1'b0;
 
-        crc_state <= 32'hFFFFFFFF;
-
         mii_locked <= 1'b0;
         mii_odd <= 1'b0;
 

@@ -428,8 +428,6 @@ always @(posedge clk) begin
     if (rst) begin
         state_reg <= STATE_IDLE;
 
-        frame_ptr_reg <= 16'd0;
-
         s_axis_tready_reg <= 1'b0;
 
         m_axis_ptp_ts_valid_reg <= 1'b0;
@@ -439,8 +437,6 @@ always @(posedge clk) begin
 
         start_packet_reg <= 1'b0;
         error_underflow_reg <= 1'b0;
-
-        crc_state <= 32'hFFFFFFFF;
     end
 end
 
