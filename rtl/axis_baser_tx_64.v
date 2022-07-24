@@ -585,7 +585,6 @@ always @* begin
                     s_axis_tready_next = 1'b0;
                     if (s_axis_tuser[0]) begin
                         output_type_next = OUTPUT_TYPE_ERROR;
-                        frame_ptr_next = 16'd0;
                         ifg_count_next = 8'd8;
                         state_next = STATE_IFG;
                     end else begin
@@ -612,7 +611,6 @@ always @* begin
             end else begin
                 // tvalid deassert, fail frame
                 output_type_next = OUTPUT_TYPE_ERROR;
-                frame_ptr_next = 16'd0;
                 ifg_count_next = 8'd8;
                 error_underflow_next = 1'b1;
                 state_next = STATE_WAIT_END;
@@ -646,8 +644,6 @@ always @* begin
             output_data_next = fcs_output_data_0;
             output_type_next = fcs_output_type_0;
 
-            frame_ptr_next = 16'd0;
-
             ifg_count_next = (ifg_delay > 8'd12 ? ifg_delay : 8'd12) - ifg_offset + (lanes_swapped ? 8'd4 : 8'd0) + deficit_idle_count_reg;
             if (extra_cycle) begin
                 state_next = STATE_FCS_2;
@@ -663,7 +659,6 @@ always @* begin
             output_type_next = fcs_output_type_1;
 
             reset_crc = 1'b1;
-            frame_ptr_next = 16'd0;
 
             if (ENABLE_DIC) begin
                 if (ifg_count_next > 8'd7) begin

@@ -399,7 +399,6 @@ always @* begin
                     if (s_axis_tuser[0]) begin
                         xgmii_txd_next = {XGMII_TERM, {3{XGMII_ERROR}}};
                         xgmii_txc_next = 4'b1111;
-                        frame_ptr_next = 16'd0;
                         ifg_count_next = 8'd10;
                         state_next = STATE_IFG;
                     end else begin
@@ -427,7 +426,6 @@ always @* begin
                 // tvalid deassert, fail frame
                 xgmii_txd_next = {XGMII_TERM, {3{XGMII_ERROR}}};
                 xgmii_txc_next = 4'b1111;
-                frame_ptr_next = 16'd0;
                 ifg_count_next = 8'd10;
                 error_underflow_next = 1'b1;
                 state_next = STATE_WAIT_END;
@@ -461,8 +459,6 @@ always @* begin
             xgmii_txd_next = fcs_output_txd_0;
             xgmii_txc_next = fcs_output_txc_0;
 
-            frame_ptr_next = 16'd0;
-
             ifg_count_next = (ifg_delay > 8'd12 ? ifg_delay : 8'd12) - ifg_offset + deficit_idle_count_reg;
             state_next = STATE_FCS_2;
         end
@@ -472,8 +468,6 @@ always @* begin
 
             xgmii_txd_next = fcs_output_txd_1;
             xgmii_txc_next = fcs_output_txc_1;
-
-            frame_ptr_next = 16'd0;
 
             if (extra_cycle) begin
                 state_next = STATE_FCS_3;
@@ -489,7 +483,6 @@ always @* begin
             xgmii_txc_next = 4'b1111;
 
             reset_crc = 1'b1;
-            frame_ptr_next = 16'd0;
 
             if (ENABLE_DIC) begin
                 if (ifg_count_next > 8'd3) begin
