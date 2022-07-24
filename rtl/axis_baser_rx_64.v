@@ -340,13 +340,18 @@ always @* begin
             m_axis_tlast_next = 1'b0;
             m_axis_tuser_next[0] = 1'b0;
 
+            if (input_type_d0[3]) begin
+                // INPUT_TYPE_TERM_*
+                reset_crc = 1'b1;
+                update_crc_last = 1'b1;
+            end
+
             if (input_type_d0 == INPUT_TYPE_DATA) begin
                 state_next = STATE_PAYLOAD;
             end else if (input_type_d0[3]) begin
                 // INPUT_TYPE_TERM_*
                 if (input_type_d0 <= INPUT_TYPE_TERM_4) begin
                     // end this cycle
-                    reset_crc = 1'b1;
                     case (input_type_d0)
                         INPUT_TYPE_TERM_0: m_axis_tkeep_next = 8'b00001111;
                         INPUT_TYPE_TERM_1: m_axis_tkeep_next = 8'b00011111;
@@ -369,7 +374,6 @@ always @* begin
                     state_next = STATE_IDLE;
                 end else begin
                     // need extra cycle
-                    update_crc_last = 1'b1;
                     state_next = STATE_LAST;
                 end
             end else begin

@@ -353,6 +353,11 @@ always @* begin
 
             last_cycle_tkeep_next = {4'b0000, tkeep_mask[7:4]};
 
+            if (detect_term) begin
+                reset_crc = 1'b1;
+                update_crc_last = 1'b1;
+            end
+
             if (control_masked) begin
                 // control or error characters in packet
                 m_axis_tlast_next = 1'b1;
@@ -363,7 +368,6 @@ always @* begin
             end else if (detect_term) begin
                 if (detect_term[4:0]) begin
                     // end this cycle
-                    reset_crc = 1'b1;
                     m_axis_tkeep_next = {tkeep_mask[3:0], 4'b1111};
                     m_axis_tlast_next = 1'b1;
                     if ((detect_term[0] && crc_valid7_save) ||
@@ -380,7 +384,6 @@ always @* begin
                     state_next = STATE_IDLE;
                 end else begin
                     // need extra cycle
-                    update_crc_last = 1'b1;
                     state_next = STATE_LAST;
                 end
             end else begin
