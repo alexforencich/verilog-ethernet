@@ -85,6 +85,8 @@ module axis_xgmii_tx_32 #
     output wire                      error_underflow
 );
 
+localparam EMPTY_WIDTH = $clog2(KEEP_WIDTH);
+
 // bus width assertions
 initial begin
     if (DATA_WIDTH != 32) begin
@@ -131,8 +133,8 @@ reg update_crc;
 
 reg [DATA_WIDTH-1:0] s_axis_tdata_masked;
 
-reg [DATA_WIDTH-1:0] s_tdata_reg ={DATA_WIDTH{1'b0}}, s_tdata_next;
-reg [KEEP_WIDTH-1:0] s_tkeep_reg = {KEEP_WIDTH{1'b0}}, s_tkeep_next;
+reg [DATA_WIDTH-1:0] s_tdata_reg = 0, s_tdata_next;
+reg [EMPTY_WIDTH-1:0] s_empty_reg = 0, s_empty_next;
 
 reg [DATA_WIDTH-1:0] fcs_output_txd_0;
 reg [DATA_WIDTH-1:0] fcs_output_txd_1;
@@ -254,6 +256,17 @@ function [2:0] keep2count;
     endcase
 endfunction
 
+function [1:0] keep2empty;
+    input [3:0] k;
+    casez (k)
+        4'bzzz0: keep2empty = 2'd3;
+        4'bzz01: keep2empty = 2'd3;
+        4'bz011: keep2empty = 2'd2;
+        4'b0111: keep2empty = 2'd1;
+        4'b1111: keep2empty = 2'd0;
+    endcase
+endfunction
+
 // Mask input data
 integer j;
 
@@ -265,8 +278,8 @@ end
 
 // FCS cycle calculation
 always @* begin
-    casez (s_tkeep_reg)
-        4'bzz01: begin
+    casez (s_empty_reg)
+        2'd3: begin
             fcs_output_txd_0 = {~crc_next0[23:0], s_tdata_reg[7:0]};
             fcs_output_txd_1 = {{2{XGMII_IDLE}}, XGMII_TERM, ~crc_next0[31:24]};
             fcs_output_txc_0 = 4'b0000;
@@ -274,7 +287,7 @@ always @* begin
             ifg_offset = 8'd3;
             extra_cycle = 1'b0;
         end
-        4'bz011: begin
+        2'd2: begin
             fcs_output_txd_0 = {~crc_next1[15:0], s_tdata_reg[15:0]};
             fcs_output_txd_1 = {XGMII_IDLE, XGMII_TERM, ~crc_next1[31:16]};
             fcs_output_txc_0 = 4'b0000;
@@ -282,7 +295,7 @@ always @* begin
             ifg_offset = 8'd2;
             extra_cycle = 1'b0;
         end
-        4'b0111: begin
+        2'd1: begin
             fcs_output_txd_0 = {~crc_next2[7:0], s_tdata_reg[23:0]};
             fcs_output_txd_1 = {XGMII_TERM, ~crc_next2[31:8]};
             fcs_output_txc_0 = 4'b0000;
@@ -290,21 +303,13 @@ always @* begin
             ifg_offset = 8'd1;
             extra_cycle = 1'b0;
         end
-        4'b1111: begin
+        2'd0: begin
             fcs_output_txd_0 = s_tdata_reg;
             fcs_output_txd_1 = ~crc_next3;
             fcs_output_txc_0 = 4'b0000;
             fcs_output_txc_1 = 4'b0000;
             ifg_offset = 8'd4;
             extra_cycle = 1'b1;
-        end
-        default: begin
-            fcs_output_txd_0 = {CTRL_WIDTH{XGMII_ERROR}};
-            fcs_output_txd_1 = {CTRL_WIDTH{XGMII_ERROR}};
-            fcs_output_txc_0 = {CTRL_WIDTH{1'b1}};
-            fcs_output_txc_1 = {CTRL_WIDTH{1'b1}};
-            ifg_offset = 8'd0;
-            extra_cycle = 1'b0;
         end
     endcase
 end
@@ -323,7 +328,7 @@ always @* begin
     s_axis_tready_next = 1'b0;
 
     s_tdata_next = s_tdata_reg;
-    s_tkeep_next = s_tkeep_reg;
+    s_empty_next = s_empty_reg;
 
     m_axis_ptp_ts_next = m_axis_ptp_ts_reg;
     m_axis_ptp_ts_tag_next = m_axis_ptp_ts_tag_reg;
@@ -353,7 +358,7 @@ always @* begin
             xgmii_txc_next = {CTRL_WIDTH{1'b1}};
 
             s_tdata_next = s_axis_tdata_masked;
-            s_tkeep_next = s_axis_tkeep;
+            s_empty_next = keep2empty(s_axis_tkeep);
 
             if (s_axis_tvalid) begin
                 // XGMII start and preamble
@@ -371,7 +376,7 @@ always @* begin
             // send preamble
 
             s_tdata_next = s_axis_tdata_masked;
-            s_tkeep_next = s_axis_tkeep;
+            s_empty_next = keep2empty(s_axis_tkeep);
 
             xgmii_txd_next = {ETH_SFD, {3{ETH_PRE}}};
             xgmii_txc_next = 4'b0000;
@@ -390,7 +395,7 @@ always @* begin
             xgmii_txc_next = 4'b0000;
 
             s_tdata_next = s_axis_tdata_masked;
-            s_tkeep_next = s_axis_tkeep;
+            s_empty_next = keep2empty(s_axis_tkeep);
 
             if (s_axis_tvalid) begin
                 if (s_axis_tlast) begin
@@ -405,13 +410,13 @@ always @* begin
                         s_axis_tready_next = 1'b0;
 
                         if (ENABLE_PADDING && (frame_ptr_reg < MIN_FL_NOCRC_MS || (frame_ptr_reg == MIN_FL_NOCRC_MS && keep2count(s_axis_tkeep) < MIN_FL_NOCRC_LS))) begin
-                            s_tkeep_next = 4'hf;
+                            s_empty_next = 0;
                             frame_ptr_next = frame_ptr_reg + 16'd4;
 
                             if (frame_ptr_reg < (MIN_FL_NOCRC_LS > 0 ? MIN_FL_NOCRC_MS : MIN_FL_NOCRC_MS-4)) begin
                                 state_next = STATE_PAD;
                             end else begin
-                                s_tkeep_next = 4'hf >> ((4-MIN_FL_NOCRC_LS) % 4);
+                                s_empty_next = (4-MIN_FL_NOCRC_LS) % 4;
 
                                 state_next = STATE_FCS_1;
                             end
@@ -439,7 +444,7 @@ always @* begin
             xgmii_txc_next = {CTRL_WIDTH{1'b0}};
 
             s_tdata_next = 32'd0;
-            s_tkeep_next = 4'hf;
+            s_empty_next = 0;
 
             update_crc = 1'b1;
             frame_ptr_next = frame_ptr_reg + 16'd4;
@@ -447,7 +452,7 @@ always @* begin
             if (frame_ptr_reg < (MIN_FL_NOCRC_LS > 0 ? MIN_FL_NOCRC_MS : MIN_FL_NOCRC_MS-4)) begin
                 state_next = STATE_PAD;
             end else begin
-                s_tkeep_next = 4'hf >> ((4-MIN_FL_NOCRC_LS) % 4);
+                s_empty_next = (4-MIN_FL_NOCRC_LS) % 4;
 
                 state_next = STATE_FCS_1;
             end
@@ -577,7 +582,7 @@ always @(posedge clk) begin
     deficit_idle_count_reg <= deficit_idle_count_next;
 
     s_tdata_reg <= s_tdata_next;
-    s_tkeep_reg <= s_tkeep_next;
+    s_empty_reg <= s_empty_next;
 
     s_axis_tready_reg <= s_axis_tready_next;
 
