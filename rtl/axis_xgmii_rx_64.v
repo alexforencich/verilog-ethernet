@@ -132,6 +132,8 @@ reg error_bad_frame_reg = 1'b0, error_bad_frame_next;
 reg error_bad_fcs_reg = 1'b0, error_bad_fcs_next;
 
 reg [PTP_TS_WIDTH-1:0] ptp_ts_reg = 0;
+reg [PTP_TS_WIDTH-1:0] ptp_ts_adj_reg = 0;
+reg ptp_ts_borrow_reg = 0;
 
 reg [31:0] crc_state = 32'hFFFFFFFF;
 reg [31:0] crc_state3 = 32'hFFFFFFFF;
@@ -278,7 +280,7 @@ always @* begin
                 // start condition
 
                 if (PTP_TS_ENABLE) begin
-                    m_axis_tuser_next[1 +: PTP_TS_WIDTH] = ptp_ts_reg;
+                    m_axis_tuser_next[1 +: PTP_TS_WIDTH] = (PTP_TS_WIDTH != 96 || ptp_ts_borrow_reg) ? ptp_ts_reg : ptp_ts_adj_reg;
                 end
 
                 if (control_masked) begin
@@ -407,10 +409,12 @@ always @(posedge clk) begin
     swap_rxd <= xgmii_rxd[63:32];
     swap_rxc <= xgmii_rxc[7:4];
 
-    if (PTP_TS_WIDTH == 96 && $signed({1'b0, ptp_ts_reg[45:16]}) - $signed(31'd1000000000) > 0) begin
+    if (PTP_TS_ENABLE && PTP_TS_WIDTH == 96) begin
         // ns field rollover
-        ptp_ts_reg[45:16] <= $signed({1'b0, ptp_ts_reg[45:16]}) - $signed(31'd1000000000);
-        ptp_ts_reg[95:48] <= ptp_ts_reg[95:48] + 1;
+        ptp_ts_adj_reg[15:0] <= ptp_ts_reg[15:0];
+        {ptp_ts_borrow_reg, ptp_ts_adj_reg[45:16]} <= $signed({1'b0, ptp_ts_reg[45:16]}) - $signed(31'd1000000000);
+        ptp_ts_adj_reg[47:46] <= 0;
+        ptp_ts_adj_reg[95:48] <= ptp_ts_reg[95:48] + 1;
     end
 
     if (xgmii_rxc[0] && xgmii_rxd[7:0] == XGMII_START) begin

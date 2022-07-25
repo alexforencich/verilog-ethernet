@@ -204,9 +204,11 @@ reg [1:0] deficit_idle_count_reg = 2'd0, deficit_idle_count_next;
 reg s_axis_tready_reg = 1'b0, s_axis_tready_next;
 
 reg [PTP_TS_WIDTH-1:0] m_axis_ptp_ts_reg = 0, m_axis_ptp_ts_next;
+reg [PTP_TS_WIDTH-1:0] m_axis_ptp_ts_adj_reg = 0, m_axis_ptp_ts_adj_next;
 reg [PTP_TAG_WIDTH-1:0] m_axis_ptp_ts_tag_reg = 0, m_axis_ptp_ts_tag_next;
 reg m_axis_ptp_ts_valid_reg = 1'b0, m_axis_ptp_ts_valid_next;
 reg m_axis_ptp_ts_valid_int_reg = 1'b0, m_axis_ptp_ts_valid_int_next;
+reg m_axis_ptp_ts_borrow_reg = 1'b0, m_axis_ptp_ts_borrow_next;
 
 reg [31:0] crc_state = 32'hFFFFFFFF;
 
@@ -226,7 +228,7 @@ assign s_axis_tready = s_axis_tready_reg;
 assign encoded_tx_data = encoded_tx_data_reg;
 assign encoded_tx_hdr = encoded_tx_hdr_reg;
 
-assign m_axis_ptp_ts = PTP_TS_ENABLE ? m_axis_ptp_ts_reg : 0;
+assign m_axis_ptp_ts = PTP_TS_ENABLE ? ((PTP_TS_WIDTH != 96 || m_axis_ptp_ts_borrow_reg) ? m_axis_ptp_ts_reg : m_axis_ptp_ts_adj_reg) : 0;
 assign m_axis_ptp_ts_tag = PTP_TAG_ENABLE ? m_axis_ptp_ts_tag_reg : 0;
 assign m_axis_ptp_ts_valid = PTP_TS_ENABLE || PTP_TAG_ENABLE ? m_axis_ptp_ts_valid_reg : 1'b0;
 
@@ -361,9 +363,11 @@ always @* begin
     s_empty_next = s_empty_reg;
 
     m_axis_ptp_ts_next = m_axis_ptp_ts_reg;
+    m_axis_ptp_ts_adj_next = m_axis_ptp_ts_adj_reg;
     m_axis_ptp_ts_tag_next = m_axis_ptp_ts_tag_reg;
     m_axis_ptp_ts_valid_next = 1'b0;
     m_axis_ptp_ts_valid_int_next = 1'b0;
+    m_axis_ptp_ts_borrow_next = m_axis_ptp_ts_borrow_reg;
 
     output_data_next = s_tdata_reg;
     output_type_next = OUTPUT_TYPE_IDLE;
@@ -371,13 +375,12 @@ always @* begin
     start_packet_next = 2'b00;
     error_underflow_next = 1'b0;
 
-    if (m_axis_ptp_ts_valid_int_reg) begin
-        m_axis_ptp_ts_valid_next = 1'b1;
-        if (PTP_TS_WIDTH == 96 && $signed({1'b0, m_axis_ptp_ts_reg[45:16]}) - $signed(31'd1000000000) > 0) begin
-            // ns field rollover
-            m_axis_ptp_ts_next[45:16] = $signed({1'b0, m_axis_ptp_ts_reg[45:16]}) - $signed(31'd1000000000);
-            m_axis_ptp_ts_next[95:48] = m_axis_ptp_ts_reg[95:48] + 1;
-        end
+    if (PTP_TS_ENABLE && PTP_TS_WIDTH == 96) begin
+        m_axis_ptp_ts_valid_next = m_axis_ptp_ts_valid_int_reg;
+        m_axis_ptp_ts_adj_next[15:0] = m_axis_ptp_ts_reg[15:0];
+        {m_axis_ptp_ts_borrow_next, m_axis_ptp_ts_adj_next[45:16]} = $signed({1'b0, m_axis_ptp_ts_reg[45:16]}) - $signed(31'd1000000000);
+        m_axis_ptp_ts_adj_next[47:46] = 0;
+        m_axis_ptp_ts_adj_next[95:48] = m_axis_ptp_ts_reg[95:48] + 1;
     end
 
     case (state_reg)
@@ -400,22 +403,26 @@ always @* begin
                     if (PTP_TS_WIDTH == 96) begin
                         m_axis_ptp_ts_next[45:0] = ptp_ts[45:0] + (((PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS) * 3) >> 1);
                         m_axis_ptp_ts_next[95:48] = ptp_ts[95:48];
+                        m_axis_ptp_ts_tag_next = s_axis_tuser >> 1;
+                        m_axis_ptp_ts_valid_int_next = 1'b1;
                     end else begin
                         m_axis_ptp_ts_next = ptp_ts + (((PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS) * 3) >> 1);
+                        m_axis_ptp_ts_tag_next = s_axis_tuser >> 1;
+                        m_axis_ptp_ts_valid_next = 1'b1;
                     end
-                    m_axis_ptp_ts_tag_next = s_axis_tuser >> 1;
-                    m_axis_ptp_ts_valid_int_next = 1'b1;
                     start_packet_next = 2'b10;
                 end else begin
                     // lanes not swapped
                     if (PTP_TS_WIDTH == 96) begin
                         m_axis_ptp_ts_next[45:0] = ptp_ts[45:0] + (PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS);
                         m_axis_ptp_ts_next[95:48] = ptp_ts[95:48];
+                        m_axis_ptp_ts_tag_next = s_axis_tuser >> 1;
+                        m_axis_ptp_ts_valid_int_next = 1'b1;
                     end else begin
                         m_axis_ptp_ts_next = ptp_ts + (PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS);
+                        m_axis_ptp_ts_tag_next = s_axis_tuser >> 1;
+                        m_axis_ptp_ts_valid_next = 1'b1;
                     end
-                    m_axis_ptp_ts_tag_next = s_axis_tuser >> 1;
-                    m_axis_ptp_ts_valid_int_next = 1'b1;
                     start_packet_next = 2'b01;
                 end
                 output_data_next = {ETH_SFD, {7{ETH_PRE}}};
@@ -649,9 +656,11 @@ always @(posedge clk) begin
     s_axis_tready_reg <= s_axis_tready_next;
 
     m_axis_ptp_ts_reg <= m_axis_ptp_ts_next;
+    m_axis_ptp_ts_adj_reg <= m_axis_ptp_ts_adj_next;
     m_axis_ptp_ts_tag_reg <= m_axis_ptp_ts_tag_next;
     m_axis_ptp_ts_valid_reg <= m_axis_ptp_ts_valid_next;
     m_axis_ptp_ts_valid_int_reg <= m_axis_ptp_ts_valid_int_next;
+    m_axis_ptp_ts_borrow_reg <= m_axis_ptp_ts_borrow_next;
 
     start_packet_reg <= start_packet_next;
     error_underflow_reg <= error_underflow_next;
