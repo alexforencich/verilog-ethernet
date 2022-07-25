@@ -164,14 +164,7 @@ reg m_axis_ptp_ts_valid_int_reg = 1'b0, m_axis_ptp_ts_valid_int_next;
 
 reg [31:0] crc_state = 32'hFFFFFFFF;
 
-wire [31:0] crc_next0;
-wire [31:0] crc_next1;
-wire [31:0] crc_next2;
-wire [31:0] crc_next3;
-wire [31:0] crc_next4;
-wire [31:0] crc_next5;
-wire [31:0] crc_next6;
-wire [31:0] crc_next7;
+wire [31:0] crc_next[7:0];
 
 reg [DATA_WIDTH-1:0] xgmii_txd_reg = {CTRL_WIDTH{XGMII_IDLE}}, xgmii_txd_next;
 reg [CTRL_WIDTH-1:0] xgmii_txc_reg = {CTRL_WIDTH{1'b1}}, xgmii_txc_next;
@@ -191,133 +184,28 @@ assign m_axis_ptp_ts_valid = PTP_TS_ENABLE || PTP_TAG_ENABLE ? m_axis_ptp_ts_val
 assign start_packet = start_packet_reg;
 assign error_underflow = error_underflow_reg;
 
-lfsr #(
-    .LFSR_WIDTH(32),
-    .LFSR_POLY(32'h4c11db7),
-    .LFSR_CONFIG("GALOIS"),
-    .LFSR_FEED_FORWARD(0),
-    .REVERSE(1),
-    .DATA_WIDTH(8),
-    .STYLE("AUTO")
-)
-eth_crc_8 (
-    .data_in(s_tdata_reg[7:0]),
-    .state_in(crc_state),
-    .data_out(),
-    .state_out(crc_next0)
-);
+generate
+    genvar n;
 
-lfsr #(
-    .LFSR_WIDTH(32),
-    .LFSR_POLY(32'h4c11db7),
-    .LFSR_CONFIG("GALOIS"),
-    .LFSR_FEED_FORWARD(0),
-    .REVERSE(1),
-    .DATA_WIDTH(16),
-    .STYLE("AUTO")
-)
-eth_crc_16 (
-    .data_in(s_tdata_reg[15:0]),
-    .state_in(crc_state),
-    .data_out(),
-    .state_out(crc_next1)
-);
+    for (n = 0; n < 8; n = n + 1) begin : crc
+        lfsr #(
+            .LFSR_WIDTH(32),
+            .LFSR_POLY(32'h4c11db7),
+            .LFSR_CONFIG("GALOIS"),
+            .LFSR_FEED_FORWARD(0),
+            .REVERSE(1),
+            .DATA_WIDTH(8*(n+1)),
+            .STYLE("AUTO")
+        )
+        eth_crc (
+            .data_in(s_tdata_reg[0 +: 8*(n+1)]),
+            .state_in(crc_state),
+            .data_out(),
+            .state_out(crc_next[n])
+        );
+    end
 
-lfsr #(
-    .LFSR_WIDTH(32),
-    .LFSR_POLY(32'h4c11db7),
-    .LFSR_CONFIG("GALOIS"),
-    .LFSR_FEED_FORWARD(0),
-    .REVERSE(1),
-    .DATA_WIDTH(24),
-    .STYLE("AUTO")
-)
-eth_crc_24 (
-    .data_in(s_tdata_reg[23:0]),
-    .state_in(crc_state),
-    .data_out(),
-    .state_out(crc_next2)
-);
-
-lfsr #(
-    .LFSR_WIDTH(32),
-    .LFSR_POLY(32'h4c11db7),
-    .LFSR_CONFIG("GALOIS"),
-    .LFSR_FEED_FORWARD(0),
-    .REVERSE(1),
-    .DATA_WIDTH(32),
-    .STYLE("AUTO")
-)
-eth_crc_32 (
-    .data_in(s_tdata_reg[31:0]),
-    .state_in(crc_state),
-    .data_out(),
-    .state_out(crc_next3)
-);
-
-lfsr #(
-    .LFSR_WIDTH(32),
-    .LFSR_POLY(32'h4c11db7),
-    .LFSR_CONFIG("GALOIS"),
-    .LFSR_FEED_FORWARD(0),
-    .REVERSE(1),
-    .DATA_WIDTH(40),
-    .STYLE("AUTO")
-)
-eth_crc_40 (
-    .data_in(s_tdata_reg[39:0]),
-    .state_in(crc_state),
-    .data_out(),
-    .state_out(crc_next4)
-);
-
-lfsr #(
-    .LFSR_WIDTH(32),
-    .LFSR_POLY(32'h4c11db7),
-    .LFSR_CONFIG("GALOIS"),
-    .LFSR_FEED_FORWARD(0),
-    .REVERSE(1),
-    .DATA_WIDTH(48),
-    .STYLE("AUTO")
-)
-eth_crc_48 (
-    .data_in(s_tdata_reg[47:0]),
-    .state_in(crc_state),
-    .data_out(),
-    .state_out(crc_next5)
-);
-
-lfsr #(
-    .LFSR_WIDTH(32),
-    .LFSR_POLY(32'h4c11db7),
-    .LFSR_CONFIG("GALOIS"),
-    .LFSR_FEED_FORWARD(0),
-    .REVERSE(1),
-    .DATA_WIDTH(56),
-    .STYLE("AUTO")
-)
-eth_crc_56 (
-    .data_in(s_tdata_reg[55:0]),
-    .state_in(crc_state),
-    .data_out(),
-    .state_out(crc_next6)
-);
-
-lfsr #(
-    .LFSR_WIDTH(32),
-    .LFSR_POLY(32'h4c11db7),
-    .LFSR_CONFIG("GALOIS"),
-    .LFSR_FEED_FORWARD(0),
-    .REVERSE(1),
-    .DATA_WIDTH(64),
-    .STYLE("AUTO")
-)
-eth_crc_64 (
-    .data_in(s_tdata_reg[63:0]),
-    .state_in(crc_state),
-    .data_out(),
-    .state_out(crc_next7)
-);
+endgenerate
 
 function [3:0] keep2count;
     input [7:0] k;
@@ -362,57 +250,57 @@ end
 always @* begin
     casez (s_empty_reg)
         3'd7: begin
-            fcs_output_txd_0 = {{2{XGMII_IDLE}}, XGMII_TERM, ~crc_next0[31:0], s_tdata_reg[7:0]};
+            fcs_output_txd_0 = {{2{XGMII_IDLE}}, XGMII_TERM, ~crc_next[0][31:0], s_tdata_reg[7:0]};
             fcs_output_txd_1 = {8{XGMII_IDLE}};
             fcs_output_txc_0 = 8'b11100000;
             fcs_output_txc_1 = 8'b11111111;
             ifg_offset = 8'd3;
         end
         3'd6: begin
-            fcs_output_txd_0 = {XGMII_IDLE, XGMII_TERM, ~crc_next1[31:0], s_tdata_reg[15:0]};
+            fcs_output_txd_0 = {XGMII_IDLE, XGMII_TERM, ~crc_next[1][31:0], s_tdata_reg[15:0]};
             fcs_output_txd_1 = {8{XGMII_IDLE}};
             fcs_output_txc_0 = 8'b11000000;
             fcs_output_txc_1 = 8'b11111111;
             ifg_offset = 8'd2;
         end
         3'd5: begin
-            fcs_output_txd_0 = {XGMII_TERM, ~crc_next2[31:0], s_tdata_reg[23:0]};
+            fcs_output_txd_0 = {XGMII_TERM, ~crc_next[2][31:0], s_tdata_reg[23:0]};
             fcs_output_txd_1 = {8{XGMII_IDLE}};
             fcs_output_txc_0 = 8'b10000000;
             fcs_output_txc_1 = 8'b11111111;
             ifg_offset = 8'd1;
         end
         3'd4: begin
-            fcs_output_txd_0 = {~crc_next3[31:0], s_tdata_reg[31:0]};
+            fcs_output_txd_0 = {~crc_next[3][31:0], s_tdata_reg[31:0]};
             fcs_output_txd_1 = {{7{XGMII_IDLE}}, XGMII_TERM};
             fcs_output_txc_0 = 8'b00000000;
             fcs_output_txc_1 = 8'b11111111;
             ifg_offset = 8'd8;
         end
         3'd3: begin
-            fcs_output_txd_0 = {~crc_next4[23:0], s_tdata_reg[39:0]};
-            fcs_output_txd_1 = {{6{XGMII_IDLE}}, XGMII_TERM, ~crc_next4[31:24]};
+            fcs_output_txd_0 = {~crc_next[4][23:0], s_tdata_reg[39:0]};
+            fcs_output_txd_1 = {{6{XGMII_IDLE}}, XGMII_TERM, ~crc_next[4][31:24]};
             fcs_output_txc_0 = 8'b00000000;
             fcs_output_txc_1 = 8'b11111110;
             ifg_offset = 8'd7;
         end
         3'd2: begin
-            fcs_output_txd_0 = {~crc_next5[15:0], s_tdata_reg[47:0]};
-            fcs_output_txd_1 = {{5{XGMII_IDLE}}, XGMII_TERM, ~crc_next5[31:16]};
+            fcs_output_txd_0 = {~crc_next[5][15:0], s_tdata_reg[47:0]};
+            fcs_output_txd_1 = {{5{XGMII_IDLE}}, XGMII_TERM, ~crc_next[5][31:16]};
             fcs_output_txc_0 = 8'b00000000;
             fcs_output_txc_1 = 8'b11111100;
             ifg_offset = 8'd6;
         end
         3'd1: begin
-            fcs_output_txd_0 = {~crc_next6[7:0], s_tdata_reg[55:0]};
-            fcs_output_txd_1 = {{4{XGMII_IDLE}}, XGMII_TERM, ~crc_next6[31:8]};
+            fcs_output_txd_0 = {~crc_next[6][7:0], s_tdata_reg[55:0]};
+            fcs_output_txd_1 = {{4{XGMII_IDLE}}, XGMII_TERM, ~crc_next[6][31:8]};
             fcs_output_txc_0 = 8'b00000000;
             fcs_output_txc_1 = 8'b11111000;
             ifg_offset = 8'd5;
         end
         3'd0: begin
             fcs_output_txd_0 = s_tdata_reg;
-            fcs_output_txd_1 = {{3{XGMII_IDLE}}, XGMII_TERM, ~crc_next7[31:0]};
+            fcs_output_txd_1 = {{3{XGMII_IDLE}}, XGMII_TERM, ~crc_next[7][31:0]};
             fcs_output_txc_0 = 8'b00000000;
             fcs_output_txc_1 = 8'b11110000;
             ifg_offset = 8'd4;
@@ -730,7 +618,7 @@ always @(posedge clk) begin
     if (reset_crc) begin
         crc_state <= 32'hFFFFFFFF;
     end else if (update_crc) begin
-        crc_state <= crc_next7;
+        crc_state <= crc_next[7];
     end
 
     swap_txd <= xgmii_txd_next[63:32];

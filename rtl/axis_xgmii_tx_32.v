@@ -158,10 +158,7 @@ reg m_axis_ptp_ts_valid_reg = 1'b0, m_axis_ptp_ts_valid_next;
 
 reg [31:0] crc_state = 32'hFFFFFFFF;
 
-wire [31:0] crc_next0;
-wire [31:0] crc_next1;
-wire [31:0] crc_next2;
-wire [31:0] crc_next3;
+wire [31:0] crc_next[3:0];
 
 reg [DATA_WIDTH-1:0] xgmii_txd_reg = {CTRL_WIDTH{XGMII_IDLE}}, xgmii_txd_next;
 reg [CTRL_WIDTH-1:0] xgmii_txc_reg = {CTRL_WIDTH{1'b1}}, xgmii_txc_next;
@@ -181,69 +178,28 @@ assign m_axis_ptp_ts_valid = PTP_TS_ENABLE || PTP_TAG_ENABLE ? m_axis_ptp_ts_val
 assign start_packet = start_packet_reg;
 assign error_underflow = error_underflow_reg;
 
-lfsr #(
-    .LFSR_WIDTH(32),
-    .LFSR_POLY(32'h4c11db7),
-    .LFSR_CONFIG("GALOIS"),
-    .LFSR_FEED_FORWARD(0),
-    .REVERSE(1),
-    .DATA_WIDTH(8),
-    .STYLE("AUTO")
-)
-eth_crc_8 (
-    .data_in(s_tdata_reg[7:0]),
-    .state_in(crc_state),
-    .data_out(),
-    .state_out(crc_next0)
-);
+generate
+    genvar n;
 
-lfsr #(
-    .LFSR_WIDTH(32),
-    .LFSR_POLY(32'h4c11db7),
-    .LFSR_CONFIG("GALOIS"),
-    .LFSR_FEED_FORWARD(0),
-    .REVERSE(1),
-    .DATA_WIDTH(16),
-    .STYLE("AUTO")
-)
-eth_crc_16 (
-    .data_in(s_tdata_reg[15:0]),
-    .state_in(crc_state),
-    .data_out(),
-    .state_out(crc_next1)
-);
+    for (n = 0; n < 4; n = n + 1) begin : crc
+        lfsr #(
+            .LFSR_WIDTH(32),
+            .LFSR_POLY(32'h4c11db7),
+            .LFSR_CONFIG("GALOIS"),
+            .LFSR_FEED_FORWARD(0),
+            .REVERSE(1),
+            .DATA_WIDTH(8*(n+1)),
+            .STYLE("AUTO")
+        )
+        eth_crc (
+            .data_in(s_tdata_reg[0 +: 8*(n+1)]),
+            .state_in(crc_state),
+            .data_out(),
+            .state_out(crc_next[n])
+        );
+    end
 
-lfsr #(
-    .LFSR_WIDTH(32),
-    .LFSR_POLY(32'h4c11db7),
-    .LFSR_CONFIG("GALOIS"),
-    .LFSR_FEED_FORWARD(0),
-    .REVERSE(1),
-    .DATA_WIDTH(24),
-    .STYLE("AUTO")
-)
-eth_crc_24 (
-    .data_in(s_tdata_reg[23:0]),
-    .state_in(crc_state),
-    .data_out(),
-    .state_out(crc_next2)
-);
-
-lfsr #(
-    .LFSR_WIDTH(32),
-    .LFSR_POLY(32'h4c11db7),
-    .LFSR_CONFIG("GALOIS"),
-    .LFSR_FEED_FORWARD(0),
-    .REVERSE(1),
-    .DATA_WIDTH(32),
-    .STYLE("AUTO")
-)
-eth_crc_32 (
-    .data_in(s_tdata_reg[31:0]),
-    .state_in(crc_state),
-    .data_out(),
-    .state_out(crc_next3)
-);
+endgenerate
 
 function [2:0] keep2count;
     input [3:0] k;
@@ -280,24 +236,24 @@ end
 always @* begin
     casez (s_empty_reg)
         2'd3: begin
-            fcs_output_txd_0 = {~crc_next0[23:0], s_tdata_reg[7:0]};
-            fcs_output_txd_1 = {{2{XGMII_IDLE}}, XGMII_TERM, ~crc_next0[31:24]};
+            fcs_output_txd_0 = {~crc_next[0][23:0], s_tdata_reg[7:0]};
+            fcs_output_txd_1 = {{2{XGMII_IDLE}}, XGMII_TERM, ~crc_next[0][31:24]};
             fcs_output_txc_0 = 4'b0000;
             fcs_output_txc_1 = 4'b1110;
             ifg_offset = 8'd3;
             extra_cycle = 1'b0;
         end
         2'd2: begin
-            fcs_output_txd_0 = {~crc_next1[15:0], s_tdata_reg[15:0]};
-            fcs_output_txd_1 = {XGMII_IDLE, XGMII_TERM, ~crc_next1[31:16]};
+            fcs_output_txd_0 = {~crc_next[1][15:0], s_tdata_reg[15:0]};
+            fcs_output_txd_1 = {XGMII_IDLE, XGMII_TERM, ~crc_next[1][31:16]};
             fcs_output_txc_0 = 4'b0000;
             fcs_output_txc_1 = 4'b1100;
             ifg_offset = 8'd2;
             extra_cycle = 1'b0;
         end
         2'd1: begin
-            fcs_output_txd_0 = {~crc_next2[7:0], s_tdata_reg[23:0]};
-            fcs_output_txd_1 = {XGMII_TERM, ~crc_next2[31:8]};
+            fcs_output_txd_0 = {~crc_next[2][7:0], s_tdata_reg[23:0]};
+            fcs_output_txd_1 = {XGMII_TERM, ~crc_next[2][31:8]};
             fcs_output_txc_0 = 4'b0000;
             fcs_output_txc_1 = 4'b1000;
             ifg_offset = 8'd1;
@@ -305,7 +261,7 @@ always @* begin
         end
         2'd0: begin
             fcs_output_txd_0 = s_tdata_reg;
-            fcs_output_txd_1 = ~crc_next3;
+            fcs_output_txd_1 = ~crc_next[3];
             fcs_output_txc_0 = 4'b0000;
             fcs_output_txc_1 = 4'b0000;
             ifg_offset = 8'd4;
@@ -593,7 +549,7 @@ always @(posedge clk) begin
     if (reset_crc) begin
         crc_state <= 32'hFFFFFFFF;
     end else if (update_crc) begin
-        crc_state <= crc_next3;
+        crc_state <= crc_next[3];
     end
 
     xgmii_txd_reg <= xgmii_txd_next;
