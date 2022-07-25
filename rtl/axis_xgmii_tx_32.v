@@ -431,8 +431,6 @@ always @* begin
             xgmii_txd_next = {{3{XGMII_IDLE}}, XGMII_TERM};
             xgmii_txc_next = 4'b1111;
 
-            reset_crc = 1'b1;
-
             if (ENABLE_DIC) begin
                 if (ifg_count_next > 8'd3) begin
                     state_next = STATE_IFG;
@@ -457,8 +455,6 @@ always @* begin
             end else begin
                 ifg_count_next = 8'd0;
             end
-
-            reset_crc = 1'b1;
 
             if (ENABLE_DIC) begin
                 if (ifg_count_next > 8'd3) begin
@@ -485,8 +481,6 @@ always @* begin
             end else begin
                 ifg_count_next = 8'd0;
             end
-
-            reset_crc = 1'b1;
 
             if (s_axis_tvalid) begin
                 if (s_axis_tlast) begin
