@@ -86,6 +86,7 @@ module axis_xgmii_tx_32 #
 );
 
 localparam EMPTY_WIDTH = $clog2(KEEP_WIDTH);
+localparam MIN_LEN_WIDTH = $clog2(MIN_FRAME_LENGTH-4-CTRL_WIDTH+1);
 
 // bus width assertions
 initial begin
@@ -99,10 +100,6 @@ initial begin
         $finish;
     end
 end
-
-localparam MIN_FL_NOCRC = MIN_FRAME_LENGTH-4;
-localparam MIN_FL_NOCRC_MS = MIN_FL_NOCRC & 16'hfffc;
-localparam MIN_FL_NOCRC_LS = MIN_FL_NOCRC & 16'h0003;
 
 localparam [7:0]
     ETH_PRE = 8'h55,
@@ -145,7 +142,7 @@ reg [7:0] ifg_offset;
 
 reg extra_cycle;
 
-reg [15:0] frame_ptr_reg = 16'd0, frame_ptr_next;
+reg [MIN_LEN_WIDTH-1:0] frame_min_count_reg = 0, frame_min_count_next;
 
 reg [7:0] ifg_count_reg = 8'd0, ifg_count_next;
 reg [1:0] deficit_idle_count_reg = 2'd0, deficit_idle_count_next;
@@ -200,17 +197,6 @@ generate
     end
 
 endgenerate
-
-function [2:0] keep2count;
-    input [3:0] k;
-    casez (k)
-        4'bzzz0: keep2count = 3'd0;
-        4'bzz01: keep2count = 3'd1;
-        4'bz011: keep2count = 3'd2;
-        4'b0111: keep2count = 3'd3;
-        4'b1111: keep2count = 3'd4;
-    endcase
-endfunction
 
 function [1:0] keep2empty;
     input [3:0] k;
@@ -276,7 +262,7 @@ always @* begin
     reset_crc = 1'b0;
     update_crc = 1'b0;
 
-    frame_ptr_next = frame_ptr_reg;
+    frame_min_count_next = frame_min_count_reg;
 
     ifg_count_next = ifg_count_reg;
     deficit_idle_count_next = deficit_idle_count_reg;
@@ -306,7 +292,7 @@ always @* begin
     case (state_reg)
         STATE_IDLE: begin
             // idle state - wait for data
-            frame_ptr_next = 16'd4;
+            frame_min_count_next = MIN_FRAME_LENGTH-4-CTRL_WIDTH;
             reset_crc = 1'b1;
 
             // XGMII idle
@@ -345,7 +331,11 @@ always @* begin
             update_crc = 1'b1;
             s_axis_tready_next = 1'b1;
 
-            frame_ptr_next = frame_ptr_reg + 16'd4;
+            if (frame_min_count_reg > CTRL_WIDTH) begin
+                frame_min_count_next = frame_min_count_reg - CTRL_WIDTH;
+            end else begin
+                frame_min_count_next = 0;
+            end
 
             xgmii_txd_next = s_tdata_reg;
             xgmii_txc_next = 4'b0000;
@@ -355,7 +345,6 @@ always @* begin
 
             if (s_axis_tvalid) begin
                 if (s_axis_tlast) begin
-                    frame_ptr_next = frame_ptr_reg + keep2count(s_axis_tkeep);
                     s_axis_tready_next = 1'b0;
                     if (s_axis_tuser[0]) begin
                         xgmii_txd_next = {XGMII_TERM, {3{XGMII_ERROR}}};
@@ -365,15 +354,14 @@ always @* begin
                     end else begin
                         s_axis_tready_next = 1'b0;
 
-                        if (ENABLE_PADDING && (frame_ptr_reg < MIN_FL_NOCRC_MS || (frame_ptr_reg == MIN_FL_NOCRC_MS && keep2count(s_axis_tkeep) < MIN_FL_NOCRC_LS))) begin
-                            s_empty_next = 0;
-                            frame_ptr_next = frame_ptr_reg + 16'd4;
-
-                            if (frame_ptr_reg < (MIN_FL_NOCRC_LS > 0 ? MIN_FL_NOCRC_MS : MIN_FL_NOCRC_MS-4)) begin
+                        if (ENABLE_PADDING && frame_min_count_reg) begin
+                            if (frame_min_count_reg > CTRL_WIDTH) begin
+                                s_empty_next = 0;
                                 state_next = STATE_PAD;
                             end else begin
-                                s_empty_next = (4-MIN_FL_NOCRC_LS) % 4;
-
+                                if (keep2empty(s_axis_tkeep) > CTRL_WIDTH-frame_min_count_reg) begin
+                                    s_empty_next = CTRL_WIDTH-frame_min_count_reg;
+                                end
                                 state_next = STATE_FCS_1;
                             end
                         end else begin
@@ -403,13 +391,13 @@ always @* begin
             s_empty_next = 0;
 
             update_crc = 1'b1;
-            frame_ptr_next = frame_ptr_reg + 16'd4;
 
-            if (frame_ptr_reg < (MIN_FL_NOCRC_LS > 0 ? MIN_FL_NOCRC_MS : MIN_FL_NOCRC_MS-4)) begin
+            if (frame_min_count_reg > CTRL_WIDTH) begin
+                frame_min_count_next = frame_min_count_reg - CTRL_WIDTH;
                 state_next = STATE_PAD;
             end else begin
-                s_empty_next = (4-MIN_FL_NOCRC_LS) % 4;
-
+                frame_min_count_next = 0;
+                s_empty_next = CTRL_WIDTH-frame_min_count_reg;
                 state_next = STATE_FCS_1;
             end
         end
@@ -531,8 +519,6 @@ end
 
 always @(posedge clk) begin
     state_reg <= state_next;
-
-    frame_ptr_reg <= frame_ptr_next;
 
     ifg_count_reg <= ifg_count_next;
     deficit_idle_count_reg <= deficit_idle_count_next;
