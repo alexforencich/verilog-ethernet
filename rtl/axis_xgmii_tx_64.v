@@ -128,10 +128,7 @@ reg [2:0] state_reg = STATE_IDLE, state_next;
 reg reset_crc;
 reg update_crc;
 
-reg swap_lanes;
-reg unswap_lanes;
-
-reg lanes_swapped = 1'b0;
+reg swap_lanes_reg = 1'b0, swap_lanes_next;
 reg [31:0] swap_txd = 32'd0;
 reg [3:0] swap_txc = 4'd0;
 
@@ -296,8 +293,7 @@ always @* begin
     reset_crc = 1'b0;
     update_crc = 1'b0;
 
-    swap_lanes = 1'b0;
-    unswap_lanes = 1'b0;
+    swap_lanes_next = swap_lanes_reg;
 
     frame_min_count_next = frame_min_count_reg;
 
@@ -346,9 +342,8 @@ always @* begin
 
             if (s_axis_tvalid) begin
                 // XGMII start and preamble
-                if (ifg_count_reg > 8'd0) begin
-                    // need to send more idles - swap lanes
-                    swap_lanes = 1'b1;
+                if (swap_lanes_reg) begin
+                    // lanes swapped
                     if (PTP_TS_WIDTH == 96) begin
                         m_axis_ptp_ts_next[45:0] = ptp_ts[45:0] + (((PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS) * 3) >> 1);
                         m_axis_ptp_ts_next[95:48] = ptp_ts[95:48];
@@ -359,8 +354,7 @@ always @* begin
                     m_axis_ptp_ts_valid_int_next = 1'b1;
                     start_packet_next = 2'b10;
                 end else begin
-                    // no more idles - unswap
-                    unswap_lanes = 1'b1;
+                    // lanes not swapped
                     if (PTP_TS_WIDTH == 96) begin
                         m_axis_ptp_ts_next[45:0] = ptp_ts[45:0] + (PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS);
                         m_axis_ptp_ts_next[95:48] = ptp_ts[95:48];
@@ -376,9 +370,9 @@ always @* begin
                 s_axis_tready_next = 1'b1;
                 state_next = STATE_PAYLOAD;
             end else begin
+                swap_lanes_next = 1'b0;
                 ifg_count_next = 8'd0;
                 deficit_idle_count_next = 2'd0;
-                unswap_lanes = 1'b1;
                 state_next = STATE_IDLE;
             end
         end
@@ -464,7 +458,7 @@ always @* begin
             xgmii_txd_next = fcs_output_txd_0;
             xgmii_txc_next = fcs_output_txc_0;
 
-            ifg_count_next = (ifg_delay > 8'd12 ? ifg_delay : 8'd12) - ifg_offset + (lanes_swapped ? 8'd4 : 8'd0) + deficit_idle_count_reg;
+            ifg_count_next = (ifg_delay > 8'd12 ? ifg_delay : 8'd12) - ifg_offset + (swap_lanes_reg ? 8'd4 : 8'd0) + deficit_idle_count_reg;
             if (s_empty_reg <= 4) begin
                 state_next = STATE_FCS_2;
             end else begin
@@ -484,9 +478,11 @@ always @* begin
                 end else begin
                     if (ifg_count_next >= 8'd4) begin
                         deficit_idle_count_next = ifg_count_next - 8'd4;
+                        swap_lanes_next = 1'b1;
                     end else begin
                         deficit_idle_count_next = ifg_count_next;
                         ifg_count_next = 8'd0;
+                        swap_lanes_next = 1'b0;
                     end
                     s_axis_tready_next = 1'b1;
                     state_next = STATE_IDLE;
@@ -496,6 +492,7 @@ always @* begin
                     state_next = STATE_IFG;
                 end else begin
                     s_axis_tready_next = 1'b1;
+                    swap_lanes_next = ifg_count_next != 0;
                     state_next = STATE_IDLE;
                 end
             end
@@ -514,9 +511,11 @@ always @* begin
                 end else begin
                     if (ifg_count_next >= 8'd4) begin
                         deficit_idle_count_next = ifg_count_next - 8'd4;
+                        swap_lanes_next = 1'b1;
                     end else begin
                         deficit_idle_count_next = ifg_count_next;
                         ifg_count_next = 8'd0;
+                        swap_lanes_next = 1'b0;
                     end
                     s_axis_tready_next = 1'b1;
                     state_next = STATE_IDLE;
@@ -526,6 +525,7 @@ always @* begin
                     state_next = STATE_IFG;
                 end else begin
                     s_axis_tready_next = 1'b1;
+                    swap_lanes_next = ifg_count_next != 0;
                     state_next = STATE_IDLE;
                 end
             end
@@ -550,9 +550,11 @@ always @* begin
                         end else begin
                             if (ifg_count_next >= 8'd4) begin
                                 deficit_idle_count_next = ifg_count_next - 8'd4;
+                                swap_lanes_next = 1'b1;
                             end else begin
                                 deficit_idle_count_next = ifg_count_next;
                                 ifg_count_next = 8'd0;
+                                swap_lanes_next = 1'b0;
                             end
                             s_axis_tready_next = 1'b1;
                             state_next = STATE_IDLE;
@@ -562,6 +564,7 @@ always @* begin
                             state_next = STATE_IFG;
                         end else begin
                             s_axis_tready_next = 1'b1;
+                            swap_lanes_next = ifg_count_next != 0;
                             state_next = STATE_IDLE;
                         end
                     end
@@ -577,6 +580,8 @@ end
 
 always @(posedge clk) begin
     state_reg <= state_next;
+
+    swap_lanes_reg <= swap_lanes_next;
 
     frame_min_count_reg <= frame_min_count_next;
 
@@ -602,12 +607,10 @@ always @(posedge clk) begin
     swap_txd <= xgmii_txd_next[63:32];
     swap_txc <= xgmii_txc_next[7:4];
 
-    if (swap_lanes || (lanes_swapped && !unswap_lanes)) begin
-        lanes_swapped <= 1'b1;
+    if (swap_lanes_reg) begin
         xgmii_txd_reg <= {xgmii_txd_next[31:0], swap_txd};
         xgmii_txc_reg <= {xgmii_txc_next[3:0], swap_txc};
     end else begin
-        lanes_swapped <= 1'b0;
         xgmii_txd_reg <= xgmii_txd_next;
         xgmii_txc_reg <= xgmii_txc_next;
     end
@@ -617,6 +620,8 @@ always @(posedge clk) begin
 
     if (rst) begin
         state_reg <= STATE_IDLE;
+
+        swap_lanes_reg <= 1'b0;
 
         ifg_count_reg <= 8'd0;
         deficit_idle_count_reg <= 2'd0;
@@ -631,8 +636,6 @@ always @(posedge clk) begin
 
         start_packet_reg <= 2'b00;
         error_underflow_reg <= 1'b0;
-
-        lanes_swapped <= 1'b0;
     end
 end
 
