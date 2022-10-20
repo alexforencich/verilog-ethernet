@@ -187,10 +187,10 @@ if (PIPELINE_OUTPUT > 0) begin
 
         if (rst) begin
             for (i = 0; i < PIPELINE_OUTPUT; i = i + 1) begin
-                output_ts_96_reg[i] = 96'd0;
-                output_ts_64_reg[i] = 64'd0;
-                output_ts_step_reg[i] = 1'b0;
-                output_pps_reg[i] = 1'b0;
+                output_ts_96_reg[i] <= 96'd0;
+                output_ts_64_reg[i] <= 64'd0;
+                output_ts_step_reg[i] <= 1'b0;
+                output_pps_reg[i] <= 1'b0;
             end
         end
     end
