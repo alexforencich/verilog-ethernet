@@ -546,6 +546,7 @@ def test_axis_async_fifo_adapter(request, s_data_width, m_data_width, frame_fifo
     parameters['DEST_WIDTH'] = 8
     parameters['USER_ENABLE'] = 1
     parameters['USER_WIDTH'] = 1
+    parameters['RAM_PIPELINE'] = 1
     parameters['FRAME_FIFO'] = frame_fifo
     parameters['USER_BAD_FRAME_VALUE'] = 1
     parameters['USER_BAD_FRAME_MASK'] = 1

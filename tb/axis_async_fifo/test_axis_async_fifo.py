@@ -522,9 +522,11 @@ rtl_dir = os.path.abspath(os.path.join(tests_dir, '..', '..', 'rtl'))
 @pytest.mark.parametrize(("s_clk", "m_clk"), [(10, 10), (10, 11), (11, 10)])
 @pytest.mark.parametrize(("frame_fifo", "drop_oversize_frame", "drop_bad_frame", "drop_when_full"),
     [(0, 0, 0, 0), (1, 0, 0, 0), (1, 1, 0, 0), (1, 1, 1, 0)])
+@pytest.mark.parametrize(("ram_pipeline"),
+    [0, 1, 4])
 @pytest.mark.parametrize("data_width", [8, 16, 32, 64])
-def test_axis_async_fifo(request, data_width, frame_fifo, drop_oversize_frame, drop_bad_frame,
-        drop_when_full, s_clk, m_clk):
+def test_axis_async_fifo(request, data_width, ram_pipeline,
+        frame_fifo, drop_oversize_frame, drop_bad_frame, drop_when_full, s_clk, m_clk):
 
     dut = "axis_async_fifo"
     module = os.path.splitext(os.path.basename(__file__))[0]
@@ -547,7 +549,7 @@ def test_axis_async_fifo(request, data_width, frame_fifo, drop_oversize_frame, d
     parameters['DEST_WIDTH'] = 8
     parameters['USER_ENABLE'] = 1
     parameters['USER_WIDTH'] = 1
-    parameters['PIPELINE_OUTPUT'] = 2
+    parameters['RAM_PIPELINE'] = ram_pipeline
     parameters['FRAME_FIFO'] = frame_fifo
     parameters['USER_BAD_FRAME_VALUE'] = 1
     parameters['USER_BAD_FRAME_MASK'] = 1
