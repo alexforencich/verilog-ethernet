@@ -264,7 +264,7 @@ endgenerate
 
 wire                   m_axis_tvalid_pipe = m_axis_tvalid_pipe_reg[RAM_PIPELINE+1-1];
 
-wire [WIDTH-1:0] m_axis = m_axis_pipe_reg[RAM_PIPELINE+1-1];
+wire [WIDTH-1:0] m_axis = RAM_PIPELINE ? m_axis_pipe_reg[RAM_PIPELINE+1-1] : mem_read_data_reg;
 
 wire [DATA_WIDTH-1:0]  m_axis_tdata_pipe  = m_axis[DATA_WIDTH-1:0];
 wire [KEEP_WIDTH-1:0]  m_axis_tkeep_pipe  = KEEP_ENABLE ? m_axis[KEEP_OFFSET +: KEEP_WIDTH] : {KEEP_WIDTH{1'b1}};
@@ -552,7 +552,7 @@ always @(posedge m_clk) begin
         if (m_axis_tready || ((~m_axis_tvalid_pipe_reg) >> j)) begin
             // output ready or bubble in pipeline; transfer down pipeline
             m_axis_tvalid_pipe_reg[j] <= m_axis_tvalid_pipe_reg[j-1];
-            m_axis_pipe_reg[j] <= m_axis_pipe_reg[j-1];
+            m_axis_pipe_reg[j] <= j == 1 ? mem_read_data_reg : m_axis_pipe_reg[j-1];
             m_axis_tvalid_pipe_reg[j-1] <= 1'b0;
         end
     end
@@ -560,7 +560,7 @@ always @(posedge m_clk) begin
     if (m_axis_tready || ~m_axis_tvalid_pipe_reg) begin
         // output ready or bubble in pipeline; read new data from FIFO
         m_axis_tvalid_pipe_reg[0] <= 1'b0;
-        m_axis_pipe_reg[0] <= mem[rd_ptr_reg[ADDR_WIDTH-1:0]];
+        mem_read_data_reg <= mem[rd_ptr_reg[ADDR_WIDTH-1:0]];
         if (!empty && !m_rst_sync3_reg && !m_drop_frame_reg) begin
             // not empty, increment pointer
             m_axis_tvalid_pipe_reg[0] <= 1'b1;
