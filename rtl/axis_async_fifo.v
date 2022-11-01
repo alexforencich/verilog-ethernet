@@ -212,8 +212,6 @@ reg [WIDTH-1:0] mem[(2**ADDR_WIDTH)-1:0];
 reg [WIDTH-1:0] mem_read_data_reg;
 reg mem_read_data_valid_reg = 1'b0;
 
-wire [WIDTH-1:0] s_axis;
-
 reg [WIDTH-1:0] m_axis_pipe_reg[PIPELINE_OUTPUT-1:0];
 reg [PIPELINE_OUTPUT-1:0] m_axis_tvalid_pipe_reg = 1'b0;
 
@@ -258,6 +256,8 @@ reg good_frame_sync4_reg = 1'b0;
 
 assign s_axis_tready = (FRAME_FIFO ? (!full_cur || (full_wr && DROP_OVERSIZE_FRAME) || DROP_WHEN_FULL) : !full) && !s_rst_sync3_reg;
 
+wire [WIDTH-1:0] s_axis;
+
 generate
     assign s_axis[DATA_WIDTH-1:0] = s_axis_tdata;
     if (KEEP_ENABLE) assign s_axis[KEEP_OFFSET +: KEEP_WIDTH] = s_axis_tkeep;
@@ -269,12 +269,14 @@ endgenerate
 
 wire                   m_axis_tvalid_pipe = m_axis_tvalid_pipe_reg[PIPELINE_OUTPUT-1];
 
-wire [DATA_WIDTH-1:0]  m_axis_tdata_pipe  = m_axis_pipe_reg[PIPELINE_OUTPUT-1][DATA_WIDTH-1:0];
-wire [KEEP_WIDTH-1:0]  m_axis_tkeep_pipe  = KEEP_ENABLE ? m_axis_pipe_reg[PIPELINE_OUTPUT-1][KEEP_OFFSET +: KEEP_WIDTH] : {KEEP_WIDTH{1'b1}};
-wire                   m_axis_tlast_pipe  = LAST_ENABLE ? m_axis_pipe_reg[PIPELINE_OUTPUT-1][LAST_OFFSET] : 1'b1;
-wire [ID_WIDTH-1:0]    m_axis_tid_pipe    = ID_ENABLE   ? m_axis_pipe_reg[PIPELINE_OUTPUT-1][ID_OFFSET +: ID_WIDTH] : {ID_WIDTH{1'b0}};
-wire [DEST_WIDTH-1:0]  m_axis_tdest_pipe  = DEST_ENABLE ? m_axis_pipe_reg[PIPELINE_OUTPUT-1][DEST_OFFSET +: DEST_WIDTH] : {DEST_WIDTH{1'b0}};
-wire [USER_WIDTH-1:0]  m_axis_tuser_pipe  = USER_ENABLE ? m_axis_pipe_reg[PIPELINE_OUTPUT-1][USER_OFFSET +: USER_WIDTH] : {USER_WIDTH{1'b0}};
+wire [WIDTH-1:0] m_axis = m_axis_pipe_reg[PIPELINE_OUTPUT-1];
+
+wire [DATA_WIDTH-1:0]  m_axis_tdata_pipe  = m_axis[DATA_WIDTH-1:0];
+wire [KEEP_WIDTH-1:0]  m_axis_tkeep_pipe  = KEEP_ENABLE ? m_axis[KEEP_OFFSET +: KEEP_WIDTH] : {KEEP_WIDTH{1'b1}};
+wire                   m_axis_tlast_pipe  = LAST_ENABLE ? m_axis[LAST_OFFSET] : 1'b1;
+wire [ID_WIDTH-1:0]    m_axis_tid_pipe    = ID_ENABLE   ? m_axis[ID_OFFSET +: ID_WIDTH] : {ID_WIDTH{1'b0}};
+wire [DEST_WIDTH-1:0]  m_axis_tdest_pipe  = DEST_ENABLE ? m_axis[DEST_OFFSET +: DEST_WIDTH] : {DEST_WIDTH{1'b0}};
+wire [USER_WIDTH-1:0]  m_axis_tuser_pipe  = USER_ENABLE ? m_axis[USER_OFFSET +: USER_WIDTH] : {USER_WIDTH{1'b0}};
 
 assign m_axis_tvalid = m_axis_tvalid_pipe;
 
