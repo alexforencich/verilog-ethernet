@@ -314,10 +314,10 @@ rtl_dir = os.path.abspath(os.path.join(tests_dir, '..', '..', 'rtl'))
 
 @pytest.mark.parametrize(("frame_fifo", "drop_oversize_frame", "drop_bad_frame", "drop_when_full"),
     [(0, 0, 0, 0), (1, 0, 0, 0), (1, 1, 0, 0), (1, 1, 1, 0)])
-@pytest.mark.parametrize(("ram_pipeline"),
-    [0, 1, 4])
+@pytest.mark.parametrize(("ram_pipeline", "output_fifo"),
+    [(0, 0), (1, 0), (4, 0), (0, 1), (1, 1), (4, 1)])
 @pytest.mark.parametrize("data_width", [8, 16, 32, 64])
-def test_axis_fifo(request, data_width, ram_pipeline,
+def test_axis_fifo(request, data_width, ram_pipeline, output_fifo,
         frame_fifo, drop_oversize_frame, drop_bad_frame, drop_when_full):
 
     dut = "axis_fifo"
@@ -342,6 +342,7 @@ def test_axis_fifo(request, data_width, ram_pipeline,
     parameters['USER_ENABLE'] = 1
     parameters['USER_WIDTH'] = 1
     parameters['RAM_PIPELINE'] = ram_pipeline
+    parameters['OUTPUT_FIFO_ENABLE'] = output_fifo
     parameters['FRAME_FIFO'] = frame_fifo
     parameters['USER_BAD_FRAME_VALUE'] = 1
     parameters['USER_BAD_FRAME_MASK'] = 1

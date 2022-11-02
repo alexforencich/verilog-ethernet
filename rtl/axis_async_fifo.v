@@ -60,6 +60,9 @@ module axis_async_fifo #
     parameter USER_WIDTH = 1,
     // number of RAM pipeline registers
     parameter RAM_PIPELINE = 1,
+    // use output FIFO
+    // When set, the RAM read enable and pipeline clock enables are removed
+    parameter OUTPUT_FIFO_ENABLE = 0,
     // Frame FIFO mode - operate on frames instead of cycles
     // When set, m_axis_tvalid will not be deasserted within a frame
     // Requires LAST_ENABLE set
@@ -120,6 +123,8 @@ module axis_async_fifo #
 );
 
 parameter ADDR_WIDTH = (KEEP_ENABLE && KEEP_WIDTH > 1) ? $clog2(DEPTH/KEEP_WIDTH) : $clog2(DEPTH);
+
+parameter OUTPUT_FIFO_ADDR_WIDTH = RAM_PIPELINE < 2 ? 3 : $clog2(RAM_PIPELINE*2+7);
 
 // check configuration
 initial begin
@@ -207,6 +212,7 @@ reg [WIDTH-1:0] mem[(2**ADDR_WIDTH)-1:0];
 reg [WIDTH-1:0] mem_read_data_reg;
 reg mem_read_data_valid_reg = 1'b0;
 
+(* shreg_extract = "no" *)
 reg [WIDTH-1:0] m_axis_pipe_reg[RAM_PIPELINE+1-1:0];
 reg [RAM_PIPELINE+1-1:0] m_axis_tvalid_pipe_reg = 0;
 
@@ -273,14 +279,7 @@ wire [ID_WIDTH-1:0]    m_axis_tid_pipe    = ID_ENABLE   ? m_axis[ID_OFFSET +: ID
 wire [DEST_WIDTH-1:0]  m_axis_tdest_pipe  = DEST_ENABLE ? m_axis[DEST_OFFSET +: DEST_WIDTH] : {DEST_WIDTH{1'b0}};
 wire [USER_WIDTH-1:0]  m_axis_tuser_pipe  = USER_ENABLE ? (m_terminate_frame_reg ? USER_BAD_FRAME_VALUE : m_axis[USER_OFFSET +: USER_WIDTH]) : {USER_WIDTH{1'b0}};
 
-assign m_axis_tvalid = m_axis_tvalid_pipe;
-
-assign m_axis_tdata = m_axis_tdata_pipe;
-assign m_axis_tkeep = m_axis_tkeep_pipe;
-assign m_axis_tlast = m_axis_tlast_pipe;
-assign m_axis_tid   = m_axis_tid_pipe;
-assign m_axis_tdest = m_axis_tdest_pipe;
-assign m_axis_tuser = m_axis_tuser_pipe;
+wire pipe_ready;
 
 assign s_status_overflow = overflow_reg;
 assign s_status_bad_frame = bad_frame_reg;
@@ -542,14 +541,14 @@ end
 integer j;
 
 always @(posedge m_clk) begin
-    if (m_axis_tready) begin
+    if (OUTPUT_FIFO_ENABLE || m_axis_tready) begin
         // output ready; invalidate stage
         m_axis_tvalid_pipe_reg[RAM_PIPELINE+1-1] <= 1'b0;
         m_terminate_frame_reg <= 1'b0;
     end
 
     for (j = RAM_PIPELINE+1-1; j > 0; j = j - 1) begin
-        if (m_axis_tready || ((~m_axis_tvalid_pipe_reg) >> j)) begin
+        if (OUTPUT_FIFO_ENABLE || m_axis_tready || ((~m_axis_tvalid_pipe_reg) >> j)) begin
             // output ready or bubble in pipeline; transfer down pipeline
             m_axis_tvalid_pipe_reg[j] <= m_axis_tvalid_pipe_reg[j-1];
             m_axis_pipe_reg[j] <= j == 1 ? mem_read_data_reg : m_axis_pipe_reg[j-1];
@@ -557,11 +556,11 @@ always @(posedge m_clk) begin
         end
     end
 
-    if (m_axis_tready || ~m_axis_tvalid_pipe_reg) begin
+    if (OUTPUT_FIFO_ENABLE || m_axis_tready || ~m_axis_tvalid_pipe_reg) begin
         // output ready or bubble in pipeline; read new data from FIFO
         m_axis_tvalid_pipe_reg[0] <= 1'b0;
         mem_read_data_reg <= mem[rd_ptr_reg[ADDR_WIDTH-1:0]];
-        if (!empty && !m_rst_sync3_reg && !m_drop_frame_reg) begin
+        if (!empty && !m_rst_sync3_reg && !m_drop_frame_reg && pipe_ready) begin
             // not empty, increment pointer
             m_axis_tvalid_pipe_reg[0] <= 1'b1;
             rd_ptr_temp = rd_ptr_reg + 1;
@@ -572,14 +571,14 @@ always @(posedge m_clk) begin
 
     if (m_axis_tvalid_pipe && LAST_ENABLE) begin
         // track output frame status
-        if (m_axis_tlast_pipe && m_axis_tready) begin
+        if (m_axis_tlast_pipe && (OUTPUT_FIFO_ENABLE || m_axis_tready)) begin
             m_frame_reg <= 1'b0;
         end else begin
             m_frame_reg <= 1'b1;
         end
     end
 
-    if (m_drop_frame_reg && (m_axis_tready || !m_axis_tvalid_pipe) && LAST_ENABLE) begin
+    if (m_drop_frame_reg && (OUTPUT_FIFO_ENABLE ? pipe_ready : m_axis_tready || !m_axis_tvalid_pipe) && LAST_ENABLE) begin
         // terminate frame
         // (only for frame transfers interrupted by source reset)
         m_axis_tvalid_pipe_reg[RAM_PIPELINE+1-1] <= 1'b1;
@@ -616,6 +615,99 @@ always @(posedge m_clk) begin
         m_terminate_frame_reg <= 1'b0;
     end
 end
+
+generate
+
+if (!OUTPUT_FIFO_ENABLE) begin
+
+    assign pipe_ready = 1'b1;
+
+    assign m_axis_tvalid = m_axis_tvalid_pipe;
+
+    assign m_axis_tdata = m_axis_tdata_pipe;
+    assign m_axis_tkeep = m_axis_tkeep_pipe;
+    assign m_axis_tlast = m_axis_tlast_pipe;
+    assign m_axis_tid   = m_axis_tid_pipe;
+    assign m_axis_tdest = m_axis_tdest_pipe;
+    assign m_axis_tuser = m_axis_tuser_pipe;
+
+end else begin
+
+    // output datapath logic
+    reg [DATA_WIDTH-1:0] m_axis_tdata_reg  = {DATA_WIDTH{1'b0}};
+    reg [KEEP_WIDTH-1:0] m_axis_tkeep_reg  = {KEEP_WIDTH{1'b0}};
+    reg                  m_axis_tvalid_reg = 1'b0;
+    reg                  m_axis_tlast_reg  = 1'b0;
+    reg [ID_WIDTH-1:0]   m_axis_tid_reg    = {ID_WIDTH{1'b0}};
+    reg [DEST_WIDTH-1:0] m_axis_tdest_reg  = {DEST_WIDTH{1'b0}};
+    reg [USER_WIDTH-1:0] m_axis_tuser_reg  = {USER_WIDTH{1'b0}};
+
+    reg [OUTPUT_FIFO_ADDR_WIDTH+1-1:0] out_fifo_wr_ptr_reg = 0;
+    reg [OUTPUT_FIFO_ADDR_WIDTH+1-1:0] out_fifo_rd_ptr_reg = 0;
+    reg out_fifo_half_full_reg = 1'b0;
+
+    wire out_fifo_full = out_fifo_wr_ptr_reg == (out_fifo_rd_ptr_reg ^ {1'b1, {OUTPUT_FIFO_ADDR_WIDTH{1'b0}}});
+    wire out_fifo_empty = out_fifo_wr_ptr_reg == out_fifo_rd_ptr_reg;
+
+    (* ram_style = "distributed", ramstyle = "no_rw_check, mlab" *)
+    reg [DATA_WIDTH-1:0] out_fifo_tdata[2**OUTPUT_FIFO_ADDR_WIDTH-1:0];
+    (* ram_style = "distributed", ramstyle = "no_rw_check, mlab" *)
+    reg [KEEP_WIDTH-1:0] out_fifo_tkeep[2**OUTPUT_FIFO_ADDR_WIDTH-1:0];
+    (* ram_style = "distributed", ramstyle = "no_rw_check, mlab" *)
+    reg                  out_fifo_tlast[2**OUTPUT_FIFO_ADDR_WIDTH-1:0];
+    (* ram_style = "distributed", ramstyle = "no_rw_check, mlab" *)
+    reg [ID_WIDTH-1:0]   out_fifo_tid[2**OUTPUT_FIFO_ADDR_WIDTH-1:0];
+    (* ram_style = "distributed", ramstyle = "no_rw_check, mlab" *)
+    reg [DEST_WIDTH-1:0] out_fifo_tdest[2**OUTPUT_FIFO_ADDR_WIDTH-1:0];
+    (* ram_style = "distributed", ramstyle = "no_rw_check, mlab" *)
+    reg [USER_WIDTH-1:0] out_fifo_tuser[2**OUTPUT_FIFO_ADDR_WIDTH-1:0];
+
+    assign pipe_ready = !out_fifo_half_full_reg;
+
+    assign m_axis_tdata  = m_axis_tdata_reg;
+    assign m_axis_tkeep  = KEEP_ENABLE ? m_axis_tkeep_reg : {KEEP_WIDTH{1'b1}};
+    assign m_axis_tvalid = m_axis_tvalid_reg;
+    assign m_axis_tlast  = LAST_ENABLE ? m_axis_tlast_reg : 1'b1;
+    assign m_axis_tid    = ID_ENABLE   ? m_axis_tid_reg   : {ID_WIDTH{1'b0}};
+    assign m_axis_tdest  = DEST_ENABLE ? m_axis_tdest_reg : {DEST_WIDTH{1'b0}};
+    assign m_axis_tuser  = USER_ENABLE ? m_axis_tuser_reg : {USER_WIDTH{1'b0}};
+
+    always @(posedge m_clk) begin
+        m_axis_tvalid_reg <= m_axis_tvalid_reg && !m_axis_tready;
+
+        out_fifo_half_full_reg <= $unsigned(out_fifo_wr_ptr_reg - out_fifo_rd_ptr_reg) >= 2**(OUTPUT_FIFO_ADDR_WIDTH-1);
+
+        if (!out_fifo_full && m_axis_tvalid_pipe) begin
+            out_fifo_tdata[out_fifo_wr_ptr_reg[OUTPUT_FIFO_ADDR_WIDTH-1:0]] <= m_axis_tdata_pipe;
+            out_fifo_tkeep[out_fifo_wr_ptr_reg[OUTPUT_FIFO_ADDR_WIDTH-1:0]] <= m_axis_tkeep_pipe;
+            out_fifo_tlast[out_fifo_wr_ptr_reg[OUTPUT_FIFO_ADDR_WIDTH-1:0]] <= m_axis_tlast_pipe;
+            out_fifo_tid[out_fifo_wr_ptr_reg[OUTPUT_FIFO_ADDR_WIDTH-1:0]] <= m_axis_tid_pipe;
+            out_fifo_tdest[out_fifo_wr_ptr_reg[OUTPUT_FIFO_ADDR_WIDTH-1:0]] <= m_axis_tdest_pipe;
+            out_fifo_tuser[out_fifo_wr_ptr_reg[OUTPUT_FIFO_ADDR_WIDTH-1:0]] <= m_axis_tuser_pipe;
+            out_fifo_wr_ptr_reg <= out_fifo_wr_ptr_reg + 1;
+        end
+
+        if (!out_fifo_empty && (!m_axis_tvalid_reg || m_axis_tready)) begin
+            m_axis_tdata_reg <= out_fifo_tdata[out_fifo_rd_ptr_reg[OUTPUT_FIFO_ADDR_WIDTH-1:0]];
+            m_axis_tkeep_reg <= out_fifo_tkeep[out_fifo_rd_ptr_reg[OUTPUT_FIFO_ADDR_WIDTH-1:0]];
+            m_axis_tvalid_reg <= 1'b1;
+            m_axis_tlast_reg <= out_fifo_tlast[out_fifo_rd_ptr_reg[OUTPUT_FIFO_ADDR_WIDTH-1:0]];
+            m_axis_tid_reg <= out_fifo_tid[out_fifo_rd_ptr_reg[OUTPUT_FIFO_ADDR_WIDTH-1:0]];
+            m_axis_tdest_reg <= out_fifo_tdest[out_fifo_rd_ptr_reg[OUTPUT_FIFO_ADDR_WIDTH-1:0]];
+            m_axis_tuser_reg <= out_fifo_tuser[out_fifo_rd_ptr_reg[OUTPUT_FIFO_ADDR_WIDTH-1:0]];
+            out_fifo_rd_ptr_reg <= out_fifo_rd_ptr_reg + 1;
+        end
+
+        if (m_rst) begin
+            out_fifo_wr_ptr_reg <= 0;
+            out_fifo_rd_ptr_reg <= 0;
+            m_axis_tvalid_reg <= 1'b0;
+        end
+    end
+
+end
+
+endgenerate
 
 endmodule
 
