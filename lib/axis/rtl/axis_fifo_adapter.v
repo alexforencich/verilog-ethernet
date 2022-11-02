@@ -63,8 +63,11 @@ module axis_fifo_adapter #
     parameter USER_ENABLE = 1,
     // tuser signal width
     parameter USER_WIDTH = 1,
-    // number of output pipeline registers
-    parameter PIPELINE_OUTPUT = 2,
+    // number of RAM pipeline registers in FIFO
+    parameter RAM_PIPELINE = 1,
+    // use output FIFO
+    // When set, the RAM read enable and pipeline clock enables are removed
+    parameter OUTPUT_FIFO_ENABLE = 0,
     // Frame FIFO mode - operate on frames instead of cycles
     // When set, m_axis_tvalid will not be deasserted within a frame
     // Requires LAST_ENABLE set
@@ -309,7 +312,8 @@ axis_fifo #(
     .DEST_WIDTH(DEST_WIDTH),
     .USER_ENABLE(USER_ENABLE),
     .USER_WIDTH(USER_WIDTH),
-    .PIPELINE_OUTPUT(PIPELINE_OUTPUT),
+    .RAM_PIPELINE(RAM_PIPELINE),
+    .OUTPUT_FIFO_ENABLE(OUTPUT_FIFO_ENABLE),
     .FRAME_FIFO(FRAME_FIFO),
     .USER_BAD_FRAME_VALUE(USER_BAD_FRAME_VALUE),
     .USER_BAD_FRAME_MASK(USER_BAD_FRAME_MASK),
