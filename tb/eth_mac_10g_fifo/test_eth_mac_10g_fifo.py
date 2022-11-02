@@ -322,13 +322,13 @@ def test_eth_mac_10g_fifo(request, data_width, enable_dic):
     parameters['ENABLE_DIC'] = enable_dic
     parameters['MIN_FRAME_LENGTH'] = 64
     parameters['TX_FIFO_DEPTH'] = 16384
-    parameters['TX_FIFO_PIPELINE_OUTPUT'] = 2
+    parameters['TX_FIFO_RAM_PIPELINE'] = 1
     parameters['TX_FRAME_FIFO'] = 1
     parameters['TX_DROP_OVERSIZE_FRAME'] = parameters['TX_FRAME_FIFO']
     parameters['TX_DROP_BAD_FRAME'] = parameters['TX_DROP_OVERSIZE_FRAME']
     parameters['TX_DROP_WHEN_FULL'] = 0
     parameters['RX_FIFO_DEPTH'] = 16384
-    parameters['RX_FIFO_PIPELINE_OUTPUT'] = 2
+    parameters['RX_FIFO_RAM_PIPELINE'] = 1
     parameters['RX_FRAME_FIFO'] = 1
     parameters['RX_DROP_OVERSIZE_FRAME'] = parameters['RX_FRAME_FIFO']
     parameters['RX_DROP_BAD_FRAME'] = parameters['RX_DROP_OVERSIZE_FRAME']
