@@ -24,13 +24,13 @@ foreach fifo_inst [get_cells -hier -filter {(ORIG_REF_NAME == axis_async_fifo ||
     puts "Inserting timing constraints for axis_async_fifo instance $fifo_inst"
 
     # get clock periods
-    set read_clk [get_clocks -of_objects [get_pins -quiet "$fifo_inst/rd_ptr_reg_reg[*]/C $fifo_inst/rd_ptr_gray_reg_reg[*]/C $fifo_inst/wr_ptr_gray_sync1_reg_reg[*]/C"]]
-    set write_clk [get_clocks -of_objects [get_pins -quiet "$fifo_inst/wr_ptr_reg_reg[*]/C $fifo_inst/wr_ptr_gray_reg_reg[*]/C $fifo_inst/rd_ptr_gray_sync1_reg_reg[*]/C"]]
+    set write_clk [get_clocks -of_objects [get_cells -quiet "$fifo_inst/wr_ptr_reg_reg[*] $fifo_inst/wr_ptr_gray_reg_reg[*] $fifo_inst/rd_ptr_gray_sync1_reg_reg[*]"]]
+    set read_clk [get_clocks -of_objects [get_cells -quiet "$fifo_inst/rd_ptr_reg_reg[*] $fifo_inst/rd_ptr_gray_reg_reg[*] $fifo_inst/wr_ptr_gray_sync1_reg_reg[*]"]]
 
-    set read_clk_period [get_property -min PERIOD $read_clk]
-    set write_clk_period [get_property -min PERIOD $write_clk]
+    set write_clk_period [if {[llength $write_clk]} {get_property -min PERIOD $write_clk} {expr 1.0}]
+    set read_clk_period [if {[llength $read_clk]} {get_property -min PERIOD $read_clk} {expr 1.0}]
 
-    set min_clk_period [expr $read_clk_period < $write_clk_period ? $read_clk_period : $write_clk_period]
+    set min_clk_period [expr min($write_clk_period, $read_clk_period)]
 
     # reset synchronization
     set reset_ffs [get_cells -quiet -hier -regexp ".*/s_rst_sync\[23\]_reg_reg" -filter "PARENT == $fifo_inst"]
