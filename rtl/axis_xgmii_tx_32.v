@@ -85,8 +85,8 @@ module axis_xgmii_tx_32 #
     output wire                      error_underflow
 );
 
-localparam EMPTY_WIDTH = $clog2(KEEP_WIDTH);
-localparam MIN_LEN_WIDTH = $clog2(MIN_FRAME_LENGTH-4-CTRL_WIDTH+1);
+parameter EMPTY_WIDTH = $clog2(KEEP_WIDTH);
+parameter MIN_LEN_WIDTH = $clog2(MIN_FRAME_LENGTH-4-CTRL_WIDTH+1);
 
 // bus width assertions
 initial begin
