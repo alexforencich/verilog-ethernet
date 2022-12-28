@@ -225,7 +225,7 @@ wire [3:0] led_int;
 /*
  * Silicon Labs CP2102 USB UART
  */
-wire uart_sys_rst;
+wire uart_rst_int;
 wire uart_suspend_int;
 wire uart_ri_int;
 wire uart_dcd_int;
