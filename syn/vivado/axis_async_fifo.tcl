@@ -83,7 +83,7 @@ foreach fifo_inst [get_cells -hier -filter {(ORIG_REF_NAME == axis_async_fifo ||
     }
 
     # output register (needed for distributed RAM sync write/async read)
-    set output_reg_ffs [get_cells -quiet "$fifo_inst/mem_read_data_reg_reg[*]"]
+    set output_reg_ffs [get_cells -quiet "$fifo_inst/m_axis_pipe_reg_reg[0][*]"]
 
     if {[llength $output_reg_ffs]} {
         set_false_path -from $write_clk -to $output_reg_ffs

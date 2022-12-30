@@ -209,7 +209,6 @@ reg m_rst_sync3_reg = 1'b1;
 
 (* ramstyle = "no_rw_check" *)
 reg [WIDTH-1:0] mem[(2**ADDR_WIDTH)-1:0];
-reg [WIDTH-1:0] mem_read_data_reg;
 reg mem_read_data_valid_reg = 1'b0;
 
 (* shreg_extract = "no" *)
@@ -268,7 +267,7 @@ generate
     if (USER_ENABLE) assign s_axis[USER_OFFSET +: USER_WIDTH] = s_axis_tuser;
 endgenerate
 
-wire [WIDTH-1:0] m_axis = RAM_PIPELINE ? m_axis_pipe_reg[RAM_PIPELINE+1-1] : mem_read_data_reg;
+wire [WIDTH-1:0] m_axis = m_axis_pipe_reg[RAM_PIPELINE+1-1];
 
 wire                   m_axis_tvalid_pipe = m_axis_tvalid_pipe_reg[RAM_PIPELINE+1-1];
 
@@ -551,7 +550,7 @@ always @(posedge m_clk) begin
         if (OUTPUT_FIFO_ENABLE || m_axis_tready || ((~m_axis_tvalid_pipe_reg) >> j)) begin
             // output ready or bubble in pipeline; transfer down pipeline
             m_axis_tvalid_pipe_reg[j] <= m_axis_tvalid_pipe_reg[j-1];
-            m_axis_pipe_reg[j] <= j == 1 ? mem_read_data_reg : m_axis_pipe_reg[j-1];
+            m_axis_pipe_reg[j] <= m_axis_pipe_reg[j-1];
             m_axis_tvalid_pipe_reg[j-1] <= 1'b0;
         end
     end
@@ -559,7 +558,7 @@ always @(posedge m_clk) begin
     if (OUTPUT_FIFO_ENABLE || m_axis_tready || ~m_axis_tvalid_pipe_reg) begin
         // output ready or bubble in pipeline; read new data from FIFO
         m_axis_tvalid_pipe_reg[0] <= 1'b0;
-        mem_read_data_reg <= mem[rd_ptr_reg[ADDR_WIDTH-1:0]];
+        m_axis_pipe_reg[0] <= mem[rd_ptr_reg[ADDR_WIDTH-1:0]];
         if (!empty && !m_rst_sync3_reg && !m_drop_frame_reg && pipe_ready) begin
             // not empty, increment pointer
             m_axis_tvalid_pipe_reg[0] <= 1'b1;
