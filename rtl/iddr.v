@@ -86,11 +86,14 @@ if (TARGET == "XILINX") begin
                 .S(1'b0)
             );
         end else if (IODDR_STYLE == "IODDR2") begin
+            wire q1_int;
+            reg q1_delay;
+
             IDDR2 #(
                 .DDR_ALIGNMENT("C0")
             )
             iddr_inst (
-                .Q0(q1[n]),
+                .Q0(q1_int),
                 .Q1(q2[n]),
                 .C0(clk),
                 .C1(~clk),
@@ -99,6 +102,12 @@ if (TARGET == "XILINX") begin
                 .R(1'b0),
                 .S(1'b0)
             );
+
+            always @(posedge clk) begin
+                q1_delay <= q1_int;
+            end
+
+            assign q1[n] = q1_delay;
         end
     end
 end else if (TARGET == "ALTERA") begin
