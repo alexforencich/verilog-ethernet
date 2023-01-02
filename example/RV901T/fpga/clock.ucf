@@ -1,0 +1,6 @@
+# UCF file for clock module domain crossing constraints
+
+NET "clk_125mhz_int" TNM = "ffs_clk_125mhz_int";
+NET "core_inst/eth_mac_inst/rx_clk" TNM = "ffs_gmii_rx_clk";
+TIMESPEC "TS_clk_125mhz_int_to_gmii_rx_clk" = FROM "ffs_clk_125mhz_int" TO "ffs_gmii_rx_clk" 10 ns;
+TIMESPEC "TS_gmii_rx_clk_to_clk_125mhz_int" = FROM "ffs_gmii_rx_clk" TO "ffs_clk_125mhz_int" 10 ns;

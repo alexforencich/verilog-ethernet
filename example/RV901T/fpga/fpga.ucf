@@ -1,0 +1,48 @@
+# User Constraints File for the Linsn RV901T board
+
+CONFIG PART = xc6slx16-2ftg256;
+
+# 25 MHz clock
+NET "clk_25mhz" LOC = "M9" | IOSTANDARD=LVCMOS33 | TNM_NET = "clk_25mhz";
+TIMESPEC "TS_clk_25mhz" = PERIOD "clk_25mhz" 25000 kHz;
+
+# Light Emitting Diodes
+NET "led"   LOC = "F7" | IOSTANDARD=LVCMOS33 | SLEW=QUIETIO | DRIVE=2;
+
+# Broadcom B50612D Tri-Mode Ethernet PHY (1000BASE-T) (U200)
+# RGMII Transmit
+NET "phy_0_tx_clk"  LOC = "D1" | IOSTANDARD=LVCMOS33 | SLEW = FAST;
+NET "phy_0_txd<0>"  LOC = "E3" | IOSTANDARD=LVCMOS33 | SLEW = FAST;
+NET "phy_0_txd<1>"  LOC = "E2" | IOSTANDARD=LVCMOS33 | SLEW = FAST;
+NET "phy_0_txd<2>"  LOC = "E1" | IOSTANDARD=LVCMOS33 | SLEW = FAST;
+NET "phy_0_txd<3>"  LOC = "F3" | IOSTANDARD=LVCMOS33 | SLEW = FAST;
+NET "phy_0_tx_ctl"  LOC = "E4" | IOSTANDARD=LVCMOS33 | SLEW = FAST;
+# RGMII Receive
+NET "phy_0_rx_clk"  LOC = "F1" | IOSTANDARD=LVCMOS33 | TNM_NET = "phy_0_rx_clk";
+NET "phy_0_rxd<0>"  LOC = "F2" | IOSTANDARD=LVCMOS33;
+NET "phy_0_rxd<1>"  LOC = "F4" | IOSTANDARD=LVCMOS33;
+NET "phy_0_rxd<2>"  LOC = "G1" | IOSTANDARD=LVCMOS33;
+NET "phy_0_rxd<3>"  LOC = "G3" | IOSTANDARD=LVCMOS33;
+NET "phy_0_rx_ctl"  LOC = "H1" | IOSTANDARD=LVCMOS33;
+
+# Timing constraints for Ethernet PHY
+TIMESPEC "TS_phy_0_rx_clk" = PERIOD "phy_0_rx_clk" 8000 ps HIGH 50 %;
+
+# Broadcom B50612D Tri-Mode Ethernet PHY (1000BASE-T) (U201)
+# RGMII Transmit
+NET "phy_1_tx_clk"  LOC = "J1" | IOSTANDARD=LVCMOS33 | SLEW = FAST;
+NET "phy_1_txd<0>"  LOC = "J3" | IOSTANDARD=LVCMOS33 | SLEW = FAST;
+NET "phy_1_txd<1>"  LOC = "K1" | IOSTANDARD=LVCMOS33 | SLEW = FAST;
+NET "phy_1_txd<2>"  LOC = "K2" | IOSTANDARD=LVCMOS33 | SLEW = FAST;
+NET "phy_1_txd<3>"  LOC = "H3" | IOSTANDARD=LVCMOS33 | SLEW = FAST;
+NET "phy_1_tx_ctl"  LOC = "H2" | IOSTANDARD=LVCMOS33 | SLEW = FAST;
+# RGMII Receive
+NET "phy_1_rx_clk"  LOC = "K3" | IOSTANDARD=LVCMOS33 | TNM_NET = "phy_1_rx_clk";
+NET "phy_1_rxd<0>"  LOC = "L1" | IOSTANDARD=LVCMOS33;
+NET "phy_1_rxd<1>"  LOC = "L3" | IOSTANDARD=LVCMOS33;
+NET "phy_1_rxd<2>"  LOC = "M1" | IOSTANDARD=LVCMOS33;
+NET "phy_1_rxd<3>"  LOC = "M2" | IOSTANDARD=LVCMOS33;
+NET "phy_1_rx_ctl"  LOC = "M3" | IOSTANDARD=LVCMOS33;
+
+# Timing constraints for Ethernet PHY
+TIMESPEC "TS_phy_1_rx_clk" = PERIOD "phy_1_rx_clk" 8000 ps HIGH 50 %;
