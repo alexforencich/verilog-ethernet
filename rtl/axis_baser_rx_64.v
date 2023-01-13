@@ -163,7 +163,6 @@ reg [1:0] state_reg = STATE_IDLE, state_next;
 
 // datapath control signals
 reg reset_crc;
-reg update_crc_last;
 
 reg lanes_swapped = 1'b0;
 reg [31:0] swap_data = 32'd0;
@@ -171,9 +170,10 @@ reg [31:0] swap_data = 32'd0;
 reg delay_type_valid = 1'b0;
 reg [3:0] delay_type = INPUT_TYPE_IDLE;
 
+reg [DATA_WIDTH-1:0] encoded_rx_data_masked = {DATA_WIDTH{1'b0}};
+
 reg [DATA_WIDTH-1:0] input_data_d0 = {DATA_WIDTH{1'b0}};
 reg [DATA_WIDTH-1:0] input_data_d1 = {DATA_WIDTH{1'b0}};
-reg [DATA_WIDTH-1:0] input_data_crc = {DATA_WIDTH{1'b0}};
 
 reg [3:0] input_type_d0 = INPUT_TYPE_IDLE;
 reg [3:0] input_type_d1 = INPUT_TYPE_IDLE;
@@ -194,17 +194,20 @@ reg [PTP_TS_WIDTH-1:0] ptp_ts_adj_reg = 0;
 reg ptp_ts_borrow_reg = 0;
 
 reg [31:0] crc_state = 32'hFFFFFFFF;
-reg [31:0] crc_state3 = 32'hFFFFFFFF;
 
-wire [31:0] crc_next[7:0];
+wire [31:0] crc_next;
 
-wire crc_valid0 = crc_next[0] == ~32'h2144df1c;
-wire crc_valid1 = crc_next[1] == ~32'h2144df1c;
-wire crc_valid2 = crc_next[2] == ~32'h2144df1c;
-wire crc_valid3 = crc_next[3] == ~32'h2144df1c;
-wire crc_valid7 = crc_next[7] == ~32'h2144df1c;
+wire [7:0] crc_valid;
+reg [7:0] crc_valid_save;
 
-reg crc_valid7_save = 1'b0;
+assign crc_valid[7] = crc_next == ~32'h2144df1c;
+assign crc_valid[6] = crc_next == ~32'hc622f71d;
+assign crc_valid[5] = crc_next == ~32'hb1c2a1a3;
+assign crc_valid[4] = crc_next == ~32'h9d6cdf7e;
+assign crc_valid[3] = crc_next == ~32'h6522df69;
+assign crc_valid[2] = crc_next == ~32'he60914ae;
+assign crc_valid[1] = crc_next == ~32'he38a6876;
+assign crc_valid[0] = crc_next == ~32'h6b87b1ec;
 
 assign m_axis_tdata = m_axis_tdata_reg;
 assign m_axis_tkeep = m_axis_tkeep_reg;
@@ -217,29 +220,6 @@ assign error_bad_frame = error_bad_frame_reg;
 assign error_bad_fcs = error_bad_fcs_reg;
 assign rx_bad_block = rx_bad_block_reg;
 
-generate
-    genvar n;
-
-    for (n = 0; n < 4; n = n + 1) begin : crc
-        lfsr #(
-            .LFSR_WIDTH(32),
-            .LFSR_POLY(32'h4c11db7),
-            .LFSR_CONFIG("GALOIS"),
-            .LFSR_FEED_FORWARD(0),
-            .REVERSE(1),
-            .DATA_WIDTH(8*(n+1)),
-            .STYLE("AUTO")
-        )
-        eth_crc (
-            .data_in(input_data_crc[0 +: 8*(n+1)]),
-            .state_in(crc_state3),
-            .data_out(),
-            .state_out(crc_next[n])
-        );
-    end
-
-endgenerate
-
 lfsr #(
     .LFSR_WIDTH(32),
     .LFSR_POLY(32'h4c11db7),
@@ -249,18 +229,42 @@ lfsr #(
     .DATA_WIDTH(64),
     .STYLE("AUTO")
 )
-eth_crc_64 (
+eth_crc (
     .data_in(input_data_d0),
     .state_in(crc_state),
     .data_out(),
-    .state_out(crc_next[7])
+    .state_out(crc_next)
 );
+
+// Mask input data
+integer j;
+
+always @* begin
+    // minimal checks of control info to simplify datapath logic, full checks performed later
+    if (encoded_rx_hdr[0] == 0) begin
+        encoded_rx_data_masked = encoded_rx_data;
+    end else if (encoded_rx_data[7]) begin
+        // terminate
+        case (encoded_rx_data[6:4])
+            3'd0: encoded_rx_data_masked = 64'd0;
+            3'd1: encoded_rx_data_masked = {56'd0, encoded_rx_data[15:8]};
+            3'd2: encoded_rx_data_masked = {48'd0, encoded_rx_data[23:8]};
+            3'd3: encoded_rx_data_masked = {40'd0, encoded_rx_data[31:8]};
+            3'd4: encoded_rx_data_masked = {32'd0, encoded_rx_data[39:8]};
+            3'd5: encoded_rx_data_masked = {24'd0, encoded_rx_data[47:8]};
+            3'd6: encoded_rx_data_masked = {16'd0, encoded_rx_data[55:8]};
+            3'd7: encoded_rx_data_masked = {8'd0, encoded_rx_data[63:8]};
+        endcase
+    end else begin
+        // start, OS, etc.
+        encoded_rx_data_masked = {encoded_rx_data[63:8], 8'd0};
+    end
+end
 
 always @* begin
     state_next = STATE_IDLE;
 
     reset_crc = 1'b0;
-    update_crc_last = 1'b0;
 
     m_axis_tdata_next = input_data_d1;
     m_axis_tkeep_next = 8'd0;
@@ -300,7 +304,6 @@ always @* begin
             if (input_type_d0[3]) begin
                 // INPUT_TYPE_TERM_*
                 reset_crc = 1'b1;
-                update_crc_last = 1'b1;
             end
 
             if (input_type_d0 == INPUT_TYPE_DATA) begin
@@ -317,11 +320,11 @@ always @* begin
                         INPUT_TYPE_TERM_4: m_axis_tkeep_next = 8'b11111111;
                     endcase
                     m_axis_tlast_next = 1'b1;
-                    if ((input_type_d0 == INPUT_TYPE_TERM_0 && crc_valid7_save) ||
-                        (input_type_d0 == INPUT_TYPE_TERM_1 && crc_valid0) ||
-                        (input_type_d0 == INPUT_TYPE_TERM_2 && crc_valid1) ||
-                        (input_type_d0 == INPUT_TYPE_TERM_3 && crc_valid2) ||
-                        (input_type_d0 == INPUT_TYPE_TERM_4 && crc_valid3)) begin
+                    if ((input_type_d0 == INPUT_TYPE_TERM_0 && crc_valid_save[7]) ||
+                        (input_type_d0 == INPUT_TYPE_TERM_1 && crc_valid[0]) ||
+                        (input_type_d0 == INPUT_TYPE_TERM_2 && crc_valid[1]) ||
+                        (input_type_d0 == INPUT_TYPE_TERM_3 && crc_valid[2]) ||
+                        (input_type_d0 == INPUT_TYPE_TERM_4 && crc_valid[3])) begin
                         // CRC valid
                     end else begin
                         m_axis_tuser_next[0] = 1'b1;
@@ -358,9 +361,9 @@ always @* begin
                 INPUT_TYPE_TERM_7: m_axis_tkeep_next = 8'b00000111;
             endcase
 
-            if ((input_type_d1 == INPUT_TYPE_TERM_5 && crc_valid0) ||
-                (input_type_d1 == INPUT_TYPE_TERM_6 && crc_valid1) ||
-                (input_type_d1 == INPUT_TYPE_TERM_7 && crc_valid2)) begin
+            if ((input_type_d1 == INPUT_TYPE_TERM_5 && crc_valid_save[4]) ||
+                (input_type_d1 == INPUT_TYPE_TERM_6 && crc_valid_save[5]) ||
+                (input_type_d1 == INPUT_TYPE_TERM_7 && crc_valid_save[6])) begin
                 // CRC valid
             end else begin
                 m_axis_tuser_next[0] = 1'b1;
@@ -389,11 +392,7 @@ always @(posedge clk) begin
 
     delay_type_valid <= 1'b0;
 
-    if (encoded_rx_hdr == SYNC_DATA) begin
-        swap_data <= encoded_rx_data[63:32];
-    end else begin
-        swap_data <= {8'd0, encoded_rx_data[63:40]};
-    end
+    swap_data <= encoded_rx_data_masked[63:32];
 
     if (PTP_TS_ENABLE && PTP_TS_WIDTH == 96) begin
         // ns field rollover
@@ -407,8 +406,7 @@ always @(posedge clk) begin
         lanes_swapped <= 1'b0;
         start_packet_reg <= 2'b01;
         input_type_d0 <= INPUT_TYPE_START_0;
-        input_data_d0 <= encoded_rx_data;
-        input_data_crc <= encoded_rx_data;
+        input_data_d0 <= encoded_rx_data_masked;
 
         if (PTP_TS_WIDTH == 96) begin
             ptp_ts_reg[45:0] <= ptp_ts[45:0] + (PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS);
@@ -426,8 +424,7 @@ always @(posedge clk) begin
         end else begin
             input_type_d0 <= INPUT_TYPE_IDLE;
         end
-        input_data_d0 <= {encoded_rx_data[31:0], swap_data};
-        input_data_crc <= {encoded_rx_data[31:0], swap_data};
+        input_data_d0 <= {encoded_rx_data_masked[31:0], swap_data};
 
         if (PTP_TS_WIDTH == 96) begin
             ptp_ts_reg[45:0] <= ptp_ts[45:0] + (((PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS) * 3) >> 1);
@@ -471,13 +468,7 @@ always @(posedge clk) begin
             rx_bad_block_reg <= 1'b1;
             input_type_d0 <= INPUT_TYPE_ERROR;
         end
-        if (encoded_rx_hdr == SYNC_DATA) begin
-            input_data_d0 <= {encoded_rx_data[31:0], swap_data};
-            input_data_crc <= {encoded_rx_data[31:0], swap_data};
-        end else begin
-            input_data_d0 <= {encoded_rx_data[39:8], swap_data};
-            input_data_crc <= {encoded_rx_data[39:8], swap_data};
-        end
+        input_data_d0 <= {encoded_rx_data_masked[31:0], swap_data};
     end else begin
         if (encoded_rx_hdr == SYNC_DATA) begin
             input_type_d0 <= INPUT_TYPE_DATA;
@@ -500,13 +491,7 @@ always @(posedge clk) begin
             rx_bad_block_reg <= 1'b1;
             input_type_d0 <= INPUT_TYPE_ERROR;
         end
-        if (encoded_rx_hdr == SYNC_DATA) begin
-            input_data_d0 <= encoded_rx_data;
-            input_data_crc <= encoded_rx_data;
-        end else begin
-            input_data_d0 <= {8'd0, encoded_rx_data[63:8]};
-            input_data_crc <= {8'd0, encoded_rx_data[63:8]};
-        end
+        input_data_d0 <= encoded_rx_data_masked;
     end
 
     if (encoded_rx_hdr == SYNC_DATA) begin
@@ -534,20 +519,10 @@ always @(posedge clk) begin
     if (reset_crc) begin
         crc_state <= 32'hFFFFFFFF;
     end else begin
-        crc_state <= crc_next[7];
+        crc_state <= crc_next;
     end
 
-    if (update_crc_last) begin
-        crc_state3 <= crc_next[3];
-    end else begin
-        crc_state3 <= crc_next[7];
-    end
-
-    crc_valid7_save <= crc_valid7;
-
-    if (state_next == STATE_LAST) begin
-        input_data_crc[31:0] <= input_data_crc[63:32];
-    end
+    crc_valid_save <= crc_valid;
 
     if (rst) begin
         state_reg <= STATE_IDLE;
