@@ -131,46 +131,46 @@ class TB:
         for k in range(10):
             await RisingEdge(self.dut.clk)
 
-        self.dut.rst <= 1
-        self.dut.phy_gmii_rst <= 1
-        self.dut.qsfp1_rx_rst_1 <= 1
-        self.dut.qsfp1_tx_rst_1 <= 1
-        self.dut.qsfp1_rx_rst_2 <= 1
-        self.dut.qsfp1_tx_rst_2 <= 1
-        self.dut.qsfp1_rx_rst_3 <= 1
-        self.dut.qsfp1_tx_rst_3 <= 1
-        self.dut.qsfp1_rx_rst_4 <= 1
-        self.dut.qsfp1_tx_rst_4 <= 1
-        self.dut.qsfp2_rx_rst_1 <= 1
-        self.dut.qsfp2_tx_rst_1 <= 1
-        self.dut.qsfp2_rx_rst_2 <= 1
-        self.dut.qsfp2_tx_rst_2 <= 1
-        self.dut.qsfp2_rx_rst_3 <= 1
-        self.dut.qsfp2_tx_rst_3 <= 1
-        self.dut.qsfp2_rx_rst_4 <= 1
-        self.dut.qsfp2_tx_rst_4 <= 1
+        self.dut.rst.value = 1
+        self.dut.phy_gmii_rst.value = 1
+        self.dut.qsfp1_rx_rst_1.value = 1
+        self.dut.qsfp1_tx_rst_1.value = 1
+        self.dut.qsfp1_rx_rst_2.value = 1
+        self.dut.qsfp1_tx_rst_2.value = 1
+        self.dut.qsfp1_rx_rst_3.value = 1
+        self.dut.qsfp1_tx_rst_3.value = 1
+        self.dut.qsfp1_rx_rst_4.value = 1
+        self.dut.qsfp1_tx_rst_4.value = 1
+        self.dut.qsfp2_rx_rst_1.value = 1
+        self.dut.qsfp2_tx_rst_1.value = 1
+        self.dut.qsfp2_rx_rst_2.value = 1
+        self.dut.qsfp2_tx_rst_2.value = 1
+        self.dut.qsfp2_rx_rst_3.value = 1
+        self.dut.qsfp2_tx_rst_3.value = 1
+        self.dut.qsfp2_rx_rst_4.value = 1
+        self.dut.qsfp2_tx_rst_4.value = 1
 
         for k in range(10):
             await RisingEdge(self.dut.clk)
 
-        self.dut.rst <= 0
-        self.dut.phy_gmii_rst <= 0
-        self.dut.qsfp1_rx_rst_1 <= 0
-        self.dut.qsfp1_tx_rst_1 <= 0
-        self.dut.qsfp1_rx_rst_2 <= 0
-        self.dut.qsfp1_tx_rst_2 <= 0
-        self.dut.qsfp1_rx_rst_3 <= 0
-        self.dut.qsfp1_tx_rst_3 <= 0
-        self.dut.qsfp1_rx_rst_4 <= 0
-        self.dut.qsfp1_tx_rst_4 <= 0
-        self.dut.qsfp2_rx_rst_1 <= 0
-        self.dut.qsfp2_tx_rst_1 <= 0
-        self.dut.qsfp2_rx_rst_2 <= 0
-        self.dut.qsfp2_tx_rst_2 <= 0
-        self.dut.qsfp2_rx_rst_3 <= 0
-        self.dut.qsfp2_tx_rst_3 <= 0
-        self.dut.qsfp2_rx_rst_4 <= 0
-        self.dut.qsfp2_tx_rst_4 <= 0
+        self.dut.rst.value = 0
+        self.dut.phy_gmii_rst.value = 0
+        self.dut.qsfp1_rx_rst_1.value = 0
+        self.dut.qsfp1_tx_rst_1.value = 0
+        self.dut.qsfp1_rx_rst_2.value = 0
+        self.dut.qsfp1_tx_rst_2.value = 0
+        self.dut.qsfp1_rx_rst_3.value = 0
+        self.dut.qsfp1_tx_rst_3.value = 0
+        self.dut.qsfp1_rx_rst_4.value = 0
+        self.dut.qsfp1_tx_rst_4.value = 0
+        self.dut.qsfp2_rx_rst_1.value = 0
+        self.dut.qsfp2_tx_rst_1.value = 0
+        self.dut.qsfp2_rx_rst_2.value = 0
+        self.dut.qsfp2_tx_rst_2.value = 0
+        self.dut.qsfp2_rx_rst_3.value = 0
+        self.dut.qsfp2_tx_rst_3.value = 0
+        self.dut.qsfp2_rx_rst_4.value = 0
+        self.dut.qsfp2_tx_rst_4.value = 0
 
 
 @cocotb.test()
@@ -244,7 +244,7 @@ async def run_test(dut):
 
     # insert tap
     await RisingEdge(dut.clk)
-    dut.sw <= 0x8
+    dut.sw.value = 0x8
     await RisingEdge(dut.clk)
 
     payload = bytes([x % 256 for x in range(256)])
@@ -287,7 +287,7 @@ async def run_test(dut):
 
     # insert tap
     await RisingEdge(dut.clk)
-    dut.sw <= 0xC
+    dut.sw.value = 0xC
     await RisingEdge(dut.clk)
 
     payload = bytes([x % 256 for x in range(256)])

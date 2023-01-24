@@ -68,23 +68,23 @@ class TB:
         for k in range(10):
             await RisingEdge(self.dut.clk_125mhz)
 
-        self.dut.rst_125mhz <= 1
+        self.dut.rst_125mhz.value = 1
 
         for k in range(10):
             await RisingEdge(self.dut.clk_125mhz)
 
-        self.dut.rst_125mhz <= 0
+        self.dut.rst_125mhz.value = 0
 
     async def _run_clk_125mhz(self):
         t = Timer(2, 'ns')
         while True:
-            self.dut.clk_125mhz <= 1
+            self.dut.clk_125mhz.value = 1
             await t
-            self.dut.clk90_125mhz <= 1
+            self.dut.clk90_125mhz.value = 1
             await t
-            self.dut.clk_125mhz <= 0
+            self.dut.clk_125mhz.value = 0
             await t
-            self.dut.clk90_125mhz <= 0
+            self.dut.clk90_125mhz.value = 0
             await t
 
 

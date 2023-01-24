@@ -64,23 +64,23 @@ class TB:
         for k in range(10):
             await RisingEdge(self.dut.clk)
 
-        self.dut.rst <= 1
+        self.dut.rst.value = 1
 
         for k in range(10):
             await RisingEdge(self.dut.clk)
 
-        self.dut.rst <= 0
+        self.dut.rst.value = 0
 
     async def _run_clk(self):
         t = Timer(2, 'ns')
         while True:
-            self.dut.clk <= 1
+            self.dut.clk.value = 1
             await t
-            self.dut.clk90 <= 1
+            self.dut.clk90.value = 1
             await t
-            self.dut.clk <= 0
+            self.dut.clk.value = 0
             await t
-            self.dut.clk90 <= 0
+            self.dut.clk90.value = 0
             await t
 
 

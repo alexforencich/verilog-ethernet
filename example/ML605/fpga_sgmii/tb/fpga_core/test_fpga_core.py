@@ -72,14 +72,14 @@ class TB:
         for k in range(10):
             await RisingEdge(self.dut.clk_125mhz)
 
-        self.dut.rst_125mhz <= 1
-        self.dut.phy_gmii_rst <= 1
+        self.dut.rst_125mhz.value = 1
+        self.dut.phy_gmii_rst.value = 1
 
         for k in range(10):
             await RisingEdge(self.dut.clk_125mhz)
 
-        self.dut.rst_125mhz <= 0
-        self.dut.phy_gmii_rst <= 0
+        self.dut.rst_125mhz.value = 0
+        self.dut.phy_gmii_rst.value = 0
 
 
 @cocotb.test()

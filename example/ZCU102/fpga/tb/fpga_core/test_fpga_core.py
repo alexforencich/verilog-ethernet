@@ -92,28 +92,28 @@ class TB:
         for k in range(10):
             await RisingEdge(self.dut.clk)
 
-        self.dut.rst <= 1
-        self.dut.sfp0_rx_rst <= 1
-        self.dut.sfp0_tx_rst <= 1
-        self.dut.sfp1_rx_rst <= 1
-        self.dut.sfp1_tx_rst <= 1
-        self.dut.sfp2_rx_rst <= 1
-        self.dut.sfp2_tx_rst <= 1
-        self.dut.sfp3_rx_rst <= 1
-        self.dut.sfp3_tx_rst <= 1
+        self.dut.rst.value = 1
+        self.dut.sfp0_rx_rst.value = 1
+        self.dut.sfp0_tx_rst.value = 1
+        self.dut.sfp1_rx_rst.value = 1
+        self.dut.sfp1_tx_rst.value = 1
+        self.dut.sfp2_rx_rst.value = 1
+        self.dut.sfp2_tx_rst.value = 1
+        self.dut.sfp3_rx_rst.value = 1
+        self.dut.sfp3_tx_rst.value = 1
 
         for k in range(10):
             await RisingEdge(self.dut.clk)
 
-        self.dut.rst <= 0
-        self.dut.sfp0_rx_rst <= 0
-        self.dut.sfp0_tx_rst <= 0
-        self.dut.sfp1_rx_rst <= 0
-        self.dut.sfp1_tx_rst <= 0
-        self.dut.sfp2_rx_rst <= 0
-        self.dut.sfp2_tx_rst <= 0
-        self.dut.sfp3_rx_rst <= 0
-        self.dut.sfp3_tx_rst <= 0
+        self.dut.rst.value = 0
+        self.dut.sfp0_rx_rst.value = 0
+        self.dut.sfp0_tx_rst.value = 0
+        self.dut.sfp1_rx_rst.value = 0
+        self.dut.sfp1_tx_rst.value = 0
+        self.dut.sfp2_rx_rst.value = 0
+        self.dut.sfp2_tx_rst.value = 0
+        self.dut.sfp3_rx_rst.value = 0
+        self.dut.sfp3_tx_rst.value = 0
 
 
 @cocotb.test()

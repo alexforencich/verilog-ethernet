@@ -72,14 +72,14 @@ class TB:
         for k in range(10):
             await RisingEdge(self.dut.clk)
 
-        self.dut.rst <= 1
-        self.dut.phy_gmii_rst <= 1
+        self.dut.rst.value = 1
+        self.dut.phy_gmii_rst.value = 1
 
         for k in range(10):
             await RisingEdge(self.dut.clk)
 
-        self.dut.rst <= 0
-        self.dut.phy_gmii_rst <= 0
+        self.dut.rst.value = 0
+        self.dut.phy_gmii_rst.value = 0
 
 
 @cocotb.test()

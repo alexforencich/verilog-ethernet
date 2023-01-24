@@ -178,44 +178,44 @@ class TB:
         for k in range(10):
             await RisingEdge(self.dut.clk)
 
-        self.dut.rst <= 1
-        self.dut.qsfp1_mac_1_rx_rst <= 1
-        self.dut.qsfp1_mac_1_tx_rst <= 1
-        self.dut.qsfp1_mac_2_rx_rst <= 1
-        self.dut.qsfp1_mac_2_tx_rst <= 1
-        self.dut.qsfp1_mac_3_rx_rst <= 1
-        self.dut.qsfp1_mac_3_tx_rst <= 1
-        self.dut.qsfp1_mac_4_rx_rst <= 1
-        self.dut.qsfp1_mac_4_tx_rst <= 1
-        self.dut.qsfp2_mac_1_rx_rst <= 1
-        self.dut.qsfp2_mac_1_tx_rst <= 1
-        self.dut.qsfp2_mac_2_rx_rst <= 1
-        self.dut.qsfp2_mac_2_tx_rst <= 1
-        self.dut.qsfp2_mac_3_rx_rst <= 1
-        self.dut.qsfp2_mac_3_tx_rst <= 1
-        self.dut.qsfp2_mac_4_rx_rst <= 1
-        self.dut.qsfp2_mac_4_tx_rst <= 1
+        self.dut.rst.value = 1
+        self.dut.qsfp1_mac_1_rx_rst.value = 1
+        self.dut.qsfp1_mac_1_tx_rst.value = 1
+        self.dut.qsfp1_mac_2_rx_rst.value = 1
+        self.dut.qsfp1_mac_2_tx_rst.value = 1
+        self.dut.qsfp1_mac_3_rx_rst.value = 1
+        self.dut.qsfp1_mac_3_tx_rst.value = 1
+        self.dut.qsfp1_mac_4_rx_rst.value = 1
+        self.dut.qsfp1_mac_4_tx_rst.value = 1
+        self.dut.qsfp2_mac_1_rx_rst.value = 1
+        self.dut.qsfp2_mac_1_tx_rst.value = 1
+        self.dut.qsfp2_mac_2_rx_rst.value = 1
+        self.dut.qsfp2_mac_2_tx_rst.value = 1
+        self.dut.qsfp2_mac_3_rx_rst.value = 1
+        self.dut.qsfp2_mac_3_tx_rst.value = 1
+        self.dut.qsfp2_mac_4_rx_rst.value = 1
+        self.dut.qsfp2_mac_4_tx_rst.value = 1
 
         for k in range(10):
             await RisingEdge(self.dut.clk)
 
-        self.dut.rst <= 0
-        self.dut.qsfp1_mac_1_rx_rst <= 0
-        self.dut.qsfp1_mac_1_tx_rst <= 0
-        self.dut.qsfp1_mac_2_rx_rst <= 0
-        self.dut.qsfp1_mac_2_tx_rst <= 0
-        self.dut.qsfp1_mac_3_rx_rst <= 0
-        self.dut.qsfp1_mac_3_tx_rst <= 0
-        self.dut.qsfp1_mac_4_rx_rst <= 0
-        self.dut.qsfp1_mac_4_tx_rst <= 0
-        self.dut.qsfp2_mac_1_rx_rst <= 0
-        self.dut.qsfp2_mac_1_tx_rst <= 0
-        self.dut.qsfp2_mac_2_rx_rst <= 0
-        self.dut.qsfp2_mac_2_tx_rst <= 0
-        self.dut.qsfp2_mac_3_rx_rst <= 0
-        self.dut.qsfp2_mac_3_tx_rst <= 0
-        self.dut.qsfp2_mac_4_rx_rst <= 0
-        self.dut.qsfp2_mac_4_tx_rst <= 0
+        self.dut.rst.value = 0
+        self.dut.qsfp1_mac_1_rx_rst.value = 0
+        self.dut.qsfp1_mac_1_tx_rst.value = 0
+        self.dut.qsfp1_mac_2_rx_rst.value = 0
+        self.dut.qsfp1_mac_2_tx_rst.value = 0
+        self.dut.qsfp1_mac_3_rx_rst.value = 0
+        self.dut.qsfp1_mac_3_tx_rst.value = 0
+        self.dut.qsfp1_mac_4_rx_rst.value = 0
+        self.dut.qsfp1_mac_4_tx_rst.value = 0
+        self.dut.qsfp2_mac_1_rx_rst.value = 0
+        self.dut.qsfp2_mac_1_tx_rst.value = 0
+        self.dut.qsfp2_mac_2_rx_rst.value = 0
+        self.dut.qsfp2_mac_2_tx_rst.value = 0
+        self.dut.qsfp2_mac_3_rx_rst.value = 0
+        self.dut.qsfp2_mac_3_tx_rst.value = 0
+        self.dut.qsfp2_mac_4_rx_rst.value = 0
+        self.dut.qsfp2_mac_4_tx_rst.value = 0
 
         for k in range(10):
             await RisingEdge(self.dut.clk)
