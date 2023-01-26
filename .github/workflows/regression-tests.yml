@@ -9,14 +9,14 @@ jobs:
     
     strategy:
       matrix:
-        python-version: [3.9]
+        python-version: ["3.10"]
         group: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v3
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -30,4 +30,4 @@ jobs:
         pip install tox tox-gh-actions
 
     - name: Test with tox
-      run: tox -- --splits 10 --group ${{ matrix.group }} --splitting-algorithm least_duration
+      run: tox -- -n auto --verbose --splits 10 --group ${{ matrix.group }} --splitting-algorithm least_duration
