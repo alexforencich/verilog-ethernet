@@ -37,7 +37,7 @@ VERILOG_SOURCES += ../../rtl/$(DUT).v
 ifeq ($(SIM), icarus)
 	PLUSARGS += -fst
 
-	#COMPILE_ARGS += -P $(TOPLEVEL).APPEND_ZERO=$(PARAM_APPEND_ZERO)
+	COMPILE_ARGS += $(foreach v,$(filter PARAM_%,$(.VARIABLES)),-P $(TOPLEVEL).$(subst PARAM_,,$(v))=$($(v)))
 
 	ifeq ($(WAVES), 1)
 		VERILOG_SOURCES += iverilog_dump.v
@@ -46,7 +46,7 @@ ifeq ($(SIM), icarus)
 else ifeq ($(SIM), verilator)
 	COMPILE_ARGS += -Wno-SELRANGE -Wno-WIDTH
 
-	#COMPILE_ARGS += -GAPPEND_ZERO=$(PARAM_APPEND_ZERO)
+	COMPILE_ARGS += $(foreach v,$(filter PARAM_%,$(.VARIABLES)),-G$(subst PARAM_,,$(v))=$($(v)))
 
 	ifeq ($(WAVES), 1)
 		COMPILE_ARGS += --trace-fst
