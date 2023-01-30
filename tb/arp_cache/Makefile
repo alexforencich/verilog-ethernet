@@ -38,7 +38,7 @@ export PARAM_CACHE_ADDR_WIDTH ?= 2
 ifeq ($(SIM), icarus)
 	PLUSARGS += -fst
 
-	COMPILE_ARGS += -P $(TOPLEVEL).CACHE_ADDR_WIDTH=$(PARAM_CACHE_ADDR_WIDTH)
+	COMPILE_ARGS += $(foreach v,$(filter PARAM_%,$(.VARIABLES)),-P $(TOPLEVEL).$(subst PARAM_,,$(v))=$($(v)))
 
 	ifeq ($(WAVES), 1)
 		VERILOG_SOURCES += iverilog_dump.v
@@ -47,7 +47,7 @@ ifeq ($(SIM), icarus)
 else ifeq ($(SIM), verilator)
 	COMPILE_ARGS += -Wno-SELRANGE -Wno-WIDTH
 
-	COMPILE_ARGS += -GCACHE_ADDR_WIDTH=$(PARAM_CACHE_ADDR_WIDTH)
+	COMPILE_ARGS += $(foreach v,$(filter PARAM_%,$(.VARIABLES)),-G$(subst PARAM_,,$(v))=$($(v)))
 
 	ifeq ($(WAVES), 1)
 		COMPILE_ARGS += --trace-fst

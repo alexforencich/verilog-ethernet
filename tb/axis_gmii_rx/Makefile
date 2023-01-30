@@ -42,10 +42,7 @@ export PARAM_USER_WIDTH ?= 1
 ifeq ($(SIM), icarus)
 	PLUSARGS += -fst
 
-	COMPILE_ARGS += -P $(TOPLEVEL).DATA_WIDTH=$(PARAM_DATA_WIDTH)
-	COMPILE_ARGS += -P $(TOPLEVEL).PTP_TS_ENABLE=$(PARAM_PTP_TS_ENABLE)
-	COMPILE_ARGS += -P $(TOPLEVEL).PTP_TS_WIDTH=$(PARAM_PTP_TS_WIDTH)
-	COMPILE_ARGS += -P $(TOPLEVEL).USER_WIDTH=$(PARAM_USER_WIDTH)
+	COMPILE_ARGS += $(foreach v,$(filter PARAM_%,$(.VARIABLES)),-P $(TOPLEVEL).$(subst PARAM_,,$(v))=$($(v)))
 
 	ifeq ($(WAVES), 1)
 		VERILOG_SOURCES += iverilog_dump.v
@@ -54,10 +51,7 @@ ifeq ($(SIM), icarus)
 else ifeq ($(SIM), verilator)
 	COMPILE_ARGS += -Wno-SELRANGE -Wno-WIDTH
 
-	COMPILE_ARGS += -GDATA_WIDTH=$(PARAM_DATA_WIDTH)
-	COMPILE_ARGS += -GPTP_TS_ENABLE=$(PARAM_PTP_TS_ENABLE)
-	COMPILE_ARGS += -GPTP_TS_WIDTH=$(PARAM_PTP_TS_WIDTH)
-	COMPILE_ARGS += -GUSER_WIDTH=$(PARAM_USER_WIDTH)
+	COMPILE_ARGS += $(foreach v,$(filter PARAM_%,$(.VARIABLES)),-G$(subst PARAM_,,$(v))=$($(v)))
 
 	ifeq ($(WAVES), 1)
 		COMPILE_ARGS += --trace-fst
