@@ -34,11 +34,11 @@ THE SOFTWARE.
 module fpga (
     /*
      * Clock: 200MHz
-     * Reset: Push button, active high
+     * Reset: Push button, active low
      */
     input  wire       clk_200mhz_p,
     input  wire       clk_200mhz_n,
-    input  wire       reset,
+    input  wire       reset_n,
 
     /*
      * GPIO
@@ -67,9 +67,7 @@ module fpga (
      * UART: 500000 bps, 8N1
      */
     input  wire       uart_rxd,
-    output wire       uart_txd,
-    output wire       uart_rts,
-    input  wire       uart_cts
+    output wire       uart_txd
 );
 
 // Clock and reset
@@ -86,7 +84,7 @@ wire rst_int;
 wire clk_200mhz_mmcm_out;
 wire clk_200mhz_int;
 
-wire mmcm_rst = reset;
+wire mmcm_rst = ~reset_n;
 wire mmcm_locked;
 wire mmcm_clkfb;
 
@@ -219,13 +217,13 @@ wire uart_rxd_int;
 wire uart_cts_int;
 
 sync_signal #(
-    .WIDTH(2),
+    .WIDTH(1),
     .N(2)
 )
 sync_signal_inst (
     .clk(clk_int),
-    .in({uart_rxd, uart_cts}),
-    .out({uart_rxd_int, uart_cts_int})
+    .in(uart_rxd),
+    .out(uart_rxd_int)
 );
 
 // IODELAY elements for RGMII interface to PHY
@@ -365,9 +363,7 @@ core_inst (
      * UART: 115200 bps, 8N1
      */
     .uart_rxd(uart_rxd_int),
-    .uart_txd(uart_txd),
-    .uart_rts(uart_rts),
-    .uart_cts(uart_cts_int)
+    .uart_txd(uart_txd)
 );
 
 endmodule
