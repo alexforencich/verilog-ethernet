@@ -32,7 +32,7 @@ MODULE   = test_$(DUT)
 VERILOG_SOURCES += ../../rtl/$(DUT).v
 
 # module parameters
-# export PARAM_APPEND_ZERO ?= 0
+# export PARAM_NAME := 0
 
 ifeq ($(SIM), icarus)
 	PLUSARGS += -fst

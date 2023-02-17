@@ -32,25 +32,25 @@ MODULE   = test_$(DUT)
 VERILOG_SOURCES += ../../rtl/$(DUT).v
 
 # module parameters
-export PARAM_DEPTH ?= 1024
-export PARAM_DATA_WIDTH ?= 8
-export PARAM_KEEP_ENABLE ?= $(shell expr $(PARAM_DATA_WIDTH) \> 8 )
-export PARAM_KEEP_WIDTH ?= $(shell expr \( $(PARAM_DATA_WIDTH) + 7 \) / 8 )
-export PARAM_LAST_ENABLE ?= 1
-export PARAM_ID_ENABLE ?= 1
-export PARAM_ID_WIDTH ?= 8
-export PARAM_DEST_ENABLE ?= 1
-export PARAM_DEST_WIDTH ?= 8
-export PARAM_USER_ENABLE ?= 1
-export PARAM_USER_WIDTH ?= 1
-export PARAM_RAM_PIPELINE ?= 1
-export PARAM_OUTPUT_FIFO_ENABLE ?= 0
-export PARAM_FRAME_FIFO ?= 1
-export PARAM_USER_BAD_FRAME_VALUE ?= 1
-export PARAM_USER_BAD_FRAME_MASK ?= 1
-export PARAM_DROP_OVERSIZE_FRAME ?= $(PARAM_FRAME_FIFO)
-export PARAM_DROP_BAD_FRAME ?= $(PARAM_DROP_OVERSIZE_FRAME)
-export PARAM_DROP_WHEN_FULL ?= 0
+export PARAM_DEPTH := 1024
+export PARAM_DATA_WIDTH := 8
+export PARAM_KEEP_ENABLE := $(shell expr $(PARAM_DATA_WIDTH) \> 8 )
+export PARAM_KEEP_WIDTH := $(shell expr \( $(PARAM_DATA_WIDTH) + 7 \) / 8 )
+export PARAM_LAST_ENABLE := 1
+export PARAM_ID_ENABLE := 1
+export PARAM_ID_WIDTH := 8
+export PARAM_DEST_ENABLE := 1
+export PARAM_DEST_WIDTH := 8
+export PARAM_USER_ENABLE := 1
+export PARAM_USER_WIDTH := 1
+export PARAM_RAM_PIPELINE := 1
+export PARAM_OUTPUT_FIFO_ENABLE := 0
+export PARAM_FRAME_FIFO := 1
+export PARAM_USER_BAD_FRAME_VALUE := 1
+export PARAM_USER_BAD_FRAME_MASK := 1
+export PARAM_DROP_OVERSIZE_FRAME := $(PARAM_FRAME_FIFO)
+export PARAM_DROP_BAD_FRAME := $(PARAM_DROP_OVERSIZE_FRAME)
+export PARAM_DROP_WHEN_FULL := 0
 
 ifeq ($(SIM), icarus)
 	PLUSARGS += -fst

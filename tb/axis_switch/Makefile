@@ -40,21 +40,21 @@ VERILOG_SOURCES += ../../rtl/arbiter.v
 VERILOG_SOURCES += ../../rtl/priority_encoder.v
 
 # module parameters
-export PARAM_DATA_WIDTH ?= 8
-export PARAM_KEEP_ENABLE ?= $(shell expr $(PARAM_DATA_WIDTH) \> 8 )
-export PARAM_KEEP_WIDTH ?= $(shell expr \( $(PARAM_DATA_WIDTH) + 7 \) / 8 )
-export PARAM_ID_ENABLE ?= 1
-export PARAM_S_ID_WIDTH ?= 16
-export PARAM_M_ID_WIDTH ?= $(shell python -c "print($(PARAM_S_ID_WIDTH) + ($(S_COUNT)-1).bit_length())")
-export PARAM_M_DEST_WIDTH ?= 8
-export PARAM_S_DEST_WIDTH ?= $(shell python -c "print($(PARAM_M_DEST_WIDTH) + ($(M_COUNT)-1).bit_length())")
-export PARAM_USER_ENABLE ?= 1
-export PARAM_USER_WIDTH ?= 1
-export PARAM_UPDATE_TID ?= 1
-export PARAM_S_REG_TYPE ?= 0
-export PARAM_M_REG_TYPE ?= 2
-export PARAM_ARB_TYPE_ROUND_ROBIN ?= 1
-export PARAM_ARB_LSB_HIGH_PRIORITY ?= 1
+export PARAM_DATA_WIDTH := 8
+export PARAM_KEEP_ENABLE := $(shell expr $(PARAM_DATA_WIDTH) \> 8 )
+export PARAM_KEEP_WIDTH := $(shell expr \( $(PARAM_DATA_WIDTH) + 7 \) / 8 )
+export PARAM_ID_ENABLE := 1
+export PARAM_S_ID_WIDTH := 16
+export PARAM_M_ID_WIDTH := $(shell python -c "print($(PARAM_S_ID_WIDTH) + ($(S_COUNT)-1).bit_length())")
+export PARAM_M_DEST_WIDTH := 8
+export PARAM_S_DEST_WIDTH := $(shell python -c "print($(PARAM_M_DEST_WIDTH) + ($(M_COUNT)-1).bit_length())")
+export PARAM_USER_ENABLE := 1
+export PARAM_USER_WIDTH := 1
+export PARAM_UPDATE_TID := 1
+export PARAM_S_REG_TYPE := 0
+export PARAM_M_REG_TYPE := 2
+export PARAM_ARB_TYPE_ROUND_ROBIN := 1
+export PARAM_ARB_LSB_HIGH_PRIORITY := 1
 
 ifeq ($(SIM), icarus)
 	PLUSARGS += -fst

@@ -33,7 +33,7 @@ VERILOG_SOURCES += ../../rtl/$(DUT).v
 VERILOG_SOURCES += ../../rtl/axis_fifo.v
 
 # module parameters
-export PARAM_APPEND_ZERO ?= 0
+export PARAM_APPEND_ZERO := 0
 
 ifeq ($(SIM), icarus)
 	PLUSARGS += -fst
