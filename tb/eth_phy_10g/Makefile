@@ -43,17 +43,17 @@ VERILOG_SOURCES += ../../rtl/xgmii_baser_enc_64.v
 VERILOG_SOURCES += ../../rtl/lfsr.v
 
 # module parameters
-export PARAM_DATA_WIDTH ?= 64
-export PARAM_CTRL_WIDTH ?= $(shell expr $(PARAM_DATA_WIDTH) / 8 )
-export PARAM_HDR_WIDTH ?= 2
-export PARAM_BIT_REVERSE ?= 0
-export PARAM_SCRAMBLER_DISABLE ?= 0
-export PARAM_PRBS31_ENABLE ?= 1
-export PARAM_TX_SERDES_PIPELINE ?= 2
-export PARAM_RX_SERDES_PIPELINE ?= 2
-export PARAM_BITSLIP_HIGH_CYCLES ?= 1
-export PARAM_BITSLIP_LOW_CYCLES ?= 8
-export PARAM_COUNT_125US ?= 195
+export PARAM_DATA_WIDTH := 64
+export PARAM_CTRL_WIDTH := $(shell expr $(PARAM_DATA_WIDTH) / 8 )
+export PARAM_HDR_WIDTH := 2
+export PARAM_BIT_REVERSE := 0
+export PARAM_SCRAMBLER_DISABLE := 0
+export PARAM_PRBS31_ENABLE := 1
+export PARAM_TX_SERDES_PIPELINE := 2
+export PARAM_RX_SERDES_PIPELINE := 2
+export PARAM_BITSLIP_HIGH_CYCLES := 1
+export PARAM_BITSLIP_LOW_CYCLES := 8
+export PARAM_COUNT_125US := 195
 
 ifeq ($(SIM), icarus)
 	PLUSARGS += -fst

@@ -38,8 +38,8 @@ VERILOG_SOURCES += ../../rtl/axis_gmii_tx.v
 VERILOG_SOURCES += ../../rtl/lfsr.v
 
 # module parameters
-export PARAM_ENABLE_PADDING ?= 1
-export PARAM_MIN_FRAME_LENGTH ?= 64
+export PARAM_ENABLE_PADDING := 1
+export PARAM_MIN_FRAME_LENGTH := 64
 
 ifeq ($(SIM), icarus)
 	PLUSARGS += -fst

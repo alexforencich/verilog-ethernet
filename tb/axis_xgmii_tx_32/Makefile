@@ -33,17 +33,17 @@ VERILOG_SOURCES += ../../rtl/$(DUT).v
 VERILOG_SOURCES += ../../rtl/lfsr.v
 
 # module parameters
-export PARAM_DATA_WIDTH ?= 32
-export PARAM_KEEP_WIDTH ?= $(shell expr $(PARAM_DATA_WIDTH) / 8 )
-export PARAM_CTRL_WIDTH ?= $(shell expr $(PARAM_DATA_WIDTH) / 8 )
-export PARAM_ENABLE_PADDING ?= 1
-export PARAM_ENABLE_DIC ?= 1
-export PARAM_MIN_FRAME_LENGTH ?= 64
-export PARAM_PTP_TS_ENABLE ?= 1
-export PARAM_PTP_TS_WIDTH ?= 96
-export PARAM_PTP_TAG_ENABLE ?= $(PARAM_PTP_TS_ENABLE)
-export PARAM_PTP_TAG_WIDTH ?= 16
-export PARAM_USER_WIDTH ?= $(if $(filter-out 1,$(PARAM_PTP_TS_ENABLE)),1,$(shell expr $(PARAM_PTP_TAG_WIDTH) + 1 ))
+export PARAM_DATA_WIDTH := 32
+export PARAM_KEEP_WIDTH := $(shell expr $(PARAM_DATA_WIDTH) / 8 )
+export PARAM_CTRL_WIDTH := $(shell expr $(PARAM_DATA_WIDTH) / 8 )
+export PARAM_ENABLE_PADDING := 1
+export PARAM_ENABLE_DIC := 1
+export PARAM_MIN_FRAME_LENGTH := 64
+export PARAM_PTP_TS_ENABLE := 1
+export PARAM_PTP_TS_WIDTH := 96
+export PARAM_PTP_TAG_ENABLE := $(PARAM_PTP_TS_ENABLE)
+export PARAM_PTP_TAG_WIDTH := 16
+export PARAM_USER_WIDTH := $(if $(filter-out 1,$(PARAM_PTP_TS_ENABLE)),1,$(shell expr $(PARAM_PTP_TAG_WIDTH) + 1 ))
 
 ifeq ($(SIM), icarus)
 	PLUSARGS += -fst

@@ -33,7 +33,7 @@ VERILOG_SOURCES += ../../rtl/$(DUT).v
 VERILOG_SOURCES += ../../rtl/lfsr.v
 
 # module parameters
-export PARAM_CACHE_ADDR_WIDTH ?= 2
+export PARAM_CACHE_ADDR_WIDTH := 2
 
 ifeq ($(SIM), icarus)
 	PLUSARGS += -fst

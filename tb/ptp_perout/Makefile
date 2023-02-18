@@ -32,16 +32,16 @@ MODULE   = test_$(DUT)
 VERILOG_SOURCES += ../../rtl/$(DUT).v
 
 # module parameters
-export PARAM_FNS_ENABLE ?= 1
-export PARAM_OUT_START_S ?= 0
-export PARAM_OUT_START_NS ?= 0
-export PARAM_OUT_START_FNS ?= 0
-export PARAM_OUT_PERIOD_S ?= 1
-export PARAM_OUT_PERIOD_NS ?= 0
-export PARAM_OUT_PERIOD_FNS ?= 0
-export PARAM_OUT_WIDTH_S ?= 0
-export PARAM_OUT_WIDTH_NS ?= 1000
-export PARAM_OUT_WIDTH_FNS ?= 0
+export PARAM_FNS_ENABLE := 1
+export PARAM_OUT_START_S := 0
+export PARAM_OUT_START_NS := 0
+export PARAM_OUT_START_FNS := 0
+export PARAM_OUT_PERIOD_S := 1
+export PARAM_OUT_PERIOD_NS := 0
+export PARAM_OUT_PERIOD_FNS := 0
+export PARAM_OUT_WIDTH_S := 0
+export PARAM_OUT_WIDTH_NS := 1000
+export PARAM_OUT_WIDTH_FNS := 0
 
 ifeq ($(SIM), icarus)
 	PLUSARGS += -fst

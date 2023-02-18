@@ -36,13 +36,13 @@ VERILOG_SOURCES += ../../rtl/arp_cache.v
 VERILOG_SOURCES += ../../rtl/lfsr.v
 
 # module parameters
-export PARAM_DATA_WIDTH ?= 8
-export PARAM_KEEP_ENABLE ?= $(shell expr $(PARAM_DATA_WIDTH) \> 8 )
-export PARAM_KEEP_WIDTH ?= $(shell expr $(PARAM_DATA_WIDTH) / 8 )
-export PARAM_CACHE_ADDR_WIDTH ?= 2
-export PARAM_REQUEST_RETRY_COUNT ?= 4
-export PARAM_REQUEST_RETRY_INTERVAL ?= 300
-export PARAM_REQUEST_TIMEOUT ?= 800
+export PARAM_DATA_WIDTH := 8
+export PARAM_KEEP_ENABLE := $(shell expr $(PARAM_DATA_WIDTH) \> 8 )
+export PARAM_KEEP_WIDTH := $(shell expr $(PARAM_DATA_WIDTH) / 8 )
+export PARAM_CACHE_ADDR_WIDTH := 2
+export PARAM_REQUEST_RETRY_COUNT := 4
+export PARAM_REQUEST_RETRY_INTERVAL := 300
+export PARAM_REQUEST_TIMEOUT := 800
 
 ifeq ($(SIM), icarus)
 	PLUSARGS += -fst

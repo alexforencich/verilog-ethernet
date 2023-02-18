@@ -62,7 +62,7 @@ VERILOG_SOURCES += ../../lib/eth/lib/axis/rtl/axis_async_fifo.v
 VERILOG_SOURCES += ../../lib/eth/lib/axis/rtl/axis_async_fifo_adapter.v
 
 # module parameters
-#export PARAM_A ?= value
+#export PARAM_A := value
 
 ifeq ($(SIM), icarus)
 	PLUSARGS += -fst
