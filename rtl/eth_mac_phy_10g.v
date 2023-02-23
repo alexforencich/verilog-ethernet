@@ -91,6 +91,7 @@ module eth_mac_phy_10g #
     input  wire [DATA_WIDTH-1:0]        serdes_rx_data,
     input  wire [HDR_WIDTH-1:0]         serdes_rx_hdr,
     output wire                         serdes_rx_bitslip,
+    output wire                         serdes_rx_reset_req,
 
     /*
      * PTP
@@ -151,6 +152,7 @@ eth_mac_phy_10g_rx_inst (
     .serdes_rx_data(serdes_rx_data),
     .serdes_rx_hdr(serdes_rx_hdr),
     .serdes_rx_bitslip(serdes_rx_bitslip),
+    .serdes_rx_reset_req(serdes_rx_reset_req),
     .ptp_ts(rx_ptp_ts),
     .rx_start_packet(rx_start_packet),
     .rx_error_count(rx_error_count),

@@ -118,6 +118,7 @@ module eth_mac_phy_10g_fifo #
     input  wire [DATA_WIDTH-1:0]      serdes_rx_data,
     input  wire [HDR_WIDTH-1:0]       serdes_rx_hdr,
     output wire                       serdes_rx_bitslip,
+    output wire                       serdes_rx_reset_req,
 
     /*
      * Status
@@ -406,6 +407,7 @@ eth_mac_phy_10g_inst (
     .serdes_rx_data(serdes_rx_data),
     .serdes_rx_hdr(serdes_rx_hdr),
     .serdes_rx_bitslip(serdes_rx_bitslip),
+    .serdes_rx_reset_req(serdes_rx_reset_req),
 
     .tx_ptp_ts(tx_ptp_ts_96),
     .rx_ptp_ts(rx_ptp_ts_96),
