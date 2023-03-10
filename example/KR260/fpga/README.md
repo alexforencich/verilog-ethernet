@@ -12,13 +12,6 @@ to ARP requests.
 *  PHY: 10G BASE-R PHY IP core and internal GTY transceiver
 
 ## How to build
-
-:warning: *<ins>To generate the bitstream for the reference design example here
-you need a Vivado license</ins>*. In case you don't have it, you can either
-fetch it from [here](https://www.xilinx.com/support/licensing_solution_center.html)
-or use the the default "30 day evaluation license"  that comes with Vivado default
-installation.
-
 Run `make` to build.  Ensure that the Xilinx Vivado toolchain components are
 in PATH.
 
