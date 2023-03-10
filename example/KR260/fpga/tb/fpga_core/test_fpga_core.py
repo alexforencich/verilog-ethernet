@@ -99,7 +99,7 @@ async def run_test(dut):
 
     payload = bytes([x % 256 for x in range(256)])
     eth = Ether(src='5a:51:52:53:54:55', dst='02:00:00:00:00:00')
-    ip = IP(src='192.168.2.100', dst='192.168.2.128')
+    ip = IP(src='192.168.1.100', dst='192.168.1.128')
     udp = UDP(sport=5678, dport=1234)
     test_pkt = eth / ip / udp / payload
 
