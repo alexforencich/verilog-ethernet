@@ -44,21 +44,7 @@ module fpga_core
     /*
      * GPIO
      */
-    // input  wire        btnu,
-    // input  wire        btnl,
-    // input  wire        btnd,
-    // input  wire        btnr,
-    // input  wire        btnc,
-    // input  wire [7:0]  sw,
     output wire [1:0]  led,
-
-    // /*
-    //  * UART: 115200 bps, 8N1
-    //  */
-    // input  wire        uart_rxd,
-    // output wire        uart_txd,
-    // input  wire        uart_rts,
-    // output wire        uart_cts,
 
     /*
      * Ethernet: SFP+

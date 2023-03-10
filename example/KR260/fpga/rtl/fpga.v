@@ -34,14 +34,6 @@ THE SOFTWARE.
  */
 module fpga (
     /*
-     * Clock: 125MHz LVDS
-     * Reset: Push button, active low
-     */
-    // input  wire       clk_125mhz_p,
-    // input  wire       clk_125mhz_n,
-    // input  wire       reset,
-
-    /*
      * Clock: 25 MHz LVCMOS18
      */
      input wire clk_25mhz_ref,
@@ -49,21 +41,7 @@ module fpga (
     /*
      * GPIO
      */
-    // input  wire       btnu,
-    // input  wire       btnl,
-    // input  wire       btnd,
-    // input  wire       btnr,
-    // input  wire       btnc,
-    // input  wire [7:0] sw,
     output wire [1:0] led,
-
-    // /*
-    //  * UART: 115200 bps, 8N1
-    //  */
-    // input  wire       uart_rxd,
-    // output wire       uart_txd,
-    // input  wire       uart_rts,
-    // output wire       uart_cts,
 
     /*
      * Ethernet: SFP+
@@ -78,9 +56,6 @@ module fpga (
 );
 
 // Clock and reset
-
-// wire clk_125mhz_ibufg;
-// wire clk_125mhz_bufg;
 wire clk_25mhz_bufg;
 
 // Internal 125 MHz clock
@@ -97,22 +72,6 @@ wire mmcm_locked;
 wire mmcm_clkfb;
 
 
-// // IBUFGDS stands for Input Buffer Differential Signaling. 
-// // It is a primitive module in Verilog that is used to buffer 
-// // an input signal and convert it from a single-ended signal 
-// // to a differential signal.
-// // 
-// // See https://docs.xilinx.com/r/2022.1-English/ug974-vivado-ultrascale-libraries/IBUFDS
-// IBUFGDS #(
-//    .DIFF_TERM("FALSE"),
-//    .IBUF_LOW_PWR("FALSE")   
-// )
-// clk_125mhz_ibufg_inst (
-//    .O   (clk_125mhz_ibufg),
-//    .I   (clk_125mhz_p),
-//    .IB  (clk_125mhz_n) 
-// );
-
 // BUFG stands for "buffer gate." The BUFG primitive is used to create a 
 // buffer gate, which is a digital circuit component that is used to 
 // amplify and/or isolate a signal.
@@ -122,11 +81,6 @@ wire mmcm_clkfb;
 // with minimal delay.
 // 
 // https://docs.xilinx.com/r/2022.1-English/ug974-vivado-ultrascale-libraries/BUFG
-// BUFG
-// clk_125mhz_bufg_in_inst (
-//     .I(clk_125mhz_ibufg),
-//     .O(clk_125mhz_bufg)
-// );
 BUFG
 clk_25mhz_bufg_in_inst (
     .I(clk_25mhz_ref),
@@ -214,61 +168,9 @@ sync_reset_125mhz_inst (
     .out(rst_125mhz_int)
 );
 
-// GPIO
-// wire btnu_int;
-// wire btnl_int;
-// wire btnd_int;
-// wire btnr_int;
-// wire btnc_int;
-// wire [7:0] sw_int;
-
-// since there's no "in", nor "out"
-// debounce_switch doesn't make sense
-// 
-// debounce_switch #(
-//     .WIDTH(9),
-//     .N(8),
-//     .RATE(156000)
-// )
-// debounce_switch_inst (
-//     .clk(clk_156mhz_int),
-//     .rst(rst_156mhz_int),
-//     .in({
-//         // btnu,
-//         // btnl,
-//         // btnd,
-//         // btnr,
-//         // btnc,
-//         // sw
-//         }),
-//     .out({
-//         // btnu_int,
-//         // btnl_int,
-//         // btnd_int,
-//         // btnr_int,
-//         // btnc_int,
-//         // sw_int
-//         })
-// );
-
-// wire uart_rxd_int;
-// wire uart_rts_int;
-
-// sync_signal #(
-//     .WIDTH(2),
-//     .N(2)
-// )
-// sync_signal_inst (
-//     .clk(clk_156mhz_int),
-//     .in({uart_rxd, uart_rts}),
-//     .out({uart_rxd_int, uart_rts_int})
-// );
 
 // XGMII 10G PHY
 assign sfp0_tx_disable_b = 1'b1;
-// assign sfp1_tx_disable_b = 1'b1;
-// assign sfp2_tx_disable_b = 1'b1;
-// assign sfp3_tx_disable_b = 1'b1;
 
 wire        sfp0_tx_clk_int;
 wire        sfp0_tx_rst_int;
@@ -283,9 +185,6 @@ assign clk_156mhz_int = sfp0_tx_clk_int;
 assign rst_156mhz_int = sfp0_tx_rst_int;
 
 wire sfp0_rx_block_lock;
-// wire sfp1_rx_block_lock;
-// wire sfp2_rx_block_lock;
-// wire sfp3_rx_block_lock;
 
 wire sfp_mgt_refclk_0;
 
@@ -366,20 +265,7 @@ core_inst (
     /*
      * GPIO
      */
-    // .btnu(btnu_int),
-    // .btnl(btnl_int),
-    // .btnd(btnd_int),
-    // .btnr(btnr_int),
-    // .btnc(btnc_int),
-    // .sw(sw_int),
     .led(led),
-    /*
-     * UART: 115200 bps, 8N1
-     */
-    // .uart_rxd(uart_rxd_int),
-    // .uart_txd(uart_txd),
-    // .uart_rts(uart_rts_int),
-    // .uart_cts(uart_cts),
     /*
      * Ethernet: SFP+
      */
