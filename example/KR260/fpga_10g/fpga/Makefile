@@ -57,6 +57,7 @@ XDC_FILES += lib/eth/lib/axis/syn/vivado/sync_reset.tcl
 
 # IP
 IP_TCL_FILES += ip/eth_xcvr_gt.tcl
+IP_TCL_FILES += ip/zynq_ps.tcl
 
 include ../common/vivado.mk
 
