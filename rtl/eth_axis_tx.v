@@ -76,11 +76,13 @@ module eth_axis_tx #
     output wire                  busy
 );
 
-parameter CYCLE_COUNT = (14+KEEP_WIDTH-1)/KEEP_WIDTH;
+parameter HDR_SIZE = 14;
+
+parameter CYCLE_COUNT = (HDR_SIZE+KEEP_WIDTH-1)/KEEP_WIDTH;
 
 parameter PTR_WIDTH = $clog2(CYCLE_COUNT);
 
-parameter OFFSET = 14 % KEEP_WIDTH;
+parameter OFFSET = HDR_SIZE % KEEP_WIDTH;
 
 // bus width assertions
 initial begin
