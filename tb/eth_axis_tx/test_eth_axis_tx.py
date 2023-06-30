@@ -134,7 +134,7 @@ def cycle_pause():
 
 
 def size_list():
-    return list(range(1, 128)) + [512, 1514, 9214] + [60]*10
+    return list(range(1, 128)) + [512, 1500, 9200] + [60-14]*10
 
 
 def incrementing_payload(length):
