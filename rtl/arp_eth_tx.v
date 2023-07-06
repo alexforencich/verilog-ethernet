@@ -82,17 +82,19 @@ module arp_eth_tx #
     output wire                   busy
 );
 
+parameter BYTE_LANES = KEEP_ENABLE ? KEEP_WIDTH : 1;
+
 parameter HDR_SIZE = 28;
 
-parameter CYCLE_COUNT = (HDR_SIZE+KEEP_WIDTH-1)/KEEP_WIDTH;
+parameter CYCLE_COUNT = (HDR_SIZE+BYTE_LANES-1)/BYTE_LANES;
 
 parameter PTR_WIDTH = $clog2(CYCLE_COUNT);
 
-parameter OFFSET = HDR_SIZE % KEEP_WIDTH;
+parameter OFFSET = HDR_SIZE % BYTE_LANES;
 
 // bus width assertions
 initial begin
-    if (KEEP_WIDTH * 8 != DATA_WIDTH) begin
+    if (BYTE_LANES * 8 != DATA_WIDTH) begin
         $error("Error: AXI stream interface requires byte (8-bit) granularity (instance %m)");
         $finish;
     end
@@ -196,9 +198,9 @@ always @* begin
             m_eth_payload_axis_tuser_int = 1'b0;
 
             `define _HEADER_FIELD_(offset, field) \
-                if (ptr_reg == offset/KEEP_WIDTH) begin \
-                    m_eth_payload_axis_tdata_int[(offset%KEEP_WIDTH)*8 +: 8] = field; \
-                    m_eth_payload_axis_tkeep_int[offset%KEEP_WIDTH] = 1'b1; \
+                if (ptr_reg == offset/BYTE_LANES) begin \
+                    m_eth_payload_axis_tdata_int[(offset%BYTE_LANES)*8 +: 8] = field; \
+                    m_eth_payload_axis_tkeep_int[offset%BYTE_LANES] = 1'b1; \
                 end
 
             `_HEADER_FIELD_(0,  arp_htype_reg[1*8 +: 8])
@@ -230,7 +232,7 @@ always @* begin
             `_HEADER_FIELD_(26, arp_tpa_reg[1*8 +: 8])
             `_HEADER_FIELD_(27, arp_tpa_reg[0*8 +: 8])
 
-            if (ptr_reg == 27/KEEP_WIDTH) begin
+            if (ptr_reg == 27/BYTE_LANES) begin
                 m_eth_payload_axis_tlast_int = 1'b1;
                 send_arp_header_next = 1'b0;
             end

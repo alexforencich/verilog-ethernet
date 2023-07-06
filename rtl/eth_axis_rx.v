@@ -77,17 +77,19 @@ module eth_axis_rx #
     output wire                  error_header_early_termination
 );
 
+parameter BYTE_LANES = KEEP_ENABLE ? KEEP_WIDTH : 1;
+
 parameter HDR_SIZE = 14;
 
-parameter CYCLE_COUNT = (HDR_SIZE+KEEP_WIDTH-1)/KEEP_WIDTH;
+parameter CYCLE_COUNT = (HDR_SIZE+BYTE_LANES-1)/BYTE_LANES;
 
 parameter PTR_WIDTH = $clog2(CYCLE_COUNT);
 
-parameter OFFSET = HDR_SIZE % KEEP_WIDTH;
+parameter OFFSET = HDR_SIZE % BYTE_LANES;
 
 // bus width assertions
 initial begin
-    if (KEEP_WIDTH * 8 != DATA_WIDTH) begin
+    if (BYTE_LANES * 8 != DATA_WIDTH) begin
         $error("Error: AXI stream interface requires byte (8-bit) granularity (instance %m)");
         $finish;
     end
@@ -215,8 +217,8 @@ always @* begin
             ptr_next = ptr_reg + 1;
 
             `define _HEADER_FIELD_(offset, field) \
-                if (ptr_reg == offset/KEEP_WIDTH && (!KEEP_ENABLE || s_axis_tkeep[offset%KEEP_WIDTH])) begin \
-                    field = s_axis_tdata[(offset%KEEP_WIDTH)*8 +: 8]; \
+                if (ptr_reg == offset/BYTE_LANES && (!KEEP_ENABLE || s_axis_tkeep[offset%BYTE_LANES])) begin \
+                    field = s_axis_tdata[(offset%BYTE_LANES)*8 +: 8]; \
                 end
 
             `_HEADER_FIELD_(0,  m_eth_dest_mac_next[5*8 +: 8])
@@ -234,7 +236,7 @@ always @* begin
             `_HEADER_FIELD_(12, m_eth_type_next[1*8 +: 8])
             `_HEADER_FIELD_(13, m_eth_type_next[0*8 +: 8])
 
-            if (ptr_reg == 13/KEEP_WIDTH && (!KEEP_ENABLE || s_axis_tkeep[13%KEEP_WIDTH])) begin
+            if (ptr_reg == 13/BYTE_LANES && (!KEEP_ENABLE || s_axis_tkeep[13%BYTE_LANES])) begin
                 if (!shift_axis_tlast) begin
                     m_eth_hdr_valid_next = 1'b1;
                     read_eth_header_next = 1'b0;
