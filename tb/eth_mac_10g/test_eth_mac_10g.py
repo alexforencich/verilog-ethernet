@@ -306,7 +306,7 @@ def test_eth_mac_10g(request, data_width, enable_dic):
     parameters['TX_PTP_TS_WIDTH'] = 96
     parameters['TX_PTP_TAG_ENABLE'] = parameters['TX_PTP_TS_ENABLE']
     parameters['TX_PTP_TAG_WIDTH'] = 16
-    parameters['RX_PTP_TS_ENABLE'] = 1
+    parameters['RX_PTP_TS_ENABLE'] = parameters['TX_PTP_TS_ENABLE']
     parameters['RX_PTP_TS_WIDTH'] = 96
     parameters['TX_USER_WIDTH'] = (parameters['TX_PTP_TAG_WIDTH'] if parameters['TX_PTP_TS_ENABLE'] and parameters['TX_PTP_TAG_ENABLE'] else 0) + 1
     parameters['RX_USER_WIDTH'] = (parameters['RX_PTP_TS_WIDTH'] if parameters['RX_PTP_TS_ENABLE'] else 0) + 1

@@ -404,7 +404,7 @@ def test_eth_mac_phy_10g_fifo(request, data_width, enable_dic):
     parameters['PTP_PERIOD_FNS'] = 0x6666 if parameters['DATA_WIDTH'] == 64 else 0x3333
     parameters['PTP_USE_SAMPLE_CLOCK'] = 0
     parameters['TX_PTP_TS_ENABLE'] = 1
-    parameters['RX_PTP_TS_ENABLE'] = 1
+    parameters['RX_PTP_TS_ENABLE'] = parameters['TX_PTP_TS_ENABLE']
     parameters['TX_PTP_TS_FIFO_DEPTH'] = 64
     parameters['PTP_TS_WIDTH'] = 96
     parameters['TX_PTP_TAG_ENABLE'] = parameters['TX_PTP_TS_ENABLE']
