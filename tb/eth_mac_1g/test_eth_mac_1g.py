@@ -32,10 +32,18 @@ import cocotb_test.simulator
 import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge
+from cocotb.utils import get_time_from_sim_steps
 from cocotb.regression import TestFactory
 
-from cocotbext.eth import GmiiFrame, GmiiSource, GmiiSink
+from cocotbext.eth import GmiiFrame, GmiiSource, GmiiSink, PtpClockSimTime
 from cocotbext.axi import AxiStreamBus, AxiStreamSource, AxiStreamSink
+from cocotbext.axi.stream import define_stream
+
+
+PtpTsBus, PtpTsTransaction, PtpTsSource, PtpTsSink, PtpTsMonitor = define_stream("PtpTs",
+    signals=["ts", "ts_valid"],
+    optional_signals=["ts_tag", "ts_ready"]
+)
 
 
 class TB:
@@ -61,12 +69,14 @@ class TB:
         self.axis_source = AxiStreamSource(AxiStreamBus.from_prefix(dut, "tx_axis"), dut.tx_clk, dut.tx_rst)
         self.axis_sink = AxiStreamSink(AxiStreamBus.from_prefix(dut, "rx_axis"), dut.rx_clk, dut.rx_rst)
 
+        self.rx_ptp_clock = PtpClockSimTime(ts_64=dut.rx_ptp_ts, clock=dut.rx_clk)
+        self.tx_ptp_clock = PtpClockSimTime(ts_64=dut.tx_ptp_ts, clock=dut.tx_clk)
+        self.tx_ptp_ts_sink = PtpTsSink(PtpTsBus.from_prefix(dut, "tx_axis_ptp"), dut.tx_clk, dut.tx_rst)
+
         dut.rx_clk_enable.setimmediatevalue(1)
         dut.tx_clk_enable.setimmediatevalue(1)
         dut.rx_mii_select.setimmediatevalue(0)
         dut.tx_mii_select.setimmediatevalue(0)
-        dut.rx_ptp_ts.setimmediatevalue(0)
-        dut.tx_ptp_ts.setimmediatevalue(0)
         dut.ifg_delay.setimmediatevalue(0)
 
     async def reset(self):
@@ -136,16 +146,28 @@ async def run_test_rx(dut, payload_lengths=None, payload_data=None, ifg=12, enab
     await tb.reset()
 
     test_frames = [payload_data(x) for x in payload_lengths()]
+    tx_frames = []
 
     for test_data in test_frames:
-        test_frame = GmiiFrame.from_payload(test_data)
+        test_frame = GmiiFrame.from_payload(test_data, tx_complete=tx_frames.append)
         await tb.gmii_source.send(test_frame)
 
     for test_data in test_frames:
         rx_frame = await tb.axis_sink.recv()
+        tx_frame = tx_frames.pop(0)
+
+        frame_error = rx_frame.tuser & 1
+        ptp_ts = rx_frame.tuser >> 1
+        ptp_ts_ns = ptp_ts / 2**16
+
+        tx_frame_sfd_ns = get_time_from_sim_steps(tx_frame.sim_time_sfd, "ns")
+
+        tb.log.info("RX frame PTP TS: %f ns", ptp_ts_ns)
+        tb.log.info("TX frame SFD sim time: %f ns", tx_frame_sfd_ns)
 
         assert rx_frame.tdata == test_data
-        assert rx_frame.tuser == 0
+        assert frame_error == 0
+        assert abs(ptp_ts_ns - tx_frame_sfd_ns - (32 if enable_gen else 8)) < 0.01
 
     assert tb.axis_sink.empty()
 
@@ -175,10 +197,19 @@ async def run_test_tx(dut, payload_lengths=None, payload_data=None, ifg=12, enab
 
     for test_data in test_frames:
         rx_frame = await tb.gmii_sink.recv()
+        ptp_ts = await tb.tx_ptp_ts_sink.recv()
+
+        ptp_ts_ns = int(ptp_ts.ts) / 2**16
+
+        rx_frame_sfd_ns = get_time_from_sim_steps(rx_frame.sim_time_sfd, "ns")
+
+        tb.log.info("TX frame PTP TS: %f ns", ptp_ts_ns)
+        tb.log.info("RX frame SFD sim time: %f ns", rx_frame_sfd_ns)
 
         assert rx_frame.get_payload() == test_data
         assert rx_frame.check_fcs()
         assert rx_frame.error is None
+        assert abs(rx_frame_sfd_ns - ptp_ts_ns - (32 if enable_gen else 8)) < 0.01
 
     assert tb.gmii_sink.empty()
 
@@ -236,7 +267,7 @@ def test_eth_mac_1g(request):
     parameters['DATA_WIDTH'] = 8
     parameters['ENABLE_PADDING'] = 1
     parameters['MIN_FRAME_LENGTH'] = 64
-    parameters['TX_PTP_TS_ENABLE'] = 0
+    parameters['TX_PTP_TS_ENABLE'] = 1
     parameters['TX_PTP_TS_WIDTH'] = 96
     parameters['TX_PTP_TAG_ENABLE'] = parameters['TX_PTP_TS_ENABLE']
     parameters['TX_PTP_TAG_WIDTH'] = 16
