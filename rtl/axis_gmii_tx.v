@@ -136,6 +136,7 @@ reg [PTP_TS_WIDTH-1:0] m_axis_ptp_ts_reg = 0, m_axis_ptp_ts_next;
 reg [PTP_TAG_WIDTH-1:0] m_axis_ptp_ts_tag_reg = 0, m_axis_ptp_ts_tag_next;
 reg m_axis_ptp_ts_valid_reg = 1'b0, m_axis_ptp_ts_valid_next;
 
+reg start_packet_int_reg = 1'b0, start_packet_int_next;
 reg start_packet_reg = 1'b0, start_packet_next;
 reg error_underflow_reg = 1'b0, error_underflow_next;
 
@@ -195,6 +196,13 @@ always @* begin
     gmii_tx_en_next = 1'b0;
     gmii_tx_er_next = 1'b0;
 
+    if (start_packet_reg) begin
+        m_axis_ptp_ts_next = ptp_ts;
+        m_axis_ptp_ts_tag_next = s_axis_tuser >> 1;
+        m_axis_ptp_ts_valid_next = 1'b1;
+    end
+
+    start_packet_int_next = start_packet_int_reg;
     start_packet_next = 1'b0;
     error_underflow_next = 1'b0;
 
@@ -211,6 +219,10 @@ always @* begin
         gmii_tx_en_next = gmii_tx_en_reg;
         gmii_tx_er_next = gmii_tx_er_reg;
         state_next = state_reg;
+        if (start_packet_int_reg) begin
+            start_packet_int_next = 1'b0;
+            start_packet_next = 1'b1;
+        end
     end else begin
         case (state_reg)
             STATE_IDLE: begin
@@ -253,10 +265,11 @@ always @* begin
                         s_tdata_next = s_axis_tdata;
                     end
                     gmii_txd_next = ETH_SFD;
-                    m_axis_ptp_ts_next = ptp_ts;
-                    m_axis_ptp_ts_tag_next = s_axis_tuser >> 1;
-                    m_axis_ptp_ts_valid_next = 1'b1;
-                    start_packet_next = 1'b1;
+                    if (mii_select) begin
+                        start_packet_int_next = 1'b1;
+                    end else begin
+                        start_packet_next = 1'b1;
+                    end
                     state_next = STATE_PAYLOAD;
                 end else begin
                     state_next = STATE_PREAMBLE;
@@ -427,6 +440,7 @@ always @(posedge clk) begin
         crc_state <= crc_next;
     end
 
+    start_packet_int_reg <= start_packet_int_next;
     start_packet_reg <= start_packet_next;
     error_underflow_reg <= error_underflow_next;
 
@@ -440,6 +454,7 @@ always @(posedge clk) begin
         gmii_tx_en_reg <= 1'b0;
         gmii_tx_er_reg <= 1'b0;
 
+        start_packet_int_reg <= 1'b0;
         start_packet_reg <= 1'b0;
         error_underflow_reg <= 1'b0;
     end

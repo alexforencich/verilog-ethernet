@@ -100,7 +100,7 @@ reg reset_crc;
 reg update_crc;
 
 reg mii_odd = 1'b0;
-reg mii_locked = 1'b0;
+reg in_frame = 1'b0;
 
 reg [DATA_WIDTH-1:0] gmii_rxd_d0 = {DATA_WIDTH{1'b0}};
 reg [DATA_WIDTH-1:0] gmii_rxd_d1 = {DATA_WIDTH{1'b0}};
@@ -125,11 +125,12 @@ reg m_axis_tvalid_reg = 1'b0, m_axis_tvalid_next;
 reg m_axis_tlast_reg = 1'b0, m_axis_tlast_next;
 reg m_axis_tuser_reg = 1'b0, m_axis_tuser_next;
 
-reg start_packet_reg = 1'b0, start_packet_next;
+reg start_packet_int_reg = 1'b0;
+reg start_packet_reg = 1'b0;
 reg error_bad_frame_reg = 1'b0, error_bad_frame_next;
 reg error_bad_fcs_reg = 1'b0, error_bad_fcs_next;
 
-reg [PTP_TS_WIDTH-1:0] ptp_ts_reg = 0, ptp_ts_next;
+reg [PTP_TS_WIDTH-1:0] ptp_ts_reg = 0;
 
 reg [31:0] crc_state = 32'hFFFFFFFF;
 wire [31:0] crc_next;
@@ -170,11 +171,8 @@ always @* begin
     m_axis_tlast_next = 1'b0;
     m_axis_tuser_next = 1'b0;
 
-    start_packet_next = 1'b0;
     error_bad_frame_next = 1'b0;
     error_bad_fcs_next = 1'b0;
-
-    ptp_ts_next = ptp_ts_reg;
 
     if (!clk_enable) begin
         // clock disabled - hold state
@@ -189,8 +187,6 @@ always @* begin
                 reset_crc = 1'b1;
 
                 if (gmii_rx_dv_d4 && !gmii_rx_er_d4 && gmii_rxd_d4 == ETH_SFD) begin
-                    ptp_ts_next = ptp_ts;
-                    start_packet_next = 1'b1;
                     state_next = STATE_PAYLOAD;
                 end else begin
                     state_next = STATE_IDLE;
@@ -246,21 +242,28 @@ end
 always @(posedge clk) begin
     state_reg <= state_next;
 
-    ptp_ts_reg <= ptp_ts_next;
-
     m_axis_tdata_reg <= m_axis_tdata_next;
     m_axis_tvalid_reg <= m_axis_tvalid_next;
     m_axis_tlast_reg <= m_axis_tlast_next;
     m_axis_tuser_reg <= m_axis_tuser_next;
 
+    start_packet_int_reg <= 1'b0;
+    start_packet_reg <= 1'b0;
+
+    if (start_packet_int_reg) begin
+        ptp_ts_reg <= ptp_ts;
+        start_packet_reg <= 1'b1;
+    end
+
     if (clk_enable) begin
         if (mii_select) begin
             mii_odd <= !mii_odd;
 
-            if (mii_locked) begin
-                mii_locked <= gmii_rx_dv;
+            if (in_frame) begin
+                in_frame <= gmii_rx_dv;
             end else if (gmii_rx_dv && {gmii_rxd[3:0], gmii_rxd_d0[7:4]} == ETH_SFD) begin
-                mii_locked <= 1'b1;
+                in_frame <= 1'b1;
+                start_packet_int_reg <= 1'b1;
                 mii_odd <= 1'b1;
             end
 
@@ -288,6 +291,13 @@ always @(posedge clk) begin
                 gmii_rx_er_d0 <= gmii_rx_er;
             end
         end else begin
+            if (in_frame) begin
+                in_frame <= gmii_rx_dv;
+            end else if (gmii_rx_dv && gmii_rxd == ETH_SFD) begin
+                in_frame <= 1'b1;
+                start_packet_int_reg <= 1'b1;
+            end
+
             gmii_rxd_d0 <= gmii_rxd;
             gmii_rxd_d1 <= gmii_rxd_d0;
             gmii_rxd_d2 <= gmii_rxd_d1;
@@ -314,7 +324,6 @@ always @(posedge clk) begin
         crc_state <= crc_next;
     end
 
-    start_packet_reg <= start_packet_next;
     error_bad_frame_reg <= error_bad_frame_next;
     error_bad_fcs_reg <= error_bad_fcs_next;
 
@@ -323,11 +332,12 @@ always @(posedge clk) begin
 
         m_axis_tvalid_reg <= 1'b0;
 
+        start_packet_int_reg <= 1'b0;
         start_packet_reg <= 1'b0;
         error_bad_frame_reg <= 1'b0;
         error_bad_fcs_reg <= 1'b0;
 
-        mii_locked <= 1'b0;
+        in_frame <= 1'b0;
         mii_odd <= 1'b0;
 
         gmii_rx_dv_d0 <= 1'b0;
