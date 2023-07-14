@@ -39,7 +39,7 @@
 CONFIG ?= config.mk
 -include ../$(CONFIG)
 
-SYN_FILES_REL = $(patsubst %, ../%, $(SYN_FILES))
+SYN_FILES_REL = $(foreach p,$(SYN_FILES),$(if $(filter /% ./%,$p),$p,../$p))
 
 IP_FILES_REL = $(patsubst %, ../%, $(IP_FILES))
 IP_FILES_INT = $(patsubst %, ip/%, $(notdir $(IP_FILES)))
@@ -48,13 +48,15 @@ IP_TCL_FILES_REL = $(patsubst %, ../%, $(IP_TCL_FILES))
 IP_TCL_FILES_INT = $(patsubst %, ip/%, $(notdir $(IP_TCL_FILES)))
 IP_TCL_FILES_IP_INT = $(patsubst %.tcl, ip/%.ip, $(notdir $(IP_TCL_FILES)))
 
+CONFIG_TCL_FILES_REL = $(foreach p,$(CONFIG_TCL_FILES),$(if $(filter /% ./%,$p),$p,../$p))
+
 ifdef QSF_FILES
-  QSF_FILES_REL = $(patsubst %, ../%, $(QSF_FILES))
+  QSF_FILES_REL = $(foreach p,$(QSF_FILES),$(if $(filter /% ./%,$p),$p,../$p))
 else
   QSF_FILES_REL = ../$(FPGA_TOP).qsf
 endif
 
-SDC_FILES_REL = $(patsubst %, ../%, $(SDC_FILES))
+SDC_FILES_REL = $(foreach p,$(SDC_FILES),$(if $(filter /% ./%,$p),$p,../$p))
 
 ASSIGNMENT_FILES = $(FPGA_TOP).qpf $(FPGA_TOP).qsf
 
@@ -72,15 +74,16 @@ fpga: $(FPGA_TOP).sof
 quartus: $(FPGA_TOP).qpf
 	quartus $(FPGA_TOP).qpf
 
-tmpclean:
+tmpclean::
 	-rm -rf defines.v
 	-rm -rf *.rpt *.summary *.done *.smsg *.chg smart.log *.htm *.eqn *.pin *.qsf *.qpf *.sld *.txt *.qws *.stp
 	-rm -rf ip db qdb incremental_db reconfig_mif tmp-clearbox synth_dumps .qsys_edit
+	-rm -rf create_project.tcl update_config.tcl update_ip_*.tcl
 
-clean: tmpclean
+clean:: tmpclean
 	-rm -rf *.sof *.pof *.jdi *.jic *.map
 
-distclean: clean
+distclean:: clean
 	-rm -rf rev
 
 syn: smart.log output_files/$(PROJECT).syn.rpt
@@ -113,7 +116,8 @@ endef
 $(foreach l,$(IP_FILES_REL) $(IP_TCL_FILES_REL),$(eval $(call COPY_IP_RULE,$(l))))
 
 define TCL_IP_GEN_RULE
-$(patsubst %.tcl, %.ip, $(1)): $(1)
+$(patsubst %.tcl,%.ip,$(1)): $(1)
+	cd ip && rm -f $(patsubst %.tcl,%,$(notdir $(1))).{qpf,qsf}
 	cd ip && qsys-script --script=$(notdir $(1))
 endef
 $(foreach l,$(IP_TCL_FILES_INT),$(eval $(call TCL_IP_GEN_RULE,$(l))))
@@ -149,25 +153,30 @@ smart.log: $(ASSIGNMENT_FILES)
 # Project initialization
 ###################################################################
 
-$(ASSIGNMENT_FILES): $(QSF_FILES_REL) $(IP_FILES_INT) $(IP_TCL_FILES_IP_INT)
-	rm -f $(FPGA_TOP).qsf
-	quartus_sh --prepare -f $(FPGA_FAMILY) -d $(FPGA_DEVICE) -t $(FPGA_TOP) $(FPGA_TOP)
-	echo >> $(FPGA_TOP).qsf
-	echo >> $(FPGA_TOP).qsf
-	echo "# Source files" >> $(FPGA_TOP).qsf
+create_project.tcl: Makefile $(QSF_FILES_REL) | $(IP_FILES_INT) $(IP_TCL_FILES_IP_INT)
+	rm -f update_config.tcl
+	echo "project_new $(FPGA_TOP) -overwrite" > $@
+	echo "set_global_assignment -name FAMILY \"$(FPGA_FAMILY)\"" >> $@
+	echo "set_global_assignment -name DEVICE \"$(FPGA_DEVICE)\"" >> $@
 	for x in $(SYN_FILES_REL) $(IP_FILES_INT) $(IP_TCL_FILES_IP_INT); do \
 		case $${x##*.} in \
-			v|V) echo set_global_assignment -name VERILOG_FILE $$x >> $(FPGA_TOP).qsf ;;\
-			vhd|VHD) echo set_global_assignment -name VHDL_FILE $$x >> $(FPGA_TOP).qsf ;;\
-			qip|QIP) echo set_global_assignment -name QIP_FILE $$x >> $(FPGA_TOP).qsf ;;\
-			ip|IP) echo set_global_assignment -name IP_FILE $$x >> $(FPGA_TOP).qsf ;;\
-			*) echo set_global_assignment -name SOURCE_FILE $$x >> $(FPGA_TOP).qsf ;;\
+			v|V) echo set_global_assignment -name VERILOG_FILE "$$x" >> $@ ;;\
+			vhd|VHD) echo set_global_assignment -name VHDL_FILE "$$x" >> $@ ;;\
+			qip|QIP) echo set_global_assignment -name QIP_FILE "$$x" >> $@ ;;\
+			ip|IP) echo set_global_assignment -name IP_FILE "$$x" >> $@ ;;\
+			*) echo set_global_assignment -name SOURCE_FILE "$$x" >> $@ ;;\
 		esac; \
 	done
-	echo >> $(FPGA_TOP).qsf
-	echo "# SDC files" >> $(FPGA_TOP).qsf
-	for x in $(SDC_FILES_REL); do echo set_global_assignment -name SDC_FILE $$x >> $(FPGA_TOP).qsf; done
-	for x in $(QSF_FILES_REL); do printf "\n#\n# Included QSF file $$x\n#\n" >> $(FPGA_TOP).qsf; cat $$x >> $(FPGA_TOP).qsf; done
+	for x in $(SDC_FILES_REL); do echo set_global_assignment -name SDC_FILE "$$x" >> $@; done
+	for x in $(QSF_FILES_REL); do echo source "$$x" >> $@; done
+
+update_config.tcl: $(CONFIG_TCL_FILES_REL) $(SYN_FILES_REL)
+	echo "project_open $(FPGA_TOP)" > $@
+	for x in $(CONFIG_TCL_FILES_REL); do echo source "$$x" >> $@; done
+
+$(ASSIGNMENT_FILES): create_project.tcl update_config.tcl
+	for x in $?; do quartus_sh -t "$$x"; done
+	touch -c $(ASSIGNMENT_FILES)
 
 syn.chg:
 	$(STAMP) syn.chg
