@@ -28,7 +28,7 @@
 ###################################################################
 
 # phony targets
-.PHONY: clean fpga
+.PHONY: fpga vivado tmpclean clean distclean
 
 # prevent make from deleting intermediate files and reports
 .PRECIOUS: %.xpr %.bit %.mcs %.prm
@@ -40,15 +40,16 @@ CONFIG ?= config.mk
 FPGA_TOP ?= fpga
 PROJECT ?= $(FPGA_TOP)
 
-SYN_FILES_REL = $(patsubst %, ../%, $(SYN_FILES))
-INC_FILES_REL = $(patsubst %, ../%, $(INC_FILES))
-XCI_FILES_REL = $(patsubst %, ../%, $(XCI_FILES))
-IP_TCL_FILES_REL = $(patsubst %, ../%, $(IP_TCL_FILES))
+SYN_FILES_REL = $(foreach p,$(SYN_FILES),$(if $(filter /% ./%,$p),$p,../$p))
+INC_FILES_REL = $(foreach p,$(INC_FILES),$(if $(filter /% ./%,$p),$p,../$p))
+XCI_FILES_REL = $(foreach p,$(XCI_FILES),$(if $(filter /% ./%,$p),$p,../$p))
+IP_TCL_FILES_REL = $(foreach p,$(IP_TCL_FILES),$(if $(filter /% ./%,$p),$p,../$p))
+CONFIG_TCL_FILES_REL = $(foreach p,$(CONFIG_TCL_FILES),$(if $(filter /% ./%,$p),$p,../$p))
 
 ifdef XDC_FILES
-  XDC_FILES_REL = $(patsubst %, ../%, $(XDC_FILES))
+  XDC_FILES_REL = $(foreach p,$(XDC_FILES),$(if $(filter /% ./%,$p),$p,../$p))
 else
-  XDC_FILES_REL = $(FPGA_TOP).xdc
+  XDC_FILES_REL = $(PROJECT).xdc
 endif
 
 ###################################################################
@@ -60,20 +61,20 @@ endif
 
 all: fpga
 
-fpga: $(FPGA_TOP).bit
+fpga: $(PROJECT).bit
 
-vivado: $(FPGA_TOP).xpr
-	vivado $(FPGA_TOP).xpr
+vivado: $(PROJECT).xpr
+	vivado $(PROJECT).xpr
 
-tmpclean:
+tmpclean::
 	-rm -rf *.log *.jou *.cache *.gen *.hbs *.hw *.ip_user_files *.runs *.xpr *.html *.xml *.sim *.srcs *.str .Xil defines.v
-	-rm -rf create_project.tcl run_synth.tcl run_impl.tcl generate_bit.tcl
+	-rm -rf create_project.tcl update_config.tcl run_synth.tcl run_impl.tcl generate_bit.tcl
 
-clean: tmpclean
+clean:: tmpclean
 	-rm -rf *.bit *.ltx program.tcl generate_mcs.tcl *.mcs *.prm flash.tcl
 	-rm -rf *_utilization.rpt *_utilization_hierarchical.rpt
 
-distclean: clean
+distclean:: clean
 	-rm -rf rev
 
 ###################################################################
@@ -91,12 +92,17 @@ create_project.tcl: Makefile $(XCI_FILES_REL) $(IP_TCL_FILES_REL)
 	echo "add_files -fileset constrs_1 $(XDC_FILES_REL)" >> $@
 	for x in $(XCI_FILES_REL); do echo "import_ip $$x" >> $@; done
 	for x in $(IP_TCL_FILES_REL); do echo "source $$x" >> $@; done
+	for x in $(CONFIG_TCL_FILES_REL); do echo "source $$x" >> $@; done
 
-$(PROJECT).xpr: create_project.tcl
+update_config.tcl: $(CONFIG_TCL_FILES_REL) $(SYN_FILES_REL) $(INC_FILES_REL) $(XDC_FILES_REL)
+	echo "open_project -quiet $(PROJECT).xpr" > $@
+	for x in $(CONFIG_TCL_FILES_REL); do echo "source $$x" >> $@; done
+
+$(PROJECT).xpr: create_project.tcl update_config.tcl
 	vivado -nojournal -nolog -mode batch $(foreach x,$?,-source $x)
 
 # synthesis run
-$(PROJECT).runs/synth_1/$(PROJECT).dcp: $(PROJECT).xpr $(SYN_FILES_REL) $(INC_FILES_REL) $(XDC_FILES_REL)
+$(PROJECT).runs/synth_1/$(PROJECT).dcp: create_project.tcl update_config.tcl $(SYN_FILES_REL) $(INC_FILES_REL) $(XDC_FILES_REL) | $(PROJECT).xpr
 	echo "open_project $(PROJECT).xpr" > run_synth.tcl
 	echo "reset_run synth_1" >> run_synth.tcl
 	echo "launch_runs -jobs 4 synth_1" >> run_synth.tcl
