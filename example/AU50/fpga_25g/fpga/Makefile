@@ -58,6 +58,9 @@ XDC_FILES += lib/eth/lib/axis/syn/vivado/sync_reset.tcl
 # IP
 IP_TCL_FILES += ip/eth_xcvr_gt.tcl
 
+# Configuration
+CONFIG_TCL_FILES = ./config.tcl
+
 include ../common/vivado.mk
 
 program: $(FPGA_TOP).bit
