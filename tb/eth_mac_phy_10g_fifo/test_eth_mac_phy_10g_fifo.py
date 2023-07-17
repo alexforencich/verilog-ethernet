@@ -38,7 +38,7 @@ from cocotb.utils import get_time_from_sim_steps
 from cocotb.regression import TestFactory
 
 from cocotbext.eth import XgmiiFrame, PtpClockSimTime
-from cocotbext.axi import AxiStreamBus, AxiStreamSource, AxiStreamSink
+from cocotbext.axi import AxiStreamBus, AxiStreamSource, AxiStreamSink, AxiStreamFrame
 from cocotbext.axi.stream import define_stream
 
 try:
@@ -177,7 +177,7 @@ async def run_test_tx(dut, payload_lengths=None, payload_data=None, ifg=12):
     test_frames = [payload_data(x) for x in payload_lengths()]
 
     for test_data in test_frames:
-        await tb.axis_source.send(test_data)
+        await tb.axis_source.send(AxiStreamFrame(test_data, tuser=2))
 
     for test_data in test_frames:
         rx_frame = await tb.serdes_sink.recv()
@@ -224,7 +224,7 @@ async def run_test_tx_alignment(dut, payload_data=None, ifg=12):
         start_lane = []
 
         for test_data in test_frames:
-            await tb.axis_source.send(test_data)
+            await tb.axis_source.send(AxiStreamFrame(test_data, tuser=2))
 
         for test_data in test_frames:
             rx_frame = await tb.serdes_sink.recv()
@@ -405,11 +405,12 @@ def test_eth_mac_phy_10g_fifo(request, data_width, enable_dic):
     parameters['PTP_USE_SAMPLE_CLOCK'] = 0
     parameters['TX_PTP_TS_ENABLE'] = 1
     parameters['RX_PTP_TS_ENABLE'] = parameters['TX_PTP_TS_ENABLE']
+    parameters['TX_PTP_TS_CTRL_IN_TUSER'] = parameters['TX_PTP_TS_ENABLE']
     parameters['TX_PTP_TS_FIFO_DEPTH'] = 64
     parameters['PTP_TS_WIDTH'] = 96
     parameters['TX_PTP_TAG_ENABLE'] = parameters['TX_PTP_TS_ENABLE']
     parameters['PTP_TAG_WIDTH'] = 16
-    parameters['TX_USER_WIDTH'] = (parameters['PTP_TAG_WIDTH'] if parameters['TX_PTP_TS_ENABLE'] and parameters['TX_PTP_TAG_ENABLE'] else 0) + 1
+    parameters['TX_USER_WIDTH'] = ((parameters['PTP_TAG_WIDTH'] if parameters['TX_PTP_TAG_ENABLE'] else 0) + (1 if parameters['TX_PTP_TS_CTRL_IN_TUSER'] else 0) if parameters['TX_PTP_TS_ENABLE'] else 0) + 1
     parameters['RX_USER_WIDTH'] = (parameters['PTP_TS_WIDTH'] if parameters['RX_PTP_TS_ENABLE'] else 0) + 1
     parameters['BIT_REVERSE'] = 0
     parameters['SCRAMBLER_DISABLE'] = 0

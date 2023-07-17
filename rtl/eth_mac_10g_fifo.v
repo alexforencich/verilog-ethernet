@@ -58,11 +58,12 @@ module eth_mac_10g_fifo #
     parameter PTP_USE_SAMPLE_CLOCK = 0,
     parameter TX_PTP_TS_ENABLE = 0,
     parameter RX_PTP_TS_ENABLE = TX_PTP_TS_ENABLE,
+    parameter TX_PTP_TS_CTRL_IN_TUSER = 0,
     parameter TX_PTP_TS_FIFO_DEPTH = 64,
     parameter PTP_TS_WIDTH = 96,
     parameter TX_PTP_TAG_ENABLE = TX_PTP_TS_ENABLE,
     parameter PTP_TAG_WIDTH = 16,
-    parameter TX_USER_WIDTH = (TX_PTP_TS_ENABLE && TX_PTP_TAG_ENABLE ? PTP_TAG_WIDTH : 0) + 1,
+    parameter TX_USER_WIDTH = (TX_PTP_TS_ENABLE ? (TX_PTP_TAG_ENABLE ? PTP_TAG_WIDTH : 0) + (TX_PTP_TS_CTRL_IN_TUSER ? 1 : 0) : 0) + 1,
     parameter RX_USER_WIDTH = (RX_PTP_TS_ENABLE ? PTP_TS_WIDTH : 0) + 1
 )
 (
@@ -339,6 +340,7 @@ eth_mac_10g #(
     .PTP_PERIOD_FNS(PTP_PERIOD_FNS),
     .TX_PTP_TS_ENABLE(TX_PTP_TS_ENABLE),
     .TX_PTP_TS_WIDTH(PTP_TS_WIDTH),
+    .TX_PTP_TS_CTRL_IN_TUSER(TX_PTP_TS_CTRL_IN_TUSER),
     .TX_PTP_TAG_ENABLE(TX_PTP_TAG_ENABLE),
     .TX_PTP_TAG_WIDTH(PTP_TAG_WIDTH),
     .RX_PTP_TS_ENABLE(RX_PTP_TS_ENABLE),

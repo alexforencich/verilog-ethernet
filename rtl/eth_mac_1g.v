@@ -38,11 +38,12 @@ module eth_mac_1g #
     parameter MIN_FRAME_LENGTH = 64,
     parameter TX_PTP_TS_ENABLE = 0,
     parameter TX_PTP_TS_WIDTH = 96,
+    parameter TX_PTP_TS_CTRL_IN_TUSER = 0,
     parameter TX_PTP_TAG_ENABLE = TX_PTP_TS_ENABLE,
     parameter TX_PTP_TAG_WIDTH = 16,
     parameter RX_PTP_TS_ENABLE = TX_PTP_TS_ENABLE,
     parameter RX_PTP_TS_WIDTH = 96,
-    parameter TX_USER_WIDTH = (TX_PTP_TAG_ENABLE ? TX_PTP_TAG_WIDTH : 0) + 1,
+    parameter TX_USER_WIDTH = (TX_PTP_TS_ENABLE ? (TX_PTP_TAG_ENABLE ? TX_PTP_TAG_WIDTH : 0) + (TX_PTP_TS_CTRL_IN_TUSER ? 1 : 0) : 0) + 1,
     parameter RX_USER_WIDTH = (RX_PTP_TS_ENABLE ? RX_PTP_TS_WIDTH : 0) + 1
 )
 (
@@ -140,6 +141,7 @@ axis_gmii_tx #(
     .MIN_FRAME_LENGTH(MIN_FRAME_LENGTH),
     .PTP_TS_ENABLE(TX_PTP_TS_ENABLE),
     .PTP_TS_WIDTH(TX_PTP_TS_WIDTH),
+    .PTP_TS_CTRL_IN_TUSER(TX_PTP_TS_CTRL_IN_TUSER),
     .PTP_TAG_ENABLE(TX_PTP_TAG_ENABLE),
     .PTP_TAG_WIDTH(TX_PTP_TAG_WIDTH),
     .USER_WIDTH(TX_USER_WIDTH)

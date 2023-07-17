@@ -41,9 +41,10 @@ module axis_xgmii_tx_32 #
     parameter MIN_FRAME_LENGTH = 64,
     parameter PTP_TS_ENABLE = 0,
     parameter PTP_TS_WIDTH = 96,
+    parameter PTP_TS_CTRL_IN_TUSER = 0,
     parameter PTP_TAG_ENABLE = PTP_TS_ENABLE,
     parameter PTP_TAG_WIDTH = 16,
-    parameter USER_WIDTH = (PTP_TAG_ENABLE ? PTP_TAG_WIDTH : 0) + 1
+    parameter USER_WIDTH = (PTP_TS_ENABLE ? (PTP_TAG_ENABLE ? PTP_TAG_WIDTH : 0) + (PTP_TS_CTRL_IN_TUSER ? 1 : 0) : 0) + 1
 )
 (
     input  wire                      clk,
@@ -276,10 +277,15 @@ always @* begin
     m_axis_ptp_ts_tag_next = m_axis_ptp_ts_tag_reg;
     m_axis_ptp_ts_valid_next = 1'b0;
 
-    if (start_packet_reg) begin
+    if (start_packet_reg && PTP_TS_ENABLE) begin
         m_axis_ptp_ts_next = ptp_ts;
-        m_axis_ptp_ts_tag_next = s_axis_tuser >> 1;
-        m_axis_ptp_ts_valid_next = 1'b1;
+        if (PTP_TS_CTRL_IN_TUSER) begin
+            m_axis_ptp_ts_tag_next = s_axis_tuser >> 2;
+            m_axis_ptp_ts_valid_next = s_axis_tuser[1];
+        end else begin
+            m_axis_ptp_ts_tag_next = s_axis_tuser >> 1;
+            m_axis_ptp_ts_valid_next = 1'b1;
+        end
     end
 
     // XGMII idle

@@ -36,7 +36,7 @@ from cocotb.utils import get_time_from_sim_steps
 from cocotb.regression import TestFactory
 
 from cocotbext.eth import GmiiSink, PtpClockSimTime
-from cocotbext.axi import AxiStreamBus, AxiStreamSource
+from cocotbext.axi import AxiStreamBus, AxiStreamSource, AxiStreamFrame
 from cocotbext.axi.stream import define_stream
 
 
@@ -114,7 +114,7 @@ async def run_test(dut, payload_lengths=None, payload_data=None, ifg=12, enable_
     test_frames = [payload_data(x) for x in payload_lengths()]
 
     for test_data in test_frames:
-        await tb.source.send(test_data)
+        await tb.source.send(AxiStreamFrame(test_data, tuser=2))
 
     for test_data in test_frames:
         rx_frame = await tb.sink.recv()
@@ -186,9 +186,10 @@ def test_axis_gmii_tx(request):
     parameters['MIN_FRAME_LENGTH'] = 64
     parameters['PTP_TS_ENABLE'] = 1
     parameters['PTP_TS_WIDTH'] = 96
+    parameters['PTP_TS_CTRL_IN_TUSER'] = parameters['PTP_TS_ENABLE']
     parameters['PTP_TAG_ENABLE'] = parameters['PTP_TS_ENABLE']
     parameters['PTP_TAG_WIDTH'] = 16
-    parameters['USER_WIDTH'] = (parameters['PTP_TS_WIDTH'] if parameters['PTP_TS_ENABLE'] else 0) + 1
+    parameters['USER_WIDTH'] = ((parameters['PTP_TAG_WIDTH'] if parameters['PTP_TAG_ENABLE'] else 0) + (1 if parameters['PTP_TS_CTRL_IN_TUSER'] else 0) if parameters['PTP_TS_ENABLE'] else 0) + 1
 
     extra_env = {f'PARAM_{k}': str(v) for k, v in parameters.items()}
 

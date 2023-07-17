@@ -43,9 +43,10 @@ module axis_xgmii_tx_64 #
     parameter PTP_PERIOD_FNS = 16'h6666,
     parameter PTP_TS_ENABLE = 0,
     parameter PTP_TS_WIDTH = 96,
+    parameter PTP_TS_CTRL_IN_TUSER = 0,
     parameter PTP_TAG_ENABLE = PTP_TS_ENABLE,
     parameter PTP_TAG_WIDTH = 16,
-    parameter USER_WIDTH = (PTP_TAG_ENABLE ? PTP_TAG_WIDTH : 0) + 1
+    parameter USER_WIDTH = (PTP_TS_ENABLE ? (PTP_TAG_ENABLE ? PTP_TAG_WIDTH : 0) + (PTP_TS_CTRL_IN_TUSER ? 1 : 0) : 0) + 1
 )
 (
     input  wire                      clk,
@@ -347,30 +348,43 @@ always @* begin
                 // XGMII start and preamble
                 if (swap_lanes_reg) begin
                     // lanes swapped
-                    if (PTP_TS_WIDTH == 96) begin
-                        m_axis_ptp_ts_next[45:0] = ptp_ts[45:0] + (((PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS) * 3) >> 1);
-                        m_axis_ptp_ts_next[95:48] = ptp_ts[95:48];
-                        m_axis_ptp_ts_tag_next = s_axis_tuser >> 1;
-                        m_axis_ptp_ts_valid_int_next = 1'b1;
-                    end else begin
-                        m_axis_ptp_ts_next = ptp_ts + (((PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS) * 3) >> 1);
-                        m_axis_ptp_ts_tag_next = s_axis_tuser >> 1;
-                        m_axis_ptp_ts_valid_next = 1'b1;
+                    if (PTP_TS_ENABLE) begin
+                        if (PTP_TS_WIDTH == 96) begin
+                            m_axis_ptp_ts_next[45:0] = ptp_ts[45:0] + (((PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS) * 3) >> 1);
+                            m_axis_ptp_ts_next[95:48] = ptp_ts[95:48];
+                        end else begin
+                            m_axis_ptp_ts_next = ptp_ts + (((PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS) * 3) >> 1);
+                        end
                     end
                     start_packet_next = 2'b10;
                 end else begin
                     // lanes not swapped
-                    if (PTP_TS_WIDTH == 96) begin
-                        m_axis_ptp_ts_next[45:0] = ptp_ts[45:0] + (PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS);
-                        m_axis_ptp_ts_next[95:48] = ptp_ts[95:48];
-                        m_axis_ptp_ts_tag_next = s_axis_tuser >> 1;
-                        m_axis_ptp_ts_valid_int_next = 1'b1;
-                    end else begin
-                        m_axis_ptp_ts_next = ptp_ts + (PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS);
-                        m_axis_ptp_ts_tag_next = s_axis_tuser >> 1;
-                        m_axis_ptp_ts_valid_next = 1'b1;
+                    if (PTP_TS_ENABLE) begin
+                        if (PTP_TS_WIDTH == 96) begin
+                            m_axis_ptp_ts_next[45:0] = ptp_ts[45:0] + (PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS);
+                            m_axis_ptp_ts_next[95:48] = ptp_ts[95:48];
+                        end else begin
+                            m_axis_ptp_ts_next = ptp_ts + (PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS);
+                        end
                     end
                     start_packet_next = 2'b01;
+                end
+                if (PTP_TS_ENABLE) begin
+                    if (PTP_TS_CTRL_IN_TUSER) begin
+                        m_axis_ptp_ts_tag_next = s_axis_tuser >> 2;
+                        if (PTP_TS_WIDTH == 96) begin
+                            m_axis_ptp_ts_valid_int_next = s_axis_tuser[1];
+                        end else begin
+                            m_axis_ptp_ts_valid_next = s_axis_tuser[1];
+                        end
+                    end else begin
+                        m_axis_ptp_ts_tag_next = s_axis_tuser >> 1;
+                        if (PTP_TS_WIDTH == 96) begin
+                            m_axis_ptp_ts_valid_int_next = 1'b1;
+                        end else begin
+                            m_axis_ptp_ts_valid_next = 1'b1;
+                        end
+                    end
                 end
                 xgmii_txd_next = {ETH_SFD, {6{ETH_PRE}}, XGMII_START};
                 xgmii_txc_next = 8'b00000001;

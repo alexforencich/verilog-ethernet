@@ -36,7 +36,7 @@ from cocotb.utils import get_time_from_sim_steps
 from cocotb.regression import TestFactory
 
 from cocotbext.eth import GmiiFrame, GmiiSource, GmiiSink, PtpClockSimTime
-from cocotbext.axi import AxiStreamBus, AxiStreamSource, AxiStreamSink
+from cocotbext.axi import AxiStreamBus, AxiStreamSource, AxiStreamSink, AxiStreamFrame
 from cocotbext.axi.stream import define_stream
 
 
@@ -193,7 +193,7 @@ async def run_test_tx(dut, payload_lengths=None, payload_data=None, ifg=12, enab
     test_frames = [payload_data(x) for x in payload_lengths()]
 
     for test_data in test_frames:
-        await tb.axis_source.send(test_data)
+        await tb.axis_source.send(AxiStreamFrame(test_data, tuser=2))
 
     for test_data in test_frames:
         rx_frame = await tb.gmii_sink.recv()
@@ -269,11 +269,12 @@ def test_eth_mac_1g(request):
     parameters['MIN_FRAME_LENGTH'] = 64
     parameters['TX_PTP_TS_ENABLE'] = 1
     parameters['TX_PTP_TS_WIDTH'] = 96
+    parameters['TX_PTP_TS_CTRL_IN_TUSER'] = parameters['TX_PTP_TS_ENABLE']
     parameters['TX_PTP_TAG_ENABLE'] = parameters['TX_PTP_TS_ENABLE']
     parameters['TX_PTP_TAG_WIDTH'] = 16
     parameters['RX_PTP_TS_ENABLE'] = parameters['TX_PTP_TS_ENABLE']
     parameters['RX_PTP_TS_WIDTH'] = 96
-    parameters['TX_USER_WIDTH'] = (parameters['TX_PTP_TAG_WIDTH'] if parameters['TX_PTP_TAG_ENABLE'] else 0) + 1
+    parameters['TX_USER_WIDTH'] = ((parameters['TX_PTP_TAG_WIDTH'] if parameters['TX_PTP_TAG_ENABLE'] else 0) + (1 if parameters['TX_PTP_TS_CTRL_IN_TUSER'] else 0) if parameters['TX_PTP_TS_ENABLE'] else 0) + 1
     parameters['RX_USER_WIDTH'] = (parameters['RX_PTP_TS_WIDTH'] if parameters['RX_PTP_TS_ENABLE'] else 0) + 1
 
     extra_env = {f'PARAM_{k}': str(v) for k, v in parameters.items()}
