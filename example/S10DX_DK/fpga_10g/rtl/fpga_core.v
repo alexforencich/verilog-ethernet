@@ -498,14 +498,14 @@ axis_async_fifo #(
     .DEST_ENABLE(0),
     .USER_ENABLE(1),
     .USER_WIDTH(1),
-    .PIPELINE_OUTPUT(2),
+    .RAM_PIPELINE(2),
     .FRAME_FIFO(1),
     .USER_BAD_FRAME_VALUE(1'b1),
     .USER_BAD_FRAME_MASK(1'b1),
     .DROP_BAD_FRAME(1),
     .DROP_WHEN_FULL(1)
 )
-max_rx_fifo (
+mac_rx_fifo (
     // AXI input
     .s_clk(qsfp1_mac_1_rx_clk),
     .s_rst(qsfp1_mac_1_rx_rst),
@@ -548,14 +548,14 @@ axis_async_fifo #(
     .DEST_ENABLE(0),
     .USER_ENABLE(1),
     .USER_WIDTH(1),
-    .PIPELINE_OUTPUT(2),
+    .RAM_PIPELINE(2),
     .FRAME_FIFO(1),
     .USER_BAD_FRAME_VALUE(1'b1),
     .USER_BAD_FRAME_MASK(1'b1),
     .DROP_BAD_FRAME(1),
     .DROP_WHEN_FULL(0)
 )
-max_tx_fifo (
+mac_tx_fifo (
     // AXI input
     .s_clk(clk),
     .s_rst(rst),
