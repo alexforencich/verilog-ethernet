@@ -38,7 +38,13 @@ module fpga (
     input  wire       ref_clk_p,
     input  wire       ref_clk_n,
 
+    output wire       clk_gty2_fdec,
+    output wire       clk_gty2_finc,
+    input  wire       clk_gty2_intr_n,
     input  wire       clk_gty2_lol_n,
+    output wire       clk_gty2_oe_n,
+    output wire       clk_gty2_sync_n,
+    output wire       clk_gty2_rst_n,
 
     /*
      * GPIO
@@ -372,6 +378,12 @@ si5341_i2c_init_inst (
     .busy(si5341_i2c_busy),
     .start(1'b1)
 );
+
+assign clk_gty2_fdec = 1'b0;
+assign clk_gty2_finc = 1'b0;
+assign clk_gty2_oe_n = 1'b1;
+assign clk_gty2_sync_n = 1'b1;
+assign clk_gty2_rst_n = btn[0];
 
 // XGMII 10G PHY
 wire qsfp_reset = rst_125mhz_int || si5341_i2c_busy || !clk_gty2_lol_n;
