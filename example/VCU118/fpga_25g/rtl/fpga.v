@@ -104,8 +104,8 @@ module fpga (
     output wire       qsfp2_tx4_n,
     input  wire       qsfp2_rx4_p,
     input  wire       qsfp2_rx4_n,
-    input  wire       qsfp2_mgt_refclk_0_p,
-    input  wire       qsfp2_mgt_refclk_0_n,
+    // input  wire       qsfp2_mgt_refclk_0_p,
+    // input  wire       qsfp2_mgt_refclk_0_n,
     // input  wire       qsfp2_mgt_refclk_1_p,
     // input  wire       qsfp2_mgt_refclk_1_n,
     // output wire       qsfp2_recclk_p,
@@ -600,16 +600,6 @@ wire qsfp2_rx_block_lock_2;
 wire qsfp2_rx_block_lock_3;
 wire qsfp2_rx_block_lock_4;
 
-wire qsfp2_mgt_refclk_0;
-
-IBUFDS_GTE4 ibufds_gte4_qsfp2_mgt_refclk_0_inst (
-    .I     (qsfp2_mgt_refclk_0_p),
-    .IB    (qsfp2_mgt_refclk_0_n),
-    .CEB   (1'b0),
-    .O     (qsfp2_mgt_refclk_0),
-    .ODIV2 ()
-);
-
 wire qsfp2_qpll0lock;
 wire qsfp2_qpll0outclk;
 wire qsfp2_qpll0outrefclk;
@@ -628,7 +618,7 @@ qsfp2_phy_1_inst (
     .xcvr_gtpowergood_out(),
 
     // PLL out
-    .xcvr_gtrefclk00_in(qsfp2_mgt_refclk_0),
+    .xcvr_gtrefclk00_in(qsfp1_mgt_refclk_0),
     .xcvr_qpll0lock_out(qsfp2_qpll0lock),
     .xcvr_qpll0outclk_out(qsfp2_qpll0outclk),
     .xcvr_qpll0outrefclk_out(qsfp2_qpll0outrefclk),
