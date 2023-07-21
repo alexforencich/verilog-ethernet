@@ -1,62 +1,18 @@
 #!/usr/bin/env python
 """
-Generates an I2C init module for an Si5341 PLL chip
+Generates an I2C init module for multiple chips
 """
 
-import argparse
 from jinja2 import Template
 
 
-def main():
-    parser = argparse.ArgumentParser(description=__doc__.strip())
-    parser.add_argument('-r', '--regs',  type=str, help="register list")
-    parser.add_argument('-n', '--name',   type=str, help="module name")
-    parser.add_argument('-o', '--output', type=str, help="output file name")
-
-    args = parser.parse_args()
-
-    try:
-        generate(**args.__dict__)
-    except IOError as ex:
-        print(ex)
-        exit(1)
-
-
-def generate(regs=None, name=None, output=None):
-    if regs is None:
-        raise Exception("Register list not specified")
-
-    if name is None:
-        name = "si5341_i2c_init"
-
-    if output is None:
-        output = name + ".v"
-
-    print(f"Generating Si5341 I2C init module {name}...")
-
+def si5341_cmds(regs, dev_addr=0x77):
     cur_page = None
     cur_addr = None
-    dev_addr = 0x77
 
-    i = 0
-    cmds = ""
+    cmds = []
 
-    cmds += "    // Initial delay\n"
-    cmds += f"    init_data[{i}] = 9'b000010110; // delay 30 ms\n"
-    i += 1
-    cmds += "    // Set muxes to select Si5341\n"
-    cmds += f"    init_data[{i}] = {{2'b01, 7'h70}};\n"
-    i += 1
-    cmds += f"    init_data[{i}] = {{1'b1,  8'h00}};\n"
-    i += 1
-    cmds += f"    init_data[{i}] = 9'b001000001; // I2C stop\n"
-    i += 1
-    cmds += f"    init_data[{i}] = {{2'b01, 7'h71}};\n"
-    i += 1
-    cmds += f"    init_data[{i}] = {{1'b1,  8'h04}};\n"
-    i += 1
-    cmds += f"    init_data[{i}] = 9'b001000001; // I2C stop\n"
-    i += 1
+    print(f"Reading register list file '{regs}'...")
 
     with open(regs, "r") as f:
         for line in f:
@@ -64,11 +20,10 @@ def generate(regs=None, name=None, output=None):
             if not line or line == "Address,Data":
                 continue
             if line[0] == '#':
-                cmds += f"    // {line[1:].strip()}\n"
+                cmds.append(f"// {line[1:].strip()}")
 
                 if line.startswith("# Delay"):
-                    cmds += f"    init_data[{i}] = 9'b000011010; // delay 300 ms\n"
-                    i += 1
+                    cmds.append("9'b000011010; // delay 300 ms")
                     cur_addr = None
 
                 continue
@@ -79,30 +34,69 @@ def generate(regs=None, name=None, output=None):
             data = int(d[1], 0)
 
             if page != cur_page:
-                cmds += f"    init_data[{i}] = {{2'b01, 7'h{dev_addr:02x}}};\n"
-                i += 1
-                cmds += f"    init_data[{i}] = {{1'b1,  8'h01}};\n"
-                i += 1
-                cmds += f"    init_data[{i}] = {{1'b1,  8'h{page:02x}}}; // set page {page:#04x}\n"
-                i += 1
+                cmds.append(f"{{2'b01, 7'h{dev_addr:02x}}};")
+                cmds.append("{1'b1,  8'h01};")
+                cmds.append(f"{{1'b1,  8'h{page:02x}}}; // set page {page:#04x}")
                 cur_page = page
                 cur_addr = None
 
             if addr != cur_addr:
-                cmds += f"    init_data[{i}] = {{2'b01, 7'h{dev_addr:02x}}};\n"
-                i += 1
-                cmds += f"    init_data[{i}] = {{1'b1,  8'h{addr & 0xff:02x}}};\n"
-                i += 1
+                cmds.append(f"{{2'b01, 7'h{dev_addr:02x}}};")
+                cmds.append(f"{{1'b1,  8'h{addr & 0xff:02x}}};")
                 cur_addr = addr
 
-            cmds += f"    init_data[{i}] = {{1'b1,  8'h{data:02x}}}; // write {data:#04x} to {addr:#06x}\n"
-            i += 1
+            cmds.append(f"{{1'b1,  8'h{data:02x}}}; // write {data:#04x} to {addr:#06x}")
             cur_addr += 1
 
-        cmds += f"    init_data[{i}] = 9'd0; // end\n"
-        i += 1
+    return cmds
 
-    cmd_count = i
+
+def mux_cmds(val, dev_addr):
+    cmds = []
+    cmds.append(f"{{2'b01, 7'h{dev_addr:02x}}};")
+    cmds.append(f"{{1'b1,  8'h{val:02x}}};")
+    cmds.append("9'b001000001; // I2C stop")
+    return cmds
+
+
+def main():
+    cmds = []
+
+    cmds.append("// Initial delay")
+    cmds.append("9'b000010110; // delay 30 ms")
+
+    # Si5341 on HTG 9200
+    cmds.append("// Set muxes to select U48 Si5341 on HTG-9200")
+    cmds.extend(mux_cmds(0x00, 0x70))
+    cmds.extend(mux_cmds(0x04, 0x71))
+
+    cmds.extend(si5341_cmds("HTG9200_161-9k2_161-Registers.txt", 0x77))
+    generate(cmds)
+
+
+def generate(cmds=None, name=None, output=None):
+    if cmds is None:
+        raise Exception("Command list is required")
+
+    if name is None:
+        name = "si5341_i2c_init"
+
+    if output is None:
+        output = name + ".v"
+
+    print(f"Generating Si5341 I2C init module {name}...")
+
+    cmds.append("9'd0; // end")
+
+    cmd_str = ""
+    cmd_count = 0
+
+    for cmd in cmds:
+        if cmd.startswith('//'):
+            cmd_str += f"    {cmd}\n"
+        else:
+            cmd_str += f"    init_data[{cmd_count}] = {cmd}\n"
+            cmd_count += 1
 
     t = Template(u"""/*
 
@@ -248,7 +242,7 @@ localparam INIT_DATA_LEN = {{cmd_count}};
 reg [8:0] init_data [INIT_DATA_LEN-1:0];
 
 initial begin
-{{cmds-}}
+{{cmd_str-}}
 end
 
 localparam [3:0]
@@ -591,7 +585,7 @@ endmodule
 
     with open(output, 'w') as f:
         f.write(t.render(
-            cmds=cmds,
+            cmd_str=cmd_str,
             cmd_count=cmd_count,
             name=name
         ))

@@ -144,7 +144,7 @@ reg [8:0] init_data [INIT_DATA_LEN-1:0];
 initial begin
     // Initial delay
     init_data[0] = 9'b000010110; // delay 30 ms
-    // Set muxes to select Si5341
+    // Set muxes to select U48 Si5341 on HTG-9200
     init_data[1] = {2'b01, 7'h70};
     init_data[2] = {1'b1,  8'h00};
     init_data[3] = 9'b001000001; // I2C stop
@@ -154,12 +154,12 @@ initial begin
     // Si534x/7x/8x/9x Registers Script
     // 
     // Part: Si5341
-    // Project File: C:\Users\Alex\Documents\Si5341-RevD-fpga-161-osc-Project.slabtimeproj
-    // Design ID: fpga
+    // Project File: X:\Projects\verilog-ethernet\example\HTG9200\fpga_25g\pll\HTG9200_161-9k2_161.slabtimeproj
+    // Design ID: 9k2_161
     // Includes Pre/Post Download Control Register Writes: Yes
     // Die Revision: B1
-    // Creator: ClockBuilder Pro v3.1 [2021-01-18]
-    // Created On: 2021-03-14 17:21:45 GMT-07:00
+    // Creator: ClockBuilder Pro v4.1 [2021-09-22]
+    // Created On: 2023-07-19 01:51:06 GMT-07:00
     // 
     // Start configuration preamble
     init_data[7] = {2'b01, 7'h77};
@@ -214,7 +214,7 @@ initial begin
     init_data[47] = {2'b01, 7'h77};
     init_data[48] = {1'b1,  8'h17};
     init_data[49] = {1'b1,  8'hd0}; // write 0xd0 to 0x0017
-    init_data[50] = {1'b1,  8'hfc}; // write 0xfc to 0x0018
+    init_data[50] = {1'b1,  8'hff}; // write 0xff to 0x0018
     init_data[51] = {2'b01, 7'h77};
     init_data[52] = {1'b1,  8'h21};
     init_data[53] = {1'b1,  8'h0b}; // write 0x0b to 0x0021
@@ -272,49 +272,49 @@ initial begin
     init_data[105] = {1'b1,  8'h02}; // write 0x02 to 0x0112
     init_data[106] = {1'b1,  8'h09}; // write 0x09 to 0x0113
     init_data[107] = {1'b1,  8'h3b}; // write 0x3b to 0x0114
-    init_data[108] = {1'b1,  8'h2c}; // write 0x2c to 0x0115
+    init_data[108] = {1'b1,  8'h29}; // write 0x29 to 0x0115
     init_data[109] = {2'b01, 7'h77};
     init_data[110] = {1'b1,  8'h17};
     init_data[111] = {1'b1,  8'h06}; // write 0x06 to 0x0117
     init_data[112] = {1'b1,  8'h09}; // write 0x09 to 0x0118
     init_data[113] = {1'b1,  8'h3b}; // write 0x3b to 0x0119
-    init_data[114] = {1'b1,  8'h29}; // write 0x29 to 0x011a
+    init_data[114] = {1'b1,  8'h28}; // write 0x28 to 0x011a
     init_data[115] = {2'b01, 7'h77};
     init_data[116] = {1'b1,  8'h1c};
     init_data[117] = {1'b1,  8'h06}; // write 0x06 to 0x011c
     init_data[118] = {1'b1,  8'h09}; // write 0x09 to 0x011d
     init_data[119] = {1'b1,  8'h3b}; // write 0x3b to 0x011e
-    init_data[120] = {1'b1,  8'h29}; // write 0x29 to 0x011f
+    init_data[120] = {1'b1,  8'h28}; // write 0x28 to 0x011f
     init_data[121] = {2'b01, 7'h77};
     init_data[122] = {1'b1,  8'h21};
     init_data[123] = {1'b1,  8'h06}; // write 0x06 to 0x0121
     init_data[124] = {1'b1,  8'h09}; // write 0x09 to 0x0122
     init_data[125] = {1'b1,  8'h3b}; // write 0x3b to 0x0123
-    init_data[126] = {1'b1,  8'h2a}; // write 0x2a to 0x0124
+    init_data[126] = {1'b1,  8'h28}; // write 0x28 to 0x0124
     init_data[127] = {2'b01, 7'h77};
     init_data[128] = {1'b1,  8'h26};
     init_data[129] = {1'b1,  8'h06}; // write 0x06 to 0x0126
     init_data[130] = {1'b1,  8'h09}; // write 0x09 to 0x0127
     init_data[131] = {1'b1,  8'h3b}; // write 0x3b to 0x0128
-    init_data[132] = {1'b1,  8'h2a}; // write 0x2a to 0x0129
+    init_data[132] = {1'b1,  8'h28}; // write 0x28 to 0x0129
     init_data[133] = {2'b01, 7'h77};
     init_data[134] = {1'b1,  8'h2b};
     init_data[135] = {1'b1,  8'h06}; // write 0x06 to 0x012b
     init_data[136] = {1'b1,  8'h09}; // write 0x09 to 0x012c
     init_data[137] = {1'b1,  8'h3b}; // write 0x3b to 0x012d
-    init_data[138] = {1'b1,  8'h2b}; // write 0x2b to 0x012e
+    init_data[138] = {1'b1,  8'h28}; // write 0x28 to 0x012e
     init_data[139] = {2'b01, 7'h77};
     init_data[140] = {1'b1,  8'h30};
     init_data[141] = {1'b1,  8'h06}; // write 0x06 to 0x0130
     init_data[142] = {1'b1,  8'h09}; // write 0x09 to 0x0131
     init_data[143] = {1'b1,  8'h3b}; // write 0x3b to 0x0132
-    init_data[144] = {1'b1,  8'h2b}; // write 0x2b to 0x0133
+    init_data[144] = {1'b1,  8'h28}; // write 0x28 to 0x0133
     init_data[145] = {2'b01, 7'h77};
     init_data[146] = {1'b1,  8'h3a};
     init_data[147] = {1'b1,  8'h06}; // write 0x06 to 0x013a
     init_data[148] = {1'b1,  8'h09}; // write 0x09 to 0x013b
     init_data[149] = {1'b1,  8'h3b}; // write 0x3b to 0x013c
-    init_data[150] = {1'b1,  8'h2b}; // write 0x2b to 0x013d
+    init_data[150] = {1'b1,  8'h28}; // write 0x28 to 0x013d
     init_data[151] = {2'b01, 7'h77};
     init_data[152] = {1'b1,  8'h3f};
     init_data[153] = {1'b1,  8'h00}; // write 0x00 to 0x013f
@@ -414,13 +414,13 @@ initial begin
     init_data[247] = {1'b1,  8'h00}; // write 0x00 to 0x0268
     init_data[248] = {1'b1,  8'h00}; // write 0x00 to 0x0269
     init_data[249] = {1'b1,  8'h00}; // write 0x00 to 0x026a
-    init_data[250] = {1'b1,  8'h66}; // write 0x66 to 0x026b
-    init_data[251] = {1'b1,  8'h70}; // write 0x70 to 0x026c
-    init_data[252] = {1'b1,  8'h67}; // write 0x67 to 0x026d
-    init_data[253] = {1'b1,  8'h61}; // write 0x61 to 0x026e
-    init_data[254] = {1'b1,  8'h00}; // write 0x00 to 0x026f
-    init_data[255] = {1'b1,  8'h00}; // write 0x00 to 0x0270
-    init_data[256] = {1'b1,  8'h00}; // write 0x00 to 0x0271
+    init_data[250] = {1'b1,  8'h39}; // write 0x39 to 0x026b
+    init_data[251] = {1'b1,  8'h6b}; // write 0x6b to 0x026c
+    init_data[252] = {1'b1,  8'h32}; // write 0x32 to 0x026d
+    init_data[253] = {1'b1,  8'h5f}; // write 0x5f to 0x026e
+    init_data[254] = {1'b1,  8'h31}; // write 0x31 to 0x026f
+    init_data[255] = {1'b1,  8'h36}; // write 0x36 to 0x0270
+    init_data[256] = {1'b1,  8'h31}; // write 0x31 to 0x0271
     init_data[257] = {1'b1,  8'h00}; // write 0x00 to 0x0272
     init_data[258] = {2'b01, 7'h77};
     init_data[259] = {1'b1,  8'h01};
@@ -440,9 +440,9 @@ initial begin
     init_data[273] = {1'b1,  8'h00}; // write 0x00 to 0x030c
     init_data[274] = {1'b1,  8'h00}; // write 0x00 to 0x030d
     init_data[275] = {1'b1,  8'h00}; // write 0x00 to 0x030e
-    init_data[276] = {1'b1,  8'h00}; // write 0x00 to 0x030f
-    init_data[277] = {1'b1,  8'h80}; // write 0x80 to 0x0310
-    init_data[278] = {1'b1,  8'h14}; // write 0x14 to 0x0311
+    init_data[276] = {1'b1,  8'h10}; // write 0x10 to 0x030f
+    init_data[277] = {1'b1,  8'h42}; // write 0x42 to 0x0310
+    init_data[278] = {1'b1,  8'h08}; // write 0x08 to 0x0311
     init_data[279] = {1'b1,  8'h00}; // write 0x00 to 0x0312
     init_data[280] = {1'b1,  8'h00}; // write 0x00 to 0x0313
     init_data[281] = {1'b1,  8'h00}; // write 0x00 to 0x0314
@@ -452,35 +452,35 @@ initial begin
     init_data[285] = {1'b1,  8'h00}; // write 0x00 to 0x0318
     init_data[286] = {1'b1,  8'h00}; // write 0x00 to 0x0319
     init_data[287] = {1'b1,  8'h00}; // write 0x00 to 0x031a
-    init_data[288] = {1'b1,  8'h80}; // write 0x80 to 0x031b
-    init_data[289] = {1'b1,  8'h14}; // write 0x14 to 0x031c
+    init_data[288] = {1'b1,  8'h00}; // write 0x00 to 0x031b
+    init_data[289] = {1'b1,  8'h00}; // write 0x00 to 0x031c
     init_data[290] = {1'b1,  8'h00}; // write 0x00 to 0x031d
     init_data[291] = {1'b1,  8'h00}; // write 0x00 to 0x031e
     init_data[292] = {1'b1,  8'h00}; // write 0x00 to 0x031f
     init_data[293] = {1'b1,  8'h00}; // write 0x00 to 0x0320
-    init_data[294] = {1'b1,  8'h80}; // write 0x80 to 0x0321
+    init_data[294] = {1'b1,  8'h00}; // write 0x00 to 0x0321
     init_data[295] = {1'b1,  8'h00}; // write 0x00 to 0x0322
     init_data[296] = {1'b1,  8'h00}; // write 0x00 to 0x0323
     init_data[297] = {1'b1,  8'h00}; // write 0x00 to 0x0324
     init_data[298] = {1'b1,  8'h00}; // write 0x00 to 0x0325
-    init_data[299] = {1'b1,  8'h80}; // write 0x80 to 0x0326
-    init_data[300] = {1'b1,  8'h14}; // write 0x14 to 0x0327
+    init_data[299] = {1'b1,  8'h00}; // write 0x00 to 0x0326
+    init_data[300] = {1'b1,  8'h00}; // write 0x00 to 0x0327
     init_data[301] = {1'b1,  8'h00}; // write 0x00 to 0x0328
     init_data[302] = {1'b1,  8'h00}; // write 0x00 to 0x0329
     init_data[303] = {1'b1,  8'h00}; // write 0x00 to 0x032a
     init_data[304] = {1'b1,  8'h00}; // write 0x00 to 0x032b
-    init_data[305] = {1'b1,  8'h80}; // write 0x80 to 0x032c
+    init_data[305] = {1'b1,  8'h00}; // write 0x00 to 0x032c
     init_data[306] = {1'b1,  8'h00}; // write 0x00 to 0x032d
     init_data[307] = {1'b1,  8'h00}; // write 0x00 to 0x032e
     init_data[308] = {1'b1,  8'h00}; // write 0x00 to 0x032f
-    init_data[309] = {1'b1,  8'h10}; // write 0x10 to 0x0330
-    init_data[310] = {1'b1,  8'h42}; // write 0x42 to 0x0331
-    init_data[311] = {1'b1,  8'h08}; // write 0x08 to 0x0332
+    init_data[309] = {1'b1,  8'h00}; // write 0x00 to 0x0330
+    init_data[310] = {1'b1,  8'h00}; // write 0x00 to 0x0331
+    init_data[311] = {1'b1,  8'h00}; // write 0x00 to 0x0332
     init_data[312] = {1'b1,  8'h00}; // write 0x00 to 0x0333
     init_data[313] = {1'b1,  8'h00}; // write 0x00 to 0x0334
     init_data[314] = {1'b1,  8'h00}; // write 0x00 to 0x0335
     init_data[315] = {1'b1,  8'h00}; // write 0x00 to 0x0336
-    init_data[316] = {1'b1,  8'h80}; // write 0x80 to 0x0337
+    init_data[316] = {1'b1,  8'h00}; // write 0x00 to 0x0337
     init_data[317] = {1'b1,  8'h00}; // write 0x00 to 0x0338
     init_data[318] = {1'b1,  8'h1f}; // write 0x1f to 0x0339
     init_data[319] = {2'b01, 7'h77};
@@ -655,9 +655,9 @@ initial begin
     init_data[488] = {2'b01, 7'h77};
     init_data[489] = {1'b1,  8'h02};
     init_data[490] = {1'b1,  8'h00}; // write 0x00 to 0x0a02
-    init_data[491] = {1'b1,  8'h1f}; // write 0x1f to 0x0a03
-    init_data[492] = {1'b1,  8'h0f}; // write 0x0f to 0x0a04
-    init_data[493] = {1'b1,  8'h1f}; // write 0x1f to 0x0a05
+    init_data[491] = {1'b1,  8'h03}; // write 0x03 to 0x0a03
+    init_data[492] = {1'b1,  8'h01}; // write 0x01 to 0x0a04
+    init_data[493] = {1'b1,  8'h03}; // write 0x03 to 0x0a05
     init_data[494] = {2'b01, 7'h77};
     init_data[495] = {1'b1,  8'h14};
     init_data[496] = {1'b1,  8'h00}; // write 0x00 to 0x0a14
@@ -681,7 +681,7 @@ initial begin
     init_data[514] = {1'b1,  8'h0f}; // write 0x0f to 0x0b44
     init_data[515] = {2'b01, 7'h77};
     init_data[516] = {1'b1,  8'h4a};
-    init_data[517] = {1'b1,  8'h00}; // write 0x00 to 0x0b4a
+    init_data[517] = {1'b1,  8'h1c}; // write 0x1c to 0x0b4a
     init_data[518] = {2'b01, 7'h77};
     init_data[519] = {1'b1,  8'h57};
     init_data[520] = {1'b1,  8'ha5}; // write 0xa5 to 0x0b57

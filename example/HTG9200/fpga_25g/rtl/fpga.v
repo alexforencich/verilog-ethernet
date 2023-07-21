@@ -381,7 +381,7 @@ si5341_i2c_init_inst (
 
 assign clk_gty2_fdec = 1'b0;
 assign clk_gty2_finc = 1'b0;
-assign clk_gty2_oe_n = 1'b1;
+assign clk_gty2_oe_n = 1'b0;
 assign clk_gty2_sync_n = 1'b1;
 assign clk_gty2_rst_n = btn[0];
 
