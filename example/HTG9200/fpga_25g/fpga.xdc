@@ -38,8 +38,13 @@ set_property -dict {LOC L23  IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 8} [get_ports {
 set_property -dict {LOC L22  IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 8} [get_ports {clk_gty2_sync_n}]
 set_property -dict {LOC K22  IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 8} [get_ports {clk_gty2_rst_n}]
 
-# set_property -dict {LOC BE20 IOSTANDARD LVCMOS18} [get_ports {clk_gth_sd_oe}]
-# set_property -dict {LOC BD20 IOSTANDARD LVCMOS18} [get_ports {clk_gth_out0_sel_i2cb}]
+#set_property -dict {LOC BE20 IOSTANDARD LVCMOS18} [get_ports {clk_gth_sd_oe}]
+#set_property -dict {LOC BD20 IOSTANDARD LVCMOS18} [get_ports {clk_gth_out0_sel_i2cb}]
+
+set_false_path -to [get_ports {clk_gty2_fdec clk_gty2_finc clk_gty2_oe_n clk_gty2_sync_n clk_gty2_rst_n}]
+set_output_delay 0 [get_ports {clk_gty2_fdec clk_gty2_finc clk_gty2_oe_n clk_gty2_sync_n clk_gty2_rst_n}]
+set_false_path -from [get_ports {clk_gty2_intr_n clk_gty2_lol_n}]
+set_input_delay 0 [get_ports {clk_gty2_intr_n clk_gty2_lol_n}]
 
 # LEDs
 set_property -dict {LOC BA24 IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 8} [get_ports {led[0]}]
@@ -51,9 +56,15 @@ set_property -dict {LOC BD25 IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 8} [get_ports {
 set_property -dict {LOC BC26 IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 8} [get_ports {led[6]}]
 set_property -dict {LOC BC27 IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 8} [get_ports {led[7]}]
 
+set_false_path -to [get_ports {led[*]}]
+set_output_delay 0 [get_ports {led[*]}]
+
 # Push buttons
 set_property -dict {LOC B31  IOSTANDARD LVCMOS12} [get_ports {btn[0]}]
 set_property -dict {LOC C31  IOSTANDARD LVCMOS12} [get_ports {btn[1]}]
+
+set_false_path -from [get_ports {btn[*]}]
+set_input_delay 0 [get_ports {btn[*]}]
 
 # DIP switches
 set_property -dict {LOC P33  IOSTANDARD LVCMOS12} [get_ports {sw[0]}]
@@ -65,15 +76,21 @@ set_property -dict {LOC D36  IOSTANDARD LVCMOS12} [get_ports {sw[5]}]
 set_property -dict {LOC E37  IOSTANDARD LVCMOS12} [get_ports {sw[6]}]
 set_property -dict {LOC F38  IOSTANDARD LVCMOS12} [get_ports {sw[7]}]
 
+set_false_path -from [get_ports {sw[*]}]
+set_input_delay 0 [get_ports {sw[*]}]
+
 # GPIO
-# set_property -dict {LOC AY25 IOSTANDARD LVCMOS18} [get_ports {gpio[0]}]
-# set_property -dict {LOC AW25 IOSTANDARD LVCMOS18} [get_ports {gpio[1]}]
-# set_property -dict {LOC AU26 IOSTANDARD LVCMOS18} [get_ports {gpio[2]}]
-# set_property -dict {LOC BD26 IOSTANDARD LVCMOS18} [get_ports {gpio[3]}]
-# set_property -dict {LOC BE27 IOSTANDARD LVCMOS18} [get_ports {gpio[4]}]
-# set_property -dict {LOC BE26 IOSTANDARD LVCMOS18} [get_ports {gpio[5]}]
-# set_property -dict {LOC AU25 IOSTANDARD LVCMOS18} [get_ports {gpio[6]}]
-# set_property -dict {LOC AR26 IOSTANDARD LVCMOS18} [get_ports {gpio[7]}]
+#set_property -dict {LOC AY25 IOSTANDARD LVCMOS18} [get_ports {gpio[0]}]
+#set_property -dict {LOC AW25 IOSTANDARD LVCMOS18} [get_ports {gpio[1]}]
+#set_property -dict {LOC AU26 IOSTANDARD LVCMOS18} [get_ports {gpio[2]}]
+#set_property -dict {LOC BD26 IOSTANDARD LVCMOS18} [get_ports {gpio[3]}]
+#set_property -dict {LOC BE27 IOSTANDARD LVCMOS18} [get_ports {gpio[4]}]
+#set_property -dict {LOC BE26 IOSTANDARD LVCMOS18} [get_ports {gpio[5]}]
+#set_property -dict {LOC AU25 IOSTANDARD LVCMOS18} [get_ports {gpio[6]}]
+#set_property -dict {LOC AR26 IOSTANDARD LVCMOS18} [get_ports {gpio[7]}]
+
+#set_false_path -to [get_ports {gpio[*]}]
+#set_output_delay 0 [get_ports {gpio[*]}]
 
 # UART
 set_property -dict {LOC BB27 IOSTANDARD LVCMOS18} [get_ports uart_txd]
@@ -82,22 +99,37 @@ set_property -dict {LOC BC28 IOSTANDARD LVCMOS18} [get_ports uart_rts]
 set_property -dict {LOC AY28 IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 8} [get_ports uart_cts]
 set_property -dict {LOC AY26 IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 8} [get_ports uart_rst_n]
 set_property -dict {LOC BB26 IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 8} [get_ports uart_suspend_n]
-# set_property -dict {LOC AW28 IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 8} [get_ports {uart_gpio[0]}]
-# set_property -dict {LOC AV28 IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 8} [get_ports {uart_gpio[1]}]
-# set_property -dict {LOC AV27 IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 8} [get_ports {uart_gpio[2]}]
-# set_property -dict {LOC AU27 IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 8} [get_ports {uart_gpio[3]}]
+#set_property -dict {LOC AW28 IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 8} [get_ports {uart_gpio[0]}]
+#set_property -dict {LOC AV28 IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 8} [get_ports {uart_gpio[1]}]
+#set_property -dict {LOC AV27 IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 8} [get_ports {uart_gpio[2]}]
+#set_property -dict {LOC AU27 IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 8} [get_ports {uart_gpio[3]}]
+
+set_false_path -to [get_ports {uart_rxd uart_cts uart_rst_n uart_suspend_n}]
+set_output_delay 0 [get_ports {uart_rxd uart_cts uart_rst_n uart_suspend_n}]
+set_false_path -from [get_ports {uart_txd uart_rts}]
+set_input_delay 0 [get_ports {uart_txd uart_rts}]
 
 # I2C
 set_property -dict {LOC BB21 IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 8} [get_ports i2c_main_scl]
 set_property -dict {LOC BC21 IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 8} [get_ports i2c_main_sda]
 set_property -dict {LOC BF20 IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 8} [get_ports i2c_main_rst_n]
 
+set_false_path -to [get_ports {i2c_main_sda i2c_main_scl i2c_main_rst_n}]
+set_output_delay 0 [get_ports {i2c_main_sda i2c_main_scl i2c_main_rst_n}]
+set_false_path -from [get_ports {i2c_main_sda i2c_main_scl}]
+set_input_delay 0 [get_ports {i2c_main_sda i2c_main_scl}]
+
 # QSPI flash
-# set_property -dict {LOC AM26 IOSTANDARD LVCMOS18 DRIVE 8} [get_ports {qspi_1_dq[0]}]
-# set_property -dict {LOC AN26 IOSTANDARD LVCMOS18 DRIVE 8} [get_ports {qspi_1_dq[1]}]
-# set_property -dict {LOC AL25 IOSTANDARD LVCMOS18 DRIVE 8} [get_ports {qspi_1_dq[2]}]
-# set_property -dict {LOC AM25 IOSTANDARD LVCMOS18 DRIVE 8} [get_ports {qspi_1_dq[3]}]
-# set_property -dict {LOC BF27 IOSTANDARD LVCMOS18 DRIVE 8} [get_ports {qspi_1_cs_n}]
+#set_property -dict {LOC AM26 IOSTANDARD LVCMOS18 DRIVE 8} [get_ports {qspi_1_dq[0]}]
+#set_property -dict {LOC AN26 IOSTANDARD LVCMOS18 DRIVE 8} [get_ports {qspi_1_dq[1]}]
+#set_property -dict {LOC AL25 IOSTANDARD LVCMOS18 DRIVE 8} [get_ports {qspi_1_dq[2]}]
+#set_property -dict {LOC AM25 IOSTANDARD LVCMOS18 DRIVE 8} [get_ports {qspi_1_dq[3]}]
+#set_property -dict {LOC BF27 IOSTANDARD LVCMOS18 DRIVE 8} [get_ports {qspi_1_cs_n}]
+
+#set_false_path -to [get_ports {qspi_1_dq[*] qspi_1_cs}]
+#set_output_delay 0 [get_ports {qspi_1_dq[*] qspi_1_cs}]
+#set_false_path -from [get_ports {qspi_1_dq}]
+#set_input_delay 0 [get_ports {qspi_1_dq}]
 
 # DDR4 A
 # set_property -dict {LOC B36  IOSTANDARD SSTL12_DCI} [get_ports {ddr4_a_a[0]}]
