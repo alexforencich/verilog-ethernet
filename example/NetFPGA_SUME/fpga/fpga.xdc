@@ -2,10 +2,11 @@
 # part: xc7vx690tffg1761-3
 
 # General configuration
-set_property CFGBVS GND                           [current_design]
-set_property CONFIG_VOLTAGE 1.8                   [current_design]
-set_property BITSTREAM.GENERAL.COMPRESS true      [current_design]
-set_property BITSTREAM.CONFIG.UNUSEDPIN Pullup    [current_design]
+set_property CFGBVS GND                                [current_design]
+set_property CONFIG_VOLTAGE 1.8                        [current_design]
+set_property BITSTREAM.GENERAL.COMPRESS true           [current_design]
+set_property BITSTREAM.CONFIG.UNUSEDPIN Pullup         [current_design]
+set_property BITSTREAM.CONFIG.OVERTEMPSHUTDOWN Enable  [current_design]
 
 # 200 MHz system clock
 set_property -dict {LOC H19  IOSTANDARD LVDS} [get_ports clk_200mhz_p]

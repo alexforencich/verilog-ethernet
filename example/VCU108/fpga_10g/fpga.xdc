@@ -8,6 +8,7 @@ set_property BITSTREAM.GENERAL.COMPRESS true           [current_design]
 set_property BITSTREAM.CONFIG.EXTMASTERCCLK_EN {DIV-1} [current_design]
 set_property BITSTREAM.CONFIG.BPI_SYNC_MODE Type1      [current_design]
 set_property CONFIG_MODE BPI16                         [current_design]
+set_property BITSTREAM.CONFIG.OVERTEMPSHUTDOWN Enable  [current_design]
 
 # System clocks
 # 300 MHz

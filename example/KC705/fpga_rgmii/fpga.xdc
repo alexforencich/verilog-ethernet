@@ -2,9 +2,10 @@
 # part: xc7k325tffg900-2
 
 # General configuration
-set_property CFGBVS VCCO [current_design]
-set_property CONFIG_VOLTAGE 2.5 [current_design]
-set_property BITSTREAM.GENERAL.COMPRESS true [current_design]
+set_property CFGBVS VCCO                               [current_design]
+set_property CONFIG_VOLTAGE 2.5                        [current_design]
+set_property BITSTREAM.GENERAL.COMPRESS true           [current_design]
+set_property BITSTREAM.CONFIG.OVERTEMPSHUTDOWN Enable  [current_design]
 
 # System clocks
 # 200 MHz
