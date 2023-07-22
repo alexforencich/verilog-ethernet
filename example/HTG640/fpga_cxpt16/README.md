@@ -1,8 +1,8 @@
-# Verilog Ethernet HXT100G Crosspoint Switch Design
+# Verilog Ethernet HTG-640 Crosspoint Switch Design
 
 ## Introduction
 
-This design targets the HiTech Global HXT100G FPGA board.
+This design targets the HiTech Global HTG-640 (HTG-V6HXT-100GIG-565) FPGA board.
 
 The design forms a 16x16 crosspoint switch for 10G Ethernet.  It is capable of
 connecting any output port to any input port based on configuration frames

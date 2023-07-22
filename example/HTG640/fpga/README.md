@@ -1,8 +1,8 @@
-# Verilog Ethernet HXT100G Example Design
+# Verilog Ethernet HTG-640 Example Design
 
 ## Introduction
 
-This example design targets the HiTech Global HXT100G FPGA board.
+This example design targets the HiTech Global HTG-640 (HTG-V6HXT-100GIG-565) FPGA board.
 
 The design by default listens to UDP port 1234 at IP address 192.168.1.128 and
 will echo back any packets received.  The design will also respond correctly
@@ -18,7 +18,7 @@ in PATH.
 
 ## How to test
 
-Run make program to program the HXT100G board with the Xilinx Impact software.
+Run make program to program the HTG-640 board with the Xilinx Impact software.
 Then run
 
     netcat -u 192.168.1.128 1234
