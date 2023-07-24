@@ -213,6 +213,7 @@ async def run_test_rx(dut, payload_lengths=None, payload_data=None, ifg=12, enab
 
         tb.log.info("RX frame PTP TS: %f ns", ptp_ts_ns)
         tb.log.info("TX frame SFD sim time: %f ns", tx_frame_sfd_ns)
+        tb.log.info("Difference: %f ns", abs(ptp_ts_ns - tx_frame_sfd_ns))
 
         assert rx_frame.tdata == test_data
         assert frame_error == 0
@@ -254,6 +255,7 @@ async def run_test_tx(dut, payload_lengths=None, payload_data=None, ifg=12, enab
 
         tb.log.info("TX frame PTP TS: %f ns", ptp_ts_ns)
         tb.log.info("RX frame SFD sim time: %f ns", rx_frame_sfd_ns)
+        tb.log.info("Difference: %f ns", abs(rx_frame_sfd_ns - ptp_ts_ns))
 
         assert rx_frame.get_payload() == test_data
         assert rx_frame.check_fcs()

@@ -103,6 +103,7 @@ async def run_test(dut, payload_lengths=None, payload_data=None, ifg=12):
 
         tb.log.info("TX frame PTP TS: %f ns", ptp_ts_ns)
         tb.log.info("RX frame SFD sim time: %f ns", rx_frame_sfd_ns)
+        tb.log.info("Difference: %f ns", abs(rx_frame_sfd_ns - ptp_ts_ns))
 
         assert rx_frame.get_payload() == test_data
         assert rx_frame.check_fcs()
@@ -152,6 +153,7 @@ async def run_test_alignment(dut, payload_data=None, ifg=12):
 
             tb.log.info("TX frame PTP TS: %f ns", ptp_ts_ns)
             tb.log.info("RX frame SFD sim time: %f ns", rx_frame_sfd_ns)
+            tb.log.info("Difference: %f ns", abs(rx_frame_sfd_ns - ptp_ts_ns))
 
             assert rx_frame.get_payload() == test_data
             assert rx_frame.check_fcs()

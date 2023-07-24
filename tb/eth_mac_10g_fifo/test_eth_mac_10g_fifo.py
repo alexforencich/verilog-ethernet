@@ -129,6 +129,7 @@ async def run_test_rx(dut, payload_lengths=None, payload_data=None, ifg=12):
 
         tb.log.info("RX frame PTP TS: %f ns", ptp_ts_ns)
         tb.log.info("TX frame SFD sim time: %f ns", tx_frame_sfd_ns)
+        tb.log.info("Difference: %f ns", abs(ptp_ts_ns - tx_frame_sfd_ns))
 
         assert rx_frame.tdata == test_data
         assert frame_error == 0
@@ -172,6 +173,7 @@ async def run_test_tx(dut, payload_lengths=None, payload_data=None, ifg=12):
 
         tb.log.info("TX frame PTP TS: %f ns", ptp_ts_ns)
         tb.log.info("RX frame SFD sim time: %f ns", rx_frame_sfd_ns)
+        tb.log.info("Difference: %f ns", abs(rx_frame_sfd_ns - ptp_ts_ns))
 
         assert rx_frame.get_payload() == test_data
         assert rx_frame.check_fcs()
@@ -197,6 +199,10 @@ async def run_test_tx_alignment(dut, payload_data=None, ifg=12):
 
     await tb.reset()
 
+    tb.log.info("Wait for PTP CDC lock")
+    while not dut.tx_ptp.tx_ptp_cdc.locked.value.integer:
+        await RisingEdge(dut.tx_clk)
+
     for length in range(60, 92):
 
         for k in range(10):
@@ -210,10 +216,24 @@ async def run_test_tx_alignment(dut, payload_data=None, ifg=12):
 
         for test_data in test_frames:
             rx_frame = await tb.xgmii_sink.recv()
+            ptp_ts = await tb.tx_ptp_ts_sink.recv()
+
+            ptp_ts_ns = int(ptp_ts.ts_96) / 2**16
+
+            rx_frame_sfd_ns = get_time_from_sim_steps(rx_frame.sim_time_sfd, "ns")
+
+            if rx_frame.start_lane == 4:
+                # start in lane 4 reports 1 full cycle delay, so subtract half clock period
+                rx_frame_sfd_ns -= 3.2
+
+            tb.log.info("TX frame PTP TS: %f ns", ptp_ts_ns)
+            tb.log.info("RX frame SFD sim time: %f ns", rx_frame_sfd_ns)
+            tb.log.info("Difference: %f ns", abs(rx_frame_sfd_ns - ptp_ts_ns))
 
             assert rx_frame.get_payload() == test_data
             assert rx_frame.check_fcs()
             assert rx_frame.ctrl is None
+            assert abs(rx_frame_sfd_ns - ptp_ts_ns - tb.clk_period) < tb.clk_period
 
             start_lane.append(rx_frame.start_lane)
 
