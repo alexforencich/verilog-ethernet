@@ -195,9 +195,12 @@ async def run_test_tx_alignment(dut, payload_data=None, ifg=12):
     tb.xgmii_source.ifg = ifg
     tb.dut.ifg_delay.value = ifg
 
+    await tb.reset()
+
     for length in range(60, 92):
 
-        await tb.reset()
+        for k in range(10):
+            await RisingEdge(dut.tx_clk)
 
         test_frames = [payload_data(length) for k in range(10)]
         start_lane = []
