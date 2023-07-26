@@ -86,7 +86,9 @@ foreach fifo_inst [get_cells -hier -filter {(ORIG_REF_NAME == axis_async_fifo ||
     set output_reg_ffs [get_cells -quiet "$fifo_inst/m_axis_pipe_reg_reg[0][*]"]
 
     if {[llength $output_reg_ffs]} {
-        set_false_path -from $write_clk -to $output_reg_ffs
+        if {[llength $write_clk]} {
+            set_false_path -from $write_clk -to $output_reg_ffs
+        }
     }
 
     # frame FIFO pointer update synchronization
