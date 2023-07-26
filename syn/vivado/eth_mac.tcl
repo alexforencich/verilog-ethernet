@@ -31,7 +31,9 @@ foreach inst [get_cells -hier -filter {(ORIG_REF_NAME == eth_mac_1g || REF_NAME 
 
         set src_clk [get_clocks -of_objects [get_pins $inst/mac_ctrl.tx_lfc_req_sync_reg_1_reg/C]]
 
-        set_max_delay -from [get_cells $inst/mac_ctrl.tx_lfc_req_sync_reg_1_reg] -to [get_cells $inst/mac_ctrl.tx_lfc_req_sync_reg_2_reg] -datapath_only [get_property -min PERIOD $src_clk]
+        set src_clk_period [if {[llength $src_clk]} {get_property -min PERIOD $src_clk} {expr 1.0}]
+
+        set_max_delay -from [get_cells $inst/mac_ctrl.tx_lfc_req_sync_reg_1_reg] -to [get_cells $inst/mac_ctrl.tx_lfc_req_sync_reg_2_reg] -datapath_only $src_clk_period
     }
 
     set sync_ffs [get_cells -quiet -hier -regexp ".*/mac_ctrl.rx_lfc_ack_sync_reg_\[1234\]_reg" -filter "PARENT == $inst"]
@@ -41,6 +43,8 @@ foreach inst [get_cells -hier -filter {(ORIG_REF_NAME == eth_mac_1g || REF_NAME 
 
         set src_clk [get_clocks -of_objects [get_pins $inst/mac_ctrl.rx_lfc_ack_sync_reg_1_reg/C]]
 
-        set_max_delay -from [get_cells $inst/mac_ctrl.rx_lfc_ack_sync_reg_1_reg] -to [get_cells $inst/mac_ctrl.rx_lfc_ack_sync_reg_2_reg] -datapath_only [get_property -min PERIOD $src_clk]
+        set src_clk_period [if {[llength $src_clk]} {get_property -min PERIOD $src_clk} {expr 1.0}]
+
+        set_max_delay -from [get_cells $inst/mac_ctrl.rx_lfc_ack_sync_reg_1_reg] -to [get_cells $inst/mac_ctrl.rx_lfc_ack_sync_reg_2_reg] -datapath_only $src_clk_period
     }
 }

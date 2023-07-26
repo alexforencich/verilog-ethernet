@@ -34,6 +34,8 @@ foreach if_inst [get_cells -hier -filter {(ORIG_REF_NAME == rgmii_phy_if || REF_
 
     set src_clk [get_clocks -of_objects [get_pins $if_inst/rgmii_tx_clk_1_reg/C]]
 
-    set_max_delay -from [get_cells $if_inst/rgmii_tx_clk_1_reg] -to [get_cells $if_inst/clk_oddr_inst/oddr[0].oddr_inst] -datapath_only [expr [get_property -min PERIOD $src_clk]/4]
-    set_max_delay -from [get_cells $if_inst/rgmii_tx_clk_2_reg] -to [get_cells $if_inst/clk_oddr_inst/oddr[0].oddr_inst] -datapath_only [expr [get_property -min PERIOD $src_clk]/4]
+    set src_clk_period [if {[llength $src_clk]} {get_property -min PERIOD $src_clk} {expr 8.0}]
+
+    set_max_delay -from [get_cells $if_inst/rgmii_tx_clk_1_reg] -to [get_cells $if_inst/clk_oddr_inst/oddr[0].oddr_inst] -datapath_only [expr $src_clk_period/4]
+    set_max_delay -from [get_cells $if_inst/rgmii_tx_clk_2_reg] -to [get_cells $if_inst/clk_oddr_inst/oddr[0].oddr_inst] -datapath_only [expr $src_clk_period/4]
 }
