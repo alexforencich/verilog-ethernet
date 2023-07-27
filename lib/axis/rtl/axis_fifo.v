@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013-2021 Alex Forencich
+Copyright (c) 2013-2023 Alex Forencich
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -113,6 +113,8 @@ module axis_fifo #
     /*
      * Status
      */
+    output wire [$clog2(DEPTH):0] status_depth,
+    output wire [$clog2(DEPTH):0] status_depth_commit,
     output wire                   status_overflow,
     output wire                   status_bad_frame,
     output wire                   status_good_frame
@@ -158,7 +160,7 @@ localparam USER_OFFSET = DEST_OFFSET + (DEST_ENABLE ? DEST_WIDTH : 0);
 localparam WIDTH       = USER_OFFSET + (USER_ENABLE ? USER_WIDTH : 0);
 
 reg [ADDR_WIDTH:0] wr_ptr_reg = {ADDR_WIDTH+1{1'b0}};
-reg [ADDR_WIDTH:0] wr_ptr_cur_reg = {ADDR_WIDTH+1{1'b0}};
+reg [ADDR_WIDTH:0] wr_ptr_commit_reg = {ADDR_WIDTH+1{1'b0}};
 reg [ADDR_WIDTH:0] rd_ptr_reg = {ADDR_WIDTH+1{1'b0}};
 
 (* ramstyle = "no_rw_check" *)
@@ -171,19 +173,20 @@ reg [RAM_PIPELINE+1-1:0] m_axis_tvalid_pipe_reg = 0;
 
 // full when first MSB different but rest same
 wire full = wr_ptr_reg == (rd_ptr_reg ^ {1'b1, {ADDR_WIDTH{1'b0}}});
-wire full_cur = wr_ptr_cur_reg == (rd_ptr_reg ^ {1'b1, {ADDR_WIDTH{1'b0}}});
 // empty when pointers match exactly
-wire empty = wr_ptr_reg == rd_ptr_reg;
+wire empty = wr_ptr_commit_reg == rd_ptr_reg;
 // overflow within packet
-wire full_wr = wr_ptr_reg == (wr_ptr_cur_reg ^ {1'b1, {ADDR_WIDTH{1'b0}}});
+wire full_wr = wr_ptr_reg == (wr_ptr_commit_reg ^ {1'b1, {ADDR_WIDTH{1'b0}}});
 
 reg drop_frame_reg = 1'b0;
 reg send_frame_reg = 1'b0;
+reg [ADDR_WIDTH:0] depth_reg = 0;
+reg [ADDR_WIDTH:0] depth_commit_reg = 0;
 reg overflow_reg = 1'b0;
 reg bad_frame_reg = 1'b0;
 reg good_frame_reg = 1'b0;
 
-assign s_axis_tready = FRAME_FIFO ? (!full_cur || (full_wr && DROP_OVERSIZE_FRAME) || DROP_WHEN_FULL) : !full;
+assign s_axis_tready = FRAME_FIFO ? (!full || (full_wr && DROP_OVERSIZE_FRAME) || DROP_WHEN_FULL) : !full;
 
 wire [WIDTH-1:0] s_axis;
 
@@ -209,6 +212,8 @@ wire [USER_WIDTH-1:0]  m_axis_tuser_pipe  = USER_ENABLE ? m_axis[USER_OFFSET +: 
 
 wire pipe_ready;
 
+assign status_depth = (KEEP_ENABLE && KEEP_WIDTH > 1) ? {depth_reg, {$clog2(KEEP_WIDTH){1'b0}}} : depth_reg;
+assign status_depth_commit = (KEEP_ENABLE && KEEP_WIDTH > 1) ? {depth_commit_reg, {$clog2(KEEP_WIDTH){1'b0}}} : depth_commit_reg;
 assign status_overflow = overflow_reg;
 assign status_bad_frame = bad_frame_reg;
 assign status_good_frame = good_frame_reg;
@@ -225,30 +230,31 @@ always @(posedge clk) begin
             // normal FIFO mode
             mem[wr_ptr_reg[ADDR_WIDTH-1:0]] <= s_axis;
             wr_ptr_reg <= wr_ptr_reg + 1;
-        end else if ((full_cur && DROP_WHEN_FULL) || (full_wr && DROP_OVERSIZE_FRAME) || drop_frame_reg) begin
+            wr_ptr_commit_reg <= wr_ptr_reg + 1;
+        end else if ((full && DROP_WHEN_FULL) || (full_wr && DROP_OVERSIZE_FRAME) || drop_frame_reg) begin
             // full, packet overflow, or currently dropping frame
             // drop frame
             drop_frame_reg <= 1'b1;
             if (s_axis_tlast) begin
                 // end of frame, reset write pointer
-                wr_ptr_cur_reg <= wr_ptr_reg;
+                wr_ptr_reg <= wr_ptr_commit_reg;
                 drop_frame_reg <= 1'b0;
                 overflow_reg <= 1'b1;
             end
         end else begin
             // store it
-            mem[wr_ptr_cur_reg[ADDR_WIDTH-1:0]] <= s_axis;
-            wr_ptr_cur_reg <= wr_ptr_cur_reg + 1;
+            mem[wr_ptr_reg[ADDR_WIDTH-1:0]] <= s_axis;
+            wr_ptr_reg <= wr_ptr_reg + 1;
             if (s_axis_tlast || (!DROP_OVERSIZE_FRAME && (full_wr || send_frame_reg))) begin
                 // end of frame or send frame
                 send_frame_reg <= !s_axis_tlast;
                 if (s_axis_tlast && DROP_BAD_FRAME && USER_BAD_FRAME_MASK & ~(s_axis_tuser ^ USER_BAD_FRAME_VALUE)) begin
                     // bad packet, reset write pointer
-                    wr_ptr_cur_reg <= wr_ptr_reg;
+                    wr_ptr_reg <= wr_ptr_commit_reg;
                     bad_frame_reg <= 1'b1;
                 end else begin
                     // good packet or packet overflow, update write pointer
-                    wr_ptr_reg <= wr_ptr_cur_reg + 1;
+                    wr_ptr_commit_reg <= wr_ptr_reg + 1;
                     good_frame_reg <= s_axis_tlast;
                 end
             end
@@ -257,12 +263,12 @@ always @(posedge clk) begin
         // data valid with packet overflow
         // update write pointer
         send_frame_reg <= 1'b1;
-        wr_ptr_reg <= wr_ptr_cur_reg;
+        wr_ptr_commit_reg <= wr_ptr_reg;
     end
 
     if (rst) begin
         wr_ptr_reg <= {ADDR_WIDTH+1{1'b0}};
-        wr_ptr_cur_reg <= {ADDR_WIDTH+1{1'b0}};
+        wr_ptr_commit_reg <= {ADDR_WIDTH+1{1'b0}};
 
         drop_frame_reg <= 1'b0;
         send_frame_reg <= 1'b0;
@@ -270,6 +276,12 @@ always @(posedge clk) begin
         bad_frame_reg <= 1'b0;
         good_frame_reg <= 1'b0;
     end
+end
+
+// Status
+always @(posedge clk) begin
+    depth_reg <= wr_ptr_reg - rd_ptr_reg;
+    depth_commit_reg <= wr_ptr_commit_reg - rd_ptr_reg;
 end
 
 // Read logic

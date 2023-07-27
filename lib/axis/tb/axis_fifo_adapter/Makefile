@@ -41,7 +41,6 @@ export PARAM_S_KEEP_WIDTH := $(shell expr \( $(PARAM_S_DATA_WIDTH) + 7 \) / 8 )
 export PARAM_M_DATA_WIDTH := 8
 export PARAM_M_KEEP_ENABLE := $(shell expr $(PARAM_M_DATA_WIDTH) \> 8 )
 export PARAM_M_KEEP_WIDTH := $(shell expr \( $(PARAM_M_DATA_WIDTH) + 7 \) / 8 )
-export PARAM_LAST_ENABLE := 1
 export PARAM_ID_ENABLE := 1
 export PARAM_ID_WIDTH := 8
 export PARAM_DEST_ENABLE := 1

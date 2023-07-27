@@ -118,6 +118,8 @@ module axis_fifo_adapter #
     /*
      * Status
      */
+    output wire [$clog2(DEPTH):0]   status_depth,
+    output wire [$clog2(DEPTH):0]   status_depth_commit,
     output wire                     status_overflow,
     output wire                     status_bad_frame,
     output wire                     status_good_frame
@@ -343,6 +345,8 @@ fifo_inst (
     .m_axis_tdest(post_fifo_axis_tdest),
     .m_axis_tuser(post_fifo_axis_tuser),
     // Status
+    .status_depth(status_depth),
+    .status_depth_commit(status_depth_commit),
     .status_overflow(status_overflow),
     .status_bad_frame(status_bad_frame),
     .status_good_frame(status_good_frame)
