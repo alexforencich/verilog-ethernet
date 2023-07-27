@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014-2021 Alex Forencich
+Copyright (c) 2014-2023 Alex Forencich
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -162,10 +162,9 @@ localparam USER_OFFSET = DEST_OFFSET + (DEST_ENABLE ? DEST_WIDTH : 0);
 localparam WIDTH       = USER_OFFSET + (USER_ENABLE ? USER_WIDTH : 0);
 
 reg [ADDR_WIDTH:0] wr_ptr_reg = {ADDR_WIDTH+1{1'b0}};
-reg [ADDR_WIDTH:0] wr_ptr_cur_reg = {ADDR_WIDTH+1{1'b0}};
+reg [ADDR_WIDTH:0] wr_ptr_commit_reg = {ADDR_WIDTH+1{1'b0}};
 reg [ADDR_WIDTH:0] wr_ptr_gray_reg = {ADDR_WIDTH+1{1'b0}};
-reg [ADDR_WIDTH:0] wr_ptr_sync_gray_reg = {ADDR_WIDTH+1{1'b0}};
-reg [ADDR_WIDTH:0] wr_ptr_cur_gray_reg = {ADDR_WIDTH+1{1'b0}};
+reg [ADDR_WIDTH:0] wr_ptr_sync_commit_reg = {ADDR_WIDTH+1{1'b0}};
 reg [ADDR_WIDTH:0] rd_ptr_reg = {ADDR_WIDTH+1{1'b0}};
 reg [ADDR_WIDTH:0] rd_ptr_gray_reg = {ADDR_WIDTH+1{1'b0}};
 
@@ -176,6 +175,8 @@ reg [ADDR_WIDTH:0] rd_ptr_temp;
 reg [ADDR_WIDTH:0] wr_ptr_gray_sync1_reg = {ADDR_WIDTH+1{1'b0}};
 (* SHREG_EXTRACT = "NO" *)
 reg [ADDR_WIDTH:0] wr_ptr_gray_sync2_reg = {ADDR_WIDTH+1{1'b0}};
+(* SHREG_EXTRACT = "NO" *)
+reg [ADDR_WIDTH:0] wr_ptr_commit_sync_reg = {ADDR_WIDTH+1{1'b0}};
 (* SHREG_EXTRACT = "NO" *)
 reg [ADDR_WIDTH:0] rd_ptr_gray_sync1_reg = {ADDR_WIDTH+1{1'b0}};
 (* SHREG_EXTRACT = "NO" *)
@@ -218,11 +219,10 @@ reg [RAM_PIPELINE+1-1:0] m_axis_tvalid_pipe_reg = 0;
 // full when first TWO MSBs do NOT match, but rest matches
 // (gray code equivalent of first MSB different but rest same)
 wire full = wr_ptr_gray_reg == (rd_ptr_gray_sync2_reg ^ {2'b11, {ADDR_WIDTH-1{1'b0}}});
-wire full_cur = wr_ptr_cur_gray_reg == (rd_ptr_gray_sync2_reg ^ {2'b11, {ADDR_WIDTH-1{1'b0}}});
 // empty when pointers match exactly
-wire empty = rd_ptr_gray_reg == (FRAME_FIFO ? wr_ptr_gray_sync1_reg : wr_ptr_gray_sync2_reg);
+wire empty = FRAME_FIFO ? (rd_ptr_reg == wr_ptr_commit_sync_reg) : (rd_ptr_gray_reg == wr_ptr_gray_sync2_reg);
 // overflow within packet
-wire full_wr = wr_ptr_reg == (wr_ptr_cur_reg ^ {1'b1, {ADDR_WIDTH{1'b0}}});
+wire full_wr = wr_ptr_reg == (wr_ptr_commit_reg ^ {1'b1, {ADDR_WIDTH{1'b0}}});
 
 // control signals
 reg write;
@@ -254,7 +254,7 @@ reg good_frame_sync2_reg = 1'b0;
 reg good_frame_sync3_reg = 1'b0;
 reg good_frame_sync4_reg = 1'b0;
 
-assign s_axis_tready = (FRAME_FIFO ? (!full_cur || (full_wr && DROP_OVERSIZE_FRAME) || DROP_WHEN_FULL) : !full) && !s_rst_sync3_reg;
+assign s_axis_tready = (FRAME_FIFO ? (!full || (full_wr && DROP_OVERSIZE_FRAME) || DROP_WHEN_FULL) : !full) && !s_rst_sync3_reg;
 
 wire [WIDTH-1:0] s_axis;
 
@@ -326,7 +326,7 @@ always @(posedge s_clk) begin
         if (wr_ptr_update_reg == wr_ptr_update_ack_sync2_reg) begin
             // no sync in progress; sync update
             wr_ptr_update_valid_reg <= 1'b0;
-            wr_ptr_sync_gray_reg <= wr_ptr_gray_reg;
+            wr_ptr_sync_commit_reg <= wr_ptr_commit_reg;
             wr_ptr_update_reg <= !wr_ptr_update_ack_sync2_reg;
         end
     end
@@ -362,44 +362,46 @@ always @(posedge s_clk) begin
                 // update pointers
                 wr_ptr_temp = wr_ptr_reg + 1;
                 wr_ptr_reg <= wr_ptr_temp;
+                wr_ptr_commit_reg <= wr_ptr_temp;
                 wr_ptr_gray_reg <= wr_ptr_temp ^ (wr_ptr_temp >> 1);
             end
-        end else if ((full_cur && DROP_WHEN_FULL) || (full_wr && DROP_OVERSIZE_FRAME) || drop_frame_reg) begin
+        end else if ((full && DROP_WHEN_FULL) || (full_wr && DROP_OVERSIZE_FRAME) || drop_frame_reg) begin
             // full, packet overflow, or currently dropping frame
             // drop frame
             drop_frame_reg <= 1'b1;
             if (s_axis_tlast) begin
                 // end of frame, reset write pointer
-                wr_ptr_temp = wr_ptr_reg;
-                wr_ptr_cur_reg <= wr_ptr_temp;
-                wr_ptr_cur_gray_reg <= wr_ptr_temp ^ (wr_ptr_temp >> 1);
+                wr_ptr_temp = wr_ptr_commit_reg;
+                wr_ptr_reg <= wr_ptr_temp;
+                wr_ptr_gray_reg <= wr_ptr_temp ^ (wr_ptr_temp >> 1);
                 drop_frame_reg <= 1'b0;
                 overflow_reg <= 1'b1;
             end
         end else begin
-            mem[wr_ptr_cur_reg[ADDR_WIDTH-1:0]] <= s_axis;
-            wr_ptr_temp = wr_ptr_cur_reg + 1;
-            wr_ptr_cur_reg <= wr_ptr_temp;
-            wr_ptr_cur_gray_reg <= wr_ptr_temp ^ (wr_ptr_temp >> 1);
+            mem[wr_ptr_reg[ADDR_WIDTH-1:0]] <= s_axis;
+            wr_ptr_temp = wr_ptr_reg + 1;
+            wr_ptr_reg <= wr_ptr_temp;
+            wr_ptr_gray_reg <= wr_ptr_temp ^ (wr_ptr_temp >> 1);
             if (s_axis_tlast || (!DROP_OVERSIZE_FRAME && (full_wr || send_frame_reg))) begin
                 // end of frame or send frame
                 send_frame_reg <= !s_axis_tlast;
                 if (s_axis_tlast && DROP_BAD_FRAME && USER_BAD_FRAME_MASK & ~(s_axis_tuser ^ USER_BAD_FRAME_VALUE)) begin
                     // bad packet, reset write pointer
-                    wr_ptr_temp = wr_ptr_reg;
-                    wr_ptr_cur_reg <= wr_ptr_temp;
-                    wr_ptr_cur_gray_reg <= wr_ptr_temp ^ (wr_ptr_temp >> 1);
+                    wr_ptr_temp = wr_ptr_commit_reg;
+                    wr_ptr_reg <= wr_ptr_temp;
+                    wr_ptr_gray_reg <= wr_ptr_temp ^ (wr_ptr_temp >> 1);
                     bad_frame_reg <= 1'b1;
                 end else begin
                     // good packet or packet overflow, update write pointer
-                    wr_ptr_temp = wr_ptr_cur_reg + 1;
+                    wr_ptr_temp = wr_ptr_reg + 1;
                     wr_ptr_reg <= wr_ptr_temp;
+                    wr_ptr_commit_reg <= wr_ptr_temp;
                     wr_ptr_gray_reg <= wr_ptr_temp ^ (wr_ptr_temp >> 1);
 
                     if (wr_ptr_update_reg == wr_ptr_update_ack_sync2_reg) begin
                         // no sync in progress; sync update
                         wr_ptr_update_valid_reg <= 1'b0;
-                        wr_ptr_sync_gray_reg <= wr_ptr_temp ^ (wr_ptr_temp >> 1);
+                        wr_ptr_sync_commit_reg <= wr_ptr_temp;
                         wr_ptr_update_reg <= !wr_ptr_update_ack_sync2_reg;
                     end else begin
                         // sync in progress; flag it for later
@@ -414,14 +416,15 @@ always @(posedge s_clk) begin
         // data valid with packet overflow
         // update write pointer
         send_frame_reg <= 1'b1;
-        wr_ptr_temp = wr_ptr_cur_reg;
+        wr_ptr_temp = wr_ptr_reg;
         wr_ptr_reg <= wr_ptr_temp;
+        wr_ptr_commit_reg <= wr_ptr_temp;
         wr_ptr_gray_reg <= wr_ptr_temp ^ (wr_ptr_temp >> 1);
 
         if (wr_ptr_update_reg == wr_ptr_update_ack_sync2_reg) begin
             // no sync in progress; sync update
             wr_ptr_update_valid_reg <= 1'b0;
-            wr_ptr_sync_gray_reg <= wr_ptr_temp ^ (wr_ptr_temp >> 1);
+            wr_ptr_sync_commit_reg <= wr_ptr_temp;
             wr_ptr_update_reg <= !wr_ptr_update_ack_sync2_reg;
         end else begin
             // sync in progress; flag it for later
@@ -431,10 +434,9 @@ always @(posedge s_clk) begin
 
     if (s_rst_sync3_reg) begin
         wr_ptr_reg <= {ADDR_WIDTH+1{1'b0}};
-        wr_ptr_cur_reg <= {ADDR_WIDTH+1{1'b0}};
+        wr_ptr_commit_reg <= {ADDR_WIDTH+1{1'b0}};
         wr_ptr_gray_reg <= {ADDR_WIDTH+1{1'b0}};
-        wr_ptr_sync_gray_reg <= {ADDR_WIDTH+1{1'b0}};
-        wr_ptr_cur_gray_reg <= {ADDR_WIDTH+1{1'b0}};
+        wr_ptr_sync_commit_reg <= {ADDR_WIDTH+1{1'b0}};
 
         wr_ptr_update_valid_reg <= 1'b0;
         wr_ptr_update_reg <= 1'b0;
@@ -442,10 +444,9 @@ always @(posedge s_clk) begin
 
     if (s_rst) begin
         wr_ptr_reg <= {ADDR_WIDTH+1{1'b0}};
-        wr_ptr_cur_reg <= {ADDR_WIDTH+1{1'b0}};
+        wr_ptr_commit_reg <= {ADDR_WIDTH+1{1'b0}};
         wr_ptr_gray_reg <= {ADDR_WIDTH+1{1'b0}};
-        wr_ptr_sync_gray_reg <= {ADDR_WIDTH+1{1'b0}};
-        wr_ptr_cur_gray_reg <= {ADDR_WIDTH+1{1'b0}};
+        wr_ptr_sync_commit_reg <= {ADDR_WIDTH+1{1'b0}};
 
         wr_ptr_update_valid_reg <= 1'b0;
         wr_ptr_update_reg <= 1'b0;
@@ -476,12 +477,11 @@ always @(posedge s_clk) begin
 end
 
 always @(posedge m_clk) begin
-    if (!FRAME_FIFO) begin
-        wr_ptr_gray_sync1_reg <= wr_ptr_gray_reg;
-    end else if (wr_ptr_update_sync2_reg ^ wr_ptr_update_sync3_reg) begin
-        wr_ptr_gray_sync1_reg <= wr_ptr_sync_gray_reg;
-    end
+    wr_ptr_gray_sync1_reg <= wr_ptr_gray_reg;
     wr_ptr_gray_sync2_reg <= wr_ptr_gray_sync1_reg;
+    if (FRAME_FIFO && wr_ptr_update_sync2_reg ^ wr_ptr_update_sync3_reg) begin
+        wr_ptr_commit_sync_reg <= wr_ptr_sync_commit_reg;
+    end
     wr_ptr_update_sync1_reg <= wr_ptr_update_reg;
     wr_ptr_update_sync2_reg <= wr_ptr_update_sync1_reg;
     wr_ptr_update_sync3_reg <= wr_ptr_update_sync2_reg;
@@ -493,6 +493,7 @@ always @(posedge m_clk) begin
     if (m_rst) begin
         wr_ptr_gray_sync1_reg <= {ADDR_WIDTH+1{1'b0}};
         wr_ptr_gray_sync2_reg <= {ADDR_WIDTH+1{1'b0}};
+        wr_ptr_commit_sync_reg <= {ADDR_WIDTH+1{1'b0}};
         wr_ptr_update_sync1_reg <= 1'b0;
         wr_ptr_update_sync2_reg <= 1'b0;
         wr_ptr_update_sync3_reg <= 1'b0;

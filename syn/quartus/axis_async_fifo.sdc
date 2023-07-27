@@ -1,4 +1,4 @@
-# Copyright (c) 2020 Alex Forencich
+# Copyright (c) 2020-2023 Alex Forencich
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -36,7 +36,8 @@ proc constrain_axis_async_fifo_inst { inst } {
 
     # pointer synchronization
     set_max_delay -from [get_registers "$inst|rd_ptr_reg[*] $inst|rd_ptr_gray_reg[*]"] -to [get_registers "$inst|rd_ptr_gray_sync1_reg[*]"] 8.000
-    set_max_delay -from [get_registers "$inst|wr_ptr_reg[*] $inst|wr_ptr_gray_reg[*] $inst|wr_ptr_sync_gray_reg[*]"] -to [get_registers "$inst|wr_ptr_gray_sync1_reg[*]"] 8.000
+    set_max_delay -from [get_registers "$inst|wr_ptr_reg[*] $inst|wr_ptr_gray_reg[*]"] -to [get_registers "$inst|wr_ptr_gray_sync1_reg[*]"] 8.000
+    set_max_delay -from [get_registers "$inst|wr_ptr_sync_commit_reg[*]"] -to [get_registers "$inst|wr_ptr_commit_sync_reg[*]"] 8.000
 
     # frame FIFO pointer update synchronization
     set_max_delay -from [get_registers "$inst|wr_ptr_update_reg"] -to [get_registers "$inst|wr_ptr_update_sync1_reg"] 8.000

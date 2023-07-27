@@ -1,4 +1,4 @@
-# Copyright (c) 2021 Alex Forencich
+# Copyright (c) 2021-2023 Alex Forencich
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -37,8 +37,10 @@ proc constrain_axis_async_fifo_inst { inst } {
     # pointer synchronization
     set_data_delay -from [get_registers "$inst|rd_ptr_reg[*] $inst|rd_ptr_gray_reg[*]"] -to [get_registers "$inst|rd_ptr_gray_sync1_reg[*]"] -override -get_value_from_clock_period dst_clock_period -value_multiplier 0.8
     set_max_skew   -from [get_keepers   "$inst|rd_ptr_reg[*] $inst|rd_ptr_gray_reg[*]"] -to [get_keepers   "$inst|rd_ptr_gray_sync1_reg[*]"] -get_skew_value_from_clock_period min_clock_period -skew_value_multiplier 0.8
-    set_data_delay -from [get_registers "$inst|wr_ptr_reg[*] $inst|wr_ptr_gray_reg[*] $inst|wr_ptr_sync_gray_reg[*]"] -to [get_registers "$inst|wr_ptr_gray_sync1_reg[*]"] -override -get_value_from_clock_period dst_clock_period -value_multiplier 0.8
-    set_max_skew   -from [get_keepers   "$inst|wr_ptr_reg[*] $inst|wr_ptr_gray_reg[*] $inst|wr_ptr_sync_gray_reg[*]"] -to [get_keepers   "$inst|wr_ptr_gray_sync1_reg[*]"] -get_skew_value_from_clock_period min_clock_period -skew_value_multiplier 0.8
+    set_data_delay -from [get_registers "$inst|wr_ptr_reg[*] $inst|wr_ptr_gray_reg[*]"] -to [get_registers "$inst|wr_ptr_gray_sync1_reg[*]"] -override -get_value_from_clock_period dst_clock_period -value_multiplier 0.8
+    set_max_skew   -from [get_keepers   "$inst|wr_ptr_reg[*] $inst|wr_ptr_gray_reg[*]"] -to [get_keepers   "$inst|wr_ptr_gray_sync1_reg[*]"] -get_skew_value_from_clock_period min_clock_period -skew_value_multiplier 0.8
+    set_data_delay -from [get_registers "$inst|wr_ptr_sync_commit_reg[*]"] -to [get_registers "$inst|wr_ptr_commit_sync_reg[*]"] -override -get_value_from_clock_period dst_clock_period -value_multiplier 0.8
+    set_max_skew   -from [get_keepers   "$inst|wr_ptr_sync_commit_reg[*]"] -to [get_keepers   "$inst|wr_ptr_commit_sync_reg[*]"] -get_skew_value_from_clock_period min_clock_period -skew_value_multiplier 0.8
 
     # frame FIFO pointer update synchronization
     set_data_delay -from [get_registers "$inst|wr_ptr_update_reg"] -to [get_registers "$inst|wr_ptr_update_sync1_reg"] -override -get_value_from_clock_period dst_clock_period -value_multiplier 0.8
