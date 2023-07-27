@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2021 Alex Forencich
+Copyright (c) 2021-2023 Alex Forencich
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -87,84 +87,88 @@ module axis_pipeline_fifo #
 
 parameter FIFO_ADDR_WIDTH = LENGTH < 2 ? 3 : $clog2(LENGTH*4+1);
 
+wire [DATA_WIDTH-1:0] axis_tdata_pipe[0:LENGTH];
+wire [KEEP_WIDTH-1:0] axis_tkeep_pipe[0:LENGTH];
+wire                  axis_tvalid_pipe[0:LENGTH];
+wire                  axis_tready_pipe[0:LENGTH];
+wire                  axis_tlast_pipe[0:LENGTH];
+wire [ID_WIDTH-1:0]   axis_tid_pipe[0:LENGTH];
+wire [DEST_WIDTH-1:0] axis_tdest_pipe[0:LENGTH];
+wire [USER_WIDTH-1:0] axis_tuser_pipe[0:LENGTH];
+
 generate
 
-if (LENGTH > 0) begin
+genvar n;
 
-    // pipeline
-    (* shreg_extract = "no" *)
-    reg [DATA_WIDTH-1:0]  axis_tdata_reg[0:LENGTH-1];
-    (* shreg_extract = "no" *)
-    reg [KEEP_WIDTH-1:0]  axis_tkeep_reg[0:LENGTH-1];
-    (* shreg_extract = "no" *)
-    reg                   axis_tvalid_reg[0:LENGTH-1];
-    (* shreg_extract = "no" *)
-    reg                   axis_tready_reg[0:LENGTH-1];
-    (* shreg_extract = "no" *)
-    reg                   axis_tlast_reg[0:LENGTH-1];
-    (* shreg_extract = "no" *)
-    reg [ID_WIDTH-1:0]    axis_tid_reg[0:LENGTH-1];
-    (* shreg_extract = "no" *)
-    reg [DEST_WIDTH-1:0]  axis_tdest_reg[0:LENGTH-1];
-    (* shreg_extract = "no" *)
-    reg [USER_WIDTH-1:0]  axis_tuser_reg[0:LENGTH-1];
+for (n = 0; n < LENGTH; n = n + 1) begin : stage
 
-    wire [DATA_WIDTH-1:0] m_axis_tdata_int = axis_tdata_reg[LENGTH-1];
-    wire [KEEP_WIDTH-1:0] m_axis_tkeep_int = axis_tkeep_reg[LENGTH-1];
-    wire                  m_axis_tvalid_int = axis_tvalid_reg[LENGTH-1];
-    wire                  m_axis_tready_int;
-    wire                  m_axis_tlast_int = axis_tlast_reg[LENGTH-1];
-    wire [ID_WIDTH-1:0]   m_axis_tid_int = axis_tid_reg[LENGTH-1];
-    wire [DEST_WIDTH-1:0] m_axis_tdest_int = axis_tdest_reg[LENGTH-1];
-    wire [USER_WIDTH-1:0] m_axis_tuser_int = axis_tuser_reg[LENGTH-1];
+    (* shreg_extract = "no" *)
+    reg [DATA_WIDTH-1:0]  axis_tdata_reg = 0;
+    (* shreg_extract = "no" *)
+    reg [KEEP_WIDTH-1:0]  axis_tkeep_reg = 0;
+    (* shreg_extract = "no" *)
+    reg                   axis_tvalid_reg = 0;
+    (* shreg_extract = "no" *)
+    reg                   axis_tready_reg = 0;
+    (* shreg_extract = "no" *)
+    reg                   axis_tlast_reg = 0;
+    (* shreg_extract = "no" *)
+    reg [ID_WIDTH-1:0]    axis_tid_reg = 0;
+    (* shreg_extract = "no" *)
+    reg [DEST_WIDTH-1:0]  axis_tdest_reg = 0;
+    (* shreg_extract = "no" *)
+    reg [USER_WIDTH-1:0]  axis_tuser_reg = 0;
 
-    assign s_axis_tready = axis_tready_reg[0];
+    assign axis_tdata_pipe[n+1] = axis_tdata_reg;
+    assign axis_tkeep_pipe[n+1] = axis_tkeep_reg;
+    assign axis_tvalid_pipe[n+1] = axis_tvalid_reg;
+    assign axis_tlast_pipe[n+1] = axis_tlast_reg;
+    assign axis_tid_pipe[n+1] = axis_tid_reg;
+    assign axis_tdest_pipe[n+1] = axis_tdest_reg;
+    assign axis_tuser_pipe[n+1] = axis_tuser_reg;
 
-    integer i;
-
-    initial begin
-        for (i = 0; i < LENGTH; i = i + 1) begin
-            axis_tdata_reg[i] = {DATA_WIDTH{1'b0}};
-            axis_tkeep_reg[i] = {KEEP_WIDTH{1'b0}};
-            axis_tvalid_reg[i] = 1'b0;
-            axis_tready_reg[i] = 1'b0;
-            axis_tlast_reg[i] = 1'b0;
-            axis_tid_reg[i] = {ID_WIDTH{1'b0}};
-            axis_tdest_reg[i] = {DEST_WIDTH{1'b0}};
-            axis_tuser_reg[i] = {USER_WIDTH{1'b0}};
-        end
-    end
+    assign axis_tready_pipe[n] = axis_tready_reg;
 
     always @(posedge clk) begin
-        axis_tdata_reg[0] <= s_axis_tdata;
-        axis_tkeep_reg[0] <= s_axis_tkeep;
-        axis_tvalid_reg[0] <= s_axis_tvalid && s_axis_tready;
-        axis_tlast_reg[0] <= s_axis_tlast;
-        axis_tid_reg[0] <= s_axis_tid;
-        axis_tdest_reg[0] <= s_axis_tdest;
-        axis_tuser_reg[0] <= s_axis_tuser;
+        axis_tdata_reg <= axis_tdata_pipe[n];
+        axis_tkeep_reg <= axis_tkeep_pipe[n];
+        axis_tvalid_reg <= axis_tvalid_pipe[n];
+        axis_tlast_reg <= axis_tlast_pipe[n];
+        axis_tid_reg <= axis_tid_pipe[n];
+        axis_tdest_reg <= axis_tdest_pipe[n];
+        axis_tuser_reg <= axis_tuser_pipe[n];
 
-        axis_tready_reg[LENGTH-1] <= m_axis_tready_int;
-
-        for (i = 0; i < LENGTH-1; i = i + 1) begin
-            axis_tdata_reg[i+1] <= axis_tdata_reg[i];
-            axis_tkeep_reg[i+1] <= axis_tkeep_reg[i];
-            axis_tvalid_reg[i+1] <= axis_tvalid_reg[i];
-            axis_tlast_reg[i+1] <= axis_tlast_reg[i];
-            axis_tid_reg[i+1] <= axis_tid_reg[i];
-            axis_tdest_reg[i+1] <= axis_tdest_reg[i];
-            axis_tuser_reg[i+1] <= axis_tuser_reg[i];
-
-            axis_tready_reg[i] <= axis_tready_reg[i+1];
-        end
+        axis_tready_reg <= axis_tready_pipe[n+1];
 
         if (rst) begin
-            for (i = 0; i < LENGTH; i = i + 1) begin
-                axis_tvalid_reg[i] <= 1'b0;
-                axis_tready_reg[i] <= 1'b0;
-            end
+            axis_tvalid_reg <= 1'b0;
+            axis_tready_reg <= 1'b0;
         end
     end
+
+end
+
+if (LENGTH > 0) begin : fifo
+
+    assign axis_tdata_pipe[0] = s_axis_tdata;
+    assign axis_tkeep_pipe[0] = s_axis_tkeep;
+    assign axis_tvalid_pipe[0] = s_axis_tvalid & s_axis_tready;
+    assign axis_tlast_pipe[0] = s_axis_tlast;
+    assign axis_tid_pipe[0] = s_axis_tid;
+    assign axis_tdest_pipe[0] = s_axis_tdest;
+    assign axis_tuser_pipe[0] = s_axis_tuser;
+    assign s_axis_tready = axis_tready_pipe[0];
+
+    wire [DATA_WIDTH-1:0] m_axis_tdata_int = axis_tdata_pipe[LENGTH];
+    wire [KEEP_WIDTH-1:0] m_axis_tkeep_int = axis_tkeep_pipe[LENGTH];
+    wire                  m_axis_tvalid_int = axis_tvalid_pipe[LENGTH];
+    wire                  m_axis_tready_int;
+    wire                  m_axis_tlast_int = axis_tlast_pipe[LENGTH];
+    wire [ID_WIDTH-1:0]   m_axis_tid_int = axis_tid_pipe[LENGTH];
+    wire [DEST_WIDTH-1:0] m_axis_tdest_int = axis_tdest_pipe[LENGTH];
+    wire [USER_WIDTH-1:0] m_axis_tuser_int = axis_tuser_pipe[LENGTH];
+
+    assign axis_tready_pipe[LENGTH] = m_axis_tready_int;
 
     // output datapath logic
     reg [DATA_WIDTH-1:0] m_axis_tdata_reg  = {DATA_WIDTH{1'b0}};
