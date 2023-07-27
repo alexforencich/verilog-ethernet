@@ -113,6 +113,8 @@ module axis_fifo #
     /*
      * Status
      */
+    output wire [$clog2(DEPTH):0] status_depth,
+    output wire [$clog2(DEPTH):0] status_depth_commit,
     output wire                   status_overflow,
     output wire                   status_bad_frame,
     output wire                   status_good_frame
@@ -178,6 +180,8 @@ wire full_wr = wr_ptr_reg == (wr_ptr_commit_reg ^ {1'b1, {ADDR_WIDTH{1'b0}}});
 
 reg drop_frame_reg = 1'b0;
 reg send_frame_reg = 1'b0;
+reg [ADDR_WIDTH:0] depth_reg = 0;
+reg [ADDR_WIDTH:0] depth_commit_reg = 0;
 reg overflow_reg = 1'b0;
 reg bad_frame_reg = 1'b0;
 reg good_frame_reg = 1'b0;
@@ -208,6 +212,8 @@ wire [USER_WIDTH-1:0]  m_axis_tuser_pipe  = USER_ENABLE ? m_axis[USER_OFFSET +: 
 
 wire pipe_ready;
 
+assign status_depth = (KEEP_ENABLE && KEEP_WIDTH > 1) ? {depth_reg, {$clog2(KEEP_WIDTH){1'b0}}} : depth_reg;
+assign status_depth_commit = (KEEP_ENABLE && KEEP_WIDTH > 1) ? {depth_commit_reg, {$clog2(KEEP_WIDTH){1'b0}}} : depth_commit_reg;
 assign status_overflow = overflow_reg;
 assign status_bad_frame = bad_frame_reg;
 assign status_good_frame = good_frame_reg;
@@ -270,6 +276,12 @@ always @(posedge clk) begin
         bad_frame_reg <= 1'b0;
         good_frame_reg <= 1'b0;
     end
+end
+
+// Status
+always @(posedge clk) begin
+    depth_reg <= wr_ptr_reg - rd_ptr_reg;
+    depth_commit_reg <= wr_ptr_commit_reg - rd_ptr_reg;
 end
 
 // Read logic

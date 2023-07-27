@@ -114,9 +114,13 @@ module axis_async_fifo #
     /*
      * Status
      */
+    output wire [$clog2(DEPTH):0] s_status_depth,
+    output wire [$clog2(DEPTH):0] s_status_depth_commit,
     output wire                   s_status_overflow,
     output wire                   s_status_bad_frame,
     output wire                   s_status_good_frame,
+    output wire [$clog2(DEPTH):0] m_status_depth,
+    output wire [$clog2(DEPTH):0] m_status_depth_commit,
     output wire                   m_status_overflow,
     output wire                   m_status_bad_frame,
     output wire                   m_status_good_frame
@@ -161,12 +165,25 @@ localparam DEST_OFFSET = ID_OFFSET   + (ID_ENABLE   ? ID_WIDTH   : 0);
 localparam USER_OFFSET = DEST_OFFSET + (DEST_ENABLE ? DEST_WIDTH : 0);
 localparam WIDTH       = USER_OFFSET + (USER_ENABLE ? USER_WIDTH : 0);
 
+function [ADDR_WIDTH:0] bin2gray(input [ADDR_WIDTH:0] b);
+    bin2gray = b ^ (b >> 1);
+endfunction
+
+function [ADDR_WIDTH:0] gray2bin(input [ADDR_WIDTH:0] g);
+    integer i;
+    for (i = 0; i <= ADDR_WIDTH; i = i + 1) begin
+        gray2bin[i] = ^(g >> i);
+    end
+endfunction
+
 reg [ADDR_WIDTH:0] wr_ptr_reg = {ADDR_WIDTH+1{1'b0}};
 reg [ADDR_WIDTH:0] wr_ptr_commit_reg = {ADDR_WIDTH+1{1'b0}};
 reg [ADDR_WIDTH:0] wr_ptr_gray_reg = {ADDR_WIDTH+1{1'b0}};
 reg [ADDR_WIDTH:0] wr_ptr_sync_commit_reg = {ADDR_WIDTH+1{1'b0}};
 reg [ADDR_WIDTH:0] rd_ptr_reg = {ADDR_WIDTH+1{1'b0}};
 reg [ADDR_WIDTH:0] rd_ptr_gray_reg = {ADDR_WIDTH+1{1'b0}};
+reg [ADDR_WIDTH:0] wr_ptr_conv_reg = {ADDR_WIDTH+1{1'b0}};
+reg [ADDR_WIDTH:0] rd_ptr_conv_reg = {ADDR_WIDTH+1{1'b0}};
 
 reg [ADDR_WIDTH:0] wr_ptr_temp;
 reg [ADDR_WIDTH:0] rd_ptr_temp;
@@ -241,6 +258,11 @@ reg good_frame_reg = 1'b0;
 reg m_drop_frame_reg = 1'b0;
 reg m_terminate_frame_reg = 1'b0;
 
+reg [ADDR_WIDTH:0] s_depth_reg = 0;
+reg [ADDR_WIDTH:0] s_depth_commit_reg = 0;
+reg [ADDR_WIDTH:0] m_depth_reg = 0;
+reg [ADDR_WIDTH:0] m_depth_commit_reg = 0;
+
 reg overflow_sync1_reg = 1'b0;
 reg overflow_sync2_reg = 1'b0;
 reg overflow_sync3_reg = 1'b0;
@@ -280,10 +302,14 @@ wire [USER_WIDTH-1:0]  m_axis_tuser_pipe  = USER_ENABLE ? (m_terminate_frame_reg
 
 wire pipe_ready;
 
+assign s_status_depth = (KEEP_ENABLE && KEEP_WIDTH > 1) ? {s_depth_reg, {$clog2(KEEP_WIDTH){1'b0}}} : s_depth_reg;
+assign s_status_depth_commit = (KEEP_ENABLE && KEEP_WIDTH > 1) ? {s_depth_commit_reg, {$clog2(KEEP_WIDTH){1'b0}}} : s_depth_commit_reg;
 assign s_status_overflow = overflow_reg;
 assign s_status_bad_frame = bad_frame_reg;
 assign s_status_good_frame = good_frame_reg;
 
+assign m_status_depth = (KEEP_ENABLE && KEEP_WIDTH > 1) ? {m_depth_reg, {$clog2(KEEP_WIDTH){1'b0}}} : m_depth_reg;
+assign m_status_depth_commit = (KEEP_ENABLE && KEEP_WIDTH > 1) ? {m_depth_commit_reg, {$clog2(KEEP_WIDTH){1'b0}}} : m_depth_commit_reg;
 assign m_status_overflow = overflow_sync3_reg ^ overflow_sync4_reg;
 assign m_status_bad_frame = bad_frame_sync3_reg ^ bad_frame_sync4_reg;
 assign m_status_good_frame = good_frame_sync3_reg ^ good_frame_sync4_reg;
@@ -363,7 +389,7 @@ always @(posedge s_clk) begin
                 wr_ptr_temp = wr_ptr_reg + 1;
                 wr_ptr_reg <= wr_ptr_temp;
                 wr_ptr_commit_reg <= wr_ptr_temp;
-                wr_ptr_gray_reg <= wr_ptr_temp ^ (wr_ptr_temp >> 1);
+                wr_ptr_gray_reg <= bin2gray(wr_ptr_temp);
             end
         end else if ((full && DROP_WHEN_FULL) || (full_wr && DROP_OVERSIZE_FRAME) || drop_frame_reg) begin
             // full, packet overflow, or currently dropping frame
@@ -373,7 +399,7 @@ always @(posedge s_clk) begin
                 // end of frame, reset write pointer
                 wr_ptr_temp = wr_ptr_commit_reg;
                 wr_ptr_reg <= wr_ptr_temp;
-                wr_ptr_gray_reg <= wr_ptr_temp ^ (wr_ptr_temp >> 1);
+                wr_ptr_gray_reg <= bin2gray(wr_ptr_temp);
                 drop_frame_reg <= 1'b0;
                 overflow_reg <= 1'b1;
             end
@@ -381,7 +407,7 @@ always @(posedge s_clk) begin
             mem[wr_ptr_reg[ADDR_WIDTH-1:0]] <= s_axis;
             wr_ptr_temp = wr_ptr_reg + 1;
             wr_ptr_reg <= wr_ptr_temp;
-            wr_ptr_gray_reg <= wr_ptr_temp ^ (wr_ptr_temp >> 1);
+            wr_ptr_gray_reg <= bin2gray(wr_ptr_temp);
             if (s_axis_tlast || (!DROP_OVERSIZE_FRAME && (full_wr || send_frame_reg))) begin
                 // end of frame or send frame
                 send_frame_reg <= !s_axis_tlast;
@@ -389,14 +415,14 @@ always @(posedge s_clk) begin
                     // bad packet, reset write pointer
                     wr_ptr_temp = wr_ptr_commit_reg;
                     wr_ptr_reg <= wr_ptr_temp;
-                    wr_ptr_gray_reg <= wr_ptr_temp ^ (wr_ptr_temp >> 1);
+                    wr_ptr_gray_reg <= bin2gray(wr_ptr_temp);
                     bad_frame_reg <= 1'b1;
                 end else begin
                     // good packet or packet overflow, update write pointer
                     wr_ptr_temp = wr_ptr_reg + 1;
                     wr_ptr_reg <= wr_ptr_temp;
                     wr_ptr_commit_reg <= wr_ptr_temp;
-                    wr_ptr_gray_reg <= wr_ptr_temp ^ (wr_ptr_temp >> 1);
+                    wr_ptr_gray_reg <= bin2gray(wr_ptr_temp);
 
                     if (wr_ptr_update_reg == wr_ptr_update_ack_sync2_reg) begin
                         // no sync in progress; sync update
@@ -419,7 +445,7 @@ always @(posedge s_clk) begin
         wr_ptr_temp = wr_ptr_reg;
         wr_ptr_reg <= wr_ptr_temp;
         wr_ptr_commit_reg <= wr_ptr_temp;
-        wr_ptr_gray_reg <= wr_ptr_temp ^ (wr_ptr_temp >> 1);
+        wr_ptr_gray_reg <= bin2gray(wr_ptr_temp);
 
         if (wr_ptr_update_reg == wr_ptr_update_ack_sync2_reg) begin
             // no sync in progress; sync update
@@ -459,6 +485,13 @@ always @(posedge s_clk) begin
         bad_frame_reg <= 1'b0;
         good_frame_reg <= 1'b0;
     end
+end
+
+// Write-side status
+always @(posedge s_clk) begin
+    rd_ptr_conv_reg <= gray2bin(rd_ptr_gray_sync2_reg);
+    s_depth_reg <= wr_ptr_reg - rd_ptr_conv_reg;
+    s_depth_commit_reg <= wr_ptr_commit_reg - rd_ptr_conv_reg;
 end
 
 // pointer synchronization
@@ -614,6 +647,13 @@ always @(posedge m_clk) begin
         m_drop_frame_reg <= 1'b0;
         m_terminate_frame_reg <= 1'b0;
     end
+end
+
+// Read-side status
+always @(posedge m_clk) begin
+    wr_ptr_conv_reg <= gray2bin(wr_ptr_gray_sync2_reg);
+    m_depth_reg <= wr_ptr_conv_reg - rd_ptr_reg;
+    m_depth_commit_reg <= FRAME_FIFO ? wr_ptr_commit_sync_reg - rd_ptr_reg : wr_ptr_conv_reg - rd_ptr_reg;
 end
 
 generate

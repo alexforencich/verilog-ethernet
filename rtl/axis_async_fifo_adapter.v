@@ -119,9 +119,13 @@ module axis_async_fifo_adapter #
     /*
      * Status
      */
+    output wire [$clog2(DEPTH):0]   s_status_depth,
+    output wire [$clog2(DEPTH):0]   s_status_depth_commit,
     output wire                     s_status_overflow,
     output wire                     s_status_bad_frame,
     output wire                     s_status_good_frame,
+    output wire [$clog2(DEPTH):0]   m_status_depth,
+    output wire [$clog2(DEPTH):0]   m_status_depth_commit,
     output wire                     m_status_overflow,
     output wire                     m_status_bad_frame,
     output wire                     m_status_good_frame
@@ -350,9 +354,13 @@ fifo_inst (
     .m_axis_tdest(post_fifo_axis_tdest),
     .m_axis_tuser(post_fifo_axis_tuser),
     // Status
+    .s_status_depth(s_status_depth),
+    .s_status_depth_commit(s_status_depth_commit),
     .s_status_overflow(s_status_overflow),
     .s_status_bad_frame(s_status_bad_frame),
     .s_status_good_frame(s_status_good_frame),
+    .m_status_depth(m_status_depth),
+    .m_status_depth_commit(m_status_depth_commit),
     .m_status_overflow(m_status_overflow),
     .m_status_bad_frame(m_status_bad_frame),
     .m_status_good_frame(m_status_good_frame)
