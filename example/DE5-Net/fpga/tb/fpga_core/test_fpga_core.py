@@ -48,17 +48,14 @@ class TB:
         cocotb.start_soon(Clock(dut.clk, 6.4, units="ns").start())
 
         # Ethernet
-        self.sfp_a_source = XgmiiSource(dut.sfp_a_rxd, dut.sfp_a_rxc, dut.clk, dut.rst)
-        self.sfp_a_sink = XgmiiSink(dut.sfp_a_txd, dut.sfp_a_txc, dut.clk, dut.rst)
+        self.sfp_source = []
+        self.sfp_sink = []
 
-        self.sfp_b_source = XgmiiSource(dut.sfp_b_rxd, dut.sfp_b_rxc, dut.clk, dut.rst)
-        self.sfp_b_sink = XgmiiSink(dut.sfp_b_txd, dut.sfp_b_txc, dut.clk, dut.rst)
-
-        self.sfp_c_source = XgmiiSource(dut.sfp_c_rxd, dut.sfp_c_rxc, dut.clk, dut.rst)
-        self.sfp_c_sink = XgmiiSink(dut.sfp_c_txd, dut.sfp_c_txc, dut.clk, dut.rst)
-
-        self.sfp_d_source = XgmiiSource(dut.sfp_d_rxd, dut.sfp_d_rxc, dut.clk, dut.rst)
-        self.sfp_d_sink = XgmiiSink(dut.sfp_d_txd, dut.sfp_d_txc, dut.clk, dut.rst)
+        for x in "abcd":
+            source = XgmiiSource(getattr(dut, f"sfp_{x}_rxd"), getattr(dut, f"sfp_{x}_rxc"), dut.clk, dut.rst)
+            self.sfp_source.append(source)
+            sink = XgmiiSink(getattr(dut, f"sfp_{x}_txd"), getattr(dut, f"sfp_{x}_txc"), dut.clk, dut.rst)
+            self.sfp_sink.append(sink)
 
         dut.btn.setimmediatevalue(0)
         dut.sw.setimmediatevalue(0)
@@ -95,11 +92,11 @@ async def run_test(dut):
 
     test_frame = XgmiiFrame.from_payload(test_pkt.build())
 
-    await tb.sfp_a_source.send(test_frame)
+    await tb.sfp_source[0].send(test_frame)
 
     tb.log.info("receive ARP request")
 
-    rx_frame = await tb.sfp_a_sink.recv()
+    rx_frame = await tb.sfp_sink[0].recv()
 
     rx_pkt = Ether(bytes(rx_frame.get_payload()))
 
@@ -127,11 +124,11 @@ async def run_test(dut):
 
     resp_frame = XgmiiFrame.from_payload(resp_pkt.build())
 
-    await tb.sfp_a_source.send(resp_frame)
+    await tb.sfp_source[0].send(resp_frame)
 
     tb.log.info("receive UDP packet")
 
-    rx_frame = await tb.sfp_a_sink.recv()
+    rx_frame = await tb.sfp_sink[0].recv()
 
     rx_pkt = Ether(bytes(rx_frame.get_payload()))
 

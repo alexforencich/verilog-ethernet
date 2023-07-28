@@ -47,77 +47,23 @@ class TB:
         cocotb.start_soon(Clock(dut.clk, 6.4, units="ns").start())
 
         # Ethernet
-        self.eth_r0_source = XgmiiSource(dut.eth_r0_rxd, dut.eth_r0_rxc, dut.clk, dut.rst)
-        self.eth_r0_sink = XgmiiSink(dut.eth_r0_txd, dut.eth_r0_txc, dut.clk, dut.rst)
+        self.eth_r_source = []
+        self.eth_r_sink = []
 
-        self.eth_r1_source = XgmiiSource(dut.eth_r1_rxd, dut.eth_r1_rxc, dut.clk, dut.rst)
-        self.eth_r1_sink = XgmiiSink(dut.eth_r1_txd, dut.eth_r1_txc, dut.clk, dut.rst)
+        for x in range(12):
+            source = XgmiiSource(getattr(dut, f"eth_r{x}_rxd"), getattr(dut, f"eth_r{x}_rxc"), dut.clk, dut.rst)
+            self.eth_r_source.append(source)
+            sink = XgmiiSink(getattr(dut, f"eth_r{x}_txd"), getattr(dut, f"eth_r{x}_txc"), dut.clk, dut.rst)
+            self.eth_r_sink.append(sink)
 
-        self.eth_r2_source = XgmiiSource(dut.eth_r2_rxd, dut.eth_r2_rxc, dut.clk, dut.rst)
-        self.eth_r2_sink = XgmiiSink(dut.eth_r2_txd, dut.eth_r2_txc, dut.clk, dut.rst)
+        self.eth_l_source = []
+        self.eth_l_sink = []
 
-        self.eth_r3_source = XgmiiSource(dut.eth_r3_rxd, dut.eth_r3_rxc, dut.clk, dut.rst)
-        self.eth_r3_sink = XgmiiSink(dut.eth_r3_txd, dut.eth_r3_txc, dut.clk, dut.rst)
-
-        self.eth_r4_source = XgmiiSource(dut.eth_r4_rxd, dut.eth_r4_rxc, dut.clk, dut.rst)
-        self.eth_r4_sink = XgmiiSink(dut.eth_r4_txd, dut.eth_r4_txc, dut.clk, dut.rst)
-
-        self.eth_r5_source = XgmiiSource(dut.eth_r5_rxd, dut.eth_r5_rxc, dut.clk, dut.rst)
-        self.eth_r5_sink = XgmiiSink(dut.eth_r5_txd, dut.eth_r5_txc, dut.clk, dut.rst)
-
-        self.eth_r6_source = XgmiiSource(dut.eth_r6_rxd, dut.eth_r6_rxc, dut.clk, dut.rst)
-        self.eth_r6_sink = XgmiiSink(dut.eth_r6_txd, dut.eth_r6_txc, dut.clk, dut.rst)
-
-        self.eth_r7_source = XgmiiSource(dut.eth_r7_rxd, dut.eth_r7_rxc, dut.clk, dut.rst)
-        self.eth_r7_sink = XgmiiSink(dut.eth_r7_txd, dut.eth_r7_txc, dut.clk, dut.rst)
-
-        self.eth_r8_source = XgmiiSource(dut.eth_r8_rxd, dut.eth_r8_rxc, dut.clk, dut.rst)
-        self.eth_r8_sink = XgmiiSink(dut.eth_r8_txd, dut.eth_r8_txc, dut.clk, dut.rst)
-
-        self.eth_r9_source = XgmiiSource(dut.eth_r9_rxd, dut.eth_r9_rxc, dut.clk, dut.rst)
-        self.eth_r9_sink = XgmiiSink(dut.eth_r9_txd, dut.eth_r9_txc, dut.clk, dut.rst)
-
-        self.eth_r10_source = XgmiiSource(dut.eth_r10_rxd, dut.eth_r10_rxc, dut.clk, dut.rst)
-        self.eth_r10_sink = XgmiiSink(dut.eth_r10_txd, dut.eth_r10_txc, dut.clk, dut.rst)
-
-        self.eth_r11_source = XgmiiSource(dut.eth_r11_rxd, dut.eth_r11_rxc, dut.clk, dut.rst)
-        self.eth_r11_sink = XgmiiSink(dut.eth_r11_txd, dut.eth_r11_txc, dut.clk, dut.rst)
-
-        self.eth_l0_source = XgmiiSource(dut.eth_l0_rxd, dut.eth_l0_rxc, dut.clk, dut.rst)
-        self.eth_l0_sink = XgmiiSink(dut.eth_l0_txd, dut.eth_l0_txc, dut.clk, dut.rst)
-
-        self.eth_l1_source = XgmiiSource(dut.eth_l1_rxd, dut.eth_l1_rxc, dut.clk, dut.rst)
-        self.eth_l1_sink = XgmiiSink(dut.eth_l1_txd, dut.eth_l1_txc, dut.clk, dut.rst)
-
-        self.eth_l2_source = XgmiiSource(dut.eth_l2_rxd, dut.eth_l2_rxc, dut.clk, dut.rst)
-        self.eth_l2_sink = XgmiiSink(dut.eth_l2_txd, dut.eth_l2_txc, dut.clk, dut.rst)
-
-        self.eth_l3_source = XgmiiSource(dut.eth_l3_rxd, dut.eth_l3_rxc, dut.clk, dut.rst)
-        self.eth_l3_sink = XgmiiSink(dut.eth_l3_txd, dut.eth_l3_txc, dut.clk, dut.rst)
-
-        self.eth_l4_source = XgmiiSource(dut.eth_l4_rxd, dut.eth_l4_rxc, dut.clk, dut.rst)
-        self.eth_l4_sink = XgmiiSink(dut.eth_l4_txd, dut.eth_l4_txc, dut.clk, dut.rst)
-
-        self.eth_l5_source = XgmiiSource(dut.eth_l5_rxd, dut.eth_l5_rxc, dut.clk, dut.rst)
-        self.eth_l5_sink = XgmiiSink(dut.eth_l5_txd, dut.eth_l5_txc, dut.clk, dut.rst)
-
-        self.eth_l6_source = XgmiiSource(dut.eth_l6_rxd, dut.eth_l6_rxc, dut.clk, dut.rst)
-        self.eth_l6_sink = XgmiiSink(dut.eth_l6_txd, dut.eth_l6_txc, dut.clk, dut.rst)
-
-        self.eth_l7_source = XgmiiSource(dut.eth_l7_rxd, dut.eth_l7_rxc, dut.clk, dut.rst)
-        self.eth_l7_sink = XgmiiSink(dut.eth_l7_txd, dut.eth_l7_txc, dut.clk, dut.rst)
-
-        self.eth_l8_source = XgmiiSource(dut.eth_l8_rxd, dut.eth_l8_rxc, dut.clk, dut.rst)
-        self.eth_l8_sink = XgmiiSink(dut.eth_l8_txd, dut.eth_l8_txc, dut.clk, dut.rst)
-
-        self.eth_l9_source = XgmiiSource(dut.eth_l9_rxd, dut.eth_l9_rxc, dut.clk, dut.rst)
-        self.eth_l9_sink = XgmiiSink(dut.eth_l9_txd, dut.eth_l9_txc, dut.clk, dut.rst)
-
-        self.eth_l10_source = XgmiiSource(dut.eth_l10_rxd, dut.eth_l10_rxc, dut.clk, dut.rst)
-        self.eth_l10_sink = XgmiiSink(dut.eth_l10_txd, dut.eth_l10_txc, dut.clk, dut.rst)
-
-        self.eth_l11_source = XgmiiSource(dut.eth_l11_rxd, dut.eth_l11_rxc, dut.clk, dut.rst)
-        self.eth_l11_sink = XgmiiSink(dut.eth_l11_txd, dut.eth_l11_txc, dut.clk, dut.rst)
+        for x in range(12):
+            source = XgmiiSource(getattr(dut, f"eth_l{x}_rxd"), getattr(dut, f"eth_l{x}_rxc"), dut.clk, dut.rst)
+            self.eth_l_source.append(source)
+            sink = XgmiiSink(getattr(dut, f"eth_l{x}_txd"), getattr(dut, f"eth_l{x}_txc"), dut.clk, dut.rst)
+            self.eth_l_sink.append(sink)
 
         dut.sw.setimmediatevalue(0)
         dut.jp.setimmediatevalue(0)
@@ -158,9 +104,9 @@ async def run_test(dut):
 
     test_frame = XgmiiFrame.from_payload(test_pkt.build())
 
-    await tb.eth_l0_source.send(test_frame)
+    await tb.eth_l_source[0].send(test_frame)
 
-    rx_frame = await tb.eth_l0_sink.recv()
+    rx_frame = await tb.eth_l_sink[0].recv()
 
     rx_pkt = Ether(bytes(rx_frame.get_payload()))
 
@@ -176,7 +122,7 @@ async def run_test(dut):
 
     test_frame = XgmiiFrame.from_payload(test_pkt.build())
 
-    await tb.eth_l11_source.send(test_frame)
+    await tb.eth_l_source[11].send(test_frame)
 
     await Timer(400, 'ns')
 
@@ -188,9 +134,9 @@ async def run_test(dut):
 
     test_frame = XgmiiFrame.from_payload(test_pkt.build())
 
-    await tb.eth_l0_source.send(test_frame)
+    await tb.eth_l_source[0].send(test_frame)
 
-    rx_frame = await tb.eth_r7_sink.recv()
+    rx_frame = await tb.eth_r_sink[7].recv()
 
     rx_pkt = Ether(bytes(rx_frame.get_payload()))
 

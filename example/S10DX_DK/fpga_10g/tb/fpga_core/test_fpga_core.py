@@ -49,173 +49,51 @@ class TB:
         cocotb.start_soon(Clock(dut.clk, 6.206, units="ns").start())
 
         # Ethernet
-        cocotb.start_soon(Clock(dut.qsfp1_mac_1_rx_clk, 6.206, units="ns").start())
-        cocotb.start_soon(Clock(dut.qsfp1_mac_1_tx_clk, 6.206, units="ns").start())
+        self.qsfp_mac = []
 
-        self.qsfp1_mac_1 = EthMac(
-            tx_clk=dut.qsfp1_mac_1_tx_clk,
-            tx_rst=dut.qsfp1_mac_1_tx_rst,
-            tx_bus=AxiStreamBus.from_prefix(dut, "qsfp1_mac_1_tx_axis"),
-            rx_clk=dut.qsfp1_mac_1_rx_clk,
-            rx_rst=dut.qsfp1_mac_1_rx_rst,
-            rx_bus=AxiStreamBus.from_prefix(dut, "qsfp1_mac_1_rx_axis"),
-            ifg=12, speed=10e9
-        )
-
-        cocotb.start_soon(Clock(dut.qsfp1_mac_2_rx_clk, 6.206, units="ns").start())
-        cocotb.start_soon(Clock(dut.qsfp1_mac_2_tx_clk, 6.206, units="ns").start())
-
-        self.qsfp1_mac_2 = EthMac(
-            tx_clk=dut.qsfp1_mac_2_tx_clk,
-            tx_rst=dut.qsfp1_mac_2_tx_rst,
-            tx_bus=AxiStreamBus.from_prefix(dut, "qsfp1_mac_2_tx_axis"),
-            rx_clk=dut.qsfp1_mac_2_rx_clk,
-            rx_rst=dut.qsfp1_mac_2_rx_rst,
-            rx_bus=AxiStreamBus.from_prefix(dut, "qsfp1_mac_2_rx_axis"),
-            ifg=12, speed=10e9
-        )
-
-        cocotb.start_soon(Clock(dut.qsfp1_mac_3_rx_clk, 6.206, units="ns").start())
-        cocotb.start_soon(Clock(dut.qsfp1_mac_3_tx_clk, 6.206, units="ns").start())
-
-        self.qsfp1_mac_3 = EthMac(
-            tx_clk=dut.qsfp1_mac_3_tx_clk,
-            tx_rst=dut.qsfp1_mac_3_tx_rst,
-            tx_bus=AxiStreamBus.from_prefix(dut, "qsfp1_mac_3_tx_axis"),
-            rx_clk=dut.qsfp1_mac_3_rx_clk,
-            rx_rst=dut.qsfp1_mac_3_rx_rst,
-            rx_bus=AxiStreamBus.from_prefix(dut, "qsfp1_mac_3_rx_axis"),
-            ifg=12, speed=10e9
-        )
-
-        cocotb.start_soon(Clock(dut.qsfp1_mac_4_rx_clk, 6.206, units="ns").start())
-        cocotb.start_soon(Clock(dut.qsfp1_mac_4_tx_clk, 6.206, units="ns").start())
-
-        self.qsfp1_mac_4 = EthMac(
-            tx_clk=dut.qsfp1_mac_4_tx_clk,
-            tx_rst=dut.qsfp1_mac_4_tx_rst,
-            tx_bus=AxiStreamBus.from_prefix(dut, "qsfp1_mac_4_tx_axis"),
-            rx_clk=dut.qsfp1_mac_4_rx_clk,
-            rx_rst=dut.qsfp1_mac_4_rx_rst,
-            rx_bus=AxiStreamBus.from_prefix(dut, "qsfp1_mac_4_rx_axis"),
-            ifg=12, speed=10e9
-        )
-
-        cocotb.start_soon(Clock(dut.qsfp2_mac_1_rx_clk, 6.206, units="ns").start())
-        cocotb.start_soon(Clock(dut.qsfp2_mac_1_tx_clk, 6.206, units="ns").start())
-
-        self.qsfp2_mac_1 = EthMac(
-            tx_clk=dut.qsfp2_mac_1_tx_clk,
-            tx_rst=dut.qsfp2_mac_1_tx_rst,
-            tx_bus=AxiStreamBus.from_prefix(dut, "qsfp2_mac_1_tx_axis"),
-            rx_clk=dut.qsfp2_mac_1_rx_clk,
-            rx_rst=dut.qsfp2_mac_1_rx_rst,
-            rx_bus=AxiStreamBus.from_prefix(dut, "qsfp2_mac_1_rx_axis"),
-            ifg=12, speed=10e9
-        )
-
-        cocotb.start_soon(Clock(dut.qsfp2_mac_2_rx_clk, 6.206, units="ns").start())
-        cocotb.start_soon(Clock(dut.qsfp2_mac_2_tx_clk, 6.206, units="ns").start())
-
-        self.qsfp2_mac_2 = EthMac(
-            tx_clk=dut.qsfp2_mac_2_tx_clk,
-            tx_rst=dut.qsfp2_mac_2_tx_rst,
-            tx_bus=AxiStreamBus.from_prefix(dut, "qsfp2_mac_2_tx_axis"),
-            rx_clk=dut.qsfp2_mac_2_rx_clk,
-            rx_rst=dut.qsfp2_mac_2_rx_rst,
-            rx_bus=AxiStreamBus.from_prefix(dut, "qsfp2_mac_2_rx_axis"),
-            ifg=12, speed=10e9
-        )
-
-        cocotb.start_soon(Clock(dut.qsfp2_mac_3_rx_clk, 6.206, units="ns").start())
-        cocotb.start_soon(Clock(dut.qsfp2_mac_3_tx_clk, 6.206, units="ns").start())
-
-        self.qsfp2_mac_3 = EthMac(
-            tx_clk=dut.qsfp2_mac_3_tx_clk,
-            tx_rst=dut.qsfp2_mac_3_tx_rst,
-            tx_bus=AxiStreamBus.from_prefix(dut, "qsfp2_mac_3_tx_axis"),
-            rx_clk=dut.qsfp2_mac_3_rx_clk,
-            rx_rst=dut.qsfp2_mac_3_rx_rst,
-            rx_bus=AxiStreamBus.from_prefix(dut, "qsfp2_mac_3_rx_axis"),
-            ifg=12, speed=10e9
-        )
-
-        cocotb.start_soon(Clock(dut.qsfp2_mac_4_rx_clk, 6.206, units="ns").start())
-        cocotb.start_soon(Clock(dut.qsfp2_mac_4_tx_clk, 6.206, units="ns").start())
-
-        self.qsfp2_mac_4 = EthMac(
-            tx_clk=dut.qsfp2_mac_4_tx_clk,
-            tx_rst=dut.qsfp2_mac_4_tx_rst,
-            tx_bus=AxiStreamBus.from_prefix(dut, "qsfp2_mac_4_tx_axis"),
-            rx_clk=dut.qsfp2_mac_4_rx_clk,
-            rx_rst=dut.qsfp2_mac_4_rx_rst,
-            rx_bus=AxiStreamBus.from_prefix(dut, "qsfp2_mac_4_rx_axis"),
-            ifg=12, speed=10e9
-        )
+        for x in range(1, 3):
+            macs = []
+            for y in range(1, 5):
+                cocotb.start_soon(Clock(getattr(dut, f"qsfp{x}_mac_{y}_tx_clk"), 6.206, units="ns").start())
+                cocotb.start_soon(Clock(getattr(dut, f"qsfp{x}_mac_{y}_rx_clk"), 6.206, units="ns").start())
+                macs.append(EthMac(
+                    tx_clk=getattr(dut, f"qsfp{x}_mac_{y}_tx_clk"),
+                    tx_rst=getattr(dut, f"qsfp{x}_mac_{y}_tx_rst"),
+                    tx_bus=AxiStreamBus.from_prefix(dut, f"qsfp{x}_mac_{y}_tx_axis"),
+                    rx_clk=getattr(dut, f"qsfp{x}_mac_{y}_rx_clk"),
+                    rx_rst=getattr(dut, f"qsfp{x}_mac_{y}_rx_rst"),
+                    rx_bus=AxiStreamBus.from_prefix(dut, f"qsfp{x}_mac_{y}_rx_axis"),
+                    ifg=12, speed=10e9
+                ))
+            self.qsfp_mac.append(macs)
 
         dut.btn.setimmediatevalue(0)
 
     async def init(self):
 
         self.dut.rst.setimmediatevalue(0)
-        self.dut.qsfp1_mac_1_rx_rst.setimmediatevalue(0)
-        self.dut.qsfp1_mac_1_tx_rst.setimmediatevalue(0)
-        self.dut.qsfp1_mac_2_rx_rst.setimmediatevalue(0)
-        self.dut.qsfp1_mac_2_tx_rst.setimmediatevalue(0)
-        self.dut.qsfp1_mac_3_rx_rst.setimmediatevalue(0)
-        self.dut.qsfp1_mac_3_tx_rst.setimmediatevalue(0)
-        self.dut.qsfp1_mac_4_rx_rst.setimmediatevalue(0)
-        self.dut.qsfp1_mac_4_tx_rst.setimmediatevalue(0)
-        self.dut.qsfp2_mac_1_rx_rst.setimmediatevalue(0)
-        self.dut.qsfp2_mac_1_tx_rst.setimmediatevalue(0)
-        self.dut.qsfp2_mac_2_rx_rst.setimmediatevalue(0)
-        self.dut.qsfp2_mac_2_tx_rst.setimmediatevalue(0)
-        self.dut.qsfp2_mac_3_rx_rst.setimmediatevalue(0)
-        self.dut.qsfp2_mac_3_tx_rst.setimmediatevalue(0)
-        self.dut.qsfp2_mac_4_rx_rst.setimmediatevalue(0)
-        self.dut.qsfp2_mac_4_tx_rst.setimmediatevalue(0)
+        for x in range(1, 3):
+            for y in range(1, 5):
+                getattr(self.dut, f"qsfp{x}_mac_{y}_rx_rst").setimmediatevalue(0)
+                getattr(self.dut, f"qsfp{x}_mac_{y}_tx_rst").setimmediatevalue(0)
 
         for k in range(10):
             await RisingEdge(self.dut.clk)
 
         self.dut.rst.value = 1
-        self.dut.qsfp1_mac_1_rx_rst.value = 1
-        self.dut.qsfp1_mac_1_tx_rst.value = 1
-        self.dut.qsfp1_mac_2_rx_rst.value = 1
-        self.dut.qsfp1_mac_2_tx_rst.value = 1
-        self.dut.qsfp1_mac_3_rx_rst.value = 1
-        self.dut.qsfp1_mac_3_tx_rst.value = 1
-        self.dut.qsfp1_mac_4_rx_rst.value = 1
-        self.dut.qsfp1_mac_4_tx_rst.value = 1
-        self.dut.qsfp2_mac_1_rx_rst.value = 1
-        self.dut.qsfp2_mac_1_tx_rst.value = 1
-        self.dut.qsfp2_mac_2_rx_rst.value = 1
-        self.dut.qsfp2_mac_2_tx_rst.value = 1
-        self.dut.qsfp2_mac_3_rx_rst.value = 1
-        self.dut.qsfp2_mac_3_tx_rst.value = 1
-        self.dut.qsfp2_mac_4_rx_rst.value = 1
-        self.dut.qsfp2_mac_4_tx_rst.value = 1
+        for x in range(1, 3):
+            for y in range(1, 5):
+                getattr(self.dut, f"qsfp{x}_mac_{y}_rx_rst").value = 1
+                getattr(self.dut, f"qsfp{x}_mac_{y}_tx_rst").value = 1
 
         for k in range(10):
             await RisingEdge(self.dut.clk)
 
         self.dut.rst.value = 0
-        self.dut.qsfp1_mac_1_rx_rst.value = 0
-        self.dut.qsfp1_mac_1_tx_rst.value = 0
-        self.dut.qsfp1_mac_2_rx_rst.value = 0
-        self.dut.qsfp1_mac_2_tx_rst.value = 0
-        self.dut.qsfp1_mac_3_rx_rst.value = 0
-        self.dut.qsfp1_mac_3_tx_rst.value = 0
-        self.dut.qsfp1_mac_4_rx_rst.value = 0
-        self.dut.qsfp1_mac_4_tx_rst.value = 0
-        self.dut.qsfp2_mac_1_rx_rst.value = 0
-        self.dut.qsfp2_mac_1_tx_rst.value = 0
-        self.dut.qsfp2_mac_2_rx_rst.value = 0
-        self.dut.qsfp2_mac_2_tx_rst.value = 0
-        self.dut.qsfp2_mac_3_rx_rst.value = 0
-        self.dut.qsfp2_mac_3_tx_rst.value = 0
-        self.dut.qsfp2_mac_4_rx_rst.value = 0
-        self.dut.qsfp2_mac_4_tx_rst.value = 0
+        for x in range(1, 3):
+            for y in range(1, 5):
+                getattr(self.dut, f"qsfp{x}_mac_{y}_rx_rst").value = 0
+                getattr(self.dut, f"qsfp{x}_mac_{y}_tx_rst").value = 0
 
         for k in range(10):
             await RisingEdge(self.dut.clk)
@@ -236,11 +114,11 @@ async def run_test(dut):
     udp = UDP(sport=5678, dport=1234)
     test_pkt = eth / ip / udp / payload
 
-    await tb.qsfp1_mac_1.rx.send(test_pkt.build())
+    await tb.qsfp_mac[0][0].rx.send(test_pkt.build())
 
     tb.log.info("receive ARP request")
 
-    rx_frame = await tb.qsfp1_mac_1.tx.recv()
+    rx_frame = await tb.qsfp_mac[0][0].tx.recv()
 
     rx_pkt = Ether(bytes(rx_frame))
 
@@ -266,11 +144,11 @@ async def run_test(dut):
         hwdst=test_pkt.dst, pdst=test_pkt[IP].dst)
     resp_pkt = eth / arp
 
-    await tb.qsfp1_mac_1.rx.send(resp_pkt.build())
+    await tb.qsfp_mac[0][0].rx.send(resp_pkt.build())
 
     tb.log.info("receive UDP packet")
 
-    rx_frame = await tb.qsfp1_mac_1.tx.recv()
+    rx_frame = await tb.qsfp_mac[0][0].tx.recv()
 
     rx_pkt = Ether(bytes(rx_frame))
 

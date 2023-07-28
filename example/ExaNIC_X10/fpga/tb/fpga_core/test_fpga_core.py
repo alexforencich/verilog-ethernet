@@ -48,41 +48,39 @@ class TB:
         cocotb.start_soon(Clock(dut.clk, 6.4, units="ns").start())
 
         # Ethernet
-        cocotb.start_soon(Clock(dut.sfp_1_rx_clk, 6.4, units="ns").start())
-        self.sfp_1_source = XgmiiSource(dut.sfp_1_rxd, dut.sfp_1_rxc, dut.sfp_1_rx_clk, dut.sfp_1_rx_rst)
-        cocotb.start_soon(Clock(dut.sfp_1_tx_clk, 6.4, units="ns").start())
-        self.sfp_1_sink = XgmiiSink(dut.sfp_1_txd, dut.sfp_1_txc, dut.sfp_1_tx_clk, dut.sfp_1_tx_rst)
+        self.sfp_source = []
+        self.sfp_sink = []
 
-        cocotb.start_soon(Clock(dut.sfp_2_rx_clk, 6.4, units="ns").start())
-        self.sfp_2_source = XgmiiSource(dut.sfp_2_rxd, dut.sfp_2_rxc, dut.sfp_2_rx_clk, dut.sfp_2_rx_rst)
-        cocotb.start_soon(Clock(dut.sfp_2_tx_clk, 6.4, units="ns").start())
-        self.sfp_2_sink = XgmiiSink(dut.sfp_2_txd, dut.sfp_2_txc, dut.sfp_2_tx_clk, dut.sfp_2_tx_rst)
+        for y in range(1, 3):
+            cocotb.start_soon(Clock(getattr(dut, f"sfp_{y}_rx_clk"), 6.4, units="ns").start())
+            source = XgmiiSource(getattr(dut, f"sfp_{y}_rxd"), getattr(dut, f"sfp_{y}_rxc"), getattr(dut, f"sfp_{y}_rx_clk"), getattr(dut, f"sfp_{y}_rx_rst"))
+            self.sfp_source.append(source)
+            cocotb.start_soon(Clock(getattr(dut, f"sfp_{y}_tx_clk"), 6.4, units="ns").start())
+            sink = XgmiiSink(getattr(dut, f"sfp_{y}_txd"), getattr(dut, f"sfp_{y}_txc"), getattr(dut, f"sfp_{y}_tx_clk"), getattr(dut, f"sfp_{y}_tx_rst"))
+            self.sfp_sink.append(sink)
 
     async def init(self):
 
         self.dut.rst.setimmediatevalue(0)
-        self.dut.sfp_1_rx_rst.setimmediatevalue(0)
-        self.dut.sfp_1_tx_rst.setimmediatevalue(0)
-        self.dut.sfp_2_rx_rst.setimmediatevalue(0)
-        self.dut.sfp_2_tx_rst.setimmediatevalue(0)
+        for y in range(1, 3):
+            getattr(self.dut, f"sfp_{y}_rx_rst").setimmediatevalue(0)
+            getattr(self.dut, f"sfp_{y}_tx_rst").setimmediatevalue(0)
 
         for k in range(10):
             await RisingEdge(self.dut.clk)
 
         self.dut.rst.value = 1
-        self.dut.sfp_1_rx_rst.value = 1
-        self.dut.sfp_1_tx_rst.value = 1
-        self.dut.sfp_2_rx_rst.value = 1
-        self.dut.sfp_2_tx_rst.value = 1
+        for y in range(1, 3):
+            getattr(self.dut, f"sfp_{y}_rx_rst").value = 1
+            getattr(self.dut, f"sfp_{y}_tx_rst").value = 1
 
         for k in range(10):
             await RisingEdge(self.dut.clk)
 
         self.dut.rst.value = 0
-        self.dut.sfp_1_rx_rst.value = 0
-        self.dut.sfp_1_tx_rst.value = 0
-        self.dut.sfp_2_rx_rst.value = 0
-        self.dut.sfp_2_tx_rst.value = 0
+        for y in range(1, 3):
+            getattr(self.dut, f"sfp_{y}_rx_rst").value = 0
+            getattr(self.dut, f"sfp_{y}_tx_rst").value = 0
 
 
 @cocotb.test()
@@ -102,11 +100,11 @@ async def run_test(dut):
 
     test_frame = XgmiiFrame.from_payload(test_pkt.build())
 
-    await tb.sfp_1_source.send(test_frame)
+    await tb.sfp_source[0].send(test_frame)
 
     tb.log.info("receive ARP request")
 
-    rx_frame = await tb.sfp_1_sink.recv()
+    rx_frame = await tb.sfp_sink[0].recv()
 
     rx_pkt = Ether(bytes(rx_frame.get_payload()))
 
@@ -134,11 +132,11 @@ async def run_test(dut):
 
     resp_frame = XgmiiFrame.from_payload(resp_pkt.build())
 
-    await tb.sfp_1_source.send(resp_frame)
+    await tb.sfp_source[0].send(resp_frame)
 
     tb.log.info("receive UDP packet")
 
-    rx_frame = await tb.sfp_1_sink.recv()
+    rx_frame = await tb.sfp_sink[0].recv()
 
     rx_pkt = Ether(bytes(rx_frame.get_payload()))
 

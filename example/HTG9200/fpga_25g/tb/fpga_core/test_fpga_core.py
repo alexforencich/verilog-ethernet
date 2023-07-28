@@ -54,415 +54,47 @@ class TB:
         dut.uart_rts.setimmediatevalue(1)
 
         # Ethernet
-        cocotb.start_soon(Clock(dut.qsfp_1_rx_clk_1, 2.56, units="ns").start())
-        self.qsfp_1_1_source = XgmiiSource(dut.qsfp_1_rxd_1, dut.qsfp_1_rxc_1, dut.qsfp_1_rx_clk_1, dut.qsfp_1_rx_rst_1)
-        cocotb.start_soon(Clock(dut.qsfp_1_tx_clk_1, 2.56, units="ns").start())
-        self.qsfp_1_1_sink = XgmiiSink(dut.qsfp_1_txd_1, dut.qsfp_1_txc_1, dut.qsfp_1_tx_clk_1, dut.qsfp_1_tx_rst_1)
+        self.qsfp_source = []
+        self.qsfp_sink = []
 
-        cocotb.start_soon(Clock(dut.qsfp_1_rx_clk_2, 2.56, units="ns").start())
-        self.qsfp_1_2_source = XgmiiSource(dut.qsfp_1_rxd_2, dut.qsfp_1_rxc_2, dut.qsfp_1_rx_clk_2, dut.qsfp_1_rx_rst_2)
-        cocotb.start_soon(Clock(dut.qsfp_1_tx_clk_2, 2.56, units="ns").start())
-        self.qsfp_1_2_sink = XgmiiSink(dut.qsfp_1_txd_2, dut.qsfp_1_txc_2, dut.qsfp_1_tx_clk_2, dut.qsfp_1_tx_rst_2)
-
-        cocotb.start_soon(Clock(dut.qsfp_1_rx_clk_3, 2.56, units="ns").start())
-        self.qsfp_1_3_source = XgmiiSource(dut.qsfp_1_rxd_3, dut.qsfp_1_rxc_3, dut.qsfp_1_rx_clk_3, dut.qsfp_1_rx_rst_3)
-        cocotb.start_soon(Clock(dut.qsfp_1_tx_clk_3, 2.56, units="ns").start())
-        self.qsfp_1_3_sink = XgmiiSink(dut.qsfp_1_txd_3, dut.qsfp_1_txc_3, dut.qsfp_1_tx_clk_3, dut.qsfp_1_tx_rst_3)
-
-        cocotb.start_soon(Clock(dut.qsfp_1_rx_clk_4, 2.56, units="ns").start())
-        self.qsfp_1_4_source = XgmiiSource(dut.qsfp_1_rxd_4, dut.qsfp_1_rxc_4, dut.qsfp_1_rx_clk_4, dut.qsfp_1_rx_rst_4)
-        cocotb.start_soon(Clock(dut.qsfp_1_tx_clk_4, 2.56, units="ns").start())
-        self.qsfp_1_4_sink = XgmiiSink(dut.qsfp_1_txd_4, dut.qsfp_1_txc_4, dut.qsfp_1_tx_clk_4, dut.qsfp_1_tx_rst_4)
-
-        cocotb.start_soon(Clock(dut.qsfp_2_rx_clk_1, 2.56, units="ns").start())
-        self.qsfp_2_1_source = XgmiiSource(dut.qsfp_2_rxd_1, dut.qsfp_2_rxc_1, dut.qsfp_2_rx_clk_1, dut.qsfp_2_rx_rst_1)
-        cocotb.start_soon(Clock(dut.qsfp_2_tx_clk_1, 2.56, units="ns").start())
-        self.qsfp_2_1_sink = XgmiiSink(dut.qsfp_2_txd_1, dut.qsfp_2_txc_1, dut.qsfp_2_tx_clk_1, dut.qsfp_2_tx_rst_1)
-
-        cocotb.start_soon(Clock(dut.qsfp_2_rx_clk_2, 2.56, units="ns").start())
-        self.qsfp_2_2_source = XgmiiSource(dut.qsfp_2_rxd_2, dut.qsfp_2_rxc_2, dut.qsfp_2_rx_clk_2, dut.qsfp_2_rx_rst_2)
-        cocotb.start_soon(Clock(dut.qsfp_2_tx_clk_2, 2.56, units="ns").start())
-        self.qsfp_2_2_sink = XgmiiSink(dut.qsfp_2_txd_2, dut.qsfp_2_txc_2, dut.qsfp_2_tx_clk_2, dut.qsfp_2_tx_rst_2)
-
-        cocotb.start_soon(Clock(dut.qsfp_2_rx_clk_3, 2.56, units="ns").start())
-        self.qsfp_2_3_source = XgmiiSource(dut.qsfp_2_rxd_3, dut.qsfp_2_rxc_3, dut.qsfp_2_rx_clk_3, dut.qsfp_2_rx_rst_3)
-        cocotb.start_soon(Clock(dut.qsfp_2_tx_clk_3, 2.56, units="ns").start())
-        self.qsfp_2_3_sink = XgmiiSink(dut.qsfp_2_txd_3, dut.qsfp_2_txc_3, dut.qsfp_2_tx_clk_3, dut.qsfp_2_tx_rst_3)
-
-        cocotb.start_soon(Clock(dut.qsfp_2_rx_clk_4, 2.56, units="ns").start())
-        self.qsfp_2_4_source = XgmiiSource(dut.qsfp_2_rxd_4, dut.qsfp_2_rxc_4, dut.qsfp_2_rx_clk_4, dut.qsfp_2_rx_rst_4)
-        cocotb.start_soon(Clock(dut.qsfp_2_tx_clk_4, 2.56, units="ns").start())
-        self.qsfp_2_4_sink = XgmiiSink(dut.qsfp_2_txd_4, dut.qsfp_2_txc_4, dut.qsfp_2_tx_clk_4, dut.qsfp_2_tx_rst_4)
-
-        cocotb.start_soon(Clock(dut.qsfp_3_rx_clk_1, 2.56, units="ns").start())
-        self.qsfp_3_1_source = XgmiiSource(dut.qsfp_3_rxd_1, dut.qsfp_3_rxc_1, dut.qsfp_3_rx_clk_1, dut.qsfp_3_rx_rst_1)
-        cocotb.start_soon(Clock(dut.qsfp_3_tx_clk_1, 2.56, units="ns").start())
-        self.qsfp_3_1_sink = XgmiiSink(dut.qsfp_3_txd_1, dut.qsfp_3_txc_1, dut.qsfp_3_tx_clk_1, dut.qsfp_3_tx_rst_1)
-
-        cocotb.start_soon(Clock(dut.qsfp_3_rx_clk_2, 2.56, units="ns").start())
-        self.qsfp_3_2_source = XgmiiSource(dut.qsfp_3_rxd_2, dut.qsfp_3_rxc_2, dut.qsfp_3_rx_clk_2, dut.qsfp_3_rx_rst_2)
-        cocotb.start_soon(Clock(dut.qsfp_3_tx_clk_2, 2.56, units="ns").start())
-        self.qsfp_3_2_sink = XgmiiSink(dut.qsfp_3_txd_2, dut.qsfp_3_txc_2, dut.qsfp_3_tx_clk_2, dut.qsfp_3_tx_rst_2)
-
-        cocotb.start_soon(Clock(dut.qsfp_3_rx_clk_3, 2.56, units="ns").start())
-        self.qsfp_3_3_source = XgmiiSource(dut.qsfp_3_rxd_3, dut.qsfp_3_rxc_3, dut.qsfp_3_rx_clk_3, dut.qsfp_3_rx_rst_3)
-        cocotb.start_soon(Clock(dut.qsfp_3_tx_clk_3, 2.56, units="ns").start())
-        self.qsfp_3_3_sink = XgmiiSink(dut.qsfp_3_txd_3, dut.qsfp_3_txc_3, dut.qsfp_3_tx_clk_3, dut.qsfp_3_tx_rst_3)
-
-        cocotb.start_soon(Clock(dut.qsfp_3_rx_clk_4, 2.56, units="ns").start())
-        self.qsfp_3_4_source = XgmiiSource(dut.qsfp_3_rxd_4, dut.qsfp_3_rxc_4, dut.qsfp_3_rx_clk_4, dut.qsfp_3_rx_rst_4)
-        cocotb.start_soon(Clock(dut.qsfp_3_tx_clk_4, 2.56, units="ns").start())
-        self.qsfp_3_4_sink = XgmiiSink(dut.qsfp_3_txd_4, dut.qsfp_3_txc_4, dut.qsfp_3_tx_clk_4, dut.qsfp_3_tx_rst_4)
-
-        cocotb.start_soon(Clock(dut.qsfp_4_rx_clk_1, 2.56, units="ns").start())
-        self.qsfp_4_1_source = XgmiiSource(dut.qsfp_4_rxd_1, dut.qsfp_4_rxc_1, dut.qsfp_4_rx_clk_1, dut.qsfp_4_rx_rst_1)
-        cocotb.start_soon(Clock(dut.qsfp_4_tx_clk_1, 2.56, units="ns").start())
-        self.qsfp_4_1_sink = XgmiiSink(dut.qsfp_4_txd_1, dut.qsfp_4_txc_1, dut.qsfp_4_tx_clk_1, dut.qsfp_4_tx_rst_1)
-
-        cocotb.start_soon(Clock(dut.qsfp_4_rx_clk_2, 2.56, units="ns").start())
-        self.qsfp_4_2_source = XgmiiSource(dut.qsfp_4_rxd_2, dut.qsfp_4_rxc_2, dut.qsfp_4_rx_clk_2, dut.qsfp_4_rx_rst_2)
-        cocotb.start_soon(Clock(dut.qsfp_4_tx_clk_2, 2.56, units="ns").start())
-        self.qsfp_4_2_sink = XgmiiSink(dut.qsfp_4_txd_2, dut.qsfp_4_txc_2, dut.qsfp_4_tx_clk_2, dut.qsfp_4_tx_rst_2)
-
-        cocotb.start_soon(Clock(dut.qsfp_4_rx_clk_3, 2.56, units="ns").start())
-        self.qsfp_4_3_source = XgmiiSource(dut.qsfp_4_rxd_3, dut.qsfp_4_rxc_3, dut.qsfp_4_rx_clk_3, dut.qsfp_4_rx_rst_3)
-        cocotb.start_soon(Clock(dut.qsfp_4_tx_clk_3, 2.56, units="ns").start())
-        self.qsfp_4_3_sink = XgmiiSink(dut.qsfp_4_txd_3, dut.qsfp_4_txc_3, dut.qsfp_4_tx_clk_3, dut.qsfp_4_tx_rst_3)
-
-        cocotb.start_soon(Clock(dut.qsfp_4_rx_clk_4, 2.56, units="ns").start())
-        self.qsfp_4_4_source = XgmiiSource(dut.qsfp_4_rxd_4, dut.qsfp_4_rxc_4, dut.qsfp_4_rx_clk_4, dut.qsfp_4_rx_rst_4)
-        cocotb.start_soon(Clock(dut.qsfp_4_tx_clk_4, 2.56, units="ns").start())
-        self.qsfp_4_4_sink = XgmiiSink(dut.qsfp_4_txd_4, dut.qsfp_4_txc_4, dut.qsfp_4_tx_clk_4, dut.qsfp_4_tx_rst_4)
-
-        cocotb.start_soon(Clock(dut.qsfp_5_rx_clk_1, 2.56, units="ns").start())
-        self.qsfp_5_1_source = XgmiiSource(dut.qsfp_5_rxd_1, dut.qsfp_5_rxc_1, dut.qsfp_5_rx_clk_1, dut.qsfp_5_rx_rst_1)
-        cocotb.start_soon(Clock(dut.qsfp_5_tx_clk_1, 2.56, units="ns").start())
-        self.qsfp_5_1_sink = XgmiiSink(dut.qsfp_5_txd_1, dut.qsfp_5_txc_1, dut.qsfp_5_tx_clk_1, dut.qsfp_5_tx_rst_1)
-
-        cocotb.start_soon(Clock(dut.qsfp_5_rx_clk_2, 2.56, units="ns").start())
-        self.qsfp_5_2_source = XgmiiSource(dut.qsfp_5_rxd_2, dut.qsfp_5_rxc_2, dut.qsfp_5_rx_clk_2, dut.qsfp_5_rx_rst_2)
-        cocotb.start_soon(Clock(dut.qsfp_5_tx_clk_2, 2.56, units="ns").start())
-        self.qsfp_5_2_sink = XgmiiSink(dut.qsfp_5_txd_2, dut.qsfp_5_txc_2, dut.qsfp_5_tx_clk_2, dut.qsfp_5_tx_rst_2)
-
-        cocotb.start_soon(Clock(dut.qsfp_5_rx_clk_3, 2.56, units="ns").start())
-        self.qsfp_5_3_source = XgmiiSource(dut.qsfp_5_rxd_3, dut.qsfp_5_rxc_3, dut.qsfp_5_rx_clk_3, dut.qsfp_5_rx_rst_3)
-        cocotb.start_soon(Clock(dut.qsfp_5_tx_clk_3, 2.56, units="ns").start())
-        self.qsfp_5_3_sink = XgmiiSink(dut.qsfp_5_txd_3, dut.qsfp_5_txc_3, dut.qsfp_5_tx_clk_3, dut.qsfp_5_tx_rst_3)
-
-        cocotb.start_soon(Clock(dut.qsfp_5_rx_clk_4, 2.56, units="ns").start())
-        self.qsfp_5_4_source = XgmiiSource(dut.qsfp_5_rxd_4, dut.qsfp_5_rxc_4, dut.qsfp_5_rx_clk_4, dut.qsfp_5_rx_rst_4)
-        cocotb.start_soon(Clock(dut.qsfp_5_tx_clk_4, 2.56, units="ns").start())
-        self.qsfp_5_4_sink = XgmiiSink(dut.qsfp_5_txd_4, dut.qsfp_5_txc_4, dut.qsfp_5_tx_clk_4, dut.qsfp_5_tx_rst_4)
-
-        cocotb.start_soon(Clock(dut.qsfp_6_rx_clk_1, 2.56, units="ns").start())
-        self.qsfp_6_1_source = XgmiiSource(dut.qsfp_6_rxd_1, dut.qsfp_6_rxc_1, dut.qsfp_6_rx_clk_1, dut.qsfp_6_rx_rst_1)
-        cocotb.start_soon(Clock(dut.qsfp_6_tx_clk_1, 2.56, units="ns").start())
-        self.qsfp_6_1_sink = XgmiiSink(dut.qsfp_6_txd_1, dut.qsfp_6_txc_1, dut.qsfp_6_tx_clk_1, dut.qsfp_6_tx_rst_1)
-
-        cocotb.start_soon(Clock(dut.qsfp_6_rx_clk_2, 2.56, units="ns").start())
-        self.qsfp_6_2_source = XgmiiSource(dut.qsfp_6_rxd_2, dut.qsfp_6_rxc_2, dut.qsfp_6_rx_clk_2, dut.qsfp_6_rx_rst_2)
-        cocotb.start_soon(Clock(dut.qsfp_6_tx_clk_2, 2.56, units="ns").start())
-        self.qsfp_6_2_sink = XgmiiSink(dut.qsfp_6_txd_2, dut.qsfp_6_txc_2, dut.qsfp_6_tx_clk_2, dut.qsfp_6_tx_rst_2)
-
-        cocotb.start_soon(Clock(dut.qsfp_6_rx_clk_3, 2.56, units="ns").start())
-        self.qsfp_6_3_source = XgmiiSource(dut.qsfp_6_rxd_3, dut.qsfp_6_rxc_3, dut.qsfp_6_rx_clk_3, dut.qsfp_6_rx_rst_3)
-        cocotb.start_soon(Clock(dut.qsfp_6_tx_clk_3, 2.56, units="ns").start())
-        self.qsfp_6_3_sink = XgmiiSink(dut.qsfp_6_txd_3, dut.qsfp_6_txc_3, dut.qsfp_6_tx_clk_3, dut.qsfp_6_tx_rst_3)
-
-        cocotb.start_soon(Clock(dut.qsfp_6_rx_clk_4, 2.56, units="ns").start())
-        self.qsfp_6_4_source = XgmiiSource(dut.qsfp_6_rxd_4, dut.qsfp_6_rxc_4, dut.qsfp_6_rx_clk_4, dut.qsfp_6_rx_rst_4)
-        cocotb.start_soon(Clock(dut.qsfp_6_tx_clk_4, 2.56, units="ns").start())
-        self.qsfp_6_4_sink = XgmiiSink(dut.qsfp_6_txd_4, dut.qsfp_6_txc_4, dut.qsfp_6_tx_clk_4, dut.qsfp_6_tx_rst_4)
-
-        cocotb.start_soon(Clock(dut.qsfp_7_rx_clk_1, 2.56, units="ns").start())
-        self.qsfp_7_1_source = XgmiiSource(dut.qsfp_7_rxd_1, dut.qsfp_7_rxc_1, dut.qsfp_7_rx_clk_1, dut.qsfp_7_rx_rst_1)
-        cocotb.start_soon(Clock(dut.qsfp_7_tx_clk_1, 2.56, units="ns").start())
-        self.qsfp_7_1_sink = XgmiiSink(dut.qsfp_7_txd_1, dut.qsfp_7_txc_1, dut.qsfp_7_tx_clk_1, dut.qsfp_7_tx_rst_1)
-
-        cocotb.start_soon(Clock(dut.qsfp_7_rx_clk_2, 2.56, units="ns").start())
-        self.qsfp_7_2_source = XgmiiSource(dut.qsfp_7_rxd_2, dut.qsfp_7_rxc_2, dut.qsfp_7_rx_clk_2, dut.qsfp_7_rx_rst_2)
-        cocotb.start_soon(Clock(dut.qsfp_7_tx_clk_2, 2.56, units="ns").start())
-        self.qsfp_7_2_sink = XgmiiSink(dut.qsfp_7_txd_2, dut.qsfp_7_txc_2, dut.qsfp_7_tx_clk_2, dut.qsfp_7_tx_rst_2)
-
-        cocotb.start_soon(Clock(dut.qsfp_7_rx_clk_3, 2.56, units="ns").start())
-        self.qsfp_7_3_source = XgmiiSource(dut.qsfp_7_rxd_3, dut.qsfp_7_rxc_3, dut.qsfp_7_rx_clk_3, dut.qsfp_7_rx_rst_3)
-        cocotb.start_soon(Clock(dut.qsfp_7_tx_clk_3, 2.56, units="ns").start())
-        self.qsfp_7_3_sink = XgmiiSink(dut.qsfp_7_txd_3, dut.qsfp_7_txc_3, dut.qsfp_7_tx_clk_3, dut.qsfp_7_tx_rst_3)
-
-        cocotb.start_soon(Clock(dut.qsfp_7_rx_clk_4, 2.56, units="ns").start())
-        self.qsfp_7_4_source = XgmiiSource(dut.qsfp_7_rxd_4, dut.qsfp_7_rxc_4, dut.qsfp_7_rx_clk_4, dut.qsfp_7_rx_rst_4)
-        cocotb.start_soon(Clock(dut.qsfp_7_tx_clk_4, 2.56, units="ns").start())
-        self.qsfp_7_4_sink = XgmiiSink(dut.qsfp_7_txd_4, dut.qsfp_7_txc_4, dut.qsfp_7_tx_clk_4, dut.qsfp_7_tx_rst_4)
-
-        cocotb.start_soon(Clock(dut.qsfp_8_rx_clk_1, 2.56, units="ns").start())
-        self.qsfp_8_1_source = XgmiiSource(dut.qsfp_8_rxd_1, dut.qsfp_8_rxc_1, dut.qsfp_8_rx_clk_1, dut.qsfp_8_rx_rst_1)
-        cocotb.start_soon(Clock(dut.qsfp_8_tx_clk_1, 2.56, units="ns").start())
-        self.qsfp_8_1_sink = XgmiiSink(dut.qsfp_8_txd_1, dut.qsfp_8_txc_1, dut.qsfp_8_tx_clk_1, dut.qsfp_8_tx_rst_1)
-
-        cocotb.start_soon(Clock(dut.qsfp_8_rx_clk_2, 2.56, units="ns").start())
-        self.qsfp_8_2_source = XgmiiSource(dut.qsfp_8_rxd_2, dut.qsfp_8_rxc_2, dut.qsfp_8_rx_clk_2, dut.qsfp_8_rx_rst_2)
-        cocotb.start_soon(Clock(dut.qsfp_8_tx_clk_2, 2.56, units="ns").start())
-        self.qsfp_8_2_sink = XgmiiSink(dut.qsfp_8_txd_2, dut.qsfp_8_txc_2, dut.qsfp_8_tx_clk_2, dut.qsfp_8_tx_rst_2)
-
-        cocotb.start_soon(Clock(dut.qsfp_8_rx_clk_3, 2.56, units="ns").start())
-        self.qsfp_8_3_source = XgmiiSource(dut.qsfp_8_rxd_3, dut.qsfp_8_rxc_3, dut.qsfp_8_rx_clk_3, dut.qsfp_8_rx_rst_3)
-        cocotb.start_soon(Clock(dut.qsfp_8_tx_clk_3, 2.56, units="ns").start())
-        self.qsfp_8_3_sink = XgmiiSink(dut.qsfp_8_txd_3, dut.qsfp_8_txc_3, dut.qsfp_8_tx_clk_3, dut.qsfp_8_tx_rst_3)
-
-        cocotb.start_soon(Clock(dut.qsfp_8_rx_clk_4, 2.56, units="ns").start())
-        self.qsfp_8_4_source = XgmiiSource(dut.qsfp_8_rxd_4, dut.qsfp_8_rxc_4, dut.qsfp_8_rx_clk_4, dut.qsfp_8_rx_rst_4)
-        cocotb.start_soon(Clock(dut.qsfp_8_tx_clk_4, 2.56, units="ns").start())
-        self.qsfp_8_4_sink = XgmiiSink(dut.qsfp_8_txd_4, dut.qsfp_8_txc_4, dut.qsfp_8_tx_clk_4, dut.qsfp_8_tx_rst_4)
-
-        cocotb.start_soon(Clock(dut.qsfp_9_rx_clk_1, 2.56, units="ns").start())
-        self.qsfp_9_1_source = XgmiiSource(dut.qsfp_9_rxd_1, dut.qsfp_9_rxc_1, dut.qsfp_9_rx_clk_1, dut.qsfp_9_rx_rst_1)
-        cocotb.start_soon(Clock(dut.qsfp_9_tx_clk_1, 2.56, units="ns").start())
-        self.qsfp_9_1_sink = XgmiiSink(dut.qsfp_9_txd_1, dut.qsfp_9_txc_1, dut.qsfp_9_tx_clk_1, dut.qsfp_9_tx_rst_1)
-
-        cocotb.start_soon(Clock(dut.qsfp_9_rx_clk_2, 2.56, units="ns").start())
-        self.qsfp_9_2_source = XgmiiSource(dut.qsfp_9_rxd_2, dut.qsfp_9_rxc_2, dut.qsfp_9_rx_clk_2, dut.qsfp_9_rx_rst_2)
-        cocotb.start_soon(Clock(dut.qsfp_9_tx_clk_2, 2.56, units="ns").start())
-        self.qsfp_9_2_sink = XgmiiSink(dut.qsfp_9_txd_2, dut.qsfp_9_txc_2, dut.qsfp_9_tx_clk_2, dut.qsfp_9_tx_rst_2)
-
-        cocotb.start_soon(Clock(dut.qsfp_9_rx_clk_3, 2.56, units="ns").start())
-        self.qsfp_9_3_source = XgmiiSource(dut.qsfp_9_rxd_3, dut.qsfp_9_rxc_3, dut.qsfp_9_rx_clk_3, dut.qsfp_9_rx_rst_3)
-        cocotb.start_soon(Clock(dut.qsfp_9_tx_clk_3, 2.56, units="ns").start())
-        self.qsfp_9_3_sink = XgmiiSink(dut.qsfp_9_txd_3, dut.qsfp_9_txc_3, dut.qsfp_9_tx_clk_3, dut.qsfp_9_tx_rst_3)
-
-        cocotb.start_soon(Clock(dut.qsfp_9_rx_clk_4, 2.56, units="ns").start())
-        self.qsfp_9_4_source = XgmiiSource(dut.qsfp_9_rxd_4, dut.qsfp_9_rxc_4, dut.qsfp_9_rx_clk_4, dut.qsfp_9_rx_rst_4)
-        cocotb.start_soon(Clock(dut.qsfp_9_tx_clk_4, 2.56, units="ns").start())
-        self.qsfp_9_4_sink = XgmiiSink(dut.qsfp_9_txd_4, dut.qsfp_9_txc_4, dut.qsfp_9_tx_clk_4, dut.qsfp_9_tx_rst_4)
+        for x in range(1, 10):
+            sources = []
+            sinks = []
+            for y in range(1, 5):
+                cocotb.start_soon(Clock(getattr(dut, f"qsfp_{x}_rx_clk_{y}"), 2.56, units="ns").start())
+                source = XgmiiSource(getattr(dut, f"qsfp_{x}_rxd_{y}"), getattr(dut, f"qsfp_{x}_rxc_{y}"), getattr(dut, f"qsfp_{x}_rx_clk_{y}"), getattr(dut, f"qsfp_{x}_rx_rst_{y}"))
+                sources.append(source)
+                cocotb.start_soon(Clock(getattr(dut, f"qsfp_{x}_tx_clk_{y}"), 2.56, units="ns").start())
+                sink = XgmiiSink(getattr(dut, f"qsfp_{x}_txd_{y}"), getattr(dut, f"qsfp_{x}_txc_{y}"), getattr(dut, f"qsfp_{x}_tx_clk_{y}"), getattr(dut, f"qsfp_{x}_tx_rst_{y}"))
+                sinks.append(sink)
+            self.qsfp_source.append(sources)
+            self.qsfp_sink.append(sinks)
 
     async def init(self):
 
         self.dut.rst.setimmediatevalue(0)
-        self.dut.qsfp_1_rx_rst_1.setimmediatevalue(0)
-        self.dut.qsfp_1_tx_rst_1.setimmediatevalue(0)
-        self.dut.qsfp_1_rx_rst_2.setimmediatevalue(0)
-        self.dut.qsfp_1_tx_rst_2.setimmediatevalue(0)
-        self.dut.qsfp_1_rx_rst_3.setimmediatevalue(0)
-        self.dut.qsfp_1_tx_rst_3.setimmediatevalue(0)
-        self.dut.qsfp_1_rx_rst_4.setimmediatevalue(0)
-        self.dut.qsfp_1_tx_rst_4.setimmediatevalue(0)
-        self.dut.qsfp_2_rx_rst_1.setimmediatevalue(0)
-        self.dut.qsfp_2_tx_rst_1.setimmediatevalue(0)
-        self.dut.qsfp_2_rx_rst_2.setimmediatevalue(0)
-        self.dut.qsfp_2_tx_rst_2.setimmediatevalue(0)
-        self.dut.qsfp_2_rx_rst_3.setimmediatevalue(0)
-        self.dut.qsfp_2_tx_rst_3.setimmediatevalue(0)
-        self.dut.qsfp_2_rx_rst_4.setimmediatevalue(0)
-        self.dut.qsfp_2_tx_rst_4.setimmediatevalue(0)
-        self.dut.qsfp_3_rx_rst_1.setimmediatevalue(0)
-        self.dut.qsfp_3_tx_rst_1.setimmediatevalue(0)
-        self.dut.qsfp_3_rx_rst_2.setimmediatevalue(0)
-        self.dut.qsfp_3_tx_rst_2.setimmediatevalue(0)
-        self.dut.qsfp_3_rx_rst_3.setimmediatevalue(0)
-        self.dut.qsfp_3_tx_rst_3.setimmediatevalue(0)
-        self.dut.qsfp_3_rx_rst_4.setimmediatevalue(0)
-        self.dut.qsfp_3_tx_rst_4.setimmediatevalue(0)
-        self.dut.qsfp_4_rx_rst_1.setimmediatevalue(0)
-        self.dut.qsfp_4_tx_rst_1.setimmediatevalue(0)
-        self.dut.qsfp_4_rx_rst_2.setimmediatevalue(0)
-        self.dut.qsfp_4_tx_rst_2.setimmediatevalue(0)
-        self.dut.qsfp_4_rx_rst_3.setimmediatevalue(0)
-        self.dut.qsfp_4_tx_rst_3.setimmediatevalue(0)
-        self.dut.qsfp_4_rx_rst_4.setimmediatevalue(0)
-        self.dut.qsfp_4_tx_rst_4.setimmediatevalue(0)
-        self.dut.qsfp_5_rx_rst_1.setimmediatevalue(0)
-        self.dut.qsfp_5_tx_rst_1.setimmediatevalue(0)
-        self.dut.qsfp_5_rx_rst_2.setimmediatevalue(0)
-        self.dut.qsfp_5_tx_rst_2.setimmediatevalue(0)
-        self.dut.qsfp_5_rx_rst_3.setimmediatevalue(0)
-        self.dut.qsfp_5_tx_rst_3.setimmediatevalue(0)
-        self.dut.qsfp_5_rx_rst_4.setimmediatevalue(0)
-        self.dut.qsfp_5_tx_rst_4.setimmediatevalue(0)
-        self.dut.qsfp_6_rx_rst_1.setimmediatevalue(0)
-        self.dut.qsfp_6_tx_rst_1.setimmediatevalue(0)
-        self.dut.qsfp_6_rx_rst_2.setimmediatevalue(0)
-        self.dut.qsfp_6_tx_rst_2.setimmediatevalue(0)
-        self.dut.qsfp_6_rx_rst_3.setimmediatevalue(0)
-        self.dut.qsfp_6_tx_rst_3.setimmediatevalue(0)
-        self.dut.qsfp_6_rx_rst_4.setimmediatevalue(0)
-        self.dut.qsfp_6_tx_rst_4.setimmediatevalue(0)
-        self.dut.qsfp_7_rx_rst_1.setimmediatevalue(0)
-        self.dut.qsfp_7_tx_rst_1.setimmediatevalue(0)
-        self.dut.qsfp_7_rx_rst_2.setimmediatevalue(0)
-        self.dut.qsfp_7_tx_rst_2.setimmediatevalue(0)
-        self.dut.qsfp_7_rx_rst_3.setimmediatevalue(0)
-        self.dut.qsfp_7_tx_rst_3.setimmediatevalue(0)
-        self.dut.qsfp_7_rx_rst_4.setimmediatevalue(0)
-        self.dut.qsfp_7_tx_rst_4.setimmediatevalue(0)
-        self.dut.qsfp_8_rx_rst_1.setimmediatevalue(0)
-        self.dut.qsfp_8_tx_rst_1.setimmediatevalue(0)
-        self.dut.qsfp_8_rx_rst_2.setimmediatevalue(0)
-        self.dut.qsfp_8_tx_rst_2.setimmediatevalue(0)
-        self.dut.qsfp_8_rx_rst_3.setimmediatevalue(0)
-        self.dut.qsfp_8_tx_rst_3.setimmediatevalue(0)
-        self.dut.qsfp_8_rx_rst_4.setimmediatevalue(0)
-        self.dut.qsfp_8_tx_rst_4.setimmediatevalue(0)
-        self.dut.qsfp_9_rx_rst_1.setimmediatevalue(0)
-        self.dut.qsfp_9_tx_rst_1.setimmediatevalue(0)
-        self.dut.qsfp_9_rx_rst_2.setimmediatevalue(0)
-        self.dut.qsfp_9_tx_rst_2.setimmediatevalue(0)
-        self.dut.qsfp_9_rx_rst_3.setimmediatevalue(0)
-        self.dut.qsfp_9_tx_rst_3.setimmediatevalue(0)
-        self.dut.qsfp_9_rx_rst_4.setimmediatevalue(0)
-        self.dut.qsfp_9_tx_rst_4.setimmediatevalue(0)
+        for x in range(1, 10):
+            for y in range(1, 5):
+                getattr(self.dut, f"qsfp_{x}_rx_rst_{y}").setimmediatevalue(0)
+                getattr(self.dut, f"qsfp_{x}_tx_rst_{y}").setimmediatevalue(0)
 
         for k in range(10):
             await RisingEdge(self.dut.clk)
 
         self.dut.rst.value = 1
-        self.dut.qsfp_1_rx_rst_1.value = 1
-        self.dut.qsfp_1_tx_rst_1.value = 1
-        self.dut.qsfp_1_rx_rst_2.value = 1
-        self.dut.qsfp_1_tx_rst_2.value = 1
-        self.dut.qsfp_1_rx_rst_3.value = 1
-        self.dut.qsfp_1_tx_rst_3.value = 1
-        self.dut.qsfp_1_rx_rst_4.value = 1
-        self.dut.qsfp_1_tx_rst_4.value = 1
-        self.dut.qsfp_2_rx_rst_1.value = 1
-        self.dut.qsfp_2_tx_rst_1.value = 1
-        self.dut.qsfp_2_rx_rst_2.value = 1
-        self.dut.qsfp_2_tx_rst_2.value = 1
-        self.dut.qsfp_2_rx_rst_3.value = 1
-        self.dut.qsfp_2_tx_rst_3.value = 1
-        self.dut.qsfp_2_rx_rst_4.value = 1
-        self.dut.qsfp_2_tx_rst_4.value = 1
-        self.dut.qsfp_3_rx_rst_1.value = 1
-        self.dut.qsfp_3_tx_rst_1.value = 1
-        self.dut.qsfp_3_rx_rst_2.value = 1
-        self.dut.qsfp_3_tx_rst_2.value = 1
-        self.dut.qsfp_3_rx_rst_3.value = 1
-        self.dut.qsfp_3_tx_rst_3.value = 1
-        self.dut.qsfp_3_rx_rst_4.value = 1
-        self.dut.qsfp_3_tx_rst_4.value = 1
-        self.dut.qsfp_4_rx_rst_1.value = 1
-        self.dut.qsfp_4_tx_rst_1.value = 1
-        self.dut.qsfp_4_rx_rst_2.value = 1
-        self.dut.qsfp_4_tx_rst_2.value = 1
-        self.dut.qsfp_4_rx_rst_3.value = 1
-        self.dut.qsfp_4_tx_rst_3.value = 1
-        self.dut.qsfp_4_rx_rst_4.value = 1
-        self.dut.qsfp_4_tx_rst_4.value = 1
-        self.dut.qsfp_5_rx_rst_1.value = 1
-        self.dut.qsfp_5_tx_rst_1.value = 1
-        self.dut.qsfp_5_rx_rst_2.value = 1
-        self.dut.qsfp_5_tx_rst_2.value = 1
-        self.dut.qsfp_5_rx_rst_3.value = 1
-        self.dut.qsfp_5_tx_rst_3.value = 1
-        self.dut.qsfp_5_rx_rst_4.value = 1
-        self.dut.qsfp_5_tx_rst_4.value = 1
-        self.dut.qsfp_6_rx_rst_1.value = 1
-        self.dut.qsfp_6_tx_rst_1.value = 1
-        self.dut.qsfp_6_rx_rst_2.value = 1
-        self.dut.qsfp_6_tx_rst_2.value = 1
-        self.dut.qsfp_6_rx_rst_3.value = 1
-        self.dut.qsfp_6_tx_rst_3.value = 1
-        self.dut.qsfp_6_rx_rst_4.value = 1
-        self.dut.qsfp_6_tx_rst_4.value = 1
-        self.dut.qsfp_7_rx_rst_1.value = 1
-        self.dut.qsfp_7_tx_rst_1.value = 1
-        self.dut.qsfp_7_rx_rst_2.value = 1
-        self.dut.qsfp_7_tx_rst_2.value = 1
-        self.dut.qsfp_7_rx_rst_3.value = 1
-        self.dut.qsfp_7_tx_rst_3.value = 1
-        self.dut.qsfp_7_rx_rst_4.value = 1
-        self.dut.qsfp_7_tx_rst_4.value = 1
-        self.dut.qsfp_8_rx_rst_1.value = 1
-        self.dut.qsfp_8_tx_rst_1.value = 1
-        self.dut.qsfp_8_rx_rst_2.value = 1
-        self.dut.qsfp_8_tx_rst_2.value = 1
-        self.dut.qsfp_8_rx_rst_3.value = 1
-        self.dut.qsfp_8_tx_rst_3.value = 1
-        self.dut.qsfp_8_rx_rst_4.value = 1
-        self.dut.qsfp_8_tx_rst_4.value = 1
-        self.dut.qsfp_9_rx_rst_1.value = 1
-        self.dut.qsfp_9_tx_rst_1.value = 1
-        self.dut.qsfp_9_rx_rst_2.value = 1
-        self.dut.qsfp_9_tx_rst_2.value = 1
-        self.dut.qsfp_9_rx_rst_3.value = 1
-        self.dut.qsfp_9_tx_rst_3.value = 1
-        self.dut.qsfp_9_rx_rst_4.value = 1
-        self.dut.qsfp_9_tx_rst_4.value = 1
+        for x in range(1, 10):
+            for y in range(1, 5):
+                getattr(self.dut, f"qsfp_{x}_rx_rst_{y}").value = 1
+                getattr(self.dut, f"qsfp_{x}_tx_rst_{y}").value = 1
 
         for k in range(10):
             await RisingEdge(self.dut.clk)
 
         self.dut.rst.value = 0
-        self.dut.qsfp_1_rx_rst_1.value = 0
-        self.dut.qsfp_1_tx_rst_1.value = 0
-        self.dut.qsfp_1_rx_rst_2.value = 0
-        self.dut.qsfp_1_tx_rst_2.value = 0
-        self.dut.qsfp_1_rx_rst_3.value = 0
-        self.dut.qsfp_1_tx_rst_3.value = 0
-        self.dut.qsfp_1_rx_rst_4.value = 0
-        self.dut.qsfp_1_tx_rst_4.value = 0
-        self.dut.qsfp_2_rx_rst_1.value = 0
-        self.dut.qsfp_2_tx_rst_1.value = 0
-        self.dut.qsfp_2_rx_rst_2.value = 0
-        self.dut.qsfp_2_tx_rst_2.value = 0
-        self.dut.qsfp_2_rx_rst_3.value = 0
-        self.dut.qsfp_2_tx_rst_3.value = 0
-        self.dut.qsfp_2_rx_rst_4.value = 0
-        self.dut.qsfp_2_tx_rst_4.value = 0
-        self.dut.qsfp_3_rx_rst_1.value = 0
-        self.dut.qsfp_3_tx_rst_1.value = 0
-        self.dut.qsfp_3_rx_rst_2.value = 0
-        self.dut.qsfp_3_tx_rst_2.value = 0
-        self.dut.qsfp_3_rx_rst_3.value = 0
-        self.dut.qsfp_3_tx_rst_3.value = 0
-        self.dut.qsfp_3_rx_rst_4.value = 0
-        self.dut.qsfp_3_tx_rst_4.value = 0
-        self.dut.qsfp_4_rx_rst_1.value = 0
-        self.dut.qsfp_4_tx_rst_1.value = 0
-        self.dut.qsfp_4_rx_rst_2.value = 0
-        self.dut.qsfp_4_tx_rst_2.value = 0
-        self.dut.qsfp_4_rx_rst_3.value = 0
-        self.dut.qsfp_4_tx_rst_3.value = 0
-        self.dut.qsfp_4_rx_rst_4.value = 0
-        self.dut.qsfp_4_tx_rst_4.value = 0
-        self.dut.qsfp_5_rx_rst_1.value = 0
-        self.dut.qsfp_5_tx_rst_1.value = 0
-        self.dut.qsfp_5_rx_rst_2.value = 0
-        self.dut.qsfp_5_tx_rst_2.value = 0
-        self.dut.qsfp_5_rx_rst_3.value = 0
-        self.dut.qsfp_5_tx_rst_3.value = 0
-        self.dut.qsfp_5_rx_rst_4.value = 0
-        self.dut.qsfp_5_tx_rst_4.value = 0
-        self.dut.qsfp_6_rx_rst_1.value = 0
-        self.dut.qsfp_6_tx_rst_1.value = 0
-        self.dut.qsfp_6_rx_rst_2.value = 0
-        self.dut.qsfp_6_tx_rst_2.value = 0
-        self.dut.qsfp_6_rx_rst_3.value = 0
-        self.dut.qsfp_6_tx_rst_3.value = 0
-        self.dut.qsfp_6_rx_rst_4.value = 0
-        self.dut.qsfp_6_tx_rst_4.value = 0
-        self.dut.qsfp_7_rx_rst_1.value = 0
-        self.dut.qsfp_7_tx_rst_1.value = 0
-        self.dut.qsfp_7_rx_rst_2.value = 0
-        self.dut.qsfp_7_tx_rst_2.value = 0
-        self.dut.qsfp_7_rx_rst_3.value = 0
-        self.dut.qsfp_7_tx_rst_3.value = 0
-        self.dut.qsfp_7_rx_rst_4.value = 0
-        self.dut.qsfp_7_tx_rst_4.value = 0
-        self.dut.qsfp_8_rx_rst_1.value = 0
-        self.dut.qsfp_8_tx_rst_1.value = 0
-        self.dut.qsfp_8_rx_rst_2.value = 0
-        self.dut.qsfp_8_tx_rst_2.value = 0
-        self.dut.qsfp_8_rx_rst_3.value = 0
-        self.dut.qsfp_8_tx_rst_3.value = 0
-        self.dut.qsfp_8_rx_rst_4.value = 0
-        self.dut.qsfp_8_tx_rst_4.value = 0
-        self.dut.qsfp_9_rx_rst_1.value = 0
-        self.dut.qsfp_9_tx_rst_1.value = 0
-        self.dut.qsfp_9_rx_rst_2.value = 0
-        self.dut.qsfp_9_tx_rst_2.value = 0
-        self.dut.qsfp_9_rx_rst_3.value = 0
-        self.dut.qsfp_9_tx_rst_3.value = 0
-        self.dut.qsfp_9_rx_rst_4.value = 0
-        self.dut.qsfp_9_tx_rst_4.value = 0
+        for x in range(1, 10):
+            for y in range(1, 5):
+                getattr(self.dut, f"qsfp_{x}_rx_rst_{y}").value = 0
+                getattr(self.dut, f"qsfp_{x}_tx_rst_{y}").value = 0
 
 
 @cocotb.test()
@@ -482,11 +114,11 @@ async def run_test(dut):
 
     test_frame = XgmiiFrame.from_payload(test_pkt.build())
 
-    await tb.qsfp_1_1_source.send(test_frame)
+    await tb.qsfp_source[0][0].send(test_frame)
 
     tb.log.info("receive ARP request")
 
-    rx_frame = await tb.qsfp_1_1_sink.recv()
+    rx_frame = await tb.qsfp_sink[0][0].recv()
 
     rx_pkt = Ether(bytes(rx_frame.get_payload()))
 
@@ -514,11 +146,11 @@ async def run_test(dut):
 
     resp_frame = XgmiiFrame.from_payload(resp_pkt.build())
 
-    await tb.qsfp_1_1_source.send(resp_frame)
+    await tb.qsfp_source[0][0].send(resp_frame)
 
     tb.log.info("receive UDP packet")
 
-    rx_frame = await tb.qsfp_1_1_sink.recv()
+    rx_frame = await tb.qsfp_sink[0][0].recv()
 
     rx_pkt = Ether(bytes(rx_frame.get_payload()))
 
