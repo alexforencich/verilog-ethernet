@@ -149,7 +149,7 @@ async def run_test_tuser_assert(dut):
     test_frame = AxiStreamFrame(test_data, tuser=1)
     await tb.source.send(test_frame)
 
-    if int(os.getenv("PARAM_DROP_BAD_FRAME")):
+    if dut.DROP_BAD_FRAME.value:
         for k in range(64):
             await RisingEdge(dut.s_clk)
 
@@ -299,7 +299,7 @@ async def run_test_shift_in_source_reset(dut):
     for k in range(64):
         await RisingEdge(dut.s_clk)
 
-    if int(os.getenv("PARAM_FRAME_FIFO")):
+    if dut.FRAME_FIFO.value:
         assert tb.sink.empty()
     else:
         rx_frame = await tb.sink.recv()
@@ -460,7 +460,7 @@ async def run_test_overflow(dut):
 
     tb.sink.pause = False
 
-    if int(os.getenv("PARAM_DROP_OVERSIZE_FRAME")):
+    if dut.DROP_OVERSIZE_FRAME.value:
         for k in range(2048):
             await RisingEdge(dut.s_clk)
 
