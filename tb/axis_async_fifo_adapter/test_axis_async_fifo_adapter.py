@@ -447,21 +447,24 @@ async def run_test_overflow(dut):
 
     tb = TB(dut)
 
+    depth = dut.DEPTH.value
+    byte_lanes = min(tb.source.byte_lanes, tb.sink.byte_lanes)
+
     await tb.reset()
 
     tb.sink.pause = True
 
-    test_data = bytearray(itertools.islice(itertools.cycle(range(256)), 2048))
+    test_data = bytearray(itertools.islice(itertools.cycle(range(256)), depth*2))
     test_frame = AxiStreamFrame(test_data)
     await tb.source.send(test_frame)
 
-    for k in range(2048):
+    for k in range((depth//byte_lanes)*2):
         await RisingEdge(dut.s_clk)
 
     tb.sink.pause = False
 
     if dut.DROP_OVERSIZE_FRAME.value:
-        for k in range(2048):
+        for k in range((depth//byte_lanes)*2):
             await RisingEdge(dut.s_clk)
 
     else:
