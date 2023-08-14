@@ -126,32 +126,32 @@ module axis_fifo_adapter #
 );
 
 // force keep width to 1 when disabled
-parameter S_KEEP_WIDTH_INT = S_KEEP_ENABLE ? S_KEEP_WIDTH : 1;
-parameter M_KEEP_WIDTH_INT = M_KEEP_ENABLE ? M_KEEP_WIDTH : 1;
+localparam S_BYTE_LANES = S_KEEP_ENABLE ? S_KEEP_WIDTH : 1;
+localparam M_BYTE_LANES = M_KEEP_ENABLE ? M_KEEP_WIDTH : 1;
 
-// bus word sizes (must be identical)
-parameter S_DATA_WORD_SIZE = S_DATA_WIDTH / S_KEEP_WIDTH_INT;
-parameter M_DATA_WORD_SIZE = M_DATA_WIDTH / M_KEEP_WIDTH_INT;
+// bus byte sizes (must be identical)
+localparam S_BYTE_SIZE = S_DATA_WIDTH / S_BYTE_LANES;
+localparam M_BYTE_SIZE = M_DATA_WIDTH / M_BYTE_LANES;
 // output bus is wider
-parameter EXPAND_BUS = M_KEEP_WIDTH_INT > S_KEEP_WIDTH_INT;
+localparam EXPAND_BUS = M_BYTE_LANES > S_BYTE_LANES;
 // total data and keep widths
-parameter DATA_WIDTH = EXPAND_BUS ? M_DATA_WIDTH : S_DATA_WIDTH;
-parameter KEEP_WIDTH = EXPAND_BUS ? M_KEEP_WIDTH_INT : S_KEEP_WIDTH_INT;
+localparam DATA_WIDTH = EXPAND_BUS ? M_DATA_WIDTH : S_DATA_WIDTH;
+localparam KEEP_WIDTH = EXPAND_BUS ? M_BYTE_LANES : S_BYTE_LANES;
 
 // bus width assertions
 initial begin
-    if (S_DATA_WORD_SIZE * S_KEEP_WIDTH_INT != S_DATA_WIDTH) begin
-        $error("Error: input data width not evenly divisble (instance %m)");
+    if (S_BYTE_SIZE * S_BYTE_LANES != S_DATA_WIDTH) begin
+        $error("Error: input data width not evenly divisible (instance %m)");
         $finish;
     end
 
-    if (M_DATA_WORD_SIZE * M_KEEP_WIDTH_INT != M_DATA_WIDTH) begin
-        $error("Error: output data width not evenly divisble (instance %m)");
+    if (M_BYTE_SIZE * M_BYTE_LANES != M_DATA_WIDTH) begin
+        $error("Error: output data width not evenly divisible (instance %m)");
         $finish;
     end
 
-    if (S_DATA_WORD_SIZE != M_DATA_WORD_SIZE) begin
-        $error("Error: word size mismatch (instance %m)");
+    if (S_BYTE_SIZE != M_BYTE_SIZE) begin
+        $error("Error: byte size mismatch (instance %m)");
         $finish;
     end
 end
@@ -176,29 +176,7 @@ wire [USER_WIDTH-1:0]  post_fifo_axis_tuser;
 
 generate
 
-if (M_KEEP_WIDTH_INT == S_KEEP_WIDTH_INT) begin
-
-    // same width, no adapter needed
-
-    assign pre_fifo_axis_tdata = s_axis_tdata;
-    assign pre_fifo_axis_tkeep = s_axis_tkeep;
-    assign pre_fifo_axis_tvalid = s_axis_tvalid;
-    assign s_axis_tready = pre_fifo_axis_tready;
-    assign pre_fifo_axis_tlast = s_axis_tlast;
-    assign pre_fifo_axis_tid = s_axis_tid;
-    assign pre_fifo_axis_tdest = s_axis_tdest;
-    assign pre_fifo_axis_tuser = s_axis_tuser;
-
-    assign m_axis_tdata = post_fifo_axis_tdata;
-    assign m_axis_tkeep = post_fifo_axis_tkeep;
-    assign m_axis_tvalid = post_fifo_axis_tvalid;
-    assign post_fifo_axis_tready = m_axis_tready;
-    assign m_axis_tlast = post_fifo_axis_tlast;
-    assign m_axis_tid = post_fifo_axis_tid;
-    assign m_axis_tdest = post_fifo_axis_tdest;
-    assign m_axis_tuser = post_fifo_axis_tuser;
-
-end else if (EXPAND_BUS) begin
+if (M_BYTE_LANES > S_BYTE_LANES) begin : upsize_pre
 
     // output wider, adapt width before FIFO
 
@@ -239,19 +217,8 @@ end else if (EXPAND_BUS) begin
         .m_axis_tuser(pre_fifo_axis_tuser)
     );
 
-    assign m_axis_tdata = post_fifo_axis_tdata;
-    assign m_axis_tkeep = post_fifo_axis_tkeep;
-    assign m_axis_tvalid = post_fifo_axis_tvalid;
-    assign post_fifo_axis_tready = m_axis_tready;
-    assign m_axis_tlast = post_fifo_axis_tlast;
-    assign m_axis_tid = post_fifo_axis_tid;
-    assign m_axis_tdest = post_fifo_axis_tdest;
-    assign m_axis_tuser = post_fifo_axis_tuser;
-    
-end else begin
+end else begin : bypass_pre
 
-    // input wider, adapt width after FIFO
-    
     assign pre_fifo_axis_tdata = s_axis_tdata;
     assign pre_fifo_axis_tkeep = s_axis_tkeep;
     assign pre_fifo_axis_tvalid = s_axis_tvalid;
@@ -261,46 +228,7 @@ end else begin
     assign pre_fifo_axis_tdest = s_axis_tdest;
     assign pre_fifo_axis_tuser = s_axis_tuser;
 
-    axis_adapter #(
-        .S_DATA_WIDTH(S_DATA_WIDTH),
-        .S_KEEP_ENABLE(S_KEEP_ENABLE),
-        .S_KEEP_WIDTH(S_KEEP_WIDTH),
-        .M_DATA_WIDTH(M_DATA_WIDTH),
-        .M_KEEP_ENABLE(M_KEEP_ENABLE),
-        .M_KEEP_WIDTH(M_KEEP_WIDTH),
-        .ID_ENABLE(ID_ENABLE),
-        .ID_WIDTH(ID_WIDTH),
-        .DEST_ENABLE(DEST_ENABLE),
-        .DEST_WIDTH(DEST_WIDTH),
-        .USER_ENABLE(USER_ENABLE),
-        .USER_WIDTH(USER_WIDTH)
-    )
-    adapter_inst (
-        .clk(clk),
-        .rst(rst),
-        // AXI input
-        .s_axis_tdata(post_fifo_axis_tdata),
-        .s_axis_tkeep(post_fifo_axis_tkeep),
-        .s_axis_tvalid(post_fifo_axis_tvalid),
-        .s_axis_tready(post_fifo_axis_tready),
-        .s_axis_tlast(post_fifo_axis_tlast),
-        .s_axis_tid(post_fifo_axis_tid),
-        .s_axis_tdest(post_fifo_axis_tdest),
-        .s_axis_tuser(post_fifo_axis_tuser),
-        // AXI output
-        .m_axis_tdata(m_axis_tdata),
-        .m_axis_tkeep(m_axis_tkeep),
-        .m_axis_tvalid(m_axis_tvalid),
-        .m_axis_tready(m_axis_tready),
-        .m_axis_tlast(m_axis_tlast),
-        .m_axis_tid(m_axis_tid),
-        .m_axis_tdest(m_axis_tdest),
-        .m_axis_tuser(m_axis_tuser)
-    );
-
 end
-
-endgenerate
 
 axis_fifo #(
     .DEPTH(DEPTH),
@@ -351,6 +279,62 @@ fifo_inst (
     .status_bad_frame(status_bad_frame),
     .status_good_frame(status_good_frame)
 );
+
+if (M_BYTE_LANES < S_BYTE_LANES) begin : downsize_post
+
+    // input wider, adapt width after FIFO
+
+    axis_adapter #(
+        .S_DATA_WIDTH(S_DATA_WIDTH),
+        .S_KEEP_ENABLE(S_KEEP_ENABLE),
+        .S_KEEP_WIDTH(S_KEEP_WIDTH),
+        .M_DATA_WIDTH(M_DATA_WIDTH),
+        .M_KEEP_ENABLE(M_KEEP_ENABLE),
+        .M_KEEP_WIDTH(M_KEEP_WIDTH),
+        .ID_ENABLE(ID_ENABLE),
+        .ID_WIDTH(ID_WIDTH),
+        .DEST_ENABLE(DEST_ENABLE),
+        .DEST_WIDTH(DEST_WIDTH),
+        .USER_ENABLE(USER_ENABLE),
+        .USER_WIDTH(USER_WIDTH)
+    )
+    adapter_inst (
+        .clk(clk),
+        .rst(rst),
+        // AXI input
+        .s_axis_tdata(post_fifo_axis_tdata),
+        .s_axis_tkeep(post_fifo_axis_tkeep),
+        .s_axis_tvalid(post_fifo_axis_tvalid),
+        .s_axis_tready(post_fifo_axis_tready),
+        .s_axis_tlast(post_fifo_axis_tlast),
+        .s_axis_tid(post_fifo_axis_tid),
+        .s_axis_tdest(post_fifo_axis_tdest),
+        .s_axis_tuser(post_fifo_axis_tuser),
+        // AXI output
+        .m_axis_tdata(m_axis_tdata),
+        .m_axis_tkeep(m_axis_tkeep),
+        .m_axis_tvalid(m_axis_tvalid),
+        .m_axis_tready(m_axis_tready),
+        .m_axis_tlast(m_axis_tlast),
+        .m_axis_tid(m_axis_tid),
+        .m_axis_tdest(m_axis_tdest),
+        .m_axis_tuser(m_axis_tuser)
+    );
+
+end else begin : bypass_post
+
+    assign m_axis_tdata = post_fifo_axis_tdata;
+    assign m_axis_tkeep = post_fifo_axis_tkeep;
+    assign m_axis_tvalid = post_fifo_axis_tvalid;
+    assign post_fifo_axis_tready = m_axis_tready;
+    assign m_axis_tlast = post_fifo_axis_tlast;
+    assign m_axis_tid = post_fifo_axis_tid;
+    assign m_axis_tdest = post_fifo_axis_tdest;
+    assign m_axis_tuser = post_fifo_axis_tuser;
+
+end
+
+endgenerate
 
 endmodule
 
