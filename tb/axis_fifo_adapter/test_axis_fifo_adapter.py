@@ -284,7 +284,7 @@ async def run_stress_test(dut, idle_inserter=None, backpressure_inserter=None):
 
     test_frames = []
 
-    for k in range(128):
+    for k in range(512):
         length = random.randint(1, byte_lanes*16)
         test_data = bytearray(itertools.islice(itertools.cycle(range(256)), length))
         test_frame = AxiStreamFrame(test_data)
