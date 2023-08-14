@@ -457,6 +457,44 @@ async def run_test_overflow(dut):
 
     tb.sink.pause = True
 
+    size = (16*byte_lanes)
+    count = depth*2 // size
+
+    test_data = bytearray(itertools.islice(itertools.cycle(range(256)), size))
+    test_frame = AxiStreamFrame(test_data)
+    for k in range(count):
+        await tb.source.send(test_frame)
+
+    for k in range((depth//byte_lanes)*2):
+        await RisingEdge(dut.s_clk)
+
+    assert not tb.source.idle()
+
+    tb.sink.pause = False
+
+    for k in range(count):
+        rx_frame = await tb.sink.recv()
+
+        assert rx_frame.tdata == test_data
+        assert not rx_frame.tuser
+
+    assert tb.sink.empty()
+
+    await RisingEdge(dut.s_clk)
+    await RisingEdge(dut.s_clk)
+
+
+async def run_test_oversize(dut):
+
+    tb = TB(dut)
+
+    depth = dut.DEPTH.value
+    byte_lanes = tb.source.byte_lanes
+
+    await tb.reset()
+
+    tb.sink.pause = True
+
     test_data = bytearray(itertools.islice(itertools.cycle(range(256)), depth*2))
     test_frame = AxiStreamFrame(test_data)
     await tb.source.send(test_frame)
@@ -558,7 +596,8 @@ if cocotb.SIM_NAME:
                 run_test_shift_out_source_reset,
                 run_test_shift_out_sink_reset,
                 run_test_pause,
-                run_test_overflow
+                run_test_overflow,
+                run_test_oversize
             ]:
 
         factory = TestFactory(test)
