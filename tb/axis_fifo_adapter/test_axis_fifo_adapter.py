@@ -373,13 +373,13 @@ def test_axis_fifo_adapter(request, s_data_width, m_data_width, frame_fifo, drop
 
     parameters = {}
 
-    parameters['DEPTH'] = 1024
     parameters['S_DATA_WIDTH'] = s_data_width
     parameters['S_KEEP_ENABLE'] = int(parameters['S_DATA_WIDTH'] > 8)
     parameters['S_KEEP_WIDTH'] = (parameters['S_DATA_WIDTH'] + 7) // 8
     parameters['M_DATA_WIDTH'] = m_data_width
     parameters['M_KEEP_ENABLE'] = int(parameters['M_DATA_WIDTH'] > 8)
     parameters['M_KEEP_WIDTH'] = (parameters['M_DATA_WIDTH'] + 7) // 8
+    parameters['DEPTH'] = 1024 * max(parameters['S_KEEP_WIDTH'], parameters['M_KEEP_WIDTH'])
     parameters['ID_ENABLE'] = 1
     parameters['ID_WIDTH'] = 8
     parameters['DEST_ENABLE'] = 1

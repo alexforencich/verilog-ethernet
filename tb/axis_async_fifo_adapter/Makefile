@@ -34,13 +34,13 @@ VERILOG_SOURCES += ../../rtl/axis_async_fifo.v
 VERILOG_SOURCES += ../../rtl/axis_adapter.v
 
 # module parameters
-export PARAM_DEPTH := 1024
 export PARAM_S_DATA_WIDTH := 8
-export PARAM_S_KEEP_ENABLE := $(shell expr $(PARAM_S_DATA_WIDTH) \> 8 )
-export PARAM_S_KEEP_WIDTH := $(shell expr \( $(PARAM_S_DATA_WIDTH) + 7 \) / 8 )
+export PARAM_S_KEEP_ENABLE := $(shell echo $$(( $(PARAM_S_DATA_WIDTH) > 8 )))
+export PARAM_S_KEEP_WIDTH := $(shell echo $$(( ( $(PARAM_S_DATA_WIDTH) + 7 ) / 8 )))
 export PARAM_M_DATA_WIDTH := 8
-export PARAM_M_KEEP_ENABLE := $(shell expr $(PARAM_M_DATA_WIDTH) \> 8 )
-export PARAM_M_KEEP_WIDTH := $(shell expr \( $(PARAM_M_DATA_WIDTH) + 7 \) / 8 )
+export PARAM_M_KEEP_ENABLE := $(shell echo $$(( $(PARAM_M_DATA_WIDTH) > 8 )))
+export PARAM_M_KEEP_WIDTH := $(shell echo $$(( ( $(PARAM_M_DATA_WIDTH) + 7 ) / 8 )))
+export PARAM_DEPTH := $(shell echo $$(( 1024 * ($(PARAM_S_KEEP_WIDTH) > $(PARAM_M_KEEP_WIDTH) ? $(PARAM_S_KEEP_WIDTH) : $(PARAM_M_KEEP_WIDTH)) )))
 export PARAM_ID_ENABLE := 1
 export PARAM_ID_WIDTH := 8
 export PARAM_DEST_ENABLE := 1

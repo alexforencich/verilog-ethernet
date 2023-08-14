@@ -32,10 +32,10 @@ MODULE   = test_$(DUT)
 VERILOG_SOURCES += ../../rtl/$(DUT).v
 
 # module parameters
-export PARAM_DEPTH := 1024
 export PARAM_DATA_WIDTH := 8
-export PARAM_KEEP_ENABLE := $(shell expr $(PARAM_DATA_WIDTH) \> 8 )
-export PARAM_KEEP_WIDTH := $(shell expr \( $(PARAM_DATA_WIDTH) + 7 \) / 8 )
+export PARAM_KEEP_ENABLE := $(shell echo $$(( $(PARAM_DATA_WIDTH) > 8 )))
+export PARAM_KEEP_WIDTH := $(shell echo $$(( ( $(PARAM_DATA_WIDTH) + 7 ) / 8 )))
+export PARAM_DEPTH := $(shell echo $$(( 1024 * $(PARAM_KEEP_WIDTH) )))
 export PARAM_LAST_ENABLE := 1
 export PARAM_ID_ENABLE := 1
 export PARAM_ID_WIDTH := 8
