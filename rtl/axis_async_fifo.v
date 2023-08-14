@@ -80,7 +80,11 @@ module axis_async_fifo #
     // Drop incoming frames when full
     // When set, s_axis_tready is always asserted
     // Requires FRAME_FIFO and DROP_OVERSIZE_FRAME set
-    parameter DROP_WHEN_FULL = 0
+    parameter DROP_WHEN_FULL = 0,
+    // Enable pause request input
+    parameter PAUSE_ENABLE = 0,
+    // Pause between frames
+    parameter FRAME_PAUSE = FRAME_FIFO
 )
 (
     /*
@@ -110,6 +114,14 @@ module axis_async_fifo #
     output wire [ID_WIDTH-1:0]    m_axis_tid,
     output wire [DEST_WIDTH-1:0]  m_axis_tdest,
     output wire [USER_WIDTH-1:0]  m_axis_tuser,
+
+    /*
+     * Pause
+     */
+    input  wire                   s_pause_req,
+    output wire                   s_pause_ack,
+    input  wire                   m_pause_req,
+    output wire                   m_pause_ack,
 
     /*
      * Status
@@ -291,6 +303,7 @@ endgenerate
 
 wire [WIDTH-1:0] m_axis = m_axis_pipe_reg[RAM_PIPELINE+1-1];
 
+wire                   m_axis_tready_pipe;
 wire                   m_axis_tvalid_pipe = m_axis_tvalid_pipe_reg[RAM_PIPELINE+1-1];
 
 wire [DATA_WIDTH-1:0]  m_axis_tdata_pipe  = m_axis[DATA_WIDTH-1:0];
@@ -299,6 +312,16 @@ wire                   m_axis_tlast_pipe  = LAST_ENABLE ? m_axis[LAST_OFFSET] | 
 wire [ID_WIDTH-1:0]    m_axis_tid_pipe    = ID_ENABLE   ? m_axis[ID_OFFSET +: ID_WIDTH] : {ID_WIDTH{1'b0}};
 wire [DEST_WIDTH-1:0]  m_axis_tdest_pipe  = DEST_ENABLE ? m_axis[DEST_OFFSET +: DEST_WIDTH] : {DEST_WIDTH{1'b0}};
 wire [USER_WIDTH-1:0]  m_axis_tuser_pipe  = USER_ENABLE ? (m_terminate_frame_reg ? USER_BAD_FRAME_VALUE : m_axis[USER_OFFSET +: USER_WIDTH]) : {USER_WIDTH{1'b0}};
+
+wire                   m_axis_tready_out;
+wire                   m_axis_tvalid_out;
+
+wire [DATA_WIDTH-1:0]  m_axis_tdata_out;
+wire [KEEP_WIDTH-1:0]  m_axis_tkeep_out;
+wire                   m_axis_tlast_out;
+wire [ID_WIDTH-1:0]    m_axis_tid_out;
+wire [DEST_WIDTH-1:0]  m_axis_tdest_out;
+wire [USER_WIDTH-1:0]  m_axis_tuser_out;
 
 wire pipe_ready;
 
@@ -574,14 +597,14 @@ end
 integer j;
 
 always @(posedge m_clk) begin
-    if (OUTPUT_FIFO_ENABLE || m_axis_tready) begin
+    if (m_axis_tready_pipe) begin
         // output ready; invalidate stage
         m_axis_tvalid_pipe_reg[RAM_PIPELINE+1-1] <= 1'b0;
         m_terminate_frame_reg <= 1'b0;
     end
 
     for (j = RAM_PIPELINE+1-1; j > 0; j = j - 1) begin
-        if (OUTPUT_FIFO_ENABLE || m_axis_tready || ((~m_axis_tvalid_pipe_reg) >> j)) begin
+        if (m_axis_tready_pipe || ((~m_axis_tvalid_pipe_reg) >> j)) begin
             // output ready or bubble in pipeline; transfer down pipeline
             m_axis_tvalid_pipe_reg[j] <= m_axis_tvalid_pipe_reg[j-1];
             m_axis_pipe_reg[j] <= m_axis_pipe_reg[j-1];
@@ -589,7 +612,7 @@ always @(posedge m_clk) begin
         end
     end
 
-    if (OUTPUT_FIFO_ENABLE || m_axis_tready || ~m_axis_tvalid_pipe_reg) begin
+    if (m_axis_tready_pipe || ~m_axis_tvalid_pipe_reg) begin
         // output ready or bubble in pipeline; read new data from FIFO
         m_axis_tvalid_pipe_reg[0] <= 1'b0;
         m_axis_pipe_reg[0] <= mem[rd_ptr_reg[ADDR_WIDTH-1:0]];
@@ -604,14 +627,14 @@ always @(posedge m_clk) begin
 
     if (m_axis_tvalid_pipe && LAST_ENABLE) begin
         // track output frame status
-        if (m_axis_tlast_pipe && (OUTPUT_FIFO_ENABLE || m_axis_tready)) begin
+        if (m_axis_tlast_pipe && m_axis_tready_pipe) begin
             m_frame_reg <= 1'b0;
         end else begin
             m_frame_reg <= 1'b1;
         end
     end
 
-    if (m_drop_frame_reg && (OUTPUT_FIFO_ENABLE ? pipe_ready : m_axis_tready || !m_axis_tvalid_pipe) && LAST_ENABLE) begin
+    if (m_drop_frame_reg && (OUTPUT_FIFO_ENABLE ? pipe_ready : m_axis_tready_pipe || !m_axis_tvalid_pipe) && LAST_ENABLE) begin
         // terminate frame
         // (only for frame transfers interrupted by source reset)
         m_axis_tvalid_pipe_reg[RAM_PIPELINE+1-1] <= 1'b1;
@@ -662,16 +685,17 @@ if (!OUTPUT_FIFO_ENABLE) begin
 
     assign pipe_ready = 1'b1;
 
-    assign m_axis_tvalid = m_axis_tvalid_pipe;
+    assign m_axis_tready_pipe = m_axis_tready_out;
+    assign m_axis_tvalid_out = m_axis_tvalid_pipe;
 
-    assign m_axis_tdata = m_axis_tdata_pipe;
-    assign m_axis_tkeep = m_axis_tkeep_pipe;
-    assign m_axis_tlast = m_axis_tlast_pipe;
-    assign m_axis_tid   = m_axis_tid_pipe;
-    assign m_axis_tdest = m_axis_tdest_pipe;
-    assign m_axis_tuser = m_axis_tuser_pipe;
+    assign m_axis_tdata_out = m_axis_tdata_pipe;
+    assign m_axis_tkeep_out = m_axis_tkeep_pipe;
+    assign m_axis_tlast_out = m_axis_tlast_pipe;
+    assign m_axis_tid_out   = m_axis_tid_pipe;
+    assign m_axis_tdest_out = m_axis_tdest_pipe;
+    assign m_axis_tuser_out = m_axis_tuser_pipe;
 
-end else begin
+end else begin : output_fifo
 
     // output datapath logic
     reg [DATA_WIDTH-1:0] m_axis_tdata_reg  = {DATA_WIDTH{1'b0}};
@@ -704,16 +728,18 @@ end else begin
 
     assign pipe_ready = !out_fifo_half_full_reg;
 
-    assign m_axis_tdata  = m_axis_tdata_reg;
-    assign m_axis_tkeep  = KEEP_ENABLE ? m_axis_tkeep_reg : {KEEP_WIDTH{1'b1}};
-    assign m_axis_tvalid = m_axis_tvalid_reg;
-    assign m_axis_tlast  = LAST_ENABLE ? m_axis_tlast_reg : 1'b1;
-    assign m_axis_tid    = ID_ENABLE   ? m_axis_tid_reg   : {ID_WIDTH{1'b0}};
-    assign m_axis_tdest  = DEST_ENABLE ? m_axis_tdest_reg : {DEST_WIDTH{1'b0}};
-    assign m_axis_tuser  = USER_ENABLE ? m_axis_tuser_reg : {USER_WIDTH{1'b0}};
+    assign m_axis_tready_pipe = 1'b1;
+
+    assign m_axis_tdata_out  = m_axis_tdata_reg;
+    assign m_axis_tkeep_out  = KEEP_ENABLE ? m_axis_tkeep_reg : {KEEP_WIDTH{1'b1}};
+    assign m_axis_tvalid_out = m_axis_tvalid_reg;
+    assign m_axis_tlast_out  = LAST_ENABLE ? m_axis_tlast_reg : 1'b1;
+    assign m_axis_tid_out    = ID_ENABLE   ? m_axis_tid_reg   : {ID_WIDTH{1'b0}};
+    assign m_axis_tdest_out  = DEST_ENABLE ? m_axis_tdest_reg : {DEST_WIDTH{1'b0}};
+    assign m_axis_tuser_out  = USER_ENABLE ? m_axis_tuser_reg : {USER_WIDTH{1'b0}};
 
     always @(posedge m_clk) begin
-        m_axis_tvalid_reg <= m_axis_tvalid_reg && !m_axis_tready;
+        m_axis_tvalid_reg <= m_axis_tvalid_reg && !m_axis_tready_out;
 
         out_fifo_half_full_reg <= $unsigned(out_fifo_wr_ptr_reg - out_fifo_rd_ptr_reg) >= 2**(OUTPUT_FIFO_ADDR_WIDTH-1);
 
@@ -727,7 +753,7 @@ end else begin
             out_fifo_wr_ptr_reg <= out_fifo_wr_ptr_reg + 1;
         end
 
-        if (!out_fifo_empty && (!m_axis_tvalid_reg || m_axis_tready)) begin
+        if (!out_fifo_empty && (!m_axis_tvalid_reg || m_axis_tready_out)) begin
             m_axis_tdata_reg <= out_fifo_tdata[out_fifo_rd_ptr_reg[OUTPUT_FIFO_ADDR_WIDTH-1:0]];
             m_axis_tkeep_reg <= out_fifo_tkeep[out_fifo_rd_ptr_reg[OUTPUT_FIFO_ADDR_WIDTH-1:0]];
             m_axis_tvalid_reg <= 1'b1;
@@ -744,6 +770,85 @@ end else begin
             m_axis_tvalid_reg <= 1'b0;
         end
     end
+
+end
+
+if (PAUSE_ENABLE) begin : pause
+
+    // Pause logic
+    reg pause_reg = 1'b0;
+    reg pause_frame_reg = 1'b0;
+
+    reg s_pause_req_sync1_reg;
+    reg s_pause_req_sync2_reg;
+    reg s_pause_req_sync3_reg;
+    reg s_pause_ack_sync1_reg;
+    reg s_pause_ack_sync2_reg;
+    reg s_pause_ack_sync3_reg;
+
+    always @(posedge s_clk) begin
+        s_pause_req_sync1_reg <= s_pause_req;
+        s_pause_ack_sync2_reg <= s_pause_ack_sync1_reg;
+        s_pause_ack_sync3_reg <= s_pause_ack_sync2_reg;
+    end
+
+    always @(posedge m_clk) begin
+        s_pause_req_sync2_reg <= s_pause_req_sync1_reg;
+        s_pause_req_sync3_reg <= s_pause_req_sync2_reg;
+        s_pause_ack_sync1_reg <= pause_reg;
+    end
+
+    assign m_axis_tready_out = m_axis_tready && !pause_reg;
+    assign m_axis_tvalid = m_axis_tvalid_out && !pause_reg;
+
+    assign m_axis_tdata = m_axis_tdata_out;
+    assign m_axis_tkeep = m_axis_tkeep_out;
+    assign m_axis_tlast = m_axis_tlast_out;
+    assign m_axis_tid   = m_axis_tid_out;
+    assign m_axis_tdest = m_axis_tdest_out;
+    assign m_axis_tuser = m_axis_tuser_out;
+
+    assign s_pause_ack = s_pause_ack_sync3_reg;
+    assign m_pause_ack = pause_reg;
+
+    always @(posedge m_clk) begin
+        if (FRAME_PAUSE) begin
+            if (m_axis_tvalid && m_axis_tready) begin
+                if (m_axis_tlast) begin
+                    pause_frame_reg <= 1'b0;
+                    pause_reg <= m_pause_req || s_pause_req_sync3_reg;
+                end else begin
+                    pause_frame_reg <= 1'b1;
+                end
+            end else begin
+                if (!pause_frame_reg) begin
+                    pause_reg <= m_pause_req || s_pause_req_sync3_reg;
+                end
+            end
+        end else begin
+            pause_reg <= m_pause_req || s_pause_req_sync3_reg;
+        end
+
+        if (m_rst) begin
+            pause_frame_reg <= 1'b0;
+            pause_reg <= 1'b0;
+        end
+    end
+
+end else begin
+
+    assign m_axis_tready_out = m_axis_tready;
+    assign m_axis_tvalid = m_axis_tvalid_out;
+
+    assign m_axis_tdata = m_axis_tdata_out;
+    assign m_axis_tkeep = m_axis_tkeep_out;
+    assign m_axis_tlast = m_axis_tlast_out;
+    assign m_axis_tid   = m_axis_tid_out;
+    assign m_axis_tdest = m_axis_tdest_out;
+    assign m_axis_tuser = m_axis_tuser_out;
+
+    assign s_pause_ack = 1'b0;
+    assign m_pause_ack = 1'b0;
 
 end
 

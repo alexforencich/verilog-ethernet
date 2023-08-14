@@ -85,7 +85,11 @@ module axis_async_fifo_adapter #
     // Drop incoming frames when full
     // When set, s_axis_tready is always asserted
     // Requires FRAME_FIFO and DROP_OVERSIZE_FRAME set
-    parameter DROP_WHEN_FULL = 0
+    parameter DROP_WHEN_FULL = 0,
+    // Enable pause request input
+    parameter PAUSE_ENABLE = 0,
+    // Pause between frames
+    parameter FRAME_PAUSE = FRAME_FIFO
 )
 (
     /*
@@ -115,6 +119,14 @@ module axis_async_fifo_adapter #
     output wire [ID_WIDTH-1:0]      m_axis_tid,
     output wire [DEST_WIDTH-1:0]    m_axis_tdest,
     output wire [USER_WIDTH-1:0]    m_axis_tuser,
+
+    /*
+     * Pause
+     */
+    input  wire                     s_pause_req,
+    output wire                     s_pause_ack,
+    input  wire                     m_pause_req,
+    output wire                     m_pause_ack,
 
     /*
      * Status
@@ -255,7 +267,9 @@ axis_async_fifo #(
     .USER_BAD_FRAME_MASK(USER_BAD_FRAME_MASK),
     .DROP_OVERSIZE_FRAME(DROP_OVERSIZE_FRAME),
     .DROP_BAD_FRAME(DROP_BAD_FRAME),
-    .DROP_WHEN_FULL(DROP_WHEN_FULL)
+    .DROP_WHEN_FULL(DROP_WHEN_FULL),
+    .PAUSE_ENABLE(PAUSE_ENABLE),
+    .FRAME_PAUSE(FRAME_PAUSE)
 )
 fifo_inst (
     // AXI input
@@ -280,6 +294,11 @@ fifo_inst (
     .m_axis_tid(post_fifo_axis_tid),
     .m_axis_tdest(post_fifo_axis_tdest),
     .m_axis_tuser(post_fifo_axis_tuser),
+    // Pause
+    .s_pause_req(s_pause_req),
+    .s_pause_ack(s_pause_ack),
+    .m_pause_req(m_pause_req),
+    .m_pause_ack(m_pause_ack),
     // Status
     .s_status_depth(s_status_depth),
     .s_status_depth_commit(s_status_depth_commit),

@@ -51,6 +51,8 @@ class TB(object):
         self.source = AxiStreamSource(AxiStreamBus.from_prefix(dut, "s_axis"), dut.clk, dut.rst)
         self.sink = AxiStreamSink(AxiStreamBus.from_prefix(dut, "m_axis"), dut.clk, dut.rst)
 
+        dut.pause_req.setimmediatevalue(0)
+
     def set_idle_generator(self, generator=None):
         if generator:
             self.source.set_pause_generator(generator())
@@ -192,6 +194,44 @@ async def run_test_init_sink_pause_reset(dut):
     await RisingEdge(dut.clk)
 
 
+async def run_test_pause(dut):
+
+    tb = TB(dut)
+
+    byte_lanes = max(tb.source.byte_lanes, tb.sink.byte_lanes)
+
+    await tb.reset()
+
+    test_data = bytearray(itertools.islice(itertools.cycle(range(256)), 16*byte_lanes))
+    test_frame = AxiStreamFrame(test_data)
+
+    for k in range(16):
+        await tb.source.send(test_frame)
+
+    for k in range(60):
+        await RisingEdge(dut.clk)
+
+    dut.pause_req.value = 1
+
+    for k in range(64):
+        await RisingEdge(dut.clk)
+
+    assert tb.sink.idle()
+
+    dut.pause_req.value = 0
+
+    for k in range(16):
+        rx_frame = await tb.sink.recv()
+
+        assert rx_frame.tdata == test_data
+        assert not rx_frame.tuser
+
+    assert tb.sink.empty()
+
+    await RisingEdge(dut.clk)
+    await RisingEdge(dut.clk)
+
+
 async def run_test_overflow(dut):
 
     tb = TB(dut)
@@ -294,6 +334,7 @@ if cocotb.SIM_NAME:
                 run_test_tuser_assert,
                 run_test_init_sink_pause,
                 run_test_init_sink_pause_reset,
+                run_test_pause,
                 run_test_overflow
             ]:
 
@@ -350,6 +391,8 @@ def test_axis_fifo_adapter(request, s_data_width, m_data_width, frame_fifo, drop
     parameters['DROP_OVERSIZE_FRAME'] = drop_oversize_frame
     parameters['DROP_BAD_FRAME'] = drop_bad_frame
     parameters['DROP_WHEN_FULL'] = drop_when_full
+    parameters['PAUSE_ENABLE'] = 1
+    parameters['FRAME_PAUSE'] = 1
 
     extra_env = {f'PARAM_{k}': str(v) for k, v in parameters.items()}
 
