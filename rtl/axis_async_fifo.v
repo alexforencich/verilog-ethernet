@@ -395,10 +395,80 @@ always @(posedge s_clk) begin
         end
     end
 
-    if (s_axis_tready && s_axis_tvalid) begin
-        // transfer in
-        if (!FRAME_FIFO) begin
-            // normal FIFO mode
+    if (FRAME_FIFO) begin
+        // frame FIFO mode
+        if (s_axis_tready && s_axis_tvalid) begin
+            // transfer in
+            if ((full && DROP_WHEN_FULL) || (full_wr && DROP_OVERSIZE_FRAME) || drop_frame_reg) begin
+                // full, packet overflow, or currently dropping frame
+                // drop frame
+                drop_frame_reg <= 1'b1;
+                if (s_axis_tlast) begin
+                    // end of frame, reset write pointer
+                    wr_ptr_temp = wr_ptr_commit_reg;
+                    wr_ptr_reg <= wr_ptr_temp;
+                    wr_ptr_gray_reg <= bin2gray(wr_ptr_temp);
+                    drop_frame_reg <= 1'b0;
+                    overflow_reg <= 1'b1;
+                end
+            end else begin
+                mem[wr_ptr_reg[ADDR_WIDTH-1:0]] <= s_axis;
+                wr_ptr_temp = wr_ptr_reg + 1;
+                wr_ptr_reg <= wr_ptr_temp;
+                wr_ptr_gray_reg <= bin2gray(wr_ptr_temp);
+                if (s_axis_tlast || (!DROP_OVERSIZE_FRAME && (full_wr || send_frame_reg))) begin
+                    // end of frame or send frame
+                    send_frame_reg <= !s_axis_tlast;
+                    if (s_axis_tlast && DROP_BAD_FRAME && USER_BAD_FRAME_MASK & ~(s_axis_tuser ^ USER_BAD_FRAME_VALUE)) begin
+                        // bad packet, reset write pointer
+                        wr_ptr_temp = wr_ptr_commit_reg;
+                        wr_ptr_reg <= wr_ptr_temp;
+                        wr_ptr_gray_reg <= bin2gray(wr_ptr_temp);
+                        bad_frame_reg <= 1'b1;
+                    end else begin
+                        // good packet or packet overflow, update write pointer
+                        wr_ptr_temp = wr_ptr_reg + 1;
+                        wr_ptr_reg <= wr_ptr_temp;
+                        wr_ptr_commit_reg <= wr_ptr_temp;
+                        wr_ptr_gray_reg <= bin2gray(wr_ptr_temp);
+
+                        if (wr_ptr_update_reg == wr_ptr_update_ack_sync2_reg) begin
+                            // no sync in progress; sync update
+                            wr_ptr_update_valid_reg <= 1'b0;
+                            wr_ptr_sync_commit_reg <= wr_ptr_temp;
+                            wr_ptr_update_reg <= !wr_ptr_update_ack_sync2_reg;
+                        end else begin
+                            // sync in progress; flag it for later
+                            wr_ptr_update_valid_reg <= 1'b1;
+                        end
+
+                        good_frame_reg <= s_axis_tlast;
+                    end
+                end
+            end
+        end else if (s_axis_tvalid && full_wr && FRAME_FIFO && !DROP_OVERSIZE_FRAME) begin
+            // data valid with packet overflow
+            // update write pointer
+            send_frame_reg <= 1'b1;
+            wr_ptr_temp = wr_ptr_reg;
+            wr_ptr_reg <= wr_ptr_temp;
+            wr_ptr_commit_reg <= wr_ptr_temp;
+            wr_ptr_gray_reg <= bin2gray(wr_ptr_temp);
+
+            if (wr_ptr_update_reg == wr_ptr_update_ack_sync2_reg) begin
+                // no sync in progress; sync update
+                wr_ptr_update_valid_reg <= 1'b0;
+                wr_ptr_sync_commit_reg <= wr_ptr_temp;
+                wr_ptr_update_reg <= !wr_ptr_update_ack_sync2_reg;
+            end else begin
+                // sync in progress; flag it for later
+                wr_ptr_update_valid_reg <= 1'b1;
+            end
+        end
+    end else begin
+        // normal FIFO mode
+        if (s_axis_tready && s_axis_tvalid) begin
+            // transfer in
             mem[wr_ptr_reg[ADDR_WIDTH-1:0]] <= s_axis;
             if (drop_frame_reg && LAST_ENABLE) begin
                 // currently dropping frame
@@ -414,70 +484,6 @@ always @(posedge s_clk) begin
                 wr_ptr_commit_reg <= wr_ptr_temp;
                 wr_ptr_gray_reg <= bin2gray(wr_ptr_temp);
             end
-        end else if ((full && DROP_WHEN_FULL) || (full_wr && DROP_OVERSIZE_FRAME) || drop_frame_reg) begin
-            // full, packet overflow, or currently dropping frame
-            // drop frame
-            drop_frame_reg <= 1'b1;
-            if (s_axis_tlast) begin
-                // end of frame, reset write pointer
-                wr_ptr_temp = wr_ptr_commit_reg;
-                wr_ptr_reg <= wr_ptr_temp;
-                wr_ptr_gray_reg <= bin2gray(wr_ptr_temp);
-                drop_frame_reg <= 1'b0;
-                overflow_reg <= 1'b1;
-            end
-        end else begin
-            mem[wr_ptr_reg[ADDR_WIDTH-1:0]] <= s_axis;
-            wr_ptr_temp = wr_ptr_reg + 1;
-            wr_ptr_reg <= wr_ptr_temp;
-            wr_ptr_gray_reg <= bin2gray(wr_ptr_temp);
-            if (s_axis_tlast || (!DROP_OVERSIZE_FRAME && (full_wr || send_frame_reg))) begin
-                // end of frame or send frame
-                send_frame_reg <= !s_axis_tlast;
-                if (s_axis_tlast && DROP_BAD_FRAME && USER_BAD_FRAME_MASK & ~(s_axis_tuser ^ USER_BAD_FRAME_VALUE)) begin
-                    // bad packet, reset write pointer
-                    wr_ptr_temp = wr_ptr_commit_reg;
-                    wr_ptr_reg <= wr_ptr_temp;
-                    wr_ptr_gray_reg <= bin2gray(wr_ptr_temp);
-                    bad_frame_reg <= 1'b1;
-                end else begin
-                    // good packet or packet overflow, update write pointer
-                    wr_ptr_temp = wr_ptr_reg + 1;
-                    wr_ptr_reg <= wr_ptr_temp;
-                    wr_ptr_commit_reg <= wr_ptr_temp;
-                    wr_ptr_gray_reg <= bin2gray(wr_ptr_temp);
-
-                    if (wr_ptr_update_reg == wr_ptr_update_ack_sync2_reg) begin
-                        // no sync in progress; sync update
-                        wr_ptr_update_valid_reg <= 1'b0;
-                        wr_ptr_sync_commit_reg <= wr_ptr_temp;
-                        wr_ptr_update_reg <= !wr_ptr_update_ack_sync2_reg;
-                    end else begin
-                        // sync in progress; flag it for later
-                        wr_ptr_update_valid_reg <= 1'b1;
-                    end
-
-                    good_frame_reg <= s_axis_tlast;
-                end
-            end
-        end
-    end else if (s_axis_tvalid && full_wr && FRAME_FIFO && !DROP_OVERSIZE_FRAME) begin
-        // data valid with packet overflow
-        // update write pointer
-        send_frame_reg <= 1'b1;
-        wr_ptr_temp = wr_ptr_reg;
-        wr_ptr_reg <= wr_ptr_temp;
-        wr_ptr_commit_reg <= wr_ptr_temp;
-        wr_ptr_gray_reg <= bin2gray(wr_ptr_temp);
-
-        if (wr_ptr_update_reg == wr_ptr_update_ack_sync2_reg) begin
-            // no sync in progress; sync update
-            wr_ptr_update_valid_reg <= 1'b0;
-            wr_ptr_sync_commit_reg <= wr_ptr_temp;
-            wr_ptr_update_reg <= !wr_ptr_update_ack_sync2_reg;
-        end else begin
-            // sync in progress; flag it for later
-            wr_ptr_update_valid_reg <= 1'b1;
         end
     end
 
