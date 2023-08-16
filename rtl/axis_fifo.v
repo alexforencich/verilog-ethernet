@@ -81,6 +81,10 @@ module axis_fifo #
     // When set, s_axis_tready is always asserted
     // Requires FRAME_FIFO and DROP_OVERSIZE_FRAME set
     parameter DROP_WHEN_FULL = 0,
+    // Mark incoming frames as bad frames when full
+    // When set, s_axis_tready is always asserted
+    // Requires FRAME_FIFO to be clear
+    parameter MARK_WHEN_FULL = 0,
     // Enable pause request input
     parameter PAUSE_ENABLE = 0,
     // Pause between frames
@@ -156,8 +160,18 @@ initial begin
         $finish;
     end
 
-    if (DROP_BAD_FRAME && (USER_BAD_FRAME_MASK & {USER_WIDTH{1'b1}}) == 0) begin
+    if ((DROP_BAD_FRAME || MARK_WHEN_FULL) && (USER_BAD_FRAME_MASK & {USER_WIDTH{1'b1}}) == 0) begin
         $error("Error: Invalid USER_BAD_FRAME_MASK value (instance %m)");
+        $finish;
+    end
+
+    if (MARK_WHEN_FULL && FRAME_FIFO) begin
+        $error("Error: MARK_WHEN_FULL is not compatible with FRAME_FIFO (instance %m)");
+        $finish;
+    end
+
+    if (MARK_WHEN_FULL && !LAST_ENABLE) begin
+        $error("Error: MARK_WHEN_FULL set requires LAST_ENABLE set (instance %m)");
         $finish;
     end
 end
@@ -188,7 +202,10 @@ wire empty = wr_ptr_commit_reg == rd_ptr_reg;
 // overflow within packet
 wire full_wr = wr_ptr_reg == (wr_ptr_commit_reg ^ {1'b1, {ADDR_WIDTH{1'b0}}});
 
+reg s_frame_reg = 1'b0;
+
 reg drop_frame_reg = 1'b0;
+reg mark_frame_reg = 1'b0;
 reg send_frame_reg = 1'b0;
 reg [ADDR_WIDTH:0] depth_reg = 0;
 reg [ADDR_WIDTH:0] depth_commit_reg = 0;
@@ -196,17 +213,17 @@ reg overflow_reg = 1'b0;
 reg bad_frame_reg = 1'b0;
 reg good_frame_reg = 1'b0;
 
-assign s_axis_tready = FRAME_FIFO ? (!full || (full_wr && DROP_OVERSIZE_FRAME) || DROP_WHEN_FULL) : !full;
+assign s_axis_tready = FRAME_FIFO ? (!full || (full_wr && DROP_OVERSIZE_FRAME) || DROP_WHEN_FULL) : (!full || MARK_WHEN_FULL);
 
 wire [WIDTH-1:0] s_axis;
 
 generate
     assign s_axis[DATA_WIDTH-1:0] = s_axis_tdata;
     if (KEEP_ENABLE) assign s_axis[KEEP_OFFSET +: KEEP_WIDTH] = s_axis_tkeep;
-    if (LAST_ENABLE) assign s_axis[LAST_OFFSET]               = s_axis_tlast;
+    if (LAST_ENABLE) assign s_axis[LAST_OFFSET]               = s_axis_tlast | mark_frame_reg;
     if (ID_ENABLE)   assign s_axis[ID_OFFSET   +: ID_WIDTH]   = s_axis_tid;
     if (DEST_ENABLE) assign s_axis[DEST_OFFSET +: DEST_WIDTH] = s_axis_tdest;
-    if (USER_ENABLE) assign s_axis[USER_OFFSET +: USER_WIDTH] = s_axis_tuser;
+    if (USER_ENABLE) assign s_axis[USER_OFFSET +: USER_WIDTH] = mark_frame_reg ? USER_BAD_FRAME_VALUE : s_axis_tuser;
 endgenerate
 
 wire [WIDTH-1:0] m_axis = m_axis_pipe_reg[RAM_PIPELINE+1-1];
@@ -244,6 +261,11 @@ always @(posedge clk) begin
     overflow_reg <= 1'b0;
     bad_frame_reg <= 1'b0;
     good_frame_reg <= 1'b0;
+
+    if (s_axis_tready && s_axis_tvalid && LAST_ENABLE) begin
+        // track input frame status
+        s_frame_reg <= !s_axis_tlast;
+    end
 
     if (FRAME_FIFO) begin
         // frame FIFO mode
@@ -286,7 +308,39 @@ always @(posedge clk) begin
     end else begin
         // normal FIFO mode
         if (s_axis_tready && s_axis_tvalid) begin
-            // transfer in
+            if (drop_frame_reg && MARK_WHEN_FULL) begin
+                // currently dropping frame
+                if (s_axis_tlast) begin
+                    // end of frame
+                    if (!full && mark_frame_reg) begin
+                        // terminate marked frame
+                        mark_frame_reg <= 1'b0;
+                        mem[wr_ptr_reg[ADDR_WIDTH-1:0]] <= s_axis;
+                        wr_ptr_reg <= wr_ptr_reg + 1;
+                        wr_ptr_commit_reg <= wr_ptr_reg + 1;
+                    end
+                    // end of frame, clear drop flag
+                    drop_frame_reg <= 1'b0;
+                    overflow_reg <= 1'b1;
+                end
+            end else if ((full || mark_frame_reg) && MARK_WHEN_FULL) begin
+                // full or marking frame
+                // drop frame; mark if this isn't the first cycle
+                drop_frame_reg <= 1'b1;
+                mark_frame_reg <= mark_frame_reg || s_frame_reg;
+                if (s_axis_tlast) begin
+                    drop_frame_reg <= 1'b0;
+                    overflow_reg <= 1'b1;
+                end
+            end else begin
+                // transfer in
+                mem[wr_ptr_reg[ADDR_WIDTH-1:0]] <= s_axis;
+                wr_ptr_reg <= wr_ptr_reg + 1;
+                wr_ptr_commit_reg <= wr_ptr_reg + 1;
+            end
+        end else if ((!full && !drop_frame_reg && mark_frame_reg) && MARK_WHEN_FULL) begin
+            // terminate marked frame
+            mark_frame_reg <= 1'b0;
             mem[wr_ptr_reg[ADDR_WIDTH-1:0]] <= s_axis;
             wr_ptr_reg <= wr_ptr_reg + 1;
             wr_ptr_commit_reg <= wr_ptr_reg + 1;
@@ -297,7 +351,10 @@ always @(posedge clk) begin
         wr_ptr_reg <= {ADDR_WIDTH+1{1'b0}};
         wr_ptr_commit_reg <= {ADDR_WIDTH+1{1'b0}};
 
+        s_frame_reg <= 1'b0;
+
         drop_frame_reg <= 1'b0;
+        mark_frame_reg <= 1'b0;
         send_frame_reg <= 1'b0;
         overflow_reg <= 1'b0;
         bad_frame_reg <= 1'b0;

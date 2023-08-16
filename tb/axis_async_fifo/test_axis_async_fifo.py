@@ -468,14 +468,14 @@ async def run_test_overflow(dut):
     for k in range((depth//byte_lanes)*3):
         await RisingEdge(dut.s_clk)
 
-    if dut.DROP_WHEN_FULL.value:
+    if dut.DROP_WHEN_FULL.value or dut.MARK_WHEN_FULL.value:
         assert tb.source.idle()
     else:
         assert not tb.source.idle()
 
     tb.sink.pause = False
 
-    if dut.DROP_WHEN_FULL.value:
+    if dut.DROP_WHEN_FULL.value or dut.MARK_WHEN_FULL.value:
         for k in range((depth//byte_lanes)*3):
             await RisingEdge(dut.s_clk)
 
@@ -484,8 +484,13 @@ async def run_test_overflow(dut):
         while not tb.sink.empty():
             rx_frame = await tb.sink.recv()
 
+            if dut.MARK_WHEN_FULL.value and rx_frame.tuser:
+                continue
+
             assert rx_frame.tdata == test_data
             assert not rx_frame.tuser
+
+            rx_count += 1
 
         assert rx_count < count
 
@@ -529,8 +534,11 @@ async def run_test_oversize(dut):
     else:
         rx_frame = await tb.sink.recv()
 
-        assert rx_frame.tdata == test_data
-        assert not rx_frame.tuser
+        if dut.MARK_WHEN_FULL.value:
+            assert rx_frame.tuser
+        else:
+            assert rx_frame.tdata == test_data
+            assert not rx_frame.tuser
 
     assert tb.sink.empty()
 
@@ -566,7 +574,7 @@ async def run_stress_test(dut, idle_inserter=None, backpressure_inserter=None):
 
         cur_id = (cur_id + 1) % id_count
 
-    if dut.DROP_WHEN_FULL.value:
+    if dut.DROP_WHEN_FULL.value or dut.MARK_WHEN_FULL.value:
         cycles = 0
         while cycles < 100:
             cycles += 1
@@ -577,9 +585,14 @@ async def run_stress_test(dut, idle_inserter=None, backpressure_inserter=None):
         while not tb.sink.empty():
             rx_frame = await tb.sink.recv()
 
+            if dut.MARK_WHEN_FULL.value and rx_frame.tuser:
+                continue
+
+            assert not rx_frame.tuser
+
             while True:
                 test_frame = test_frames.pop(0)
-                if not rx_frame.tuser and rx_frame.tid == test_frame.tid and rx_frame.tdest == test_frame.tdest and rx_frame.tdata == test_frame.tdata:
+                if rx_frame.tid == test_frame.tid and rx_frame.tdest == test_frame.tdest and rx_frame.tdata == test_frame.tdata:
                     break
 
         assert len(test_frames) < 512
@@ -653,13 +666,16 @@ rtl_dir = os.path.abspath(os.path.join(tests_dir, '..', '..', 'rtl'))
 
 
 @pytest.mark.parametrize(("s_clk", "m_clk"), [(10, 10), (10, 11), (11, 10)])
-@pytest.mark.parametrize(("frame_fifo", "drop_oversize_frame", "drop_bad_frame", "drop_when_full"),
-    [(0, 0, 0, 0), (1, 0, 0, 0), (1, 1, 0, 0), (1, 1, 1, 0), (1, 1, 1, 1)])
+@pytest.mark.parametrize(("frame_fifo", "drop_oversize_frame", "drop_bad_frame",
+    "drop_when_full", "mark_when_full"),
+    [(0, 0, 0, 0, 0), (1, 0, 0, 0, 0), (1, 1, 0, 0, 0), (1, 1, 1, 0, 0),
+        (1, 1, 1, 1, 0), (0, 0, 0, 0, 1)])
 @pytest.mark.parametrize(("ram_pipeline", "output_fifo"),
     [(0, 0), (1, 0), (4, 0), (0, 1), (1, 1), (4, 1)])
 @pytest.mark.parametrize("data_width", [8, 16, 32, 64])
 def test_axis_async_fifo(request, data_width, ram_pipeline, output_fifo,
-        frame_fifo, drop_oversize_frame, drop_bad_frame, drop_when_full, s_clk, m_clk):
+        frame_fifo, drop_oversize_frame, drop_bad_frame,
+        drop_when_full, mark_when_full, s_clk, m_clk):
 
     dut = "axis_async_fifo"
     module = os.path.splitext(os.path.basename(__file__))[0]
@@ -690,6 +706,7 @@ def test_axis_async_fifo(request, data_width, ram_pipeline, output_fifo,
     parameters['DROP_OVERSIZE_FRAME'] = drop_oversize_frame
     parameters['DROP_BAD_FRAME'] = drop_bad_frame
     parameters['DROP_WHEN_FULL'] = drop_when_full
+    parameters['MARK_WHEN_FULL'] = mark_when_full
     parameters['PAUSE_ENABLE'] = 1
     parameters['FRAME_PAUSE'] = 1
 

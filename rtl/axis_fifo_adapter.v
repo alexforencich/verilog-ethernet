@@ -86,6 +86,10 @@ module axis_fifo_adapter #
     // When set, s_axis_tready is always asserted
     // Requires FRAME_FIFO and DROP_OVERSIZE_FRAME set
     parameter DROP_WHEN_FULL = 0,
+    // Mark incoming frames as bad frames when full
+    // When set, s_axis_tready is always asserted
+    // Requires FRAME_FIFO to be clear
+    parameter MARK_WHEN_FULL = 0,
     // Enable pause request input
     parameter PAUSE_ENABLE = 0,
     // Pause between frames
@@ -260,6 +264,7 @@ axis_fifo #(
     .DROP_OVERSIZE_FRAME(DROP_OVERSIZE_FRAME),
     .DROP_BAD_FRAME(DROP_BAD_FRAME),
     .DROP_WHEN_FULL(DROP_WHEN_FULL),
+    .MARK_WHEN_FULL(MARK_WHEN_FULL),
     .PAUSE_ENABLE(PAUSE_ENABLE),
     .FRAME_PAUSE(FRAME_PAUSE)
 )
