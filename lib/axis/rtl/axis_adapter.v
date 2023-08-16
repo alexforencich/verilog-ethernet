@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2014-2018 Alex Forencich
+Copyright (c) 2014-2023 Alex Forencich
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -90,468 +90,235 @@ module axis_adapter #
 );
 
 // force keep width to 1 when disabled
-parameter S_KEEP_WIDTH_INT = S_KEEP_ENABLE ? S_KEEP_WIDTH : 1;
-parameter M_KEEP_WIDTH_INT = M_KEEP_ENABLE ? M_KEEP_WIDTH : 1;
+localparam S_BYTE_LANES = S_KEEP_ENABLE ? S_KEEP_WIDTH : 1;
+localparam M_BYTE_LANES = M_KEEP_ENABLE ? M_KEEP_WIDTH : 1;
 
-// bus word sizes (must be identical)
-parameter S_DATA_WORD_SIZE = S_DATA_WIDTH / S_KEEP_WIDTH_INT;
-parameter M_DATA_WORD_SIZE = M_DATA_WIDTH / M_KEEP_WIDTH_INT;
-// output bus is wider
-parameter EXPAND_BUS = M_KEEP_WIDTH_INT > S_KEEP_WIDTH_INT;
-// total data and keep widths
-parameter DATA_WIDTH = EXPAND_BUS ? M_DATA_WIDTH : S_DATA_WIDTH;
-parameter KEEP_WIDTH = EXPAND_BUS ? M_KEEP_WIDTH_INT : S_KEEP_WIDTH_INT;
-// required number of segments in wider bus
-parameter SEGMENT_COUNT = EXPAND_BUS ? (M_KEEP_WIDTH_INT / S_KEEP_WIDTH_INT) : (S_KEEP_WIDTH_INT / M_KEEP_WIDTH_INT);
-parameter SEGMENT_COUNT_WIDTH = SEGMENT_COUNT == 1 ? 1 : $clog2(SEGMENT_COUNT);
-// data width and keep width per segment
-parameter SEGMENT_DATA_WIDTH = DATA_WIDTH / SEGMENT_COUNT;
-parameter SEGMENT_KEEP_WIDTH = KEEP_WIDTH / SEGMENT_COUNT;
+// bus byte sizes (must be identical)
+localparam S_BYTE_SIZE = S_DATA_WIDTH / S_BYTE_LANES;
+localparam M_BYTE_SIZE = M_DATA_WIDTH / M_BYTE_LANES;
 
 // bus width assertions
 initial begin
-    if (S_DATA_WORD_SIZE * S_KEEP_WIDTH_INT != S_DATA_WIDTH) begin
-        $error("Error: input data width not evenly divisble (instance %m)");
+    if (S_BYTE_SIZE * S_BYTE_LANES != S_DATA_WIDTH) begin
+        $error("Error: input data width not evenly divisible (instance %m)");
         $finish;
     end
 
-    if (M_DATA_WORD_SIZE * M_KEEP_WIDTH_INT != M_DATA_WIDTH) begin
-        $error("Error: output data width not evenly divisble (instance %m)");
+    if (M_BYTE_SIZE * M_BYTE_LANES != M_DATA_WIDTH) begin
+        $error("Error: output data width not evenly divisible (instance %m)");
         $finish;
     end
 
-    if (S_DATA_WORD_SIZE != M_DATA_WORD_SIZE) begin
-        $error("Error: word size mismatch (instance %m)");
+    if (S_BYTE_SIZE != M_BYTE_SIZE) begin
+        $error("Error: byte size mismatch (instance %m)");
         $finish;
     end
 end
 
-// state register
-localparam [2:0]
-    STATE_IDLE = 3'd0,
-    STATE_TRANSFER_IN = 3'd1,
-    STATE_TRANSFER_OUT = 3'd2;
+generate
 
-reg [2:0] state_reg = STATE_IDLE, state_next;
+if (M_BYTE_LANES == S_BYTE_LANES) begin : bypass
+    // same width; bypass
 
-reg [SEGMENT_COUNT_WIDTH-1:0] segment_count_reg = 0, segment_count_next;
+    assign s_axis_tready = m_axis_tready;
 
-reg last_segment;
+    assign m_axis_tdata  = s_axis_tdata;
+    assign m_axis_tkeep  = M_KEEP_ENABLE ? s_axis_tkeep : {M_KEEP_WIDTH{1'b1}};
+    assign m_axis_tvalid = s_axis_tvalid;
+    assign m_axis_tlast  = s_axis_tlast;
+    assign m_axis_tid    = ID_ENABLE   ? s_axis_tid   : {ID_WIDTH{1'b0}};
+    assign m_axis_tdest  = DEST_ENABLE ? s_axis_tdest : {DEST_WIDTH{1'b0}};
+    assign m_axis_tuser  = USER_ENABLE ? s_axis_tuser : {USER_WIDTH{1'b0}};
 
-reg [DATA_WIDTH-1:0] temp_tdata_reg = {DATA_WIDTH{1'b0}}, temp_tdata_next;
-reg [KEEP_WIDTH-1:0] temp_tkeep_reg = {KEEP_WIDTH{1'b0}}, temp_tkeep_next;
-reg                  temp_tlast_reg = 1'b0, temp_tlast_next;
-reg [ID_WIDTH-1:0]   temp_tid_reg   = {ID_WIDTH{1'b0}}, temp_tid_next;
-reg [DEST_WIDTH-1:0] temp_tdest_reg = {DEST_WIDTH{1'b0}}, temp_tdest_next;
-reg [USER_WIDTH-1:0] temp_tuser_reg = {USER_WIDTH{1'b0}}, temp_tuser_next;
+end else if (M_BYTE_LANES > S_BYTE_LANES) begin : upsize
+    // output is wider; upsize
 
-// internal datapath
-reg  [M_DATA_WIDTH-1:0] m_axis_tdata_int;
-reg  [M_KEEP_WIDTH-1:0] m_axis_tkeep_int;
-reg                     m_axis_tvalid_int;
-reg                     m_axis_tready_int_reg = 1'b0;
-reg                     m_axis_tlast_int;
-reg  [ID_WIDTH-1:0]     m_axis_tid_int;
-reg  [DEST_WIDTH-1:0]   m_axis_tdest_int;
-reg  [USER_WIDTH-1:0]   m_axis_tuser_int;
-wire                    m_axis_tready_int_early;
+    // required number of segments in wider bus
+    localparam SEG_COUNT = M_BYTE_LANES / S_BYTE_LANES;
+    // data width and keep width per segment
+    localparam SEG_DATA_WIDTH = M_DATA_WIDTH / SEG_COUNT;
+    localparam SEG_KEEP_WIDTH = M_BYTE_LANES / SEG_COUNT;
 
-reg s_axis_tready_reg = 1'b0, s_axis_tready_next;
+    reg [$clog2(SEG_COUNT)-1:0] seg_reg = 0;
 
-assign s_axis_tready = s_axis_tready_reg;
+    reg [S_DATA_WIDTH-1:0] s_axis_tdata_reg = {S_DATA_WIDTH{1'b0}};
+    reg [S_KEEP_WIDTH-1:0] s_axis_tkeep_reg = {S_KEEP_WIDTH{1'b0}};
+    reg s_axis_tvalid_reg = 1'b0;
+    reg s_axis_tlast_reg = 1'b0;
+    reg [ID_WIDTH-1:0] s_axis_tid_reg = {ID_WIDTH{1'b0}};
+    reg [DEST_WIDTH-1:0] s_axis_tdest_reg = {DEST_WIDTH{1'b0}};
+    reg [USER_WIDTH-1:0] s_axis_tuser_reg = {USER_WIDTH{1'b0}};
 
-always @* begin
-    state_next = STATE_IDLE;
+    reg [M_DATA_WIDTH-1:0] m_axis_tdata_reg = {M_DATA_WIDTH{1'b0}};
+    reg [M_KEEP_WIDTH-1:0] m_axis_tkeep_reg = {M_KEEP_WIDTH{1'b0}};
+    reg m_axis_tvalid_reg = 1'b0;
+    reg m_axis_tlast_reg = 1'b0;
+    reg [ID_WIDTH-1:0] m_axis_tid_reg = {ID_WIDTH{1'b0}};
+    reg [DEST_WIDTH-1:0] m_axis_tdest_reg = {DEST_WIDTH{1'b0}};
+    reg [USER_WIDTH-1:0] m_axis_tuser_reg = {USER_WIDTH{1'b0}};
 
-    segment_count_next = segment_count_reg;
+    assign s_axis_tready = !s_axis_tvalid_reg;
 
-    last_segment = 0;
+    assign m_axis_tdata  = m_axis_tdata_reg;
+    assign m_axis_tkeep  = M_KEEP_ENABLE ? m_axis_tkeep_reg : {M_KEEP_WIDTH{1'b1}};
+    assign m_axis_tvalid = m_axis_tvalid_reg;
+    assign m_axis_tlast  = m_axis_tlast_reg;
+    assign m_axis_tid    = ID_ENABLE   ? m_axis_tid_reg   : {ID_WIDTH{1'b0}};
+    assign m_axis_tdest  = DEST_ENABLE ? m_axis_tdest_reg : {DEST_WIDTH{1'b0}};
+    assign m_axis_tuser  = USER_ENABLE ? m_axis_tuser_reg : {USER_WIDTH{1'b0}};
 
-    temp_tdata_next = temp_tdata_reg;
-    temp_tkeep_next = temp_tkeep_reg;
-    temp_tlast_next = temp_tlast_reg;
-    temp_tid_next   = temp_tid_reg;
-    temp_tdest_next = temp_tdest_reg;
-    temp_tuser_next = temp_tuser_reg;
+    always @(posedge clk) begin
+        m_axis_tvalid_reg <= m_axis_tvalid_reg && !m_axis_tready;
 
-    if (EXPAND_BUS) begin
-        m_axis_tdata_int  = temp_tdata_reg;
-        m_axis_tkeep_int  = temp_tkeep_reg;
-        m_axis_tlast_int  = temp_tlast_reg;
-    end else begin
-        m_axis_tdata_int  = {M_DATA_WIDTH{1'b0}};
-        m_axis_tkeep_int  = {M_KEEP_WIDTH{1'b0}};
-        m_axis_tlast_int  = 1'b0;
-    end
-    m_axis_tvalid_int = 1'b0;
-    m_axis_tid_int    = temp_tid_reg;
-    m_axis_tdest_int  = temp_tdest_reg;
-    m_axis_tuser_int  = temp_tuser_reg;
+        if (!m_axis_tvalid_reg || m_axis_tready) begin
+            // output register empty
 
-    s_axis_tready_next = 1'b0;
-
-    case (state_reg)
-        STATE_IDLE: begin
-            // idle state - no data in registers
-            if (SEGMENT_COUNT == 1) begin
-                // output and input same width - just act like a register
-
-                // accept data next cycle if output register ready next cycle
-                s_axis_tready_next = m_axis_tready_int_early;
-
-                // transfer through
-                m_axis_tdata_int  = s_axis_tdata;
-                m_axis_tkeep_int  = S_KEEP_ENABLE ? s_axis_tkeep : 1'b1;
-                m_axis_tvalid_int = s_axis_tvalid;
-                m_axis_tlast_int  = s_axis_tlast;
-                m_axis_tid_int    = s_axis_tid;
-                m_axis_tdest_int  = s_axis_tdest;
-                m_axis_tuser_int  = s_axis_tuser;
-
-                state_next = STATE_IDLE;
-            end else if (EXPAND_BUS) begin
-                // output bus is wider
-
-                // accept new data
-                s_axis_tready_next = 1'b1;
-
-                if (s_axis_tready && s_axis_tvalid) begin
-                    // word transfer in - store it in data register
-
-                    // pass complete input word, zero-extended to temp register
-                    temp_tdata_next = s_axis_tdata;
-                    temp_tkeep_next = S_KEEP_ENABLE ? s_axis_tkeep : 1'b1;
-                    temp_tlast_next = s_axis_tlast;
-                    temp_tid_next   = s_axis_tid;
-                    temp_tdest_next = s_axis_tdest;
-                    temp_tuser_next = s_axis_tuser;
-
-                    // first input segment complete
-                    segment_count_next = 1;
-
-                    if (s_axis_tlast) begin
-                        // got last signal on first segment, so output it
-                        s_axis_tready_next = 1'b0;
-                        state_next = STATE_TRANSFER_OUT;
-                    end else begin
-                        // otherwise, transfer in the rest of the words
-                        s_axis_tready_next = 1'b1;
-                        state_next = STATE_TRANSFER_IN;
-                    end
-                end else begin
-                    state_next = STATE_IDLE;
-                end
+            if (seg_reg == 0) begin
+                m_axis_tdata_reg[seg_reg*SEG_DATA_WIDTH +: SEG_DATA_WIDTH] <= s_axis_tvalid_reg ? s_axis_tdata_reg : s_axis_tdata;
+                m_axis_tkeep_reg <= s_axis_tvalid_reg ? s_axis_tkeep_reg : s_axis_tkeep;
             end else begin
-                // output bus is narrower
+                m_axis_tdata_reg[seg_reg*SEG_DATA_WIDTH +: SEG_DATA_WIDTH] <= s_axis_tdata;
+                m_axis_tkeep_reg[seg_reg*SEG_KEEP_WIDTH +: SEG_KEEP_WIDTH] <= s_axis_tkeep;
+            end
+            m_axis_tlast_reg <= s_axis_tvalid_reg ? s_axis_tlast_reg : s_axis_tlast;
+            m_axis_tid_reg <= s_axis_tvalid_reg ? s_axis_tid_reg : s_axis_tid;
+            m_axis_tdest_reg <= s_axis_tvalid_reg ? s_axis_tdest_reg : s_axis_tdest;
+            m_axis_tuser_reg <= s_axis_tvalid_reg ? s_axis_tuser_reg : s_axis_tuser;
 
-                // accept new data
-                s_axis_tready_next = 1'b1;
+            if (s_axis_tvalid_reg) begin
+                // consume data from buffer
+                s_axis_tvalid_reg <= 1'b0;
 
-                if (s_axis_tready && s_axis_tvalid) begin
-                    // word transfer in - store it in data register
-                    segment_count_next = 0;
-
-                    // is this the last segment?
-                    if (SEGMENT_COUNT == 1) begin
-                        // last segment by counter value
-                        last_segment = 1'b1;
-                    end else if (S_KEEP_ENABLE && s_axis_tkeep[SEGMENT_KEEP_WIDTH-1:0] != {SEGMENT_KEEP_WIDTH{1'b1}}) begin
-                        // last segment by tkeep fall in current segment
-                        last_segment = 1'b1;
-                    end else if (S_KEEP_ENABLE && s_axis_tkeep[(SEGMENT_KEEP_WIDTH*2)-1:SEGMENT_KEEP_WIDTH] == {SEGMENT_KEEP_WIDTH{1'b0}}) begin
-                        // last segment by tkeep fall at end of current segment
-                        last_segment = 1'b1;
-                    end else begin
-                        last_segment = 1'b0;
-                    end
-
-                    // pass complete input word, zero-extended to temp register
-                    temp_tdata_next = s_axis_tdata;
-                    temp_tkeep_next = S_KEEP_ENABLE ? s_axis_tkeep : 1'b1;
-                    temp_tlast_next = s_axis_tlast;
-                    temp_tid_next   = s_axis_tid;
-                    temp_tdest_next = s_axis_tdest;
-                    temp_tuser_next = s_axis_tuser;
-
-                    // short-circuit and get first word out the door
-                    m_axis_tdata_int  = s_axis_tdata[SEGMENT_DATA_WIDTH-1:0];
-                    m_axis_tkeep_int  = s_axis_tkeep[SEGMENT_KEEP_WIDTH-1:0];
-                    m_axis_tvalid_int = 1'b1;
-                    m_axis_tlast_int  = s_axis_tlast & last_segment;
-                    m_axis_tid_int    = s_axis_tid;
-                    m_axis_tdest_int  = s_axis_tdest;
-                    m_axis_tuser_int  = s_axis_tuser;
-
-                    if (m_axis_tready_int_reg) begin
-                        // if output register is ready for first word, then move on to the next one
-                        segment_count_next = 1;
-                    end
-
-                    if (!last_segment || !m_axis_tready_int_reg) begin
-                        // continue outputting words
-                        s_axis_tready_next = 1'b0;
-                        state_next = STATE_TRANSFER_OUT;
-                    end else begin
-                        state_next = STATE_IDLE;
-                    end
+                if (s_axis_tlast_reg || seg_reg == SEG_COUNT-1) begin
+                    seg_reg <= 0;
+                    m_axis_tvalid_reg <= 1'b1;
                 end else begin
-                    state_next = STATE_IDLE;
+                    seg_reg <= seg_reg + 1;
+                end
+            end else if (s_axis_tvalid) begin
+                // data direct from input
+                if (s_axis_tlast || seg_reg == SEG_COUNT-1) begin
+                    seg_reg <= 0;
+                    m_axis_tvalid_reg <= 1'b1;
+                end else begin
+                    seg_reg <= seg_reg + 1;
                 end
             end
+        end else if (s_axis_tvalid && s_axis_tready) begin
+            // store input data in skid buffer
+            s_axis_tdata_reg <= s_axis_tdata;
+            s_axis_tkeep_reg <= s_axis_tkeep;
+            s_axis_tvalid_reg <= 1'b1;
+            s_axis_tlast_reg <= s_axis_tlast;
+            s_axis_tid_reg <= s_axis_tid;
+            s_axis_tdest_reg <= s_axis_tdest;
+            s_axis_tuser_reg <= s_axis_tuser;
         end
-        STATE_TRANSFER_IN: begin
-            // transfer word to temp registers
-            // only used when output is wider
 
-            // accept new data
-            s_axis_tready_next = 1'b1;
-
-            if (s_axis_tready && s_axis_tvalid) begin
-                // word transfer in - store in data register
-
-                temp_tdata_next[segment_count_reg*SEGMENT_DATA_WIDTH +: SEGMENT_DATA_WIDTH] = s_axis_tdata;
-                temp_tkeep_next[segment_count_reg*SEGMENT_KEEP_WIDTH +: SEGMENT_KEEP_WIDTH] = S_KEEP_ENABLE ? s_axis_tkeep : 1'b1;
-                temp_tlast_next = s_axis_tlast;
-                temp_tid_next   = s_axis_tid;
-                temp_tdest_next = s_axis_tdest;
-                temp_tuser_next = s_axis_tuser;
-
-                segment_count_next = segment_count_reg + 1;
-
-                if ((segment_count_reg == SEGMENT_COUNT-1) || s_axis_tlast) begin
-                    // terminated by counter or tlast signal, output complete word
-                    // read input word next cycle if output will be ready
-                    s_axis_tready_next = m_axis_tready_int_early;
-                    state_next = STATE_TRANSFER_OUT;
-                end else begin
-                    // more words to read
-                    s_axis_tready_next = 1'b1;
-                    state_next = STATE_TRANSFER_IN;
-                end
-            end else begin
-                state_next = STATE_TRANSFER_IN;
-            end
+        if (rst) begin
+            seg_reg <= 0;
+            s_axis_tvalid_reg <= 1'b0;
+            m_axis_tvalid_reg <= 1'b0;
         end
-        STATE_TRANSFER_OUT: begin
-            // transfer word to output registers
+    end
 
-            if (EXPAND_BUS) begin
-                // output bus is wider
+end else begin : downsize
+    // output is narrower; downsize
 
-                // do not accept new data
-                s_axis_tready_next = 1'b0;
+    // required number of segments in wider bus
+    localparam SEG_COUNT = S_BYTE_LANES / M_BYTE_LANES;
+    // data width and keep width per segment
+    localparam SEG_DATA_WIDTH = S_DATA_WIDTH / SEG_COUNT;
+    localparam SEG_KEEP_WIDTH = S_BYTE_LANES / SEG_COUNT;
 
-                // single-cycle output of entire stored word (output wider)
-                m_axis_tdata_int  = temp_tdata_reg;
-                m_axis_tkeep_int  = temp_tkeep_reg;
-                m_axis_tvalid_int = 1'b1;
-                m_axis_tlast_int  = temp_tlast_reg;
-                m_axis_tid_int    = temp_tid_reg;
-                m_axis_tdest_int  = temp_tdest_reg;
-                m_axis_tuser_int  = temp_tuser_reg;
+    reg [S_DATA_WIDTH-1:0] s_axis_tdata_reg = {S_DATA_WIDTH{1'b0}};
+    reg [S_KEEP_WIDTH-1:0] s_axis_tkeep_reg = {S_KEEP_WIDTH{1'b0}};
+    reg s_axis_tvalid_reg = 1'b0;
+    reg s_axis_tlast_reg = 1'b0;
+    reg [ID_WIDTH-1:0] s_axis_tid_reg = {ID_WIDTH{1'b0}};
+    reg [DEST_WIDTH-1:0] s_axis_tdest_reg = {DEST_WIDTH{1'b0}};
+    reg [USER_WIDTH-1:0] s_axis_tuser_reg = {USER_WIDTH{1'b0}};
 
-                if (m_axis_tready_int_reg) begin
-                    // word transfer out
+    reg [M_DATA_WIDTH-1:0] m_axis_tdata_reg = {M_DATA_WIDTH{1'b0}};
+    reg [M_KEEP_WIDTH-1:0] m_axis_tkeep_reg = {M_KEEP_WIDTH{1'b0}};
+    reg m_axis_tvalid_reg = 1'b0;
+    reg m_axis_tlast_reg = 1'b0;
+    reg [ID_WIDTH-1:0] m_axis_tid_reg = {ID_WIDTH{1'b0}};
+    reg [DEST_WIDTH-1:0] m_axis_tdest_reg = {DEST_WIDTH{1'b0}};
+    reg [USER_WIDTH-1:0] m_axis_tuser_reg = {USER_WIDTH{1'b0}};
 
-                    if (s_axis_tready && s_axis_tvalid) begin
-                        // word transfer in
+    assign s_axis_tready = !s_axis_tvalid_reg;
 
-                        // pass complete input word, zero-extended to temp register
-                        temp_tdata_next = s_axis_tdata;
-                        temp_tkeep_next = S_KEEP_ENABLE ? s_axis_tkeep : 1'b1;
-                        temp_tlast_next = s_axis_tlast;
-                        temp_tid_next   = s_axis_tid;
-                        temp_tdest_next = s_axis_tdest;
-                        temp_tuser_next = s_axis_tuser;
+    assign m_axis_tdata  = m_axis_tdata_reg;
+    assign m_axis_tkeep  = M_KEEP_ENABLE ? m_axis_tkeep_reg : {M_KEEP_WIDTH{1'b1}};
+    assign m_axis_tvalid = m_axis_tvalid_reg;
+    assign m_axis_tlast  = m_axis_tlast_reg;
+    assign m_axis_tid    = ID_ENABLE   ? m_axis_tid_reg   : {ID_WIDTH{1'b0}};
+    assign m_axis_tdest  = DEST_ENABLE ? m_axis_tdest_reg : {DEST_WIDTH{1'b0}};
+    assign m_axis_tuser  = USER_ENABLE ? m_axis_tuser_reg : {USER_WIDTH{1'b0}};
 
-                        // first input segment complete
-                        segment_count_next = 1;
+    always @(posedge clk) begin
+        m_axis_tvalid_reg <= m_axis_tvalid_reg && !m_axis_tready;
 
-                        if (s_axis_tlast) begin
-                            // got last signal on first segment, so output it
-                            s_axis_tready_next = 1'b0;
-                            state_next = STATE_TRANSFER_OUT;
-                        end else begin
-                            // otherwise, transfer in the rest of the words
-                            s_axis_tready_next = 1'b1;
-                            state_next = STATE_TRANSFER_IN;
-                        end
-                    end else begin
-                        s_axis_tready_next = 1'b1;
-                        state_next = STATE_IDLE;
-                    end
-                end else begin
-                    state_next = STATE_TRANSFER_OUT;
+        if (!m_axis_tvalid_reg || m_axis_tready) begin
+            // output register empty
+
+            m_axis_tdata_reg <= s_axis_tvalid_reg ? s_axis_tdata_reg : s_axis_tdata;
+            m_axis_tkeep_reg <= s_axis_tvalid_reg ? s_axis_tkeep_reg : s_axis_tkeep;
+            m_axis_tlast_reg <= 1'b0;
+            m_axis_tid_reg <= s_axis_tvalid_reg ? s_axis_tid_reg : s_axis_tid;
+            m_axis_tdest_reg <= s_axis_tvalid_reg ? s_axis_tdest_reg : s_axis_tdest;
+            m_axis_tuser_reg <= s_axis_tvalid_reg ? s_axis_tuser_reg : s_axis_tuser;
+
+            if (s_axis_tvalid_reg) begin
+                // buffer has data; shift out from buffer
+                s_axis_tdata_reg <= s_axis_tdata_reg >> SEG_DATA_WIDTH;
+                s_axis_tkeep_reg <= s_axis_tkeep_reg >> SEG_KEEP_WIDTH;
+
+                m_axis_tvalid_reg <= 1'b1;
+
+                if ((s_axis_tkeep_reg >> SEG_KEEP_WIDTH) == 0) begin
+                    s_axis_tvalid_reg <= 1'b0;
+                    m_axis_tlast_reg <= s_axis_tlast_reg;
                 end
-            end else begin
-                // output bus is narrower
+            end else if (s_axis_tvalid && s_axis_tready) begin
+                // buffer is empty; store from input
+                s_axis_tdata_reg <= s_axis_tdata >> SEG_DATA_WIDTH;
+                s_axis_tkeep_reg <= s_axis_tkeep >> SEG_KEEP_WIDTH;
+                s_axis_tlast_reg <= s_axis_tlast;
+                s_axis_tid_reg <= s_axis_tid;
+                s_axis_tdest_reg <= s_axis_tdest;
+                s_axis_tuser_reg <= s_axis_tuser;
 
-                // do not accept new data
-                s_axis_tready_next = 1'b0;
+                m_axis_tvalid_reg <= 1'b1;
 
-                // is this the last segment?
-                if (segment_count_reg == SEGMENT_COUNT-1) begin
-                    // last segment by counter value
-                    last_segment = 1'b1;
-                end else if (temp_tkeep_reg[segment_count_reg*SEGMENT_KEEP_WIDTH +: SEGMENT_KEEP_WIDTH] != {SEGMENT_KEEP_WIDTH{1'b1}}) begin
-                    // last segment by tkeep fall in current segment
-                    last_segment = 1'b1;
-                end else if (temp_tkeep_reg[(segment_count_reg+1)*SEGMENT_KEEP_WIDTH +: SEGMENT_KEEP_WIDTH] == {SEGMENT_KEEP_WIDTH{1'b0}}) begin
-                    // last segment by tkeep fall at end of current segment
-                    last_segment = 1'b1;
+                if ((s_axis_tkeep >> SEG_KEEP_WIDTH) == 0) begin
+                    s_axis_tvalid_reg <= 1'b0;
+                    m_axis_tlast_reg <= s_axis_tlast;
                 end else begin
-                    last_segment = 1'b0;
-                end
-
-                // output current part of stored word (output narrower)
-                m_axis_tdata_int  = temp_tdata_reg[segment_count_reg*SEGMENT_DATA_WIDTH +: SEGMENT_DATA_WIDTH];
-                m_axis_tkeep_int  = temp_tkeep_reg[segment_count_reg*SEGMENT_KEEP_WIDTH +: SEGMENT_KEEP_WIDTH];
-                m_axis_tvalid_int = 1'b1;
-                m_axis_tlast_int  = temp_tlast_reg && last_segment;
-                m_axis_tid_int    = temp_tid_reg;
-                m_axis_tdest_int  = temp_tdest_reg;
-                m_axis_tuser_int  = temp_tuser_reg;
-
-                if (m_axis_tready_int_reg) begin
-                    // word transfer out
-
-                    segment_count_next = segment_count_reg + 1;
-
-                    if (last_segment) begin
-                        // terminated by counter or tlast signal
-
-                        s_axis_tready_next = 1'b1;
-                        state_next = STATE_IDLE;
-                    end else begin
-                        // more words to write
-                        state_next = STATE_TRANSFER_OUT;
-                    end
-                end else begin
-                    state_next = STATE_TRANSFER_OUT;
+                    s_axis_tvalid_reg <= 1'b1;
                 end
             end
+        end else if (s_axis_tvalid && s_axis_tready) begin
+            // store input data
+            s_axis_tdata_reg <= s_axis_tdata;
+            s_axis_tkeep_reg <= s_axis_tkeep;
+            s_axis_tvalid_reg <= 1'b1;
+            s_axis_tlast_reg <= s_axis_tlast;
+            s_axis_tid_reg <= s_axis_tid;
+            s_axis_tdest_reg <= s_axis_tdest;
+            s_axis_tuser_reg <= s_axis_tuser;
         end
-    endcase
-end
 
-always @(posedge clk) begin
-    if (rst) begin
-        state_reg <= STATE_IDLE;
-        s_axis_tready_reg <= 1'b0;
-    end else begin
-        state_reg <= state_next;
-
-        s_axis_tready_reg <= s_axis_tready_next;
-    end
-
-    segment_count_reg <= segment_count_next;
-
-    temp_tdata_reg <= temp_tdata_next;
-    temp_tkeep_reg <= temp_tkeep_next;
-    temp_tlast_reg <= temp_tlast_next;
-    temp_tid_reg   <= temp_tid_next;
-    temp_tdest_reg <= temp_tdest_next;
-    temp_tuser_reg <= temp_tuser_next;
-end
-
-// output datapath logic
-reg [M_DATA_WIDTH-1:0] m_axis_tdata_reg  = {M_DATA_WIDTH{1'b0}};
-reg [M_KEEP_WIDTH-1:0] m_axis_tkeep_reg  = {M_KEEP_WIDTH{1'b0}};
-reg                    m_axis_tvalid_reg = 1'b0, m_axis_tvalid_next;
-reg                    m_axis_tlast_reg  = 1'b0;
-reg [ID_WIDTH-1:0]     m_axis_tid_reg    = {ID_WIDTH{1'b0}};
-reg [DEST_WIDTH-1:0]   m_axis_tdest_reg  = {DEST_WIDTH{1'b0}};
-reg [USER_WIDTH-1:0]   m_axis_tuser_reg  = {USER_WIDTH{1'b0}};
-
-reg [M_DATA_WIDTH-1:0] temp_m_axis_tdata_reg  = {M_DATA_WIDTH{1'b0}};
-reg [M_KEEP_WIDTH-1:0] temp_m_axis_tkeep_reg  = {M_KEEP_WIDTH{1'b0}};
-reg                    temp_m_axis_tvalid_reg = 1'b0, temp_m_axis_tvalid_next;
-reg                    temp_m_axis_tlast_reg  = 1'b0;
-reg [ID_WIDTH-1:0]     temp_m_axis_tid_reg    = {ID_WIDTH{1'b0}};
-reg [DEST_WIDTH-1:0]   temp_m_axis_tdest_reg  = {DEST_WIDTH{1'b0}};
-reg [USER_WIDTH-1:0]   temp_m_axis_tuser_reg  = {USER_WIDTH{1'b0}};
-
-// datapath control
-reg store_axis_int_to_output;
-reg store_axis_int_to_temp;
-reg store_axis_temp_to_output;
-
-assign m_axis_tdata  = m_axis_tdata_reg;
-assign m_axis_tkeep  = M_KEEP_ENABLE ? m_axis_tkeep_reg : {M_KEEP_WIDTH{1'b1}};
-assign m_axis_tvalid = m_axis_tvalid_reg;
-assign m_axis_tlast  = m_axis_tlast_reg;
-assign m_axis_tid    = ID_ENABLE   ? m_axis_tid_reg   : {ID_WIDTH{1'b0}};
-assign m_axis_tdest  = DEST_ENABLE ? m_axis_tdest_reg : {DEST_WIDTH{1'b0}};
-assign m_axis_tuser  = USER_ENABLE ? m_axis_tuser_reg : {USER_WIDTH{1'b0}};
-
-// enable ready input next cycle if output is ready or the temp reg will not be filled on the next cycle (output reg empty or no input)
-assign m_axis_tready_int_early = m_axis_tready || (!temp_m_axis_tvalid_reg && (!m_axis_tvalid_reg || !m_axis_tvalid_int));
-
-always @* begin
-    // transfer sink ready state to source
-    m_axis_tvalid_next = m_axis_tvalid_reg;
-    temp_m_axis_tvalid_next = temp_m_axis_tvalid_reg;
-
-    store_axis_int_to_output = 1'b0;
-    store_axis_int_to_temp = 1'b0;
-    store_axis_temp_to_output = 1'b0;
-
-    if (m_axis_tready_int_reg) begin
-        // input is ready
-        if (m_axis_tready || !m_axis_tvalid_reg) begin
-            // output is ready or currently not valid, transfer data to output
-            m_axis_tvalid_next = m_axis_tvalid_int;
-            store_axis_int_to_output = 1'b1;
-        end else begin
-            // output is not ready, store input in temp
-            temp_m_axis_tvalid_next = m_axis_tvalid_int;
-            store_axis_int_to_temp = 1'b1;
+        if (rst) begin
+            s_axis_tvalid_reg <= 1'b0;
+            m_axis_tvalid_reg <= 1'b0;
         end
-    end else if (m_axis_tready) begin
-        // input is not ready, but output is ready
-        m_axis_tvalid_next = temp_m_axis_tvalid_reg;
-        temp_m_axis_tvalid_next = 1'b0;
-        store_axis_temp_to_output = 1'b1;
     end
+
 end
 
-always @(posedge clk) begin
-    m_axis_tvalid_reg <= m_axis_tvalid_next;
-    m_axis_tready_int_reg <= m_axis_tready_int_early;
-    temp_m_axis_tvalid_reg <= temp_m_axis_tvalid_next;
-
-    // datapath
-    if (store_axis_int_to_output) begin
-        m_axis_tdata_reg <= m_axis_tdata_int;
-        m_axis_tkeep_reg <= m_axis_tkeep_int;
-        m_axis_tlast_reg <= m_axis_tlast_int;
-        m_axis_tid_reg   <= m_axis_tid_int;
-        m_axis_tdest_reg <= m_axis_tdest_int;
-        m_axis_tuser_reg <= m_axis_tuser_int;
-    end else if (store_axis_temp_to_output) begin
-        m_axis_tdata_reg <= temp_m_axis_tdata_reg;
-        m_axis_tkeep_reg <= temp_m_axis_tkeep_reg;
-        m_axis_tlast_reg <= temp_m_axis_tlast_reg;
-        m_axis_tid_reg   <= temp_m_axis_tid_reg;
-        m_axis_tdest_reg <= temp_m_axis_tdest_reg;
-        m_axis_tuser_reg <= temp_m_axis_tuser_reg;
-    end
-
-    if (store_axis_int_to_temp) begin
-        temp_m_axis_tdata_reg <= m_axis_tdata_int;
-        temp_m_axis_tkeep_reg <= m_axis_tkeep_int;
-        temp_m_axis_tlast_reg <= m_axis_tlast_int;
-        temp_m_axis_tid_reg   <= m_axis_tid_int;
-        temp_m_axis_tdest_reg <= m_axis_tdest_int;
-        temp_m_axis_tuser_reg <= m_axis_tuser_int;
-    end
-
-    if (rst) begin
-        m_axis_tvalid_reg <= 1'b0;
-        m_axis_tready_int_reg <= 1'b0;
-        temp_m_axis_tvalid_reg <= 1'b0;
-    end
-end
+endgenerate
 
 endmodule
 

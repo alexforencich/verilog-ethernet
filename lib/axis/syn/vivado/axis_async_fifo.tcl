@@ -120,4 +120,21 @@ foreach fifo_inst [get_cells -hier -filter {(ORIG_REF_NAME == axis_async_fifo ||
             set_max_delay -from [get_cells "$fifo_inst/${i}_sync1_reg_reg"] -to [get_cells "$fifo_inst/${i}_sync2_reg_reg"] -datapath_only $read_clk_period
         }
     }
+
+    # pause sync
+    set sync_ffs [get_cells -quiet -hier -regexp ".*/pause.s_pause_req_sync\[123\]_reg_reg" -filter "PARENT == $fifo_inst"]
+
+    if {[llength $sync_ffs]} {
+        set_property ASYNC_REG TRUE $sync_ffs
+
+        set_max_delay -from [get_cells "$fifo_inst/pause.s_pause_req_sync1_reg_reg"] -to [get_cells "$fifo_inst/pause.s_pause_req_sync2_reg_reg"] -datapath_only $read_clk_period
+    }
+
+    set sync_ffs [get_cells -quiet -hier -regexp ".*/pause.s_pause_ack_sync\[123\]_reg_reg" -filter "PARENT == $fifo_inst"]
+
+    if {[llength $sync_ffs]} {
+        set_property ASYNC_REG TRUE $sync_ffs
+
+        set_max_delay -from [get_cells "$fifo_inst/pause.s_pause_ack_sync1_reg_reg"] -to [get_cells "$fifo_inst/pause.s_pause_ack_sync2_reg_reg"] -datapath_only $write_clk_period
+    }
 }

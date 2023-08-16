@@ -80,7 +80,15 @@ module axis_async_fifo #
     // Drop incoming frames when full
     // When set, s_axis_tready is always asserted
     // Requires FRAME_FIFO and DROP_OVERSIZE_FRAME set
-    parameter DROP_WHEN_FULL = 0
+    parameter DROP_WHEN_FULL = 0,
+    // Mark incoming frames as bad frames when full
+    // When set, s_axis_tready is always asserted
+    // Requires FRAME_FIFO to be clear
+    parameter MARK_WHEN_FULL = 0,
+    // Enable pause request input
+    parameter PAUSE_ENABLE = 0,
+    // Pause between frames
+    parameter FRAME_PAUSE = FRAME_FIFO
 )
 (
     /*
@@ -110,6 +118,14 @@ module axis_async_fifo #
     output wire [ID_WIDTH-1:0]    m_axis_tid,
     output wire [DEST_WIDTH-1:0]  m_axis_tdest,
     output wire [USER_WIDTH-1:0]  m_axis_tuser,
+
+    /*
+     * Pause
+     */
+    input  wire                   s_pause_req,
+    output wire                   s_pause_ack,
+    input  wire                   m_pause_req,
+    output wire                   m_pause_ack,
 
     /*
      * Status
@@ -152,8 +168,18 @@ initial begin
         $finish;
     end
 
-    if (DROP_BAD_FRAME && (USER_BAD_FRAME_MASK & {USER_WIDTH{1'b1}}) == 0) begin
+    if ((DROP_BAD_FRAME || MARK_WHEN_FULL) && (USER_BAD_FRAME_MASK & {USER_WIDTH{1'b1}}) == 0) begin
         $error("Error: Invalid USER_BAD_FRAME_MASK value (instance %m)");
+        $finish;
+    end
+
+    if (MARK_WHEN_FULL && FRAME_FIFO) begin
+        $error("Error: MARK_WHEN_FULL is not compatible with FRAME_FIFO (instance %m)");
+        $finish;
+    end
+
+    if (MARK_WHEN_FULL && !LAST_ENABLE) begin
+        $error("Error: MARK_WHEN_FULL set requires LAST_ENABLE set (instance %m)");
         $finish;
     end
 end
@@ -250,6 +276,7 @@ reg s_frame_reg = 1'b0;
 reg m_frame_reg = 1'b0;
 
 reg drop_frame_reg = 1'b0;
+reg mark_frame_reg = 1'b0;
 reg send_frame_reg = 1'b0;
 reg overflow_reg = 1'b0;
 reg bad_frame_reg = 1'b0;
@@ -276,21 +303,22 @@ reg good_frame_sync2_reg = 1'b0;
 reg good_frame_sync3_reg = 1'b0;
 reg good_frame_sync4_reg = 1'b0;
 
-assign s_axis_tready = (FRAME_FIFO ? (!full || (full_wr && DROP_OVERSIZE_FRAME) || DROP_WHEN_FULL) : !full) && !s_rst_sync3_reg;
+assign s_axis_tready = (FRAME_FIFO ? (!full || (full_wr && DROP_OVERSIZE_FRAME) || DROP_WHEN_FULL) : (!full || MARK_WHEN_FULL)) && !s_rst_sync3_reg;
 
 wire [WIDTH-1:0] s_axis;
 
 generate
     assign s_axis[DATA_WIDTH-1:0] = s_axis_tdata;
     if (KEEP_ENABLE) assign s_axis[KEEP_OFFSET +: KEEP_WIDTH] = s_axis_tkeep;
-    if (LAST_ENABLE) assign s_axis[LAST_OFFSET]               = s_axis_tlast;
+    if (LAST_ENABLE) assign s_axis[LAST_OFFSET]               = s_axis_tlast | mark_frame_reg;
     if (ID_ENABLE)   assign s_axis[ID_OFFSET   +: ID_WIDTH]   = s_axis_tid;
     if (DEST_ENABLE) assign s_axis[DEST_OFFSET +: DEST_WIDTH] = s_axis_tdest;
-    if (USER_ENABLE) assign s_axis[USER_OFFSET +: USER_WIDTH] = s_axis_tuser;
+    if (USER_ENABLE) assign s_axis[USER_OFFSET +: USER_WIDTH] = mark_frame_reg ? USER_BAD_FRAME_VALUE : s_axis_tuser;
 endgenerate
 
 wire [WIDTH-1:0] m_axis = m_axis_pipe_reg[RAM_PIPELINE+1-1];
 
+wire                   m_axis_tready_pipe;
 wire                   m_axis_tvalid_pipe = m_axis_tvalid_pipe_reg[RAM_PIPELINE+1-1];
 
 wire [DATA_WIDTH-1:0]  m_axis_tdata_pipe  = m_axis[DATA_WIDTH-1:0];
@@ -299,6 +327,16 @@ wire                   m_axis_tlast_pipe  = LAST_ENABLE ? m_axis[LAST_OFFSET] | 
 wire [ID_WIDTH-1:0]    m_axis_tid_pipe    = ID_ENABLE   ? m_axis[ID_OFFSET +: ID_WIDTH] : {ID_WIDTH{1'b0}};
 wire [DEST_WIDTH-1:0]  m_axis_tdest_pipe  = DEST_ENABLE ? m_axis[DEST_OFFSET +: DEST_WIDTH] : {DEST_WIDTH{1'b0}};
 wire [USER_WIDTH-1:0]  m_axis_tuser_pipe  = USER_ENABLE ? (m_terminate_frame_reg ? USER_BAD_FRAME_VALUE : m_axis[USER_OFFSET +: USER_WIDTH]) : {USER_WIDTH{1'b0}};
+
+wire                   m_axis_tready_out;
+wire                   m_axis_tvalid_out;
+
+wire [DATA_WIDTH-1:0]  m_axis_tdata_out;
+wire [KEEP_WIDTH-1:0]  m_axis_tkeep_out;
+wire                   m_axis_tlast_out;
+wire [ID_WIDTH-1:0]    m_axis_tid_out;
+wire [DEST_WIDTH-1:0]  m_axis_tdest_out;
+wire [USER_WIDTH-1:0]  m_axis_tuser_out;
 
 wire pipe_ready;
 
@@ -372,89 +410,121 @@ always @(posedge s_clk) begin
         end
     end
 
-    if (s_axis_tready && s_axis_tvalid) begin
-        // transfer in
-        if (!FRAME_FIFO) begin
-            // normal FIFO mode
-            mem[wr_ptr_reg[ADDR_WIDTH-1:0]] <= s_axis;
-            if (drop_frame_reg && LAST_ENABLE) begin
-                // currently dropping frame
-                // (only for frame transfers interrupted by sink reset)
+    if (FRAME_FIFO) begin
+        // frame FIFO mode
+        if (s_axis_tready && s_axis_tvalid) begin
+            // transfer in
+            if ((full && DROP_WHEN_FULL) || (full_wr && DROP_OVERSIZE_FRAME) || drop_frame_reg) begin
+                // full, packet overflow, or currently dropping frame
+                // drop frame
+                drop_frame_reg <= 1'b1;
                 if (s_axis_tlast) begin
-                    // end of frame, clear drop flag
+                    // end of frame, reset write pointer
+                    wr_ptr_temp = wr_ptr_commit_reg;
+                    wr_ptr_reg <= wr_ptr_temp;
+                    wr_ptr_gray_reg <= bin2gray(wr_ptr_temp);
                     drop_frame_reg <= 1'b0;
+                    overflow_reg <= 1'b1;
                 end
             end else begin
-                // update pointers
+                mem[wr_ptr_reg[ADDR_WIDTH-1:0]] <= s_axis;
+                wr_ptr_temp = wr_ptr_reg + 1;
+                wr_ptr_reg <= wr_ptr_temp;
+                wr_ptr_gray_reg <= bin2gray(wr_ptr_temp);
+                if (s_axis_tlast || (!DROP_OVERSIZE_FRAME && (full_wr || send_frame_reg))) begin
+                    // end of frame or send frame
+                    send_frame_reg <= !s_axis_tlast;
+                    if (s_axis_tlast && DROP_BAD_FRAME && USER_BAD_FRAME_MASK & ~(s_axis_tuser ^ USER_BAD_FRAME_VALUE)) begin
+                        // bad packet, reset write pointer
+                        wr_ptr_temp = wr_ptr_commit_reg;
+                        wr_ptr_reg <= wr_ptr_temp;
+                        wr_ptr_gray_reg <= bin2gray(wr_ptr_temp);
+                        bad_frame_reg <= 1'b1;
+                    end else begin
+                        // good packet or packet overflow, update write pointer
+                        wr_ptr_temp = wr_ptr_reg + 1;
+                        wr_ptr_reg <= wr_ptr_temp;
+                        wr_ptr_commit_reg <= wr_ptr_temp;
+                        wr_ptr_gray_reg <= bin2gray(wr_ptr_temp);
+
+                        if (wr_ptr_update_reg == wr_ptr_update_ack_sync2_reg) begin
+                            // no sync in progress; sync update
+                            wr_ptr_update_valid_reg <= 1'b0;
+                            wr_ptr_sync_commit_reg <= wr_ptr_temp;
+                            wr_ptr_update_reg <= !wr_ptr_update_ack_sync2_reg;
+                        end else begin
+                            // sync in progress; flag it for later
+                            wr_ptr_update_valid_reg <= 1'b1;
+                        end
+
+                        good_frame_reg <= s_axis_tlast;
+                    end
+                end
+            end
+        end else if (s_axis_tvalid && full_wr && FRAME_FIFO && !DROP_OVERSIZE_FRAME) begin
+            // data valid with packet overflow
+            // update write pointer
+            send_frame_reg <= 1'b1;
+            wr_ptr_temp = wr_ptr_reg;
+            wr_ptr_reg <= wr_ptr_temp;
+            wr_ptr_commit_reg <= wr_ptr_temp;
+            wr_ptr_gray_reg <= bin2gray(wr_ptr_temp);
+
+            if (wr_ptr_update_reg == wr_ptr_update_ack_sync2_reg) begin
+                // no sync in progress; sync update
+                wr_ptr_update_valid_reg <= 1'b0;
+                wr_ptr_sync_commit_reg <= wr_ptr_temp;
+                wr_ptr_update_reg <= !wr_ptr_update_ack_sync2_reg;
+            end else begin
+                // sync in progress; flag it for later
+                wr_ptr_update_valid_reg <= 1'b1;
+            end
+        end
+    end else begin
+        // normal FIFO mode
+        if (s_axis_tready && s_axis_tvalid) begin
+            if (drop_frame_reg && LAST_ENABLE) begin
+                // currently dropping frame
+                if (s_axis_tlast) begin
+                    // end of frame
+                    if (!full && mark_frame_reg && MARK_WHEN_FULL) begin
+                        // terminate marked frame
+                        mark_frame_reg <= 1'b0;
+                        mem[wr_ptr_reg[ADDR_WIDTH-1:0]] <= s_axis;
+                        wr_ptr_temp = wr_ptr_reg + 1;
+                        wr_ptr_reg <= wr_ptr_temp;
+                        wr_ptr_commit_reg <= wr_ptr_temp;
+                        wr_ptr_gray_reg <= bin2gray(wr_ptr_temp);
+                    end
+                    // end of frame, clear drop flag
+                    drop_frame_reg <= 1'b0;
+                    overflow_reg <= 1'b1;
+                end
+            end else if ((full || mark_frame_reg) && MARK_WHEN_FULL) begin
+                // full or marking frame
+                // drop frame; mark if this isn't the first cycle
+                drop_frame_reg <= 1'b1;
+                mark_frame_reg <= mark_frame_reg || s_frame_reg;
+                if (s_axis_tlast) begin
+                    drop_frame_reg <= 1'b0;
+                    overflow_reg <= 1'b1;
+                end
+            end else begin
+                // transfer in
+                mem[wr_ptr_reg[ADDR_WIDTH-1:0]] <= s_axis;
                 wr_ptr_temp = wr_ptr_reg + 1;
                 wr_ptr_reg <= wr_ptr_temp;
                 wr_ptr_commit_reg <= wr_ptr_temp;
                 wr_ptr_gray_reg <= bin2gray(wr_ptr_temp);
             end
-        end else if ((full && DROP_WHEN_FULL) || (full_wr && DROP_OVERSIZE_FRAME) || drop_frame_reg) begin
-            // full, packet overflow, or currently dropping frame
-            // drop frame
-            drop_frame_reg <= 1'b1;
-            if (s_axis_tlast) begin
-                // end of frame, reset write pointer
-                wr_ptr_temp = wr_ptr_commit_reg;
-                wr_ptr_reg <= wr_ptr_temp;
-                wr_ptr_gray_reg <= bin2gray(wr_ptr_temp);
-                drop_frame_reg <= 1'b0;
-                overflow_reg <= 1'b1;
-            end
-        end else begin
+        end else if ((!full && !drop_frame_reg && mark_frame_reg) && MARK_WHEN_FULL) begin
+            // terminate marked frame
+            mark_frame_reg <= 1'b0;
             mem[wr_ptr_reg[ADDR_WIDTH-1:0]] <= s_axis;
             wr_ptr_temp = wr_ptr_reg + 1;
             wr_ptr_reg <= wr_ptr_temp;
+            wr_ptr_commit_reg <= wr_ptr_temp;
             wr_ptr_gray_reg <= bin2gray(wr_ptr_temp);
-            if (s_axis_tlast || (!DROP_OVERSIZE_FRAME && (full_wr || send_frame_reg))) begin
-                // end of frame or send frame
-                send_frame_reg <= !s_axis_tlast;
-                if (s_axis_tlast && DROP_BAD_FRAME && USER_BAD_FRAME_MASK & ~(s_axis_tuser ^ USER_BAD_FRAME_VALUE)) begin
-                    // bad packet, reset write pointer
-                    wr_ptr_temp = wr_ptr_commit_reg;
-                    wr_ptr_reg <= wr_ptr_temp;
-                    wr_ptr_gray_reg <= bin2gray(wr_ptr_temp);
-                    bad_frame_reg <= 1'b1;
-                end else begin
-                    // good packet or packet overflow, update write pointer
-                    wr_ptr_temp = wr_ptr_reg + 1;
-                    wr_ptr_reg <= wr_ptr_temp;
-                    wr_ptr_commit_reg <= wr_ptr_temp;
-                    wr_ptr_gray_reg <= bin2gray(wr_ptr_temp);
-
-                    if (wr_ptr_update_reg == wr_ptr_update_ack_sync2_reg) begin
-                        // no sync in progress; sync update
-                        wr_ptr_update_valid_reg <= 1'b0;
-                        wr_ptr_sync_commit_reg <= wr_ptr_temp;
-                        wr_ptr_update_reg <= !wr_ptr_update_ack_sync2_reg;
-                    end else begin
-                        // sync in progress; flag it for later
-                        wr_ptr_update_valid_reg <= 1'b1;
-                    end
-
-                    good_frame_reg <= s_axis_tlast;
-                end
-            end
-        end
-    end else if (s_axis_tvalid && full_wr && FRAME_FIFO && !DROP_OVERSIZE_FRAME) begin
-        // data valid with packet overflow
-        // update write pointer
-        send_frame_reg <= 1'b1;
-        wr_ptr_temp = wr_ptr_reg;
-        wr_ptr_reg <= wr_ptr_temp;
-        wr_ptr_commit_reg <= wr_ptr_temp;
-        wr_ptr_gray_reg <= bin2gray(wr_ptr_temp);
-
-        if (wr_ptr_update_reg == wr_ptr_update_ack_sync2_reg) begin
-            // no sync in progress; sync update
-            wr_ptr_update_valid_reg <= 1'b0;
-            wr_ptr_sync_commit_reg <= wr_ptr_temp;
-            wr_ptr_update_reg <= !wr_ptr_update_ack_sync2_reg;
-        end else begin
-            // sync in progress; flag it for later
-            wr_ptr_update_valid_reg <= 1'b1;
         end
     end
 
@@ -480,6 +550,7 @@ always @(posedge s_clk) begin
         s_frame_reg <= 1'b0;
 
         drop_frame_reg <= 1'b0;
+        mark_frame_reg <= 1'b0;
         send_frame_reg <= 1'b0;
         overflow_reg <= 1'b0;
         bad_frame_reg <= 1'b0;
@@ -574,14 +645,14 @@ end
 integer j;
 
 always @(posedge m_clk) begin
-    if (OUTPUT_FIFO_ENABLE || m_axis_tready) begin
+    if (m_axis_tready_pipe) begin
         // output ready; invalidate stage
         m_axis_tvalid_pipe_reg[RAM_PIPELINE+1-1] <= 1'b0;
         m_terminate_frame_reg <= 1'b0;
     end
 
     for (j = RAM_PIPELINE+1-1; j > 0; j = j - 1) begin
-        if (OUTPUT_FIFO_ENABLE || m_axis_tready || ((~m_axis_tvalid_pipe_reg) >> j)) begin
+        if (m_axis_tready_pipe || ((~m_axis_tvalid_pipe_reg) >> j)) begin
             // output ready or bubble in pipeline; transfer down pipeline
             m_axis_tvalid_pipe_reg[j] <= m_axis_tvalid_pipe_reg[j-1];
             m_axis_pipe_reg[j] <= m_axis_pipe_reg[j-1];
@@ -589,7 +660,7 @@ always @(posedge m_clk) begin
         end
     end
 
-    if (OUTPUT_FIFO_ENABLE || m_axis_tready || ~m_axis_tvalid_pipe_reg) begin
+    if (m_axis_tready_pipe || ~m_axis_tvalid_pipe_reg) begin
         // output ready or bubble in pipeline; read new data from FIFO
         m_axis_tvalid_pipe_reg[0] <= 1'b0;
         m_axis_pipe_reg[0] <= mem[rd_ptr_reg[ADDR_WIDTH-1:0]];
@@ -604,14 +675,14 @@ always @(posedge m_clk) begin
 
     if (m_axis_tvalid_pipe && LAST_ENABLE) begin
         // track output frame status
-        if (m_axis_tlast_pipe && (OUTPUT_FIFO_ENABLE || m_axis_tready)) begin
+        if (m_axis_tlast_pipe && m_axis_tready_pipe) begin
             m_frame_reg <= 1'b0;
         end else begin
             m_frame_reg <= 1'b1;
         end
     end
 
-    if (m_drop_frame_reg && (OUTPUT_FIFO_ENABLE ? pipe_ready : m_axis_tready || !m_axis_tvalid_pipe) && LAST_ENABLE) begin
+    if (m_drop_frame_reg && (OUTPUT_FIFO_ENABLE ? pipe_ready : m_axis_tready_pipe || !m_axis_tvalid_pipe) && LAST_ENABLE) begin
         // terminate frame
         // (only for frame transfers interrupted by source reset)
         m_axis_tvalid_pipe_reg[RAM_PIPELINE+1-1] <= 1'b1;
@@ -662,16 +733,17 @@ if (!OUTPUT_FIFO_ENABLE) begin
 
     assign pipe_ready = 1'b1;
 
-    assign m_axis_tvalid = m_axis_tvalid_pipe;
+    assign m_axis_tready_pipe = m_axis_tready_out;
+    assign m_axis_tvalid_out = m_axis_tvalid_pipe;
 
-    assign m_axis_tdata = m_axis_tdata_pipe;
-    assign m_axis_tkeep = m_axis_tkeep_pipe;
-    assign m_axis_tlast = m_axis_tlast_pipe;
-    assign m_axis_tid   = m_axis_tid_pipe;
-    assign m_axis_tdest = m_axis_tdest_pipe;
-    assign m_axis_tuser = m_axis_tuser_pipe;
+    assign m_axis_tdata_out = m_axis_tdata_pipe;
+    assign m_axis_tkeep_out = m_axis_tkeep_pipe;
+    assign m_axis_tlast_out = m_axis_tlast_pipe;
+    assign m_axis_tid_out   = m_axis_tid_pipe;
+    assign m_axis_tdest_out = m_axis_tdest_pipe;
+    assign m_axis_tuser_out = m_axis_tuser_pipe;
 
-end else begin
+end else begin : output_fifo
 
     // output datapath logic
     reg [DATA_WIDTH-1:0] m_axis_tdata_reg  = {DATA_WIDTH{1'b0}};
@@ -704,16 +776,18 @@ end else begin
 
     assign pipe_ready = !out_fifo_half_full_reg;
 
-    assign m_axis_tdata  = m_axis_tdata_reg;
-    assign m_axis_tkeep  = KEEP_ENABLE ? m_axis_tkeep_reg : {KEEP_WIDTH{1'b1}};
-    assign m_axis_tvalid = m_axis_tvalid_reg;
-    assign m_axis_tlast  = LAST_ENABLE ? m_axis_tlast_reg : 1'b1;
-    assign m_axis_tid    = ID_ENABLE   ? m_axis_tid_reg   : {ID_WIDTH{1'b0}};
-    assign m_axis_tdest  = DEST_ENABLE ? m_axis_tdest_reg : {DEST_WIDTH{1'b0}};
-    assign m_axis_tuser  = USER_ENABLE ? m_axis_tuser_reg : {USER_WIDTH{1'b0}};
+    assign m_axis_tready_pipe = 1'b1;
+
+    assign m_axis_tdata_out  = m_axis_tdata_reg;
+    assign m_axis_tkeep_out  = KEEP_ENABLE ? m_axis_tkeep_reg : {KEEP_WIDTH{1'b1}};
+    assign m_axis_tvalid_out = m_axis_tvalid_reg;
+    assign m_axis_tlast_out  = LAST_ENABLE ? m_axis_tlast_reg : 1'b1;
+    assign m_axis_tid_out    = ID_ENABLE   ? m_axis_tid_reg   : {ID_WIDTH{1'b0}};
+    assign m_axis_tdest_out  = DEST_ENABLE ? m_axis_tdest_reg : {DEST_WIDTH{1'b0}};
+    assign m_axis_tuser_out  = USER_ENABLE ? m_axis_tuser_reg : {USER_WIDTH{1'b0}};
 
     always @(posedge m_clk) begin
-        m_axis_tvalid_reg <= m_axis_tvalid_reg && !m_axis_tready;
+        m_axis_tvalid_reg <= m_axis_tvalid_reg && !m_axis_tready_out;
 
         out_fifo_half_full_reg <= $unsigned(out_fifo_wr_ptr_reg - out_fifo_rd_ptr_reg) >= 2**(OUTPUT_FIFO_ADDR_WIDTH-1);
 
@@ -727,7 +801,7 @@ end else begin
             out_fifo_wr_ptr_reg <= out_fifo_wr_ptr_reg + 1;
         end
 
-        if (!out_fifo_empty && (!m_axis_tvalid_reg || m_axis_tready)) begin
+        if (!out_fifo_empty && (!m_axis_tvalid_reg || m_axis_tready_out)) begin
             m_axis_tdata_reg <= out_fifo_tdata[out_fifo_rd_ptr_reg[OUTPUT_FIFO_ADDR_WIDTH-1:0]];
             m_axis_tkeep_reg <= out_fifo_tkeep[out_fifo_rd_ptr_reg[OUTPUT_FIFO_ADDR_WIDTH-1:0]];
             m_axis_tvalid_reg <= 1'b1;
@@ -744,6 +818,85 @@ end else begin
             m_axis_tvalid_reg <= 1'b0;
         end
     end
+
+end
+
+if (PAUSE_ENABLE) begin : pause
+
+    // Pause logic
+    reg pause_reg = 1'b0;
+    reg pause_frame_reg = 1'b0;
+
+    reg s_pause_req_sync1_reg;
+    reg s_pause_req_sync2_reg;
+    reg s_pause_req_sync3_reg;
+    reg s_pause_ack_sync1_reg;
+    reg s_pause_ack_sync2_reg;
+    reg s_pause_ack_sync3_reg;
+
+    always @(posedge s_clk) begin
+        s_pause_req_sync1_reg <= s_pause_req;
+        s_pause_ack_sync2_reg <= s_pause_ack_sync1_reg;
+        s_pause_ack_sync3_reg <= s_pause_ack_sync2_reg;
+    end
+
+    always @(posedge m_clk) begin
+        s_pause_req_sync2_reg <= s_pause_req_sync1_reg;
+        s_pause_req_sync3_reg <= s_pause_req_sync2_reg;
+        s_pause_ack_sync1_reg <= pause_reg;
+    end
+
+    assign m_axis_tready_out = m_axis_tready && !pause_reg;
+    assign m_axis_tvalid = m_axis_tvalid_out && !pause_reg;
+
+    assign m_axis_tdata = m_axis_tdata_out;
+    assign m_axis_tkeep = m_axis_tkeep_out;
+    assign m_axis_tlast = m_axis_tlast_out;
+    assign m_axis_tid   = m_axis_tid_out;
+    assign m_axis_tdest = m_axis_tdest_out;
+    assign m_axis_tuser = m_axis_tuser_out;
+
+    assign s_pause_ack = s_pause_ack_sync3_reg;
+    assign m_pause_ack = pause_reg;
+
+    always @(posedge m_clk) begin
+        if (FRAME_PAUSE) begin
+            if (m_axis_tvalid && m_axis_tready) begin
+                if (m_axis_tlast) begin
+                    pause_frame_reg <= 1'b0;
+                    pause_reg <= m_pause_req || s_pause_req_sync3_reg;
+                end else begin
+                    pause_frame_reg <= 1'b1;
+                end
+            end else begin
+                if (!pause_frame_reg) begin
+                    pause_reg <= m_pause_req || s_pause_req_sync3_reg;
+                end
+            end
+        end else begin
+            pause_reg <= m_pause_req || s_pause_req_sync3_reg;
+        end
+
+        if (m_rst) begin
+            pause_frame_reg <= 1'b0;
+            pause_reg <= 1'b0;
+        end
+    end
+
+end else begin
+
+    assign m_axis_tready_out = m_axis_tready;
+    assign m_axis_tvalid = m_axis_tvalid_out;
+
+    assign m_axis_tdata = m_axis_tdata_out;
+    assign m_axis_tkeep = m_axis_tkeep_out;
+    assign m_axis_tlast = m_axis_tlast_out;
+    assign m_axis_tid   = m_axis_tid_out;
+    assign m_axis_tdest = m_axis_tdest_out;
+    assign m_axis_tuser = m_axis_tuser_out;
+
+    assign s_pause_ack = 1'b0;
+    assign m_pause_ack = 1'b0;
 
 end
 

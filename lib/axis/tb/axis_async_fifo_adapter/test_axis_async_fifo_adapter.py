@@ -52,6 +52,9 @@ class TB(object):
         self.source = AxiStreamSource(AxiStreamBus.from_prefix(dut, "s_axis"), dut.s_clk, dut.s_rst)
         self.sink = AxiStreamSink(AxiStreamBus.from_prefix(dut, "m_axis"), dut.m_clk, dut.m_rst)
 
+        dut.s_pause_req.setimmediatevalue(0)
+        dut.m_pause_req.setimmediatevalue(0)
+
     def set_idle_generator(self, generator=None):
         if generator:
             self.source.set_pause_generator(generator())
@@ -146,7 +149,7 @@ async def run_test_tuser_assert(dut):
     test_frame = AxiStreamFrame(test_data, tuser=1)
     await tb.source.send(test_frame)
 
-    if int(os.getenv("PARAM_DROP_BAD_FRAME")):
+    if dut.DROP_BAD_FRAME.value:
         for k in range(64):
             await RisingEdge(dut.s_clk)
 
@@ -296,7 +299,7 @@ async def run_test_shift_in_source_reset(dut):
     for k in range(64):
         await RisingEdge(dut.s_clk)
 
-    if int(os.getenv("PARAM_FRAME_FIFO")):
+    if dut.FRAME_FIFO.value:
         assert tb.sink.empty()
     else:
         rx_frame = await tb.sink.recv()
@@ -390,32 +393,149 @@ async def run_test_shift_out_sink_reset(dut):
     await RisingEdge(dut.s_clk)
 
 
+async def run_test_pause(dut):
+
+    tb = TB(dut)
+
+    byte_lanes = max(tb.source.byte_lanes, tb.sink.byte_lanes)
+
+    await tb.reset()
+
+    test_data = bytearray(itertools.islice(itertools.cycle(range(256)), 16*byte_lanes))
+    test_frame = AxiStreamFrame(test_data)
+
+    for k in range(16):
+        await tb.source.send(test_frame)
+
+    for k in range(60):
+        await RisingEdge(dut.s_clk)
+
+    dut.m_pause_req.value = 1
+
+    for k in range(64):
+        await RisingEdge(dut.s_clk)
+
+    assert tb.sink.idle()
+
+    dut.m_pause_req.value = 0
+
+    for k in range(60):
+        await RisingEdge(dut.s_clk)
+
+    dut.s_pause_req.value = 1
+
+    for k in range(64):
+        await RisingEdge(dut.s_clk)
+
+    assert tb.sink.idle()
+
+    dut.s_pause_req.value = 0
+
+    for k in range(16):
+        rx_frame = await tb.sink.recv()
+
+        assert rx_frame.tdata == test_data
+        assert not rx_frame.tuser
+
+    assert tb.sink.empty()
+
+    await RisingEdge(dut.s_clk)
+    await RisingEdge(dut.s_clk)
+
+
 async def run_test_overflow(dut):
 
     tb = TB(dut)
+
+    depth = dut.DEPTH.value
+    byte_lanes = min(tb.source.byte_lanes, tb.sink.byte_lanes)
 
     await tb.reset()
 
     tb.sink.pause = True
 
-    test_data = bytearray(itertools.islice(itertools.cycle(range(256)), 2048))
+    size = (16*byte_lanes)
+    count = depth*2 // size
+
+    test_data = bytearray(itertools.islice(itertools.cycle(range(256)), size))
+    test_frame = AxiStreamFrame(test_data)
+    for k in range(count):
+        await tb.source.send(test_frame)
+
+    for k in range((depth//byte_lanes)*3):
+        await RisingEdge(dut.s_clk)
+
+    if dut.DROP_WHEN_FULL.value or dut.MARK_WHEN_FULL.value:
+        assert tb.source.idle()
+    else:
+        assert not tb.source.idle()
+
+    tb.sink.pause = False
+
+    if dut.DROP_WHEN_FULL.value or dut.MARK_WHEN_FULL.value:
+        for k in range((depth//byte_lanes)*3):
+            await RisingEdge(dut.s_clk)
+
+        rx_count = 0
+
+        while not tb.sink.empty():
+            rx_frame = await tb.sink.recv()
+
+            if dut.MARK_WHEN_FULL.value and rx_frame.tuser:
+                continue
+
+            assert rx_frame.tdata == test_data
+            assert not rx_frame.tuser
+
+            rx_count += 1
+
+        assert rx_count < count
+
+    else:
+        for k in range(count):
+            rx_frame = await tb.sink.recv()
+
+            assert rx_frame.tdata == test_data
+            assert not rx_frame.tuser
+
+    assert tb.sink.empty()
+
+    await RisingEdge(dut.s_clk)
+    await RisingEdge(dut.s_clk)
+
+
+async def run_test_oversize(dut):
+
+    tb = TB(dut)
+
+    depth = dut.DEPTH.value
+    byte_lanes = min(tb.source.byte_lanes, tb.sink.byte_lanes)
+
+    await tb.reset()
+
+    tb.sink.pause = True
+
+    test_data = bytearray(itertools.islice(itertools.cycle(range(256)), depth*2))
     test_frame = AxiStreamFrame(test_data)
     await tb.source.send(test_frame)
 
-    for k in range(2048):
+    for k in range((depth//byte_lanes)*2):
         await RisingEdge(dut.s_clk)
 
     tb.sink.pause = False
 
-    if int(os.getenv("PARAM_DROP_OVERSIZE_FRAME")):
-        for k in range(2048):
+    if dut.DROP_OVERSIZE_FRAME.value:
+        for k in range((depth//byte_lanes)*2):
             await RisingEdge(dut.s_clk)
 
     else:
         rx_frame = await tb.sink.recv()
 
-        assert rx_frame.tdata == test_data
-        assert not rx_frame.tuser
+        if dut.MARK_WHEN_FULL.value:
+            assert rx_frame.tuser
+        else:
+            assert rx_frame.tdata == test_data
+            assert not rx_frame.tuser
 
     assert tb.sink.empty()
 
@@ -439,7 +559,7 @@ async def run_stress_test(dut, idle_inserter=None, backpressure_inserter=None):
 
     test_frames = []
 
-    for k in range(128):
+    for k in range(512):
         length = random.randint(1, byte_lanes*16)
         test_data = bytearray(itertools.islice(itertools.cycle(range(256)), length))
         test_frame = AxiStreamFrame(test_data)
@@ -451,13 +571,37 @@ async def run_stress_test(dut, idle_inserter=None, backpressure_inserter=None):
 
         cur_id = (cur_id + 1) % id_count
 
-    for test_frame in test_frames:
-        rx_frame = await tb.sink.recv()
+    if dut.DROP_WHEN_FULL.value or dut.MARK_WHEN_FULL.value:
+        cycles = 0
+        while cycles < 100:
+            cycles += 1
+            if not tb.source.idle() or dut.s_axis_tvalid.value.integer or dut.m_axis_tvalid.value.integer or dut.m_status_depth.value.integer:
+                cycles = 0
+            await RisingEdge(dut.m_clk)
 
-        assert rx_frame.tdata == test_frame.tdata
-        assert rx_frame.tid == test_frame.tid
-        assert rx_frame.tdest == test_frame.tdest
-        assert not rx_frame.tuser
+        while not tb.sink.empty():
+            rx_frame = await tb.sink.recv()
+
+            if dut.MARK_WHEN_FULL.value and rx_frame.tuser:
+                continue
+
+            assert not rx_frame.tuser
+
+            while True:
+                test_frame = test_frames.pop(0)
+                if rx_frame.tid == test_frame.tid and rx_frame.tdest == test_frame.tdest and rx_frame.tdata == test_frame.tdata:
+                    break
+
+        assert len(test_frames) < 512
+
+    else:
+        for test_frame in test_frames:
+            rx_frame = await tb.sink.recv()
+
+            assert rx_frame.tdata == test_frame.tdata
+            assert rx_frame.tid == test_frame.tid
+            assert rx_frame.tdest == test_frame.tdest
+            assert not rx_frame.tuser
 
     assert tb.sink.empty()
 
@@ -498,7 +642,9 @@ if cocotb.SIM_NAME:
                 run_test_shift_in_sink_reset,
                 run_test_shift_out_source_reset,
                 run_test_shift_out_sink_reset,
-                run_test_overflow
+                run_test_pause,
+                run_test_overflow,
+                run_test_oversize
             ]:
 
         factory = TestFactory(test)
@@ -516,11 +662,15 @@ tests_dir = os.path.dirname(__file__)
 rtl_dir = os.path.abspath(os.path.join(tests_dir, '..', '..', 'rtl'))
 
 
-@pytest.mark.parametrize(("frame_fifo", "drop_oversize_frame", "drop_bad_frame", "drop_when_full"),
-    [(0, 0, 0, 0), (1, 0, 0, 0), (1, 1, 0, 0), (1, 1, 1, 0)])
+@pytest.mark.parametrize(("frame_fifo", "drop_oversize_frame", "drop_bad_frame",
+    "drop_when_full", "mark_when_full"),
+    [(0, 0, 0, 0, 0), (1, 0, 0, 0, 0), (1, 1, 0, 0, 0), (1, 1, 1, 0, 0),
+        (1, 1, 1, 1, 0), (0, 0, 0, 0, 1)])
 @pytest.mark.parametrize("m_data_width", [8, 16, 32])
 @pytest.mark.parametrize("s_data_width", [8, 16, 32])
-def test_axis_async_fifo_adapter(request, s_data_width, m_data_width, frame_fifo, drop_oversize_frame, drop_bad_frame, drop_when_full):
+def test_axis_async_fifo_adapter(request, s_data_width, m_data_width,
+        frame_fifo, drop_oversize_frame, drop_bad_frame,
+        drop_when_full, mark_when_full):
     dut = "axis_async_fifo_adapter"
     module = os.path.splitext(os.path.basename(__file__))[0]
     toplevel = dut
@@ -533,13 +683,13 @@ def test_axis_async_fifo_adapter(request, s_data_width, m_data_width, frame_fifo
 
     parameters = {}
 
-    parameters['DEPTH'] = 1024
     parameters['S_DATA_WIDTH'] = s_data_width
     parameters['S_KEEP_ENABLE'] = int(parameters['S_DATA_WIDTH'] > 8)
     parameters['S_KEEP_WIDTH'] = (parameters['S_DATA_WIDTH'] + 7) // 8
     parameters['M_DATA_WIDTH'] = m_data_width
     parameters['M_KEEP_ENABLE'] = int(parameters['M_DATA_WIDTH'] > 8)
     parameters['M_KEEP_WIDTH'] = (parameters['M_DATA_WIDTH'] + 7) // 8
+    parameters['DEPTH'] = 1024 * max(parameters['S_KEEP_WIDTH'], parameters['M_KEEP_WIDTH'])
     parameters['ID_ENABLE'] = 1
     parameters['ID_WIDTH'] = 8
     parameters['DEST_ENABLE'] = 1
@@ -554,6 +704,9 @@ def test_axis_async_fifo_adapter(request, s_data_width, m_data_width, frame_fifo
     parameters['DROP_OVERSIZE_FRAME'] = drop_oversize_frame
     parameters['DROP_BAD_FRAME'] = drop_bad_frame
     parameters['DROP_WHEN_FULL'] = drop_when_full
+    parameters['MARK_WHEN_FULL'] = mark_when_full
+    parameters['PAUSE_ENABLE'] = 1
+    parameters['FRAME_PAUSE'] = 1
 
     extra_env = {f'PARAM_{k}': str(v) for k, v in parameters.items()}
 
