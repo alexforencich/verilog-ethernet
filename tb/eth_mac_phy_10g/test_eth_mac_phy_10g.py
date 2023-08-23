@@ -83,8 +83,9 @@ class TB:
         self.tx_ptp_clock = PtpClockSimTime(ts_64=dut.tx_ptp_ts, clock=dut.tx_clk)
         self.tx_ptp_ts_sink = PtpTsSink(PtpTsBus.from_prefix(dut, "tx_axis_ptp"), dut.tx_clk, dut.tx_rst)
 
-        dut.tx_prbs31_enable.setimmediatevalue(0)
-        dut.rx_prbs31_enable.setimmediatevalue(0)
+        dut.cfg_ifg.setimmediatevalue(0)
+        dut.cfg_tx_prbs31_enable.setimmediatevalue(0)
+        dut.cfg_rx_prbs31_enable.setimmediatevalue(0)
 
     async def reset(self):
         self.dut.rx_rst.setimmediatevalue(0)
@@ -106,7 +107,7 @@ async def run_test_rx(dut, payload_lengths=None, payload_data=None, ifg=12):
     tb = TB(dut)
 
     tb.serdes_source.ifg = ifg
-    tb.dut.ifg_delay.value = ifg
+    tb.dut.cfg_ifg.value = ifg
 
     await tb.reset()
 
@@ -159,7 +160,7 @@ async def run_test_tx(dut, payload_lengths=None, payload_data=None, ifg=12):
     tb = TB(dut)
 
     tb.serdes_source.ifg = ifg
-    tb.dut.ifg_delay.value = ifg
+    tb.dut.cfg_ifg.value = ifg
 
     await tb.reset()
 
@@ -204,7 +205,7 @@ async def run_test_tx_alignment(dut, payload_data=None, ifg=12):
     byte_width = tb.axis_source.width // 8
 
     tb.serdes_source.ifg = ifg
-    tb.dut.ifg_delay.value = ifg
+    tb.dut.cfg_ifg.value = ifg
 
     await tb.reset()
 

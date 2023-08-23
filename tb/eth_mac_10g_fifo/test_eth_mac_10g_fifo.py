@@ -75,6 +75,8 @@ class TB:
         dut.ptp_sample_clk.setimmediatevalue(0)
         dut.ptp_ts_step.setimmediatevalue(0)
 
+        dut.cfg_ifg.setimmediatevalue(0)
+
     async def reset(self):
         self.dut.logic_rst.setimmediatevalue(0)
         self.dut.rx_rst.setimmediatevalue(0)
@@ -98,7 +100,7 @@ async def run_test_rx(dut, payload_lengths=None, payload_data=None, ifg=12):
     tb = TB(dut)
 
     tb.xgmii_source.ifg = ifg
-    tb.dut.ifg_delay.value = ifg
+    tb.dut.cfg_ifg.value = ifg
 
     await tb.reset()
 
@@ -146,7 +148,7 @@ async def run_test_tx(dut, payload_lengths=None, payload_data=None, ifg=12):
     tb = TB(dut)
 
     tb.xgmii_source.ifg = ifg
-    tb.dut.ifg_delay.value = ifg
+    tb.dut.cfg_ifg.value = ifg
 
     await tb.reset()
 
@@ -195,7 +197,7 @@ async def run_test_tx_alignment(dut, payload_data=None, ifg=12):
     byte_width = tb.axis_source.width // 8
 
     tb.xgmii_source.ifg = ifg
-    tb.dut.ifg_delay.value = ifg
+    tb.dut.cfg_ifg.value = ifg
 
     await tb.reset()
 

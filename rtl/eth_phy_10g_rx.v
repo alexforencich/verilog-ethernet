@@ -75,7 +75,7 @@ module eth_phy_10g_rx #
     /*
      * Configuration
      */
-    input  wire                  rx_prbs31_enable
+    input  wire                  cfg_rx_prbs31_enable
 );
 
 // bus width assertions
@@ -125,7 +125,7 @@ eth_phy_10g_rx_if_inst (
     .rx_block_lock(rx_block_lock),
     .rx_high_ber(rx_high_ber),
     .rx_status(rx_status),
-    .rx_prbs31_enable(rx_prbs31_enable)
+    .cfg_rx_prbs31_enable(cfg_rx_prbs31_enable)
 );
 
 xgmii_baser_dec_64 #(

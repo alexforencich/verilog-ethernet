@@ -91,7 +91,7 @@ module eth_mac_mii #
     /*
      * Configuration
      */
-    input  wire [7:0]  ifg_delay
+    input  wire [7:0]  cfg_ifg
 );
 
 wire [3:0]  mac_mii_rxd;
@@ -162,7 +162,7 @@ eth_mac_1g_inst (
     .rx_start_packet(rx_start_packet),
     .rx_error_bad_frame(rx_error_bad_frame),
     .rx_error_bad_fcs(rx_error_bad_fcs),
-    .ifg_delay(ifg_delay)
+    .cfg_ifg(cfg_ifg)
 );
 
 endmodule

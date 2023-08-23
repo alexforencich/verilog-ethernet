@@ -65,7 +65,7 @@ module eth_phy_10g_tx #
     /*
      * Configuration
      */
-    input  wire                  tx_prbs31_enable
+    input  wire                  cfg_tx_prbs31_enable
 );
 
 // bus width assertions
@@ -119,7 +119,7 @@ eth_phy_10g_tx_if_inst (
     .encoded_tx_hdr(encoded_tx_hdr),
     .serdes_tx_data(serdes_tx_data),
     .serdes_tx_hdr(serdes_tx_hdr),
-    .tx_prbs31_enable(tx_prbs31_enable)
+    .cfg_tx_prbs31_enable(cfg_tx_prbs31_enable)
 );
 
 endmodule

@@ -88,7 +88,7 @@ class TB:
         dut.tx_lfc_pause_en.setimmediatevalue(0)
         dut.tx_pause_req.setimmediatevalue(0)
 
-        dut.ifg_delay.setimmediatevalue(0)
+        dut.cfg_ifg.setimmediatevalue(0)
         dut.cfg_mcf_rx_eth_dst_mcast.setimmediatevalue(0)
         dut.cfg_mcf_rx_check_eth_dst_mcast.setimmediatevalue(0)
         dut.cfg_mcf_rx_eth_dst_ucast.setimmediatevalue(0)
@@ -141,7 +141,7 @@ async def run_test_rx(dut, payload_lengths=None, payload_data=None, ifg=12):
     tb = TB(dut)
 
     tb.xgmii_source.ifg = ifg
-    tb.dut.ifg_delay.value = ifg
+    tb.dut.cfg_ifg.value = ifg
 
     await tb.reset()
 
@@ -185,7 +185,7 @@ async def run_test_tx(dut, payload_lengths=None, payload_data=None, ifg=12):
     tb = TB(dut)
 
     tb.xgmii_source.ifg = ifg
-    tb.dut.ifg_delay.value = ifg
+    tb.dut.cfg_ifg.value = ifg
 
     await tb.reset()
 
@@ -230,7 +230,7 @@ async def run_test_tx_alignment(dut, payload_data=None, ifg=12):
     byte_width = tb.axis_source.width // 8
 
     tb.xgmii_source.ifg = ifg
-    tb.dut.ifg_delay.value = ifg
+    tb.dut.cfg_ifg.value = ifg
 
     await tb.reset()
 
@@ -313,7 +313,7 @@ async def run_test_lfc(dut, ifg=12):
     tb = TB(dut)
 
     tb.xgmii_source.ifg = ifg
-    tb.dut.ifg_delay.value = ifg
+    tb.dut.cfg_ifg.value = ifg
 
     await tb.reset()
 
@@ -456,7 +456,7 @@ async def run_test_pfc(dut, ifg=12):
     tb = TB(dut)
 
     tb.xgmii_source.ifg = ifg
-    tb.dut.ifg_delay.value = ifg
+    tb.dut.cfg_ifg.value = ifg
 
     await tb.reset()
 

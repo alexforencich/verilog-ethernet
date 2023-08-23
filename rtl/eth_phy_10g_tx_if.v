@@ -59,7 +59,7 @@ module eth_phy_10g_tx_if #
     /*
      * Configuration
      */
-    input  wire                  tx_prbs31_enable
+    input  wire                  cfg_tx_prbs31_enable
 );
 
 // bus width assertions
@@ -167,7 +167,7 @@ prbs31_gen_inst (
 always @(posedge clk) begin
     scrambler_state_reg <= scrambler_state;
 
-    if (PRBS31_ENABLE && tx_prbs31_enable) begin
+    if (PRBS31_ENABLE && cfg_tx_prbs31_enable) begin
         prbs31_state_reg <= prbs31_state;
 
         serdes_tx_data_reg <= ~prbs31_data[DATA_WIDTH+HDR_WIDTH-1:HDR_WIDTH];

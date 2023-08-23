@@ -74,7 +74,7 @@ module eth_phy_10g_rx_if #
     /*
      * Configuration
      */
-    input  wire                  rx_prbs31_enable
+    input  wire                  cfg_rx_prbs31_enable
 );
 
 // bus width assertions
@@ -206,7 +206,7 @@ always @(posedge clk) begin
     encoded_rx_data_reg <= SCRAMBLER_DISABLE ? serdes_rx_data_int : descrambled_rx_data;
     encoded_rx_hdr_reg <= serdes_rx_hdr_int;
 
-    if (PRBS31_ENABLE && rx_prbs31_enable) begin
+    if (PRBS31_ENABLE && cfg_rx_prbs31_enable) begin
         prbs31_state_reg <= prbs31_state;
 
         rx_error_count_1_reg <= rx_error_count_1_temp;
@@ -222,8 +222,8 @@ assign rx_error_count = rx_error_count_reg;
 
 wire serdes_rx_bitslip_int;
 wire serdes_rx_reset_req_int;
-assign serdes_rx_bitslip = serdes_rx_bitslip_int && !(PRBS31_ENABLE && rx_prbs31_enable);
-assign serdes_rx_reset_req = serdes_rx_reset_req_int && !(PRBS31_ENABLE && rx_prbs31_enable);
+assign serdes_rx_bitslip = serdes_rx_bitslip_int && !(PRBS31_ENABLE && cfg_rx_prbs31_enable);
+assign serdes_rx_reset_req = serdes_rx_reset_req_int && !(PRBS31_ENABLE && cfg_rx_prbs31_enable);
 
 eth_phy_10g_rx_frame_sync #(
     .HDR_WIDTH(HDR_WIDTH),

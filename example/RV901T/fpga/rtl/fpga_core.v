@@ -344,7 +344,7 @@ eth_mac_inst (
     .rx_fifo_good_frame(),
     .speed(),
 
-    .ifg_delay(12)
+    .cfg_ifg(8'd12)
 );
 
 assign phy_1_tx_clk = 1'b0;

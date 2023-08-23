@@ -83,8 +83,8 @@ module eth_phy_10g #
     /*
      * Configuration
      */
-    input  wire                  tx_prbs31_enable,
-    input  wire                  rx_prbs31_enable
+    input  wire                  cfg_tx_prbs31_enable,
+    input  wire                  cfg_rx_prbs31_enable
 );
 
 eth_phy_10g_rx #(
@@ -114,7 +114,7 @@ eth_phy_10g_rx_inst (
     .rx_block_lock(rx_block_lock),
     .rx_high_ber(rx_high_ber),
     .rx_status(rx_status),
-    .rx_prbs31_enable(rx_prbs31_enable)
+    .cfg_rx_prbs31_enable(cfg_rx_prbs31_enable)
 );
 
 eth_phy_10g_tx #(
@@ -134,7 +134,7 @@ eth_phy_10g_tx_inst (
     .serdes_tx_data(serdes_tx_data),
     .serdes_tx_hdr(serdes_tx_hdr),
     .tx_bad_block(tx_bad_block),
-    .tx_prbs31_enable(tx_prbs31_enable)
+    .cfg_tx_prbs31_enable(cfg_tx_prbs31_enable)
 );
 
 endmodule

@@ -709,7 +709,7 @@ eth_mac_10g_fifo_inst (
     .rx_fifo_bad_frame(),
     .rx_fifo_good_frame(),
 
-    .ifg_delay(8'd12)
+    .cfg_ifg(8'd12)
 );
 
 // 1G interface for debugging
@@ -788,7 +788,7 @@ eth_mac_1g_inst (
     .rx_fifo_bad_frame(),
     .rx_fifo_good_frame(),
 
-    .ifg_delay(12)
+    .cfg_ifg(8'd12)
 );
 
 axis_adapter #(

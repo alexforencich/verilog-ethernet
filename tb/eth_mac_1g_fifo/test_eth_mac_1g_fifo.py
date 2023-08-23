@@ -66,7 +66,7 @@ class TB:
         dut.tx_clk_enable.setimmediatevalue(1)
         dut.rx_mii_select.setimmediatevalue(0)
         dut.tx_mii_select.setimmediatevalue(0)
-        dut.ifg_delay.setimmediatevalue(0)
+        dut.cfg_ifg.setimmediatevalue(0)
 
     async def reset(self):
         self.dut.logic_rst.setimmediatevalue(0)
@@ -127,7 +127,7 @@ async def run_test_rx(dut, payload_lengths=None, payload_data=None, ifg=12, enab
     tb = TB(dut)
 
     tb.gmii_source.ifg = ifg
-    tb.dut.ifg_delay.value = ifg
+    tb.dut.cfg_ifg.value = ifg
     tb.dut.rx_mii_select.value = mii_sel
     tb.dut.tx_mii_select.value = mii_sel
 
@@ -160,7 +160,7 @@ async def run_test_tx(dut, payload_lengths=None, payload_data=None, ifg=12, enab
     tb = TB(dut)
 
     tb.gmii_source.ifg = ifg
-    tb.dut.ifg_delay.value = ifg
+    tb.dut.cfg_ifg.value = ifg
     tb.dut.rx_mii_select.value = mii_sel
     tb.dut.tx_mii_select.value = mii_sel
 

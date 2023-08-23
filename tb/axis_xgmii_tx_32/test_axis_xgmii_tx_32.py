@@ -62,7 +62,7 @@ class TB:
         self.ptp_clock = PtpClockSimTime(ts_64=dut.ptp_ts, clock=dut.clk)
         self.ptp_ts_sink = PtpTsSink(PtpTsBus.from_prefix(dut, "m_axis_ptp"), dut.clk, dut.rst)
 
-        dut.ifg_delay.setimmediatevalue(0)
+        dut.cfg_ifg.setimmediatevalue(0)
 
     async def reset(self):
         self.dut.rst.setimmediatevalue(0)
@@ -80,7 +80,7 @@ async def run_test(dut, payload_lengths=None, payload_data=None, ifg=12):
 
     tb = TB(dut)
 
-    tb.dut.ifg_delay.value = ifg
+    tb.dut.cfg_ifg.value = ifg
 
     await tb.reset()
 
@@ -120,7 +120,7 @@ async def run_test_alignment(dut, payload_data=None, ifg=12):
 
     byte_width = tb.source.width // 8
 
-    tb.dut.ifg_delay.value = ifg
+    tb.dut.cfg_ifg.value = ifg
 
     await tb.reset()
 

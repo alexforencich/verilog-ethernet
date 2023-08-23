@@ -118,7 +118,7 @@ module eth_mac_1g_gmii_fifo #
     /*
      * Configuration
      */
-    input  wire [7:0]                 ifg_delay
+    input  wire [7:0]                 cfg_ifg
 );
 
 wire tx_clk;
@@ -246,7 +246,7 @@ eth_mac_1g_gmii_inst (
     .rx_error_bad_frame(rx_error_bad_frame_int),
     .rx_error_bad_fcs(rx_error_bad_fcs_int),
     .speed(speed_int),
-    .ifg_delay(ifg_delay)
+    .cfg_ifg(cfg_ifg)
 );
 
 axis_async_fifo_adapter #(

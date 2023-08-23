@@ -150,7 +150,7 @@ module eth_mac_10g #
     /*
      * Configuration
      */
-    input  wire [7:0]                   ifg_delay,
+    input  wire [7:0]                   cfg_ifg,
     input  wire [47:0]                  cfg_mcf_rx_eth_dst_mcast,
     input  wire                         cfg_mcf_rx_check_eth_dst_mcast,
     input  wire [47:0]                  cfg_mcf_rx_eth_dst_ucast,
@@ -274,7 +274,7 @@ axis_xgmii_tx_inst (
     .m_axis_ptp_ts(tx_axis_ptp_ts),
     .m_axis_ptp_ts_tag(tx_axis_ptp_ts_tag),
     .m_axis_ptp_ts_valid(tx_axis_ptp_ts_valid),
-    .ifg_delay(ifg_delay),
+    .cfg_ifg(cfg_ifg),
     .start_packet(tx_start_packet),
     .error_underflow(tx_error_underflow)
 );
@@ -336,7 +336,7 @@ axis_xgmii_tx_inst (
     .m_axis_ptp_ts(tx_axis_ptp_ts),
     .m_axis_ptp_ts_tag(tx_axis_ptp_ts_tag),
     .m_axis_ptp_ts_valid(tx_axis_ptp_ts_valid),
-    .ifg_delay(ifg_delay),
+    .cfg_ifg(cfg_ifg),
     .start_packet(tx_start_packet[0]),
     .error_underflow(tx_error_underflow)
 );
