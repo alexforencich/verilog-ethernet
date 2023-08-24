@@ -154,6 +154,8 @@ module eth_mac_1g #
      * Configuration
      */
     input  wire [7:0]                   cfg_ifg,
+    input  wire                         cfg_tx_enable,
+    input  wire                         cfg_rx_enable,
     input  wire [47:0]                  cfg_mcf_rx_eth_dst_mcast,
     input  wire                         cfg_mcf_rx_check_eth_dst_mcast,
     input  wire [47:0]                  cfg_mcf_rx_eth_dst_ucast,
@@ -220,6 +222,7 @@ axis_gmii_rx_inst (
     .ptp_ts(rx_ptp_ts),
     .clk_enable(rx_clk_enable),
     .mii_select(rx_mii_select),
+    .cfg_rx_enable(cfg_rx_enable),
     .start_packet(rx_start_packet),
     .error_bad_frame(rx_error_bad_frame),
     .error_bad_fcs(rx_error_bad_fcs)
@@ -254,6 +257,7 @@ axis_gmii_tx_inst (
     .clk_enable(tx_clk_enable),
     .mii_select(tx_mii_select),
     .cfg_ifg(cfg_ifg),
+    .cfg_tx_enable(cfg_tx_enable),
     .start_packet(tx_start_packet),
     .error_underflow(tx_error_underflow)
 );

@@ -96,6 +96,8 @@ class TB:
         dut.tx_mii_select.setimmediatevalue(0)
 
         dut.cfg_ifg.setimmediatevalue(0)
+        dut.cfg_tx_enable.setimmediatevalue(0)
+        dut.cfg_rx_enable.setimmediatevalue(0)
         dut.cfg_mcf_rx_eth_dst_mcast.setimmediatevalue(0)
         dut.cfg_mcf_rx_check_eth_dst_mcast.setimmediatevalue(0)
         dut.cfg_mcf_rx_eth_dst_ucast.setimmediatevalue(0)
@@ -185,6 +187,7 @@ async def run_test_rx(dut, payload_lengths=None, payload_data=None, ifg=12, enab
 
     tb.gmii_source.ifg = ifg
     tb.dut.cfg_ifg.value = ifg
+    tb.dut.cfg_rx_enable.value = 1
     tb.dut.rx_mii_select.value = mii_sel
     tb.dut.tx_mii_select.value = mii_sel
 
@@ -231,6 +234,7 @@ async def run_test_tx(dut, payload_lengths=None, payload_data=None, ifg=12, enab
 
     tb.gmii_source.ifg = ifg
     tb.dut.cfg_ifg.value = ifg
+    tb.dut.cfg_tx_enable.value = 1
     tb.dut.rx_mii_select.value = mii_sel
     tb.dut.tx_mii_select.value = mii_sel
 
@@ -274,6 +278,8 @@ async def run_test_lfc(dut, ifg=12, enable_gen=None, mii_sel=True):
 
     tb.gmii_source.ifg = ifg
     tb.dut.cfg_ifg.value = ifg
+    tb.dut.cfg_tx_enable.value = 1
+    tb.dut.cfg_rx_enable.value = 1
     tb.dut.rx_mii_select.value = mii_sel
     tb.dut.tx_mii_select.value = mii_sel
 
@@ -423,6 +429,8 @@ async def run_test_pfc(dut, ifg=12, enable_gen=None, mii_sel=True):
 
     tb.gmii_source.ifg = ifg
     tb.dut.cfg_ifg.value = ifg
+    tb.dut.cfg_tx_enable.value = 1
+    tb.dut.cfg_rx_enable.value = 1
     tb.dut.rx_mii_select.value = mii_sel
     tb.dut.tx_mii_select.value = mii_sel
 

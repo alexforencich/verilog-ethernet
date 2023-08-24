@@ -67,6 +67,11 @@ module axis_xgmii_rx_64 #
     input  wire [PTP_TS_WIDTH-1:0]  ptp_ts,
 
     /*
+     * Configuration
+     */
+    input  wire                     cfg_rx_enable,
+
+    /*
      * Status
      */
     output wire [1:0]               start_packet,
@@ -270,7 +275,7 @@ always @* begin
             // idle state - wait for packet
             reset_crc = 1'b1;
 
-            if (xgmii_start_d1) begin
+            if (xgmii_start_d1 && cfg_rx_enable) begin
                 // start condition
 
                 if (PTP_TS_ENABLE) begin

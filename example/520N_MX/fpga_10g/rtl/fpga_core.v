@@ -497,7 +497,9 @@ eth_mac_10g_fifo_inst (
     .rx_fifo_bad_frame(),
     .rx_fifo_good_frame(),
 
-    .cfg_ifg(8'd12)
+    .cfg_ifg(8'd12),
+    .cfg_tx_enable(1'b1),
+    .cfg_rx_enable(1'b1)
 );
 
 eth_axis_rx #(

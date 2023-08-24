@@ -91,7 +91,9 @@ module eth_mac_mii #
     /*
      * Configuration
      */
-    input  wire [7:0]  cfg_ifg
+    input  wire [7:0]  cfg_ifg,
+    input  wire        cfg_tx_enable,
+    input  wire        cfg_rx_enable
 );
 
 wire [3:0]  mac_mii_rxd;
@@ -162,7 +164,9 @@ eth_mac_1g_inst (
     .rx_start_packet(rx_start_packet),
     .rx_error_bad_frame(rx_error_bad_frame),
     .rx_error_bad_fcs(rx_error_bad_fcs),
-    .cfg_ifg(cfg_ifg)
+    .cfg_ifg(cfg_ifg),
+    .cfg_tx_enable(cfg_tx_enable),
+    .cfg_rx_enable(cfg_rx_enable)
 );
 
 endmodule

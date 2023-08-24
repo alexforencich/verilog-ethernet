@@ -54,6 +54,8 @@ class TB:
         self.axis_sink = AxiStreamSink(AxiStreamBus.from_prefix(dut, "rx_axis"), dut.logic_clk, dut.logic_rst)
 
         dut.cfg_ifg.setimmediatevalue(0)
+        dut.cfg_tx_enable.setimmediatevalue(0)
+        dut.cfg_rx_enable.setimmediatevalue(0)
 
     async def reset(self):
         self.dut.logic_rst.setimmediatevalue(0)
@@ -73,6 +75,7 @@ async def run_test_rx(dut, payload_lengths=None, payload_data=None, ifg=12, spee
 
     tb.mii_phy.rx.ifg = ifg
     tb.dut.cfg_ifg.value = ifg
+    tb.dut.cfg_rx_enable.value = 1
 
     await tb.reset()
 
@@ -100,6 +103,7 @@ async def run_test_tx(dut, payload_lengths=None, payload_data=None, ifg=12, spee
 
     tb.mii_phy.rx.ifg = ifg
     tb.dut.cfg_ifg.value = ifg
+    tb.dut.cfg_tx_enable.value = 1
 
     await tb.reset()
 

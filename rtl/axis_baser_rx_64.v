@@ -67,6 +67,11 @@ module axis_baser_rx_64 #
     input  wire [PTP_TS_WIDTH-1:0]  ptp_ts,
 
     /*
+     * Configuration
+     */
+    input  wire                     cfg_rx_enable,
+
+    /*
      * Status
      */
     output wire [1:0]               start_packet,
@@ -285,7 +290,7 @@ always @* begin
                 m_axis_tuser_next[1 +: PTP_TS_WIDTH] = (PTP_TS_WIDTH != 96 || ptp_ts_borrow_reg) ? ptp_ts_reg : ptp_ts_adj_reg;
             end
 
-            if (input_type_d1 == INPUT_TYPE_START_0) begin
+            if (input_type_d1 == INPUT_TYPE_START_0 && cfg_rx_enable) begin
                 // start condition
                 reset_crc = 1'b0;
                 state_next = STATE_PAYLOAD;

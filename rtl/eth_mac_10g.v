@@ -151,6 +151,8 @@ module eth_mac_10g #
      * Configuration
      */
     input  wire [7:0]                   cfg_ifg,
+    input  wire                         cfg_tx_enable,
+    input  wire                         cfg_rx_enable,
     input  wire [47:0]                  cfg_mcf_rx_eth_dst_mcast,
     input  wire                         cfg_mcf_rx_check_eth_dst_mcast,
     input  wire [47:0]                  cfg_mcf_rx_eth_dst_ucast,
@@ -238,6 +240,7 @@ axis_xgmii_rx_inst (
     .m_axis_tlast(rx_axis_tlast_int),
     .m_axis_tuser(rx_axis_tuser_int),
     .ptp_ts(rx_ptp_ts),
+    .cfg_rx_enable(cfg_rx_enable),
     .start_packet(rx_start_packet),
     .error_bad_frame(rx_error_bad_frame),
     .error_bad_fcs(rx_error_bad_fcs)
@@ -275,6 +278,7 @@ axis_xgmii_tx_inst (
     .m_axis_ptp_ts_tag(tx_axis_ptp_ts_tag),
     .m_axis_ptp_ts_valid(tx_axis_ptp_ts_valid),
     .cfg_ifg(cfg_ifg),
+    .cfg_tx_enable(cfg_tx_enable),
     .start_packet(tx_start_packet),
     .error_underflow(tx_error_underflow)
 );
@@ -300,6 +304,7 @@ axis_xgmii_rx_inst (
     .m_axis_tlast(rx_axis_tlast_int),
     .m_axis_tuser(rx_axis_tuser_int),
     .ptp_ts(rx_ptp_ts),
+    .cfg_rx_enable(cfg_rx_enable),
     .start_packet(rx_start_packet[0]),
     .error_bad_frame(rx_error_bad_frame),
     .error_bad_fcs(rx_error_bad_fcs)
@@ -337,6 +342,7 @@ axis_xgmii_tx_inst (
     .m_axis_ptp_ts_tag(tx_axis_ptp_ts_tag),
     .m_axis_ptp_ts_valid(tx_axis_ptp_ts_valid),
     .cfg_ifg(cfg_ifg),
+    .cfg_tx_enable(cfg_tx_enable),
     .start_packet(tx_start_packet[0]),
     .error_underflow(tx_error_underflow)
 );

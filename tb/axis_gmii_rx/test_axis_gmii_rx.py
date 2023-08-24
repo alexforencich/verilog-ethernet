@@ -59,6 +59,7 @@ class TB:
 
         dut.clk_enable.setimmediatevalue(1)
         dut.mii_select.setimmediatevalue(0)
+        dut.cfg_rx_enable.setimmediatevalue(0)
 
     async def reset(self):
         self.dut.rst.setimmediatevalue(0)
@@ -96,6 +97,7 @@ async def run_test(dut, payload_lengths=None, payload_data=None, ifg=12, enable_
 
     tb.source.ifg = ifg
     tb.dut.mii_select.value = mii_sel
+    tb.dut.cfg_rx_enable.value = 1
 
     if enable_gen is not None:
         tb.set_enable_generator(enable_gen())

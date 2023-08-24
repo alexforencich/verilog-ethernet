@@ -96,7 +96,9 @@ module eth_mac_1g_gmii #
     /*
      * Configuration
      */
-    input  wire [7:0]  cfg_ifg
+    input  wire [7:0]  cfg_ifg,
+    input  wire        cfg_tx_enable,
+    input  wire        cfg_rx_enable
 );
 
 wire [7:0]  mac_gmii_rxd;
@@ -244,7 +246,9 @@ eth_mac_1g_inst (
     .tx_error_underflow(tx_error_underflow),
     .rx_error_bad_frame(rx_error_bad_frame),
     .rx_error_bad_fcs(rx_error_bad_fcs),
-    .cfg_ifg(cfg_ifg)
+    .cfg_ifg(cfg_ifg),
+    .cfg_tx_enable(cfg_tx_enable),
+    .cfg_rx_enable(cfg_rx_enable)
 );
 
 endmodule

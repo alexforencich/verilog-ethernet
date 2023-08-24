@@ -148,6 +148,8 @@ module eth_mac_phy_10g_fifo #
      * Configuration
      */
     input  wire [7:0]                 cfg_ifg,
+    input  wire                       cfg_tx_enable,
+    input  wire                       cfg_rx_enable,
     input  wire                       cfg_tx_prbs31_enable,
     input  wire                       cfg_rx_prbs31_enable
 );
@@ -426,6 +428,8 @@ eth_mac_phy_10g_inst (
     .rx_status(rx_status_int),
 
     .cfg_ifg(cfg_ifg),
+    .cfg_tx_enable(cfg_tx_enable),
+    .cfg_rx_enable(cfg_rx_enable),
 
     .cfg_tx_prbs31_enable(cfg_tx_prbs31_enable),
     .cfg_rx_prbs31_enable(cfg_rx_prbs31_enable)

@@ -69,6 +69,11 @@ module axis_gmii_rx #
     input  wire                     mii_select,
 
     /*
+     * Configuration
+     */
+    input  wire                     cfg_rx_enable,
+
+    /*
      * Status
      */
     output wire                     start_packet,
@@ -186,7 +191,7 @@ always @* begin
                 // idle state - wait for packet
                 reset_crc = 1'b1;
 
-                if (gmii_rx_dv_d4 && !gmii_rx_er_d4 && gmii_rxd_d4 == ETH_SFD) begin
+                if (gmii_rx_dv_d4 && !gmii_rx_er_d4 && gmii_rxd_d4 == ETH_SFD && cfg_rx_enable) begin
                     state_next = STATE_PAYLOAD;
                 end else begin
                     state_next = STATE_IDLE;

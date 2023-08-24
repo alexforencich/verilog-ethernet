@@ -53,6 +53,8 @@ class TB:
 
         self.ptp_clock = PtpClockSimTime(ts_64=dut.ptp_ts, clock=dut.clk)
 
+        dut.cfg_rx_enable.setimmediatevalue(0)
+
     async def reset(self):
         self.dut.rst.setimmediatevalue(0)
         await RisingEdge(self.dut.clk)
@@ -70,6 +72,7 @@ async def run_test(dut, payload_lengths=None, payload_data=None, ifg=12):
     tb = TB(dut)
 
     tb.source.ifg = ifg
+    tb.dut.cfg_rx_enable.value = 1
 
     await tb.reset()
 

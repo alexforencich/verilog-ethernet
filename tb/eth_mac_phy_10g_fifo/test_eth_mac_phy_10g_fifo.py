@@ -87,6 +87,8 @@ class TB:
         dut.ptp_ts_step.setimmediatevalue(0)
 
         dut.cfg_ifg.setimmediatevalue(0)
+        dut.cfg_tx_enable.setimmediatevalue(0)
+        dut.cfg_rx_enable.setimmediatevalue(0)
         dut.cfg_tx_prbs31_enable.setimmediatevalue(0)
         dut.cfg_rx_prbs31_enable.setimmediatevalue(0)
 
@@ -114,6 +116,7 @@ async def run_test_rx(dut, payload_lengths=None, payload_data=None, ifg=12):
 
     tb.serdes_source.ifg = ifg
     tb.dut.cfg_ifg.value = ifg
+    tb.dut.cfg_rx_enable.value = 1
 
     await tb.reset()
 
@@ -169,6 +172,7 @@ async def run_test_tx(dut, payload_lengths=None, payload_data=None, ifg=12):
 
     tb.serdes_source.ifg = ifg
     tb.dut.cfg_ifg.value = ifg
+    tb.dut.cfg_tx_enable.value = 1
 
     await tb.reset()
 
@@ -218,6 +222,7 @@ async def run_test_tx_alignment(dut, payload_data=None, ifg=12):
 
     tb.serdes_source.ifg = ifg
     tb.dut.cfg_ifg.value = ifg
+    tb.dut.cfg_tx_enable.value = 1
 
     await tb.reset()
 

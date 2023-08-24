@@ -78,6 +78,7 @@ module axis_xgmii_tx_32 #
      * Configuration
      */
     input  wire [7:0]                cfg_ifg,
+    input  wire                      cfg_tx_enable,
 
     /*
      * Status
@@ -308,7 +309,7 @@ always @* begin
             s_tdata_next = s_axis_tdata_masked;
             s_empty_next = keep2empty(s_axis_tkeep);
 
-            if (s_axis_tvalid) begin
+            if (s_axis_tvalid && cfg_tx_enable) begin
                 // XGMII start and preamble
                 xgmii_txd_next = {{3{ETH_PRE}}, XGMII_START};
                 xgmii_txc_next = 4'b0001;
