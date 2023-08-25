@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2021 Alex Forencich
+Copyright (c) 2021-2023 Alex Forencich
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -58,8 +58,8 @@ module eth_xcvr_phy_wrapper #
      */
     input  wire                   xcvr_gtrefclk00_in,
     output wire                   xcvr_qpll0lock_out,
-    output wire                   xcvr_qpll0outclk_out,
-    output wire                   xcvr_qpll0outrefclk_out,
+    output wire                   xcvr_qpll0clk_out,
+    output wire                   xcvr_qpll0refclk_out,
 
     /*
      * PLL in
@@ -94,6 +94,7 @@ module eth_xcvr_phy_wrapper #
     output wire                   phy_rx_sequence_error,
     output wire                   phy_rx_block_lock,
     output wire                   phy_rx_high_ber,
+    output wire                   phy_rx_status,
     input  wire                   phy_cfg_tx_prbs31_enable,
     input  wire                   phy_cfg_rx_prbs31_enable
 );
@@ -128,8 +129,8 @@ if (HAS_COMMON) begin : xcvr
         // PLL
         .gtrefclk00_in(xcvr_gtrefclk00_in),
         .qpll0lock_out(xcvr_qpll0lock_out),
-        .qpll0outclk_out(xcvr_qpll0outclk_out),
-        .qpll0outrefclk_out(xcvr_qpll0outrefclk_out),
+        .qpll0outclk_out(xcvr_qpll0clk_out),
+        .qpll0outrefclk_out(xcvr_qpll0refclk_out),
 
         // Serial data
         .gtytxp_out(xcvr_txp),
@@ -173,6 +174,8 @@ if (HAS_COMMON) begin : xcvr
         .rxheadervalid_out(gt_rxheadervalid),
         .rxstartofseq_out()
     );
+
+    assign xcvr_qpll0reset_out = 1'b0;
 
 end else begin : xcvr
 
@@ -234,6 +237,10 @@ end else begin : xcvr
         .rxstartofseq_out()
     );
 
+    assign xcvr_qpll0lock_out = 1'b0;
+    assign xcvr_qpll0clk_out = 1'b0;
+    assign xcvr_qpll0refclk_out = 1'b0;
+
 end
 
 endgenerate
@@ -290,6 +297,7 @@ phy_inst (
     .rx_sequence_error(phy_rx_sequence_error),
     .rx_block_lock(phy_rx_block_lock),
     .rx_high_ber(phy_rx_high_ber),
+    .rx_status(phy_rx_status),
     .cfg_tx_prbs31_enable(phy_cfg_tx_prbs31_enable),
     .cfg_rx_prbs31_enable(phy_cfg_rx_prbs31_enable)
 );
