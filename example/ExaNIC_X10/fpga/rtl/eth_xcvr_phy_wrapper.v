@@ -94,8 +94,8 @@ module eth_xcvr_phy_wrapper #
     output wire                   phy_rx_sequence_error,
     output wire                   phy_rx_block_lock,
     output wire                   phy_rx_high_ber,
-    input  wire                   phy_tx_prbs31_enable,
-    input  wire                   phy_rx_prbs31_enable
+    input  wire                   phy_cfg_tx_prbs31_enable,
+    input  wire                   phy_cfg_rx_prbs31_enable
 );
 
 wire phy_rx_reset_req;
@@ -298,8 +298,8 @@ phy_inst (
     .rx_sequence_error(phy_rx_sequence_error),
     .rx_block_lock(phy_rx_block_lock),
     .rx_high_ber(phy_rx_high_ber),
-    .tx_prbs31_enable(phy_tx_prbs31_enable),
-    .rx_prbs31_enable(phy_rx_prbs31_enable)
+    .cfg_tx_prbs31_enable(phy_cfg_tx_prbs31_enable),
+    .cfg_rx_prbs31_enable(phy_cfg_rx_prbs31_enable)
 );
 
 endmodule

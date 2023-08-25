@@ -273,8 +273,8 @@ qsfp_phy_1_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(qsfp_rx_block_lock_1),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -320,8 +320,8 @@ qsfp_phy_2_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(qsfp_rx_block_lock_2),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -367,8 +367,8 @@ qsfp_phy_3_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(qsfp_rx_block_lock_3),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -414,8 +414,8 @@ qsfp_phy_4_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(qsfp_rx_block_lock_4),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 fpga_core

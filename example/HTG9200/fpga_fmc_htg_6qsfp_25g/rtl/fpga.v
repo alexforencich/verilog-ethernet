@@ -601,8 +601,8 @@ qsfp_1_phy_1_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(qsfp_1_rx_block_lock_1),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -648,8 +648,8 @@ qsfp_1_phy_2_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(qsfp_1_rx_block_lock_2),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -695,8 +695,8 @@ qsfp_1_phy_3_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(qsfp_1_rx_block_lock_3),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -742,8 +742,8 @@ qsfp_1_phy_4_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(qsfp_1_rx_block_lock_4),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 // QSFP 2
@@ -844,8 +844,8 @@ qsfp_2_phy_1_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(qsfp_2_rx_block_lock_1),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -891,8 +891,8 @@ qsfp_2_phy_2_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(qsfp_2_rx_block_lock_2),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -938,8 +938,8 @@ qsfp_2_phy_3_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(qsfp_2_rx_block_lock_3),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -985,8 +985,8 @@ qsfp_2_phy_4_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(qsfp_2_rx_block_lock_4),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 // QSFP 3
@@ -1087,8 +1087,8 @@ qsfp_3_phy_1_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(qsfp_3_rx_block_lock_1),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -1134,8 +1134,8 @@ qsfp_3_phy_2_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(qsfp_3_rx_block_lock_2),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -1181,8 +1181,8 @@ qsfp_3_phy_3_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(qsfp_3_rx_block_lock_3),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -1228,8 +1228,8 @@ qsfp_3_phy_4_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(qsfp_3_rx_block_lock_4),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 // QSFP 4
@@ -1330,8 +1330,8 @@ qsfp_4_phy_1_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(qsfp_4_rx_block_lock_1),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -1377,8 +1377,8 @@ qsfp_4_phy_2_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(qsfp_4_rx_block_lock_2),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -1424,8 +1424,8 @@ qsfp_4_phy_3_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(qsfp_4_rx_block_lock_3),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -1471,8 +1471,8 @@ qsfp_4_phy_4_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(qsfp_4_rx_block_lock_4),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 // QSFP 5
@@ -1573,8 +1573,8 @@ qsfp_5_phy_1_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(qsfp_5_rx_block_lock_1),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -1620,8 +1620,8 @@ qsfp_5_phy_2_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(qsfp_5_rx_block_lock_2),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -1667,8 +1667,8 @@ qsfp_5_phy_3_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(qsfp_5_rx_block_lock_3),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -1714,8 +1714,8 @@ qsfp_5_phy_4_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(qsfp_5_rx_block_lock_4),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 // QSFP 6
@@ -1816,8 +1816,8 @@ qsfp_6_phy_1_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(qsfp_6_rx_block_lock_1),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -1863,8 +1863,8 @@ qsfp_6_phy_2_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(qsfp_6_rx_block_lock_2),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -1910,8 +1910,8 @@ qsfp_6_phy_3_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(qsfp_6_rx_block_lock_3),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -1957,8 +1957,8 @@ qsfp_6_phy_4_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(qsfp_6_rx_block_lock_4),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 // QSFP 7
@@ -2059,8 +2059,8 @@ qsfp_7_phy_1_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(qsfp_7_rx_block_lock_1),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -2106,8 +2106,8 @@ qsfp_7_phy_2_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(qsfp_7_rx_block_lock_2),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -2153,8 +2153,8 @@ qsfp_7_phy_3_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(qsfp_7_rx_block_lock_3),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -2200,8 +2200,8 @@ qsfp_7_phy_4_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(qsfp_7_rx_block_lock_4),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 // QSFP 8
@@ -2302,8 +2302,8 @@ qsfp_8_phy_1_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(qsfp_8_rx_block_lock_1),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -2349,8 +2349,8 @@ qsfp_8_phy_2_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(qsfp_8_rx_block_lock_2),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -2396,8 +2396,8 @@ qsfp_8_phy_3_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(qsfp_8_rx_block_lock_3),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -2443,8 +2443,8 @@ qsfp_8_phy_4_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(qsfp_8_rx_block_lock_4),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 // QSFP 9
@@ -2545,8 +2545,8 @@ qsfp_9_phy_1_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(qsfp_9_rx_block_lock_1),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -2592,8 +2592,8 @@ qsfp_9_phy_2_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(qsfp_9_rx_block_lock_2),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -2639,8 +2639,8 @@ qsfp_9_phy_3_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(qsfp_9_rx_block_lock_3),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -2686,8 +2686,8 @@ qsfp_9_phy_4_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(qsfp_9_rx_block_lock_4),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 // FMC QSFP 1
@@ -2790,8 +2790,8 @@ fmc_qsfp_1_phy_1_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(fmc_qsfp_1_rx_block_lock_1),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -2837,8 +2837,8 @@ fmc_qsfp_1_phy_2_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(fmc_qsfp_1_rx_block_lock_2),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -2884,8 +2884,8 @@ fmc_qsfp_1_phy_3_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(fmc_qsfp_1_rx_block_lock_3),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -2931,8 +2931,8 @@ fmc_qsfp_1_phy_4_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(fmc_qsfp_1_rx_block_lock_4),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 // FMC QSFP 2
@@ -3035,8 +3035,8 @@ fmc_qsfp_2_phy_1_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(fmc_qsfp_2_rx_block_lock_1),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -3082,8 +3082,8 @@ fmc_qsfp_2_phy_2_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(fmc_qsfp_2_rx_block_lock_2),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -3129,8 +3129,8 @@ fmc_qsfp_2_phy_3_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(fmc_qsfp_2_rx_block_lock_3),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -3176,8 +3176,8 @@ fmc_qsfp_2_phy_4_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(fmc_qsfp_2_rx_block_lock_4),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 // FMC QSFP 3
@@ -3280,8 +3280,8 @@ fmc_qsfp_3_phy_1_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(fmc_qsfp_3_rx_block_lock_1),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -3327,8 +3327,8 @@ fmc_qsfp_3_phy_2_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(fmc_qsfp_3_rx_block_lock_2),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -3374,8 +3374,8 @@ fmc_qsfp_3_phy_3_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(fmc_qsfp_3_rx_block_lock_3),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -3421,8 +3421,8 @@ fmc_qsfp_3_phy_4_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(fmc_qsfp_3_rx_block_lock_4),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 // FMC QSFP 4
@@ -3525,8 +3525,8 @@ fmc_qsfp_4_phy_1_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(fmc_qsfp_4_rx_block_lock_1),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -3572,8 +3572,8 @@ fmc_qsfp_4_phy_2_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(fmc_qsfp_4_rx_block_lock_2),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -3619,8 +3619,8 @@ fmc_qsfp_4_phy_3_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(fmc_qsfp_4_rx_block_lock_3),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -3666,8 +3666,8 @@ fmc_qsfp_4_phy_4_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(fmc_qsfp_4_rx_block_lock_4),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 // FMC QSFP 5
@@ -3770,8 +3770,8 @@ fmc_qsfp_5_phy_1_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(fmc_qsfp_5_rx_block_lock_1),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -3817,8 +3817,8 @@ fmc_qsfp_5_phy_2_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(fmc_qsfp_5_rx_block_lock_2),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -3864,8 +3864,8 @@ fmc_qsfp_5_phy_3_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(fmc_qsfp_5_rx_block_lock_3),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -3911,8 +3911,8 @@ fmc_qsfp_5_phy_4_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(fmc_qsfp_5_rx_block_lock_4),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 // FMC QSFP 6
@@ -4015,8 +4015,8 @@ fmc_qsfp_6_phy_1_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(fmc_qsfp_6_rx_block_lock_1),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -4062,8 +4062,8 @@ fmc_qsfp_6_phy_2_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(fmc_qsfp_6_rx_block_lock_2),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -4109,8 +4109,8 @@ fmc_qsfp_6_phy_3_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(fmc_qsfp_6_rx_block_lock_3),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -4156,8 +4156,8 @@ fmc_qsfp_6_phy_4_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(fmc_qsfp_6_rx_block_lock_4),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 fpga_core

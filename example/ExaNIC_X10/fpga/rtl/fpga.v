@@ -260,8 +260,8 @@ sfp_1_phy_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(sfp_1_rx_block_lock),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 eth_xcvr_phy_wrapper #(
@@ -307,8 +307,8 @@ sfp_2_phy_inst (
     .phy_rx_sequence_error(),
     .phy_rx_block_lock(sfp_2_rx_block_lock),
     .phy_rx_high_ber(),
-    .phy_tx_prbs31_enable(),
-    .phy_rx_prbs31_enable()
+    .phy_cfg_tx_prbs31_enable(1'b0),
+    .phy_cfg_rx_prbs31_enable(1'b0)
 );
 
 assign sfp_1_led[0] = sfp_1_rx_block_lock;
