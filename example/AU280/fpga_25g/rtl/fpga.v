@@ -45,22 +45,10 @@ module fpga (
     /*
      * Ethernet: QSFP28
      */
-    output wire       qsfp0_tx1_p,
-    output wire       qsfp0_tx1_n,
-    input  wire       qsfp0_rx1_p,
-    input  wire       qsfp0_rx1_n,
-    output wire       qsfp0_tx2_p,
-    output wire       qsfp0_tx2_n,
-    input  wire       qsfp0_rx2_p,
-    input  wire       qsfp0_rx2_n,
-    output wire       qsfp0_tx3_p,
-    output wire       qsfp0_tx3_n,
-    input  wire       qsfp0_rx3_p,
-    input  wire       qsfp0_rx3_n,
-    output wire       qsfp0_tx4_p,
-    output wire       qsfp0_tx4_n,
-    input  wire       qsfp0_rx4_p,
-    input  wire       qsfp0_rx4_n,
+    output wire [3:0] qsfp0_tx_p,
+    output wire [3:0] qsfp0_tx_n,
+    input  wire [3:0] qsfp0_rx_p,
+    input  wire [3:0] qsfp0_rx_n,
     // input  wire       qsfp0_mgt_refclk_0_p,
     // input  wire       qsfp0_mgt_refclk_0_n,
     input  wire       qsfp0_mgt_refclk_1_p,
@@ -68,22 +56,10 @@ module fpga (
     output wire       qsfp0_refclk_oe_b,
     output wire       qsfp0_refclk_fs,
 
-    output wire       qsfp1_tx1_p,
-    output wire       qsfp1_tx1_n,
-    input  wire       qsfp1_rx1_p,
-    input  wire       qsfp1_rx1_n,
-    output wire       qsfp1_tx2_p,
-    output wire       qsfp1_tx2_n,
-    input  wire       qsfp1_rx2_p,
-    input  wire       qsfp1_rx2_n,
-    output wire       qsfp1_tx3_p,
-    output wire       qsfp1_tx3_n,
-    input  wire       qsfp1_rx3_p,
-    input  wire       qsfp1_rx3_n,
-    output wire       qsfp1_tx4_p,
-    output wire       qsfp1_tx4_n,
-    input  wire       qsfp1_rx4_p,
-    input  wire       qsfp1_rx4_n,
+    output wire [3:0] qsfp1_tx_p,
+    output wire [3:0] qsfp1_tx_n,
+    input  wire [3:0] qsfp1_rx_p,
+    input  wire [3:0] qsfp1_rx_n,
     // input  wire       qsfp1_mgt_refclk_0_p,
     // input  wire       qsfp1_mgt_refclk_0_n,
     input  wire       qsfp1_mgt_refclk_1_p,
@@ -258,196 +234,103 @@ BUFG_GT bufg_gt_refclk_inst (
     .O       (qsfp0_mgt_refclk_1_bufg)
 );
 
-wire qsfp0_qpll0lock;
-wire qsfp0_qpll0outclk;
-wire qsfp0_qpll0outrefclk;
-
-eth_xcvr_phy_wrapper #(
-    .HAS_COMMON(1)
+eth_xcvr_phy_quad_wrapper #(
+    .TX_SERDES_PIPELINE(2),
+    .RX_SERDES_PIPELINE(2),
+    .COUNT_125US(125000/2.56)
 )
-qsfp0_phy_1_inst (
+qsfp0_phy_inst (
     .xcvr_ctrl_clk(clk_125mhz_int),
     .xcvr_ctrl_rst(rst_125mhz_int),
 
-    // Common
+    /*
+     * Common
+     */
     .xcvr_gtpowergood_out(qsfp0_gtpowergood),
 
-    // PLL out
+    /*
+     * PLL
+     */
     .xcvr_gtrefclk00_in(qsfp0_mgt_refclk_1),
-    .xcvr_qpll0lock_out(qsfp0_qpll0lock),
-    .xcvr_qpll0outclk_out(qsfp0_qpll0outclk),
-    .xcvr_qpll0outrefclk_out(qsfp0_qpll0outrefclk),
 
-    // PLL in
-    .xcvr_qpll0lock_in(1'b0),
-    .xcvr_qpll0reset_out(),
-    .xcvr_qpll0clk_in(1'b0),
-    .xcvr_qpll0refclk_in(1'b0),
+    /*
+     * Serial data
+     */
+    .xcvr_txp(qsfp0_tx_p),
+    .xcvr_txn(qsfp0_tx_n),
+    .xcvr_rxp(qsfp0_rx_p),
+    .xcvr_rxn(qsfp0_rx_n),
 
-    // Serial data
-    .xcvr_txp(qsfp0_tx1_p),
-    .xcvr_txn(qsfp0_tx1_n),
-    .xcvr_rxp(qsfp0_rx1_p),
-    .xcvr_rxn(qsfp0_rx1_n),
+    /*
+     * PHY connections
+     */
+    .phy_1_tx_clk(qsfp0_tx_clk_1_int),
+    .phy_1_tx_rst(qsfp0_tx_rst_1_int),
+    .phy_1_xgmii_txd(qsfp0_txd_1_int),
+    .phy_1_xgmii_txc(qsfp0_txc_1_int),
+    .phy_1_rx_clk(qsfp0_rx_clk_1_int),
+    .phy_1_rx_rst(qsfp0_rx_rst_1_int),
+    .phy_1_xgmii_rxd(qsfp0_rxd_1_int),
+    .phy_1_xgmii_rxc(qsfp0_rxc_1_int),
+    .phy_1_tx_bad_block(),
+    .phy_1_rx_error_count(),
+    .phy_1_rx_bad_block(),
+    .phy_1_rx_sequence_error(),
+    .phy_1_rx_block_lock(qsfp0_rx_block_lock_1),
+    .phy_1_rx_status(),
+    .phy_1_cfg_tx_prbs31_enable(1'b0),
+    .phy_1_cfg_rx_prbs31_enable(1'b0),
 
-    // PHY connections
-    .phy_tx_clk(qsfp0_tx_clk_1_int),
-    .phy_tx_rst(qsfp0_tx_rst_1_int),
-    .phy_xgmii_txd(qsfp0_txd_1_int),
-    .phy_xgmii_txc(qsfp0_txc_1_int),
-    .phy_rx_clk(qsfp0_rx_clk_1_int),
-    .phy_rx_rst(qsfp0_rx_rst_1_int),
-    .phy_xgmii_rxd(qsfp0_rxd_1_int),
-    .phy_xgmii_rxc(qsfp0_rxc_1_int),
-    .phy_tx_bad_block(),
-    .phy_rx_error_count(),
-    .phy_rx_bad_block(),
-    .phy_rx_sequence_error(),
-    .phy_rx_block_lock(qsfp0_rx_block_lock_1),
-    .phy_rx_high_ber(),
-    .phy_cfg_tx_prbs31_enable(1'b0),
-    .phy_cfg_rx_prbs31_enable(1'b0)
-);
+    .phy_2_tx_clk(qsfp0_tx_clk_2_int),
+    .phy_2_tx_rst(qsfp0_tx_rst_2_int),
+    .phy_2_xgmii_txd(qsfp0_txd_2_int),
+    .phy_2_xgmii_txc(qsfp0_txc_2_int),
+    .phy_2_rx_clk(qsfp0_rx_clk_2_int),
+    .phy_2_rx_rst(qsfp0_rx_rst_2_int),
+    .phy_2_xgmii_rxd(qsfp0_rxd_2_int),
+    .phy_2_xgmii_rxc(qsfp0_rxc_2_int),
+    .phy_2_tx_bad_block(),
+    .phy_2_rx_error_count(),
+    .phy_2_rx_bad_block(),
+    .phy_2_rx_sequence_error(),
+    .phy_2_rx_block_lock(qsfp0_rx_block_lock_2),
+    .phy_2_rx_status(),
+    .phy_2_cfg_tx_prbs31_enable(1'b0),
+    .phy_2_cfg_rx_prbs31_enable(1'b0),
 
-eth_xcvr_phy_wrapper #(
-    .HAS_COMMON(0)
-)
-qsfp0_phy_2_inst (
-    .xcvr_ctrl_clk(clk_125mhz_int),
-    .xcvr_ctrl_rst(rst_125mhz_int),
+    .phy_3_tx_clk(qsfp0_tx_clk_3_int),
+    .phy_3_tx_rst(qsfp0_tx_rst_3_int),
+    .phy_3_xgmii_txd(qsfp0_txd_3_int),
+    .phy_3_xgmii_txc(qsfp0_txc_3_int),
+    .phy_3_rx_clk(qsfp0_rx_clk_3_int),
+    .phy_3_rx_rst(qsfp0_rx_rst_3_int),
+    .phy_3_xgmii_rxd(qsfp0_rxd_3_int),
+    .phy_3_xgmii_rxc(qsfp0_rxc_3_int),
+    .phy_3_tx_bad_block(),
+    .phy_3_rx_error_count(),
+    .phy_3_rx_bad_block(),
+    .phy_3_rx_sequence_error(),
+    .phy_3_rx_block_lock(qsfp0_rx_block_lock_3),
+    .phy_3_rx_status(),
+    .phy_3_cfg_tx_prbs31_enable(1'b0),
+    .phy_3_cfg_rx_prbs31_enable(1'b0),
 
-    // Common
-    .xcvr_gtpowergood_out(),
-
-    // PLL out
-    .xcvr_gtrefclk00_in(1'b0),
-    .xcvr_qpll0lock_out(),
-    .xcvr_qpll0outclk_out(),
-    .xcvr_qpll0outrefclk_out(),
-
-    // PLL in
-    .xcvr_qpll0lock_in(qsfp0_qpll0lock),
-    .xcvr_qpll0reset_out(),
-    .xcvr_qpll0clk_in(qsfp0_qpll0outclk),
-    .xcvr_qpll0refclk_in(qsfp0_qpll0outrefclk),
-
-    // Serial data
-    .xcvr_txp(qsfp0_tx2_p),
-    .xcvr_txn(qsfp0_tx2_n),
-    .xcvr_rxp(qsfp0_rx2_p),
-    .xcvr_rxn(qsfp0_rx2_n),
-
-    // PHY connections
-    .phy_tx_clk(qsfp0_tx_clk_2_int),
-    .phy_tx_rst(qsfp0_tx_rst_2_int),
-    .phy_xgmii_txd(qsfp0_txd_2_int),
-    .phy_xgmii_txc(qsfp0_txc_2_int),
-    .phy_rx_clk(qsfp0_rx_clk_2_int),
-    .phy_rx_rst(qsfp0_rx_rst_2_int),
-    .phy_xgmii_rxd(qsfp0_rxd_2_int),
-    .phy_xgmii_rxc(qsfp0_rxc_2_int),
-    .phy_tx_bad_block(),
-    .phy_rx_error_count(),
-    .phy_rx_bad_block(),
-    .phy_rx_sequence_error(),
-    .phy_rx_block_lock(qsfp0_rx_block_lock_2),
-    .phy_rx_high_ber(),
-    .phy_cfg_tx_prbs31_enable(1'b0),
-    .phy_cfg_rx_prbs31_enable(1'b0)
-);
-
-eth_xcvr_phy_wrapper #(
-    .HAS_COMMON(0)
-)
-qsfp0_phy_3_inst (
-    .xcvr_ctrl_clk(clk_125mhz_int),
-    .xcvr_ctrl_rst(rst_125mhz_int),
-
-    // Common
-    .xcvr_gtpowergood_out(),
-
-    // PLL out
-    .xcvr_gtrefclk00_in(1'b0),
-    .xcvr_qpll0lock_out(),
-    .xcvr_qpll0outclk_out(),
-    .xcvr_qpll0outrefclk_out(),
-
-    // PLL in
-    .xcvr_qpll0lock_in(qsfp0_qpll0lock),
-    .xcvr_qpll0reset_out(),
-    .xcvr_qpll0clk_in(qsfp0_qpll0outclk),
-    .xcvr_qpll0refclk_in(qsfp0_qpll0outrefclk),
-
-    // Serial data
-    .xcvr_txp(qsfp0_tx3_p),
-    .xcvr_txn(qsfp0_tx3_n),
-    .xcvr_rxp(qsfp0_rx3_p),
-    .xcvr_rxn(qsfp0_rx3_n),
-
-    // PHY connections
-    .phy_tx_clk(qsfp0_tx_clk_3_int),
-    .phy_tx_rst(qsfp0_tx_rst_3_int),
-    .phy_xgmii_txd(qsfp0_txd_3_int),
-    .phy_xgmii_txc(qsfp0_txc_3_int),
-    .phy_rx_clk(qsfp0_rx_clk_3_int),
-    .phy_rx_rst(qsfp0_rx_rst_3_int),
-    .phy_xgmii_rxd(qsfp0_rxd_3_int),
-    .phy_xgmii_rxc(qsfp0_rxc_3_int),
-    .phy_tx_bad_block(),
-    .phy_rx_error_count(),
-    .phy_rx_bad_block(),
-    .phy_rx_sequence_error(),
-    .phy_rx_block_lock(qsfp0_rx_block_lock_3),
-    .phy_rx_high_ber(),
-    .phy_cfg_tx_prbs31_enable(1'b0),
-    .phy_cfg_rx_prbs31_enable(1'b0)
-);
-
-eth_xcvr_phy_wrapper #(
-    .HAS_COMMON(0)
-)
-qsfp0_phy_4_inst (
-    .xcvr_ctrl_clk(clk_125mhz_int),
-    .xcvr_ctrl_rst(rst_125mhz_int),
-
-    // Common
-    .xcvr_gtpowergood_out(),
-
-    // PLL out
-    .xcvr_gtrefclk00_in(1'b0),
-    .xcvr_qpll0lock_out(),
-    .xcvr_qpll0outclk_out(),
-    .xcvr_qpll0outrefclk_out(),
-
-    // PLL in
-    .xcvr_qpll0lock_in(qsfp0_qpll0lock),
-    .xcvr_qpll0reset_out(),
-    .xcvr_qpll0clk_in(qsfp0_qpll0outclk),
-    .xcvr_qpll0refclk_in(qsfp0_qpll0outrefclk),
-
-    // Serial data
-    .xcvr_txp(qsfp0_tx4_p),
-    .xcvr_txn(qsfp0_tx4_n),
-    .xcvr_rxp(qsfp0_rx4_p),
-    .xcvr_rxn(qsfp0_rx4_n),
-
-    // PHY connections
-    .phy_tx_clk(qsfp0_tx_clk_4_int),
-    .phy_tx_rst(qsfp0_tx_rst_4_int),
-    .phy_xgmii_txd(qsfp0_txd_4_int),
-    .phy_xgmii_txc(qsfp0_txc_4_int),
-    .phy_rx_clk(qsfp0_rx_clk_4_int),
-    .phy_rx_rst(qsfp0_rx_rst_4_int),
-    .phy_xgmii_rxd(qsfp0_rxd_4_int),
-    .phy_xgmii_rxc(qsfp0_rxc_4_int),
-    .phy_tx_bad_block(),
-    .phy_rx_error_count(),
-    .phy_rx_bad_block(),
-    .phy_rx_sequence_error(),
-    .phy_rx_block_lock(qsfp0_rx_block_lock_4),
-    .phy_rx_high_ber(),
-    .phy_cfg_tx_prbs31_enable(1'b0),
-    .phy_cfg_rx_prbs31_enable(1'b0)
+    .phy_4_tx_clk(qsfp0_tx_clk_4_int),
+    .phy_4_tx_rst(qsfp0_tx_rst_4_int),
+    .phy_4_xgmii_txd(qsfp0_txd_4_int),
+    .phy_4_xgmii_txc(qsfp0_txc_4_int),
+    .phy_4_rx_clk(qsfp0_rx_clk_4_int),
+    .phy_4_rx_rst(qsfp0_rx_rst_4_int),
+    .phy_4_xgmii_rxd(qsfp0_rxd_4_int),
+    .phy_4_xgmii_rxc(qsfp0_rxc_4_int),
+    .phy_4_tx_bad_block(),
+    .phy_4_rx_error_count(),
+    .phy_4_rx_bad_block(),
+    .phy_4_rx_sequence_error(),
+    .phy_4_rx_block_lock(qsfp0_rx_block_lock_4),
+    .phy_4_rx_status(),
+    .phy_4_cfg_tx_prbs31_enable(1'b0),
+    .phy_4_cfg_rx_prbs31_enable(1'b0)
 );
 
 // QSFP1
@@ -502,196 +385,103 @@ IBUFDS_GTE4 ibufds_gte4_qsfp1_mgt_refclk_1_inst (
     .ODIV2 ()
 );
 
-wire qsfp1_qpll0lock;
-wire qsfp1_qpll0outclk;
-wire qsfp1_qpll0outrefclk;
-
-eth_xcvr_phy_wrapper #(
-    .HAS_COMMON(1)
+eth_xcvr_phy_quad_wrapper #(
+    .TX_SERDES_PIPELINE(2),
+    .RX_SERDES_PIPELINE(2),
+    .COUNT_125US(125000/2.56)
 )
-qsfp1_phy_1_inst (
+qsfp1_phy_inst (
     .xcvr_ctrl_clk(clk_125mhz_int),
     .xcvr_ctrl_rst(rst_125mhz_int),
 
-    // Common
+    /*
+     * Common
+     */
     .xcvr_gtpowergood_out(),
 
-    // PLL out
+    /*
+     * PLL
+     */
     .xcvr_gtrefclk00_in(qsfp1_mgt_refclk_1),
-    .xcvr_qpll0lock_out(qsfp1_qpll0lock),
-    .xcvr_qpll0outclk_out(qsfp1_qpll0outclk),
-    .xcvr_qpll0outrefclk_out(qsfp1_qpll0outrefclk),
 
-    // PLL in
-    .xcvr_qpll0lock_in(1'b0),
-    .xcvr_qpll0reset_out(),
-    .xcvr_qpll0clk_in(1'b0),
-    .xcvr_qpll0refclk_in(1'b0),
+    /*
+     * Serial data
+     */
+    .xcvr_txp(qsfp1_tx_p),
+    .xcvr_txn(qsfp1_tx_n),
+    .xcvr_rxp(qsfp1_rx_p),
+    .xcvr_rxn(qsfp1_rx_n),
 
-    // Serial data
-    .xcvr_txp(qsfp1_tx1_p),
-    .xcvr_txn(qsfp1_tx1_n),
-    .xcvr_rxp(qsfp1_rx1_p),
-    .xcvr_rxn(qsfp1_rx1_n),
+    /*
+     * PHY connections
+     */
+    .phy_1_tx_clk(qsfp1_tx_clk_1_int),
+    .phy_1_tx_rst(qsfp1_tx_rst_1_int),
+    .phy_1_xgmii_txd(qsfp1_txd_1_int),
+    .phy_1_xgmii_txc(qsfp1_txc_1_int),
+    .phy_1_rx_clk(qsfp1_rx_clk_1_int),
+    .phy_1_rx_rst(qsfp1_rx_rst_1_int),
+    .phy_1_xgmii_rxd(qsfp1_rxd_1_int),
+    .phy_1_xgmii_rxc(qsfp1_rxc_1_int),
+    .phy_1_tx_bad_block(),
+    .phy_1_rx_error_count(),
+    .phy_1_rx_bad_block(),
+    .phy_1_rx_sequence_error(),
+    .phy_1_rx_block_lock(qsfp1_rx_block_lock_1),
+    .phy_1_rx_status(),
+    .phy_1_cfg_tx_prbs31_enable(1'b0),
+    .phy_1_cfg_rx_prbs31_enable(1'b0),
 
-    // PHY connections
-    .phy_tx_clk(qsfp1_tx_clk_1_int),
-    .phy_tx_rst(qsfp1_tx_rst_1_int),
-    .phy_xgmii_txd(qsfp1_txd_1_int),
-    .phy_xgmii_txc(qsfp1_txc_1_int),
-    .phy_rx_clk(qsfp1_rx_clk_1_int),
-    .phy_rx_rst(qsfp1_rx_rst_1_int),
-    .phy_xgmii_rxd(qsfp1_rxd_1_int),
-    .phy_xgmii_rxc(qsfp1_rxc_1_int),
-    .phy_tx_bad_block(),
-    .phy_rx_error_count(),
-    .phy_rx_bad_block(),
-    .phy_rx_sequence_error(),
-    .phy_rx_block_lock(qsfp1_rx_block_lock_1),
-    .phy_rx_high_ber(),
-    .phy_cfg_tx_prbs31_enable(1'b0),
-    .phy_cfg_rx_prbs31_enable(1'b0)
-);
+    .phy_2_tx_clk(qsfp1_tx_clk_2_int),
+    .phy_2_tx_rst(qsfp1_tx_rst_2_int),
+    .phy_2_xgmii_txd(qsfp1_txd_2_int),
+    .phy_2_xgmii_txc(qsfp1_txc_2_int),
+    .phy_2_rx_clk(qsfp1_rx_clk_2_int),
+    .phy_2_rx_rst(qsfp1_rx_rst_2_int),
+    .phy_2_xgmii_rxd(qsfp1_rxd_2_int),
+    .phy_2_xgmii_rxc(qsfp1_rxc_2_int),
+    .phy_2_tx_bad_block(),
+    .phy_2_rx_error_count(),
+    .phy_2_rx_bad_block(),
+    .phy_2_rx_sequence_error(),
+    .phy_2_rx_block_lock(qsfp1_rx_block_lock_2),
+    .phy_2_rx_status(),
+    .phy_2_cfg_tx_prbs31_enable(1'b0),
+    .phy_2_cfg_rx_prbs31_enable(1'b0),
 
-eth_xcvr_phy_wrapper #(
-    .HAS_COMMON(0)
-)
-qsfp1_phy_2_inst (
-    .xcvr_ctrl_clk(clk_125mhz_int),
-    .xcvr_ctrl_rst(rst_125mhz_int),
+    .phy_3_tx_clk(qsfp1_tx_clk_3_int),
+    .phy_3_tx_rst(qsfp1_tx_rst_3_int),
+    .phy_3_xgmii_txd(qsfp1_txd_3_int),
+    .phy_3_xgmii_txc(qsfp1_txc_3_int),
+    .phy_3_rx_clk(qsfp1_rx_clk_3_int),
+    .phy_3_rx_rst(qsfp1_rx_rst_3_int),
+    .phy_3_xgmii_rxd(qsfp1_rxd_3_int),
+    .phy_3_xgmii_rxc(qsfp1_rxc_3_int),
+    .phy_3_tx_bad_block(),
+    .phy_3_rx_error_count(),
+    .phy_3_rx_bad_block(),
+    .phy_3_rx_sequence_error(),
+    .phy_3_rx_block_lock(qsfp1_rx_block_lock_3),
+    .phy_3_rx_status(),
+    .phy_3_cfg_tx_prbs31_enable(1'b0),
+    .phy_3_cfg_rx_prbs31_enable(1'b0),
 
-    // Common
-    .xcvr_gtpowergood_out(),
-
-    // PLL out
-    .xcvr_gtrefclk00_in(1'b0),
-    .xcvr_qpll0lock_out(),
-    .xcvr_qpll0outclk_out(),
-    .xcvr_qpll0outrefclk_out(),
-
-    // PLL in
-    .xcvr_qpll0lock_in(qsfp1_qpll0lock),
-    .xcvr_qpll0reset_out(),
-    .xcvr_qpll0clk_in(qsfp1_qpll0outclk),
-    .xcvr_qpll0refclk_in(qsfp1_qpll0outrefclk),
-
-    // Serial data
-    .xcvr_txp(qsfp1_tx2_p),
-    .xcvr_txn(qsfp1_tx2_n),
-    .xcvr_rxp(qsfp1_rx2_p),
-    .xcvr_rxn(qsfp1_rx2_n),
-
-    // PHY connections
-    .phy_tx_clk(qsfp1_tx_clk_2_int),
-    .phy_tx_rst(qsfp1_tx_rst_2_int),
-    .phy_xgmii_txd(qsfp1_txd_2_int),
-    .phy_xgmii_txc(qsfp1_txc_2_int),
-    .phy_rx_clk(qsfp1_rx_clk_2_int),
-    .phy_rx_rst(qsfp1_rx_rst_2_int),
-    .phy_xgmii_rxd(qsfp1_rxd_2_int),
-    .phy_xgmii_rxc(qsfp1_rxc_2_int),
-    .phy_tx_bad_block(),
-    .phy_rx_error_count(),
-    .phy_rx_bad_block(),
-    .phy_rx_sequence_error(),
-    .phy_rx_block_lock(qsfp1_rx_block_lock_2),
-    .phy_rx_high_ber(),
-    .phy_cfg_tx_prbs31_enable(1'b0),
-    .phy_cfg_rx_prbs31_enable(1'b0)
-);
-
-eth_xcvr_phy_wrapper #(
-    .HAS_COMMON(0)
-)
-qsfp1_phy_3_inst (
-    .xcvr_ctrl_clk(clk_125mhz_int),
-    .xcvr_ctrl_rst(rst_125mhz_int),
-
-    // Common
-    .xcvr_gtpowergood_out(),
-
-    // PLL out
-    .xcvr_gtrefclk00_in(1'b0),
-    .xcvr_qpll0lock_out(),
-    .xcvr_qpll0outclk_out(),
-    .xcvr_qpll0outrefclk_out(),
-
-    // PLL in
-    .xcvr_qpll0lock_in(qsfp1_qpll0lock),
-    .xcvr_qpll0reset_out(),
-    .xcvr_qpll0clk_in(qsfp1_qpll0outclk),
-    .xcvr_qpll0refclk_in(qsfp1_qpll0outrefclk),
-
-    // Serial data
-    .xcvr_txp(qsfp1_tx3_p),
-    .xcvr_txn(qsfp1_tx3_n),
-    .xcvr_rxp(qsfp1_rx3_p),
-    .xcvr_rxn(qsfp1_rx3_n),
-
-    // PHY connections
-    .phy_tx_clk(qsfp1_tx_clk_3_int),
-    .phy_tx_rst(qsfp1_tx_rst_3_int),
-    .phy_xgmii_txd(qsfp1_txd_3_int),
-    .phy_xgmii_txc(qsfp1_txc_3_int),
-    .phy_rx_clk(qsfp1_rx_clk_3_int),
-    .phy_rx_rst(qsfp1_rx_rst_3_int),
-    .phy_xgmii_rxd(qsfp1_rxd_3_int),
-    .phy_xgmii_rxc(qsfp1_rxc_3_int),
-    .phy_tx_bad_block(),
-    .phy_rx_error_count(),
-    .phy_rx_bad_block(),
-    .phy_rx_sequence_error(),
-    .phy_rx_block_lock(qsfp1_rx_block_lock_3),
-    .phy_rx_high_ber(),
-    .phy_cfg_tx_prbs31_enable(1'b0),
-    .phy_cfg_rx_prbs31_enable(1'b0)
-);
-
-eth_xcvr_phy_wrapper #(
-    .HAS_COMMON(0)
-)
-qsfp1_phy_4_inst (
-    .xcvr_ctrl_clk(clk_125mhz_int),
-    .xcvr_ctrl_rst(rst_125mhz_int),
-
-    // Common
-    .xcvr_gtpowergood_out(),
-
-    // PLL out
-    .xcvr_gtrefclk00_in(1'b0),
-    .xcvr_qpll0lock_out(),
-    .xcvr_qpll0outclk_out(),
-    .xcvr_qpll0outrefclk_out(),
-
-    // PLL in
-    .xcvr_qpll0lock_in(qsfp1_qpll0lock),
-    .xcvr_qpll0reset_out(),
-    .xcvr_qpll0clk_in(qsfp1_qpll0outclk),
-    .xcvr_qpll0refclk_in(qsfp1_qpll0outrefclk),
-
-    // Serial data
-    .xcvr_txp(qsfp1_tx4_p),
-    .xcvr_txn(qsfp1_tx4_n),
-    .xcvr_rxp(qsfp1_rx4_p),
-    .xcvr_rxn(qsfp1_rx4_n),
-
-    // PHY connections
-    .phy_tx_clk(qsfp1_tx_clk_4_int),
-    .phy_tx_rst(qsfp1_tx_rst_4_int),
-    .phy_xgmii_txd(qsfp1_txd_4_int),
-    .phy_xgmii_txc(qsfp1_txc_4_int),
-    .phy_rx_clk(qsfp1_rx_clk_4_int),
-    .phy_rx_rst(qsfp1_rx_rst_4_int),
-    .phy_xgmii_rxd(qsfp1_rxd_4_int),
-    .phy_xgmii_rxc(qsfp1_rxc_4_int),
-    .phy_tx_bad_block(),
-    .phy_rx_error_count(),
-    .phy_rx_bad_block(),
-    .phy_rx_sequence_error(),
-    .phy_rx_block_lock(qsfp1_rx_block_lock_4),
-    .phy_rx_high_ber(),
-    .phy_cfg_tx_prbs31_enable(1'b0),
-    .phy_cfg_rx_prbs31_enable(1'b0)
+    .phy_4_tx_clk(qsfp1_tx_clk_4_int),
+    .phy_4_tx_rst(qsfp1_tx_rst_4_int),
+    .phy_4_xgmii_txd(qsfp1_txd_4_int),
+    .phy_4_xgmii_txc(qsfp1_txc_4_int),
+    .phy_4_rx_clk(qsfp1_rx_clk_4_int),
+    .phy_4_rx_rst(qsfp1_rx_rst_4_int),
+    .phy_4_xgmii_rxd(qsfp1_rxd_4_int),
+    .phy_4_xgmii_rxc(qsfp1_rxc_4_int),
+    .phy_4_tx_bad_block(),
+    .phy_4_rx_error_count(),
+    .phy_4_rx_bad_block(),
+    .phy_4_rx_sequence_error(),
+    .phy_4_rx_block_lock(qsfp1_rx_block_lock_4),
+    .phy_4_rx_status(),
+    .phy_4_cfg_tx_prbs31_enable(1'b0),
+    .phy_4_cfg_rx_prbs31_enable(1'b0)
 );
 
 fpga_core
