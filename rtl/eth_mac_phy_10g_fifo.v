@@ -63,7 +63,6 @@ module eth_mac_phy_10g_fifo #
     parameter RX_DROP_WHEN_FULL = RX_DROP_OVERSIZE_FRAME,
     parameter PTP_PERIOD_NS = 4'h6,
     parameter PTP_PERIOD_FNS = 16'h6666,
-    parameter PTP_USE_SAMPLE_CLOCK = 0,
     parameter TX_PTP_TS_ENABLE = 0,
     parameter RX_PTP_TS_ENABLE = TX_PTP_TS_ENABLE,
     parameter TX_PTP_TS_CTRL_IN_TUSER = 0,
@@ -258,8 +257,7 @@ if (TX_PTP_TS_ENABLE) begin : tx_ptp
     ptp_clock_cdc #(
         .TS_WIDTH(PTP_TS_WIDTH),
         .NS_WIDTH(6),
-        .FNS_WIDTH(16),
-        .USE_SAMPLE_CLOCK(PTP_USE_SAMPLE_CLOCK)
+        .FNS_WIDTH(16)
     )
     tx_ptp_cdc (
         .input_clk(logic_clk),
@@ -335,8 +333,7 @@ if (RX_PTP_TS_ENABLE) begin : rx_ptp
     ptp_clock_cdc #(
         .TS_WIDTH(PTP_TS_WIDTH),
         .NS_WIDTH(6),
-        .FNS_WIDTH(16),
-        .USE_SAMPLE_CLOCK(PTP_USE_SAMPLE_CLOCK)
+        .FNS_WIDTH(16)
     )
     rx_ptp_cdc (
         .input_clk(logic_clk),

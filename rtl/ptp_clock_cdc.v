@@ -36,7 +36,6 @@ module ptp_clock_cdc #
     parameter TS_WIDTH = 96,
     parameter NS_WIDTH = 4,
     parameter FNS_WIDTH = 16,
-    parameter USE_SAMPLE_CLOCK = 1,
     parameter LOG_RATE = 3,
     parameter PIPELINE_OUTPUT = 0
 )
@@ -304,37 +303,35 @@ reg edge_2_reg = 1'b0;
 reg [3:0] active_reg = 0;
 
 always @(posedge sample_clk) begin
-    if (USE_SAMPLE_CLOCK) begin
-        // phase and frequency detector
-        if (dest_sync_sample_sync2_reg && !dest_sync_sample_sync3_reg) begin
-            if (src_sync_sample_sync2_reg && !src_sync_sample_sync3_reg) begin
-                edge_1_reg <= 1'b0;
-                edge_2_reg <= 1'b0;
-            end else begin
-                edge_1_reg <= !edge_2_reg;
-                edge_2_reg <= 1'b0;
-            end
-        end else if (src_sync_sample_sync2_reg && !src_sync_sample_sync3_reg) begin
-            edge_1_reg <= 1'b0;
-            edge_2_reg <= !edge_1_reg;
-        end
-
-        // accumulator
-        sample_acc_reg <= $signed(sample_acc_reg) + $signed({1'b0, edge_2_reg}) - $signed({1'b0, edge_1_reg});
-
-        sample_cnt_reg <= sample_cnt_reg + 1;
-
+    // phase and frequency detector
+    if (dest_sync_sample_sync2_reg && !dest_sync_sample_sync3_reg) begin
         if (src_sync_sample_sync2_reg && !src_sync_sample_sync3_reg) begin
-            active_reg[0] <= 1'b1;
+            edge_1_reg <= 1'b0;
+            edge_2_reg <= 1'b0;
+        end else begin
+            edge_1_reg <= !edge_2_reg;
+            edge_2_reg <= 1'b0;
         end
+    end else if (src_sync_sample_sync2_reg && !src_sync_sample_sync3_reg) begin
+        edge_1_reg <= 1'b0;
+        edge_2_reg <= !edge_1_reg;
+    end
 
-        if (sample_cnt_reg == 0) begin
-            active_reg <= {active_reg, src_sync_sample_sync2_reg && !src_sync_sample_sync3_reg};
-            sample_acc_reg <= $signed({1'b0, edge_2_reg}) - $signed({1'b0, edge_1_reg});
-            sample_acc_out_reg <= sample_acc_reg;
-            if (active_reg != 0) begin
-                sample_update_reg <= !sample_update_reg;
-            end
+    // accumulator
+    sample_acc_reg <= $signed(sample_acc_reg) + $signed({1'b0, edge_2_reg}) - $signed({1'b0, edge_1_reg});
+
+    sample_cnt_reg <= sample_cnt_reg + 1;
+
+    if (src_sync_sample_sync2_reg && !src_sync_sample_sync3_reg) begin
+        active_reg[0] <= 1'b1;
+    end
+
+    if (sample_cnt_reg == 0) begin
+        active_reg <= {active_reg, src_sync_sample_sync2_reg && !src_sync_sample_sync3_reg};
+        sample_acc_reg <= $signed({1'b0, edge_2_reg}) - $signed({1'b0, edge_1_reg});
+        sample_acc_out_reg <= sample_acc_reg;
+        if (active_reg != 0) begin
+            sample_update_reg <= !sample_update_reg;
         end
     end
 end
@@ -347,50 +344,6 @@ end
 
 reg [SAMPLE_ACC_WIDTH-1:0] sample_acc_sync_reg = 0;
 reg sample_acc_sync_valid_reg = 0;
-
-always @(posedge output_clk) begin
-    if (USE_SAMPLE_CLOCK) begin
-        // latch in synchronized counts from phase detector
-        sample_acc_sync_valid_reg <= 1'b0;
-        if (sample_update_sync2_reg ^ sample_update_sync3_reg) begin
-            sample_acc_sync_reg <= sample_acc_out_reg;
-            sample_acc_sync_valid_reg <= 1'b1;
-        end
-    end else begin
-        // phase and frequency detector
-        if (dest_sync_sync2_reg && !dest_sync_sync3_reg) begin
-            if (src_sync_sync2_reg && !src_sync_sync3_reg) begin
-                edge_1_reg <= 1'b0;
-                edge_2_reg <= 1'b0;
-            end else begin
-                edge_1_reg <= !edge_2_reg;
-                edge_2_reg <= 1'b0;
-            end
-        end else if (src_sync_sync2_reg && !src_sync_sync3_reg) begin
-            edge_1_reg <= 1'b0;
-            edge_2_reg <= !edge_1_reg;
-        end
-
-        // accumulator
-        sample_acc_reg <= $signed(sample_acc_reg) + $signed({1'b0, edge_2_reg}) - $signed({1'b0, edge_1_reg});
-
-        sample_cnt_reg <= sample_cnt_reg + 1;
-
-        if (src_sync_sync2_reg && !src_sync_sync3_reg) begin
-            active_reg[0] <= 1'b1;
-        end
-
-        sample_acc_sync_valid_reg <= 1'b0;
-        if (sample_cnt_reg == 0) begin
-            active_reg <= {active_reg, src_sync_sync2_reg && !src_sync_sync3_reg};
-            sample_acc_reg <= $signed({1'b0, edge_2_reg}) - $signed({1'b0, edge_1_reg});
-            sample_acc_sync_reg <= sample_acc_reg;
-            if (active_reg != 0) begin
-                sample_acc_sync_valid_reg <= 1'b1;
-            end
-        end
-    end
-end
 
 reg [PHASE_ACC_WIDTH-1:0] dest_err_int_reg = 0, dest_err_int_next = 0;
 reg [1:0] dest_ovf;
@@ -463,6 +416,13 @@ always @(posedge output_clk) begin
     dest_phase_reg <= dest_phase_next;
     dest_phase_inc_reg <= dest_phase_inc_next;
     dest_update_reg <= dest_update_next;
+
+    sample_acc_sync_valid_reg <= 1'b0;
+    if (sample_update_sync2_reg ^ sample_update_sync3_reg) begin
+        // latch in synchronized counts from phase detector
+        sample_acc_sync_reg <= sample_acc_out_reg;
+        sample_acc_sync_valid_reg <= 1'b1;
+    end
 
     if (dest_update_reg) begin
         // capture local TS

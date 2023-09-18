@@ -62,6 +62,7 @@ class TB:
         cocotb.start_soon(Clock(dut.logic_clk, self.clk_period, units="ns").start())
         cocotb.start_soon(Clock(dut.rx_clk, self.clk_period, units="ns").start())
         cocotb.start_soon(Clock(dut.tx_clk, self.clk_period, units="ns").start())
+        cocotb.start_soon(Clock(dut.ptp_sample_clk, 9.9, units="ns").start())
 
         self.xgmii_source = XgmiiSource(dut.xgmii_rxd, dut.xgmii_rxc, dut.rx_clk, dut.rx_rst)
         self.xgmii_sink = XgmiiSink(dut.xgmii_txd, dut.xgmii_txc, dut.tx_clk, dut.tx_rst)
@@ -72,7 +73,6 @@ class TB:
         self.ptp_clock = PtpClockSimTime(ts_64=dut.ptp_ts_96, clock=dut.logic_clk)
         self.tx_ptp_ts_sink = PtpTsSink(PtpTsBus.from_prefix(dut, "tx_axis_ptp"), dut.tx_clk, dut.tx_rst)
 
-        dut.ptp_sample_clk.setimmediatevalue(0)
         dut.ptp_ts_step.setimmediatevalue(0)
 
         dut.cfg_ifg.setimmediatevalue(0)
@@ -138,7 +138,7 @@ async def run_test_rx(dut, payload_lengths=None, payload_data=None, ifg=12):
 
         assert rx_frame.tdata == test_data
         assert frame_error == 0
-        assert abs(ptp_ts_ns - tx_frame_sfd_ns - tb.clk_period) < tb.clk_period
+        assert abs(ptp_ts_ns - tx_frame_sfd_ns - tb.clk_period) < tb.clk_period*2
 
     assert tb.axis_sink.empty()
 
@@ -184,7 +184,7 @@ async def run_test_tx(dut, payload_lengths=None, payload_data=None, ifg=12):
         assert rx_frame.get_payload() == test_data
         assert rx_frame.check_fcs()
         assert rx_frame.ctrl is None
-        assert abs(rx_frame_sfd_ns - ptp_ts_ns - tb.clk_period) < tb.clk_period
+        assert abs(rx_frame_sfd_ns - ptp_ts_ns - tb.clk_period) < tb.clk_period*2
 
     assert tb.xgmii_sink.empty()
 
@@ -240,7 +240,7 @@ async def run_test_tx_alignment(dut, payload_data=None, ifg=12):
             assert rx_frame.get_payload() == test_data
             assert rx_frame.check_fcs()
             assert rx_frame.ctrl is None
-            assert abs(rx_frame_sfd_ns - ptp_ts_ns - tb.clk_period) < tb.clk_period
+            assert abs(rx_frame_sfd_ns - ptp_ts_ns - tb.clk_period) < tb.clk_period*2
 
             start_lane.append(rx_frame.start_lane)
 
@@ -365,7 +365,6 @@ def test_eth_mac_10g_fifo(request, data_width, enable_dic):
     parameters['RX_DROP_WHEN_FULL'] = parameters['RX_DROP_OVERSIZE_FRAME']
     parameters['PTP_PERIOD_NS'] = 0x6 if parameters['DATA_WIDTH'] == 64 else 0x3
     parameters['PTP_PERIOD_FNS'] = 0x6666 if parameters['DATA_WIDTH'] == 64 else 0x3333
-    parameters['PTP_USE_SAMPLE_CLOCK'] = 0
     parameters['TX_PTP_TS_ENABLE'] = 1
     parameters['RX_PTP_TS_ENABLE'] = parameters['TX_PTP_TS_ENABLE']
     parameters['TX_PTP_TS_CTRL_IN_TUSER'] = parameters['TX_PTP_TS_ENABLE']

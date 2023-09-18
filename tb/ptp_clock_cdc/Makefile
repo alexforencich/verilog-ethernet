@@ -35,7 +35,6 @@ VERILOG_SOURCES += ../../rtl/$(DUT).v
 export PARAM_TS_WIDTH := 96
 export PARAM_NS_WIDTH := 4
 export PARAM_FNS_WIDTH := 16
-export PARAM_USE_SAMPLE_CLOCK := 1
 export PARAM_LOG_RATE := 3
 export PARAM_PIPELINE_OUTPUT := 0
 
