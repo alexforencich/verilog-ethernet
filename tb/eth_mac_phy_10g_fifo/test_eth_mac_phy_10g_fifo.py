@@ -125,8 +125,8 @@ async def run_test_rx(dut, payload_lengths=None, payload_data=None, ifg=12):
         await RisingEdge(dut.rx_clk)
 
     tb.log.info("Wait for PTP CDC lock")
-    while not dut.tx_ptp.tx_ptp_cdc.locked.value.integer:
-        await RisingEdge(dut.tx_clk)
+    while not dut.rx_ptp.rx_ptp_cdc.locked.value.integer:
+        await RisingEdge(dut.rx_clk)
 
     # clear out sink buffer
     tb.axis_sink.clear()
