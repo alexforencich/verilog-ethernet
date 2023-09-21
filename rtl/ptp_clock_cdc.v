@@ -76,18 +76,21 @@ initial begin
     end
 end
 
-parameter FNS_WIDTH = 16;
+localparam FNS_WIDTH = 16;
 
-parameter TS_NS_WIDTH = TS_WIDTH == 96 ? 30 : 48;
+localparam TS_NS_WIDTH = TS_WIDTH == 96 ? 30 : 48;
+localparam TS_FNS_WIDTH = FNS_WIDTH > 16 ? 16 : FNS_WIDTH;
 
-parameter PHASE_CNT_WIDTH = LOG_RATE;
-parameter PHASE_ACC_WIDTH = PHASE_CNT_WIDTH+16;
+localparam PHASE_CNT_WIDTH = LOG_RATE;
+localparam PHASE_ACC_WIDTH = PHASE_CNT_WIDTH+16;
 
-parameter LOG_SAMPLE_SYNC_RATE = LOG_RATE;
-parameter SAMPLE_ACC_WIDTH = LOG_SAMPLE_SYNC_RATE+2;
+localparam LOG_SAMPLE_SYNC_RATE = LOG_RATE;
+localparam SAMPLE_ACC_WIDTH = LOG_SAMPLE_SYNC_RATE+2;
 
-parameter DEST_SYNC_LOCK_WIDTH = 7;
-parameter PTP_LOCK_WIDTH = 8;
+localparam DEST_SYNC_LOCK_WIDTH = 7;
+localparam PTP_LOCK_WIDTH = 8;
+
+localparam TIME_ERR_INT_WIDTH = NS_WIDTH+FNS_WIDTH+16;
 
 localparam [30:0] NS_PER_S = 31'd1_000_000_000;
 
@@ -100,16 +103,16 @@ reg [FNS_WIDTH-1:0] period_fns_ovf_reg = 0, period_fns_ovf_next;
 
 reg [47:0] src_ts_s_capt_reg = 0;
 reg [TS_NS_WIDTH-1:0] src_ts_ns_capt_reg = 0;
-reg [FNS_WIDTH-1:0] src_ts_fns_capt_reg = 0;
+reg [TS_FNS_WIDTH-1:0] src_ts_fns_capt_reg = 0;
 reg src_ts_step_capt_reg = 0;
 
 reg [47:0] dest_ts_s_capt_reg = 0;
 reg [TS_NS_WIDTH-1:0] dest_ts_ns_capt_reg = 0;
-reg [FNS_WIDTH-1:0] dest_ts_fns_capt_reg = 0;
+reg [TS_FNS_WIDTH-1:0] dest_ts_fns_capt_reg = 0;
 
 reg [47:0] ts_s_sync_reg = 0;
 reg [TS_NS_WIDTH-1:0] ts_ns_sync_reg = 0;
-reg [FNS_WIDTH-1:0] ts_fns_sync_reg = 0;
+reg [TS_FNS_WIDTH-1:0] ts_fns_sync_reg = 0;
 reg ts_step_sync_reg = 0;
 
 reg [47:0] ts_s_reg = 0, ts_s_next;
@@ -126,7 +129,7 @@ reg pps_reg = 1'b0;
 
 reg [47:0] ts_s_pipe_reg[0:PIPELINE_OUTPUT-1];
 reg [TS_NS_WIDTH-1:0] ts_ns_pipe_reg[0:PIPELINE_OUTPUT-1];
-reg [FNS_WIDTH-1:0] ts_fns_pipe_reg[0:PIPELINE_OUTPUT-1];
+reg [TS_FNS_WIDTH-1:0] ts_fns_pipe_reg[0:PIPELINE_OUTPUT-1];
 reg ts_step_pipe_reg[0:PIPELINE_OUTPUT-1];
 reg pps_pipe_reg[0:PIPELINE_OUTPUT-1];
 
@@ -264,7 +267,7 @@ always @(posedge input_clk) begin
         end else begin
             src_ts_ns_capt_reg <= input_ts[63:16];
         end
-        src_ts_fns_capt_reg <= FNS_WIDTH > 16 ? input_ts[15:0] << (FNS_WIDTH-16) : input_ts[15:0] >> (16-FNS_WIDTH);
+        src_ts_fns_capt_reg <= input_ts[15:0] >> (16-TS_FNS_WIDTH);
         src_ts_step_capt_reg <= input_ts_step || input_ts_step_reg;
         input_ts_step_reg <= 1'b0;
         src_sync_reg <= !src_sync_reg;
@@ -434,7 +437,7 @@ always @(posedge output_clk) begin
         end else begin
             dest_ts_s_capt_reg <= ts_s_reg;
             dest_ts_ns_capt_reg <= ts_ns_reg;
-            dest_ts_fns_capt_reg <= ts_fns_reg;
+            dest_ts_fns_capt_reg <= {ts_fns_reg, 16'd0} >> FNS_WIDTH;
         end
 
         dest_sync_reg <= !dest_sync_reg;
@@ -477,8 +480,6 @@ always @(posedge output_clk) begin
     end
 end
 
-parameter TIME_ERR_INT_WIDTH = NS_WIDTH+FNS_WIDTH+16;
-
 reg sec_mismatch_reg = 1'b0, sec_mismatch_next;
 reg diff_valid_reg = 1'b0, diff_valid_next;
 reg diff_corr_valid_reg = 1'b0, diff_corr_valid_next;
@@ -486,10 +487,10 @@ reg diff_corr_valid_reg = 1'b0, diff_corr_valid_next;
 reg ts_s_msb_diff_reg = 1'b0, ts_s_msb_diff_next;
 reg [7:0] ts_s_diff_reg = 0, ts_s_diff_next;
 reg [TS_NS_WIDTH+1-1:0] ts_ns_diff_reg = 0, ts_ns_diff_next;
-reg [FNS_WIDTH-1:0] ts_fns_diff_reg = 0, ts_fns_diff_next;
+reg [TS_FNS_WIDTH-1:0] ts_fns_diff_reg = 0, ts_fns_diff_next;
 
 reg [16:0] ts_ns_diff_corr_reg = 0, ts_ns_diff_corr_next;
-reg [FNS_WIDTH-1:0] ts_fns_diff_corr_reg = 0, ts_fns_diff_corr_next;
+reg [TS_FNS_WIDTH-1:0] ts_fns_diff_corr_reg = 0, ts_fns_diff_corr_next;
 
 reg [TIME_ERR_INT_WIDTH-1:0] time_err_int_reg = 0, time_err_int_next;
 
