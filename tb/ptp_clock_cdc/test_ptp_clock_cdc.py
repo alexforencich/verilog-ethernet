@@ -243,7 +243,6 @@ def test_ptp_clock_cdc(request, ts_width):
 
     parameters['TS_WIDTH'] = ts_width
     parameters['NS_WIDTH'] = 4
-    parameters['FNS_WIDTH'] = 16
     parameters['LOG_RATE'] = 3
     parameters['PIPELINE_OUTPUT'] = 0
 

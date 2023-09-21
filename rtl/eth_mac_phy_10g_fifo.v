@@ -256,8 +256,7 @@ if (TX_PTP_TS_ENABLE) begin : tx_ptp
     
     ptp_clock_cdc #(
         .TS_WIDTH(PTP_TS_WIDTH),
-        .NS_WIDTH(6),
-        .FNS_WIDTH(16)
+        .NS_WIDTH(6)
     )
     tx_ptp_cdc (
         .input_clk(logic_clk),
@@ -332,8 +331,7 @@ if (RX_PTP_TS_ENABLE) begin : rx_ptp
 
     ptp_clock_cdc #(
         .TS_WIDTH(PTP_TS_WIDTH),
-        .NS_WIDTH(6),
-        .FNS_WIDTH(16)
+        .NS_WIDTH(6)
     )
     rx_ptp_cdc (
         .input_clk(logic_clk),

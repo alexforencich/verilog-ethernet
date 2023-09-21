@@ -35,7 +35,6 @@ module ptp_clock_cdc #
 (
     parameter TS_WIDTH = 96,
     parameter NS_WIDTH = 4,
-    parameter FNS_WIDTH = 16,
     parameter LOG_RATE = 3,
     parameter PIPELINE_OUTPUT = 0
 )
@@ -76,6 +75,8 @@ initial begin
         $finish;
     end
 end
+
+parameter FNS_WIDTH = 16;
 
 parameter TS_NS_WIDTH = TS_WIDTH == 96 ? 30 : 48;
 
