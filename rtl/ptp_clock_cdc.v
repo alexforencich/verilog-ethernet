@@ -110,10 +110,10 @@ reg [47:0] dest_ts_s_capt_reg = 0;
 reg [TS_NS_WIDTH-1:0] dest_ts_ns_capt_reg = 0;
 reg [TS_FNS_WIDTH-1:0] dest_ts_fns_capt_reg = 0;
 
-reg [47:0] ts_s_sync_reg = 0;
-reg [TS_NS_WIDTH-1:0] ts_ns_sync_reg = 0;
-reg [TS_FNS_WIDTH-1:0] ts_fns_sync_reg = 0;
-reg ts_step_sync_reg = 0;
+reg [47:0] src_ts_s_sync_reg = 0;
+reg [TS_NS_WIDTH-1:0] src_ts_ns_sync_reg = 0;
+reg [TS_FNS_WIDTH-1:0] src_ts_fns_sync_reg = 0;
+reg src_ts_step_sync_reg = 0;
 
 reg [47:0] ts_s_reg = 0, ts_s_next;
 reg [TS_NS_WIDTH-1:0] ts_ns_reg = 0, ts_ns_next;
@@ -449,11 +449,11 @@ always @(posedge output_clk) begin
     if (src_sync_sync2_reg ^ src_sync_sync3_reg) begin
         // store captured source TS
         if (TS_WIDTH == 96) begin
-            ts_s_sync_reg <= src_ts_s_capt_reg;
+            src_ts_s_sync_reg <= src_ts_s_capt_reg;
         end
-        ts_ns_sync_reg <= src_ts_ns_capt_reg;
-        ts_fns_sync_reg <= src_ts_fns_capt_reg;
-        ts_step_sync_reg <= src_ts_step_capt_reg;
+        src_ts_ns_sync_reg <= src_ts_ns_capt_reg;
+        src_ts_fns_sync_reg <= src_ts_fns_capt_reg;
+        src_ts_step_sync_reg <= src_ts_step_capt_reg;
 
         ts_sync_valid_reg <= ts_capt_valid_reg;
         ts_capt_valid_reg <= 1'b0;
@@ -561,16 +561,16 @@ always @* begin
     if (ts_sync_valid_reg) begin
         // Read new value
         if (TS_WIDTH == 96) begin
-            if (ts_step_sync_reg || sec_mismatch_reg) begin
+            if (src_ts_step_sync_reg || sec_mismatch_reg) begin
                 // input stepped
                 sec_mismatch_next = 1'b0;
 
-                ts_s_next = ts_s_sync_reg;
-                ts_ns_next = ts_ns_sync_reg;
-                ts_ns_inc_next = ts_ns_sync_reg;
+                ts_s_next = src_ts_s_sync_reg;
+                ts_ns_next = src_ts_ns_sync_reg;
+                ts_ns_inc_next = src_ts_ns_sync_reg;
                 ts_ns_ovf_next[30] = 1'b1;
-                ts_fns_next = ts_fns_sync_reg;
-                ts_fns_inc_next = ts_fns_sync_reg;
+                ts_fns_next = src_ts_fns_sync_reg;
+                ts_fns_inc_next = src_ts_fns_sync_reg;
                 ts_step_next = 1;
             end else begin
                 // input did not step
@@ -578,16 +578,16 @@ always @* begin
                 diff_valid_next = 1'b1;
             end
             // compute difference
-            ts_s_msb_diff_next = ts_s_sync_reg[47:8] != dest_ts_s_capt_reg[47:8];
-            ts_s_diff_next = ts_s_sync_reg[7:0] - dest_ts_s_capt_reg[7:0];
-            {ts_ns_diff_next, ts_fns_diff_next} = {ts_ns_sync_reg, ts_fns_sync_reg} - {dest_ts_ns_capt_reg, dest_ts_fns_capt_reg};
+            ts_s_msb_diff_next = src_ts_s_sync_reg[47:8] != dest_ts_s_capt_reg[47:8];
+            ts_s_diff_next = src_ts_s_sync_reg[7:0] - dest_ts_s_capt_reg[7:0];
+            {ts_ns_diff_next, ts_fns_diff_next} = {src_ts_ns_sync_reg, src_ts_fns_sync_reg} - {dest_ts_ns_capt_reg, dest_ts_fns_capt_reg};
         end else if (TS_WIDTH == 64) begin
-            if (ts_step_sync_reg || sec_mismatch_reg) begin
+            if (src_ts_step_sync_reg || sec_mismatch_reg) begin
                 // input stepped
                 sec_mismatch_next = 1'b0;
 
-                ts_ns_next = ts_ns_sync_reg;
-                ts_fns_next = ts_fns_sync_reg;
+                ts_ns_next = src_ts_ns_sync_reg;
+                ts_fns_next = src_ts_fns_sync_reg;
                 ts_step_next = 1;
             end else begin
                 // input did not step
@@ -595,7 +595,7 @@ always @* begin
                 diff_valid_next = 1'b1;
             end
             // compute difference
-            {ts_ns_diff_next, ts_fns_diff_next} = {ts_ns_sync_reg, ts_fns_sync_reg} - {dest_ts_ns_capt_reg, dest_ts_fns_capt_reg};
+            {ts_ns_diff_next, ts_fns_diff_next} = {src_ts_ns_sync_reg, src_ts_fns_sync_reg} - {dest_ts_ns_capt_reg, dest_ts_fns_capt_reg};
         end
     end
 

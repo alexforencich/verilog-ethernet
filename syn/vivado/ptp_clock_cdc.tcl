@@ -31,22 +31,22 @@ foreach inst [get_cells -hier -filter {(ORIG_REF_NAME == ptp_clock_cdc || REF_NA
     set output_clk_period [if {[llength $output_clk]} {get_property -min PERIOD $output_clk} {expr 1.0}]
 
     # timestamp synchronization
-    set_property ASYNC_REG TRUE [get_cells -hier -regexp ".*/ts_(s|ns|fns|step)_sync_reg_reg(\\\[\\d+\\\])?" -filter "PARENT == $inst"]
+    set_property ASYNC_REG TRUE [get_cells -hier -regexp ".*/src_ts_(s|ns|fns|step)_sync_reg_reg(\\\[\\d+\\\])?" -filter "PARENT == $inst"]
 
     if {[llength [get_cells "$inst/src_ts_s_capt_reg_reg[*]"]]} {
-        set_max_delay -from [get_cells "$inst/src_ts_s_capt_reg_reg[*]"] -to [get_cells "$inst/ts_s_sync_reg_reg[*]"] -datapath_only $output_clk_period
-        set_bus_skew  -from [get_cells "$inst/src_ts_s_capt_reg_reg[*]"] -to [get_cells "$inst/ts_s_sync_reg_reg[*]"] $input_clk_period
+        set_max_delay -from [get_cells "$inst/src_ts_s_capt_reg_reg[*]"] -to [get_cells "$inst/src_ts_s_sync_reg_reg[*]"] -datapath_only $output_clk_period
+        set_bus_skew  -from [get_cells "$inst/src_ts_s_capt_reg_reg[*]"] -to [get_cells "$inst/src_ts_s_sync_reg_reg[*]"] $input_clk_period
     }
 
-    set_max_delay -from [get_cells "$inst/src_ts_ns_capt_reg_reg[*]"] -to [get_cells "$inst/ts_ns_sync_reg_reg[*]"] -datapath_only $output_clk_period
-    set_bus_skew  -from [get_cells "$inst/src_ts_ns_capt_reg_reg[*]"] -to [get_cells "$inst/ts_ns_sync_reg_reg[*]"] $input_clk_period
+    set_max_delay -from [get_cells "$inst/src_ts_ns_capt_reg_reg[*]"] -to [get_cells "$inst/src_ts_ns_sync_reg_reg[*]"] -datapath_only $output_clk_period
+    set_bus_skew  -from [get_cells "$inst/src_ts_ns_capt_reg_reg[*]"] -to [get_cells "$inst/src_ts_ns_sync_reg_reg[*]"] $input_clk_period
 
-    set_max_delay -from [get_cells "$inst/src_ts_fns_capt_reg_reg[*]"] -to [get_cells "$inst/ts_fns_sync_reg_reg[*]"] -datapath_only $output_clk_period
-    set_bus_skew  -from [get_cells "$inst/src_ts_fns_capt_reg_reg[*]"] -to [get_cells "$inst/ts_fns_sync_reg_reg[*]"] $input_clk_period
+    set_max_delay -from [get_cells "$inst/src_ts_fns_capt_reg_reg[*]"] -to [get_cells "$inst/src_ts_fns_sync_reg_reg[*]"] -datapath_only $output_clk_period
+    set_bus_skew  -from [get_cells "$inst/src_ts_fns_capt_reg_reg[*]"] -to [get_cells "$inst/src_ts_fns_sync_reg_reg[*]"] $input_clk_period
 
     if {[llength [get_cells "$inst/src_ts_step_capt_reg_reg"]]} {
-        set_max_delay -from [get_cells "$inst/src_ts_step_capt_reg_reg"] -to [get_cells "$inst/ts_step_sync_reg_reg"] -datapath_only $output_clk_period
-        set_bus_skew  -from [get_cells "$inst/src_ts_step_capt_reg_reg"] -to [get_cells "$inst/ts_step_sync_reg_reg"] $input_clk_period
+        set_max_delay -from [get_cells "$inst/src_ts_step_capt_reg_reg"] -to [get_cells "$inst/src_ts_step_sync_reg_reg"] -datapath_only $output_clk_period
+        set_bus_skew  -from [get_cells "$inst/src_ts_step_capt_reg_reg"] -to [get_cells "$inst/src_ts_step_sync_reg_reg"] $input_clk_period
     }
 
     # sample clock
