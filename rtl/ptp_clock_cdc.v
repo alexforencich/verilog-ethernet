@@ -139,15 +139,12 @@ reg [PHASE_ACC_WIDTH-1:0] dest_phase_inc_reg = {PHASE_ACC_WIDTH{1'b0}}, dest_pha
 
 reg src_sync_reg = 1'b0;
 reg src_update_reg = 1'b0;
-reg dest_sync_reg = 1'b0, dest_sync_next = 1'b0;
+reg dest_sync_reg = 1'b0;
 reg dest_update_reg = 1'b0, dest_update_next = 1'b0;
 
 reg src_sync_sync1_reg = 1'b0;
 reg src_sync_sync2_reg = 1'b0;
 reg src_sync_sync3_reg = 1'b0;
-reg dest_sync_sync1_reg = 1'b0;
-reg dest_sync_sync2_reg = 1'b0;
-reg dest_sync_sync3_reg = 1'b0;
 
 reg src_sync_sample_sync1_reg = 1'b0;
 reg src_sync_sample_sync2_reg = 1'b0;
@@ -156,7 +153,7 @@ reg dest_sync_sample_sync1_reg = 1'b0;
 reg dest_sync_sample_sync2_reg = 1'b0;
 reg dest_sync_sample_sync3_reg = 1'b0;
 
-reg [SAMPLE_ACC_WIDTH-1:0] sample_acc_reg = 0, sample_acc_next = 0;
+reg [SAMPLE_ACC_WIDTH-1:0] sample_acc_reg = 0;
 reg [SAMPLE_ACC_WIDTH-1:0] sample_acc_out_reg = 0;
 reg [LOG_SAMPLE_SYNC_RATE-1:0] sample_cnt_reg = 0;
 reg sample_update_reg = 1'b0;
@@ -287,9 +284,6 @@ always @(posedge output_clk) begin
     src_sync_sync1_reg <= src_sync_reg;
     src_sync_sync2_reg <= src_sync_sync1_reg;
     src_sync_sync3_reg <= src_sync_sync2_reg;
-    dest_sync_sync1_reg <= dest_sync_reg;
-    dest_sync_sync2_reg <= dest_sync_sync1_reg;
-    dest_sync_sync3_reg <= dest_sync_sync2_reg;
 end
 
 always @(posedge sample_clk) begin
@@ -514,9 +508,6 @@ always @* begin
     ts_fns_ovf_next = ts_fns_ovf_reg;
 
     ts_step_next = 0;
-
-    diff_valid_next = 1'b0;
-    diff_corr_valid_next = 1'b0;
 
     sec_mismatch_next = sec_mismatch_reg;
     diff_valid_next = 1'b0;
