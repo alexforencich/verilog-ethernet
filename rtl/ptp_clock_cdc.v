@@ -90,7 +90,7 @@ localparam SAMPLE_ACC_WIDTH = LOG_SAMPLE_SYNC_RATE+2;
 localparam DEST_SYNC_LOCK_WIDTH = 7;
 localparam PTP_LOCK_WIDTH = 8;
 
-localparam TIME_ERR_INT_WIDTH = NS_WIDTH+FNS_WIDTH+16;
+localparam TIME_ERR_INT_WIDTH = NS_WIDTH+FNS_WIDTH;
 
 localparam [30:0] NS_PER_S = 31'd1_000_000_000;
 
@@ -639,9 +639,9 @@ always @* begin
 
         // time integral of error
         if (ptp_locked_reg) begin
-            {ptp_ovf, time_err_int_next} = $signed({1'b0, time_err_int_reg}) + $signed({ts_ns_diff_corr_reg, ts_fns_diff_corr_reg});
+            {ptp_ovf, time_err_int_next} = $signed({1'b0, time_err_int_reg}) + ($signed({ts_ns_diff_corr_reg, ts_fns_diff_corr_reg}) / 2**16);
         end else begin
-            {ptp_ovf, time_err_int_next} = $signed({1'b0, time_err_int_reg}) + ($signed({ts_ns_diff_corr_reg, ts_fns_diff_corr_reg}) * 2**3);
+            {ptp_ovf, time_err_int_next} = $signed({1'b0, time_err_int_reg}) + ($signed({ts_ns_diff_corr_reg, ts_fns_diff_corr_reg}) / 2**13);
         end
 
         // saturate
@@ -655,9 +655,9 @@ always @* begin
 
         // compute output
         if (ptp_locked_reg) begin
-            {ptp_ovf, period_ns_next, period_fns_next} = ($signed({1'b0, time_err_int_reg}) / 2**16) + ($signed({ts_ns_diff_corr_reg, ts_fns_diff_corr_reg}) / 2**10);
+            {ptp_ovf, period_ns_next, period_fns_next} = $signed({1'b0, time_err_int_reg}) + ($signed({ts_ns_diff_corr_reg, ts_fns_diff_corr_reg}) / 2**10);
         end else begin
-            {ptp_ovf, period_ns_next, period_fns_next} = ($signed({1'b0, time_err_int_reg}) / 2**16) + ($signed({ts_ns_diff_corr_reg, ts_fns_diff_corr_reg}) / 2**7);
+            {ptp_ovf, period_ns_next, period_fns_next} = $signed({1'b0, time_err_int_reg}) + ($signed({ts_ns_diff_corr_reg, ts_fns_diff_corr_reg}) / 2**7);
         end
 
         // saturate
