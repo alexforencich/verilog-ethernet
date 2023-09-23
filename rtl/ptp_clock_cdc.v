@@ -94,42 +94,32 @@ localparam TIME_ERR_INT_WIDTH = NS_WIDTH+FNS_WIDTH;
 
 localparam [30:0] NS_PER_S = 31'd1_000_000_000;
 
-reg [NS_WIDTH-1:0] period_ns_reg = 0, period_ns_next;
-reg [FNS_WIDTH-1:0] period_fns_reg = 0, period_fns_next;
-reg [NS_WIDTH-1:0] period_ns_delay_reg = 0, period_ns_delay_next;
-reg [FNS_WIDTH-1:0] period_fns_delay_reg = 0, period_fns_delay_next;
-reg [30:0] period_ns_ovf_reg = 0, period_ns_ovf_next;
-reg [FNS_WIDTH-1:0] period_fns_ovf_reg = 0, period_fns_ovf_next;
+reg [NS_WIDTH+FNS_WIDTH-1:0] period_ns_reg = 0, period_ns_next;
+reg [NS_WIDTH+FNS_WIDTH-1:0] period_ns_delay_reg = 0, period_ns_delay_next;
+reg [31+FNS_WIDTH-1:0] period_ns_ovf_reg = 0, period_ns_ovf_next;
 
 reg [47:0] src_ts_s_capt_reg = 0;
-reg [TS_NS_WIDTH-1:0] src_ts_ns_capt_reg = 0;
-reg [TS_FNS_WIDTH-1:0] src_ts_fns_capt_reg = 0;
+reg [TS_NS_WIDTH+TS_FNS_WIDTH-1:0] src_ts_ns_capt_reg = 0;
 reg src_ts_step_capt_reg = 0;
 
 reg [47:0] dest_ts_s_capt_reg = 0;
-reg [TS_NS_WIDTH-1:0] dest_ts_ns_capt_reg = 0;
-reg [TS_FNS_WIDTH-1:0] dest_ts_fns_capt_reg = 0;
+reg [TS_NS_WIDTH+TS_FNS_WIDTH-1:0] dest_ts_ns_capt_reg = 0;
 
 reg [47:0] src_ts_s_sync_reg = 0;
-reg [TS_NS_WIDTH-1:0] src_ts_ns_sync_reg = 0;
-reg [TS_FNS_WIDTH-1:0] src_ts_fns_sync_reg = 0;
+reg [TS_NS_WIDTH+TS_FNS_WIDTH-1:0] src_ts_ns_sync_reg = 0;
 reg src_ts_step_sync_reg = 0;
 
 reg [47:0] ts_s_reg = 0, ts_s_next;
-reg [TS_NS_WIDTH-1:0] ts_ns_reg = 0, ts_ns_next;
-reg [FNS_WIDTH-1:0] ts_fns_reg = 0, ts_fns_next;
-reg [TS_NS_WIDTH-1:0] ts_ns_inc_reg = 0, ts_ns_inc_next;
-reg [FNS_WIDTH-1:0] ts_fns_inc_reg = 0, ts_fns_inc_next;
-reg [TS_NS_WIDTH+1-1:0] ts_ns_ovf_reg = {TS_NS_WIDTH+1{1'b1}}, ts_ns_ovf_next;
-reg [FNS_WIDTH-1:0] ts_fns_ovf_reg = {FNS_WIDTH{1'b1}}, ts_fns_ovf_next;
+reg [TS_NS_WIDTH+FNS_WIDTH-1:0] ts_ns_reg = 0, ts_ns_next;
+reg [TS_NS_WIDTH+FNS_WIDTH-1:0] ts_ns_inc_reg = 0, ts_ns_inc_next;
+reg [TS_NS_WIDTH+FNS_WIDTH+1-1:0] ts_ns_ovf_reg = {TS_NS_WIDTH+FNS_WIDTH+1{1'b1}}, ts_ns_ovf_next;
 
 reg ts_step_reg = 1'b0, ts_step_next;
 
 reg pps_reg = 1'b0;
 
 reg [47:0] ts_s_pipe_reg[0:PIPELINE_OUTPUT-1];
-reg [TS_NS_WIDTH-1:0] ts_ns_pipe_reg[0:PIPELINE_OUTPUT-1];
-reg [TS_FNS_WIDTH-1:0] ts_fns_pipe_reg[0:PIPELINE_OUTPUT-1];
+reg [TS_NS_WIDTH+TS_FNS_WIDTH-1:0] ts_ns_pipe_reg[0:PIPELINE_OUTPUT-1];
 reg ts_step_pipe_reg[0:PIPELINE_OUTPUT-1];
 reg pps_pipe_reg[0:PIPELINE_OUTPUT-1];
 
@@ -191,11 +181,9 @@ if (PIPELINE_OUTPUT > 0) begin
         if (TS_WIDTH == 96) begin
             output_ts_reg[0][95:48] <= ts_s_reg;
             output_ts_reg[0][47:46] <= 2'b00;
-            output_ts_reg[0][45:16] <= ts_ns_reg;
-            output_ts_reg[0][15:0]  <= {ts_fns_reg, 16'd0} >> FNS_WIDTH;
+            output_ts_reg[0][45:0]  <= {ts_ns_reg, 16'd0} >> FNS_WIDTH;
         end else if (TS_WIDTH == 64) begin
-            output_ts_reg[0][63:16] <= ts_ns_reg;
-            output_ts_reg[0][15:0]  <= {ts_fns_reg, 16'd0} >> FNS_WIDTH;
+            output_ts_reg[0]  <= {ts_ns_reg, 16'd0} >> FNS_WIDTH;
         end
 
         output_ts_step_reg[0] <= ts_step_reg;
@@ -221,11 +209,9 @@ end else begin
     if (TS_WIDTH == 96) begin
         assign output_ts[95:48] = ts_s_reg;
         assign output_ts[47:46] = 2'b00;
-        assign output_ts[45:16] = ts_ns_reg;
-        assign output_ts[15:0]  = {ts_fns_reg, 16'd0} >> FNS_WIDTH;
+        assign output_ts[45:0]  = {ts_ns_reg, 16'd0} >> FNS_WIDTH;
     end else if (TS_WIDTH == 64) begin
-        assign output_ts[63:16] = ts_ns_reg;
-        assign output_ts[15:0]  = {ts_fns_reg, 16'd0} >> FNS_WIDTH;
+        assign output_ts = {ts_ns_reg, 16'd0} >> FNS_WIDTH;
     end
 
     assign output_ts_step = ts_step_reg;
@@ -242,7 +228,6 @@ initial begin
     for (i = 0; i < PIPELINE_OUTPUT; i = i + 1) begin
         ts_s_pipe_reg[i] = 0;
         ts_ns_pipe_reg[i] = 0;
-        ts_fns_pipe_reg[i] = 0;
         ts_step_pipe_reg[i] = 1'b0;
         pps_pipe_reg[i] = 1'b0;
     end
@@ -260,11 +245,10 @@ always @(posedge input_clk) begin
         // capture source TS
         if (TS_WIDTH == 96) begin
             src_ts_s_capt_reg <= input_ts[95:48];
-            src_ts_ns_capt_reg <= input_ts[45:16];
+            src_ts_ns_capt_reg <= input_ts[45:0] >> (16-TS_FNS_WIDTH);
         end else begin
-            src_ts_ns_capt_reg <= input_ts[63:16];
+            src_ts_ns_capt_reg <= input_ts >> (16-TS_FNS_WIDTH);
         end
-        src_ts_fns_capt_reg <= input_ts[15:0] >> (16-TS_FNS_WIDTH);
         src_ts_step_capt_reg <= input_ts_step || input_ts_step_reg;
         input_ts_step_reg <= 1'b0;
         src_sync_reg <= !src_sync_reg;
@@ -427,11 +411,9 @@ always @(posedge output_clk) begin
         if (PIPELINE_OUTPUT > 0) begin
             dest_ts_s_capt_reg <= ts_s_pipe_reg[PIPELINE_OUTPUT-1];
             dest_ts_ns_capt_reg <= ts_ns_pipe_reg[PIPELINE_OUTPUT-1];
-            dest_ts_fns_capt_reg <= ts_fns_pipe_reg[PIPELINE_OUTPUT-1];
         end else begin
             dest_ts_s_capt_reg <= ts_s_reg;
-            dest_ts_ns_capt_reg <= ts_ns_reg;
-            dest_ts_fns_capt_reg <= {ts_fns_reg, 16'd0} >> FNS_WIDTH;
+            dest_ts_ns_capt_reg <= ts_ns_reg >> FNS_WIDTH-TS_FNS_WIDTH;
         end
 
         dest_sync_reg <= !dest_sync_reg;
@@ -446,7 +428,6 @@ always @(posedge output_clk) begin
             src_ts_s_sync_reg <= src_ts_s_capt_reg;
         end
         src_ts_ns_sync_reg <= src_ts_ns_capt_reg;
-        src_ts_fns_sync_reg <= src_ts_fns_capt_reg;
         src_ts_step_sync_reg <= src_ts_step_capt_reg;
 
         ts_sync_valid_reg <= ts_capt_valid_reg;
@@ -480,11 +461,9 @@ reg diff_corr_valid_reg = 1'b0, diff_corr_valid_next;
 
 reg ts_s_msb_diff_reg = 1'b0, ts_s_msb_diff_next;
 reg [7:0] ts_s_diff_reg = 0, ts_s_diff_next;
-reg [TS_NS_WIDTH+1-1:0] ts_ns_diff_reg = 0, ts_ns_diff_next;
-reg [TS_FNS_WIDTH-1:0] ts_fns_diff_reg = 0, ts_fns_diff_next;
+reg [TS_NS_WIDTH+TS_FNS_WIDTH+1-1:0] ts_ns_diff_reg = 0, ts_ns_diff_next;
 
-reg [16:0] ts_ns_diff_corr_reg = 0, ts_ns_diff_corr_next;
-reg [TS_FNS_WIDTH-1:0] ts_fns_diff_corr_reg = 0, ts_fns_diff_corr_next;
+reg [17+TS_FNS_WIDTH-1:0] ts_ns_diff_corr_reg = 0, ts_ns_diff_corr_next;
 
 reg [TIME_ERR_INT_WIDTH-1:0] time_err_int_reg = 0, time_err_int_next;
 
@@ -497,15 +476,11 @@ assign locked = ptp_locked_reg && dest_sync_locked_reg;
 
 always @* begin
     period_ns_next = period_ns_reg;
-    period_fns_next = period_fns_reg;
 
     ts_s_next = ts_s_reg;
     ts_ns_next = ts_ns_reg;
-    ts_fns_next = ts_fns_reg;
     ts_ns_inc_next = ts_ns_inc_reg;
-    ts_fns_inc_next = ts_fns_inc_reg;
     ts_ns_ovf_next = ts_ns_ovf_reg;
-    ts_fns_ovf_next = ts_fns_ovf_reg;
 
     ts_step_next = 0;
 
@@ -516,10 +491,8 @@ always @* begin
     ts_s_msb_diff_next = ts_s_msb_diff_reg;
     ts_s_diff_next = ts_s_diff_reg;
     ts_ns_diff_next = ts_ns_diff_reg;
-    ts_fns_diff_next = ts_fns_diff_reg;
 
     ts_ns_diff_corr_next = ts_ns_diff_corr_reg;
-    ts_fns_diff_corr_next = ts_fns_diff_corr_reg;
 
     time_err_int_next = time_err_int_reg;
 
@@ -527,26 +500,26 @@ always @* begin
     ptp_locked_next = ptp_locked_reg;
 
     // PTP clock
-    {period_ns_delay_next, period_fns_delay_next} = {period_ns_reg, period_fns_reg};
-    {period_ns_ovf_next, period_fns_ovf_next} = {NS_PER_S, {FNS_WIDTH{1'b0}}} - {period_ns_reg, period_fns_reg};
+    period_ns_delay_next = period_ns_reg;
+    period_ns_ovf_next = {NS_PER_S, {FNS_WIDTH{1'b0}}} - period_ns_reg;
 
     if (TS_WIDTH == 96) begin
         // 96 bit timestamp
-        {ts_ns_inc_next, ts_fns_inc_next} = {ts_ns_inc_reg, ts_fns_inc_reg} + {period_ns_delay_reg, period_fns_delay_reg};
-        {ts_ns_ovf_next, ts_fns_ovf_next} = {ts_ns_inc_reg, ts_fns_inc_reg} - {period_ns_ovf_reg, period_fns_ovf_reg};
-        {ts_ns_next, ts_fns_next} = {ts_ns_inc_reg, ts_fns_inc_reg};
+        ts_ns_inc_next = ts_ns_inc_reg + period_ns_delay_reg;
+        ts_ns_ovf_next = ts_ns_inc_reg - period_ns_ovf_reg;
+        ts_ns_next = ts_ns_inc_reg;
 
-        if (!ts_ns_ovf_reg[30]) begin
+        if (!ts_ns_ovf_reg[30+FNS_WIDTH]) begin
             // if the overflow lookahead did not borrow, one second has elapsed
             // increment seconds field, pre-compute normal increment, force overflow lookahead borrow bit set
-            {ts_ns_inc_next, ts_fns_inc_next} = {ts_ns_ovf_reg, ts_fns_ovf_reg} + {period_ns_delay_reg, period_fns_delay_reg};
-            ts_ns_ovf_next[30] = 1'b1;
-            {ts_ns_next, ts_fns_next} = {ts_ns_ovf_reg, ts_fns_ovf_reg};
+            ts_ns_inc_next = ts_ns_ovf_reg + period_ns_delay_reg;
+            ts_ns_ovf_next[30+FNS_WIDTH] = 1'b1;
+            ts_ns_next = ts_ns_ovf_reg;
             ts_s_next = ts_s_reg + 1;
         end
     end else if (TS_WIDTH == 64) begin
         // 64 bit timestamp
-        {ts_ns_next, ts_fns_next} = {ts_ns_reg, ts_fns_reg} + {period_ns_reg, period_fns_reg};
+        ts_ns_next = ts_ns_reg + period_ns_reg;
     end
 
     if (ts_sync_valid_reg) begin
@@ -559,9 +532,7 @@ always @* begin
                 ts_s_next = src_ts_s_sync_reg;
                 ts_ns_next = src_ts_ns_sync_reg;
                 ts_ns_inc_next = src_ts_ns_sync_reg;
-                ts_ns_ovf_next[30] = 1'b1;
-                ts_fns_next = src_ts_fns_sync_reg;
-                ts_fns_inc_next = src_ts_fns_sync_reg;
+                ts_ns_ovf_next[30+FNS_WIDTH] = 1'b1;
                 ts_step_next = 1;
             end else begin
                 // input did not step
@@ -571,14 +542,13 @@ always @* begin
             // compute difference
             ts_s_msb_diff_next = src_ts_s_sync_reg[47:8] != dest_ts_s_capt_reg[47:8];
             ts_s_diff_next = src_ts_s_sync_reg[7:0] - dest_ts_s_capt_reg[7:0];
-            {ts_ns_diff_next, ts_fns_diff_next} = {src_ts_ns_sync_reg, src_ts_fns_sync_reg} - {dest_ts_ns_capt_reg, dest_ts_fns_capt_reg};
+            ts_ns_diff_next = src_ts_ns_sync_reg - dest_ts_ns_capt_reg;
         end else if (TS_WIDTH == 64) begin
             if (src_ts_step_sync_reg || sec_mismatch_reg) begin
                 // input stepped
                 sec_mismatch_next = 1'b0;
 
                 ts_ns_next = src_ts_ns_sync_reg;
-                ts_fns_next = src_ts_fns_sync_reg;
                 ts_step_next = 1;
             end else begin
                 // input did not step
@@ -586,37 +556,35 @@ always @* begin
                 diff_valid_next = 1'b1;
             end
             // compute difference
-            {ts_ns_diff_next, ts_fns_diff_next} = {src_ts_ns_sync_reg, src_ts_fns_sync_reg} - {dest_ts_ns_capt_reg, dest_ts_fns_capt_reg};
+            ts_ns_diff_next = src_ts_ns_sync_reg - dest_ts_ns_capt_reg;
         end
     end
 
     if (diff_valid_reg) begin
         // seconds field correction
         if (TS_WIDTH == 96) begin
-            if ($signed(ts_s_diff_reg) == 0 && ts_s_msb_diff_reg == 0 && ($signed(ts_ns_diff_reg[30:16]) == 0 || $signed(ts_ns_diff_reg[30:16]) == -1)) begin
+            if ($signed(ts_s_diff_reg) == 0 && ts_s_msb_diff_reg == 0 && ($signed(ts_ns_diff_reg[16+FNS_WIDTH +: 14]) == 0 || $signed(ts_ns_diff_reg[16+FNS_WIDTH +: 14]) == -1)) begin
                 // difference is small and no seconds difference; slew
-                ts_ns_diff_corr_next = ts_ns_diff_reg[16:0];
-                ts_fns_diff_corr_next = ts_fns_diff_reg;
+                ts_ns_diff_corr_next = ts_ns_diff_reg[16+FNS_WIDTH:0];
                 diff_corr_valid_next = 1'b1;
-            end else if ($signed(ts_s_diff_reg) == 1 && ts_ns_diff_reg[30:16] == ~NS_PER_S[30:16]) begin
+            end else if ($signed(ts_s_diff_reg) == 1 && ts_ns_diff_reg[16+FNS_WIDTH +: 14] == ~NS_PER_S[30:16]) begin
                 // difference is small with 1 second difference; adjust and slew
-                ts_ns_diff_corr_next = ts_ns_diff_reg[16:0] + NS_PER_S[16:0];
-                ts_fns_diff_corr_next = ts_fns_diff_reg;
+                ts_ns_diff_corr_next[FNS_WIDTH +: NS_WIDTH] = ts_ns_diff_reg[FNS_WIDTH +: 17] + NS_PER_S[0 +: 17];
+                ts_ns_diff_corr_next[0 +: FNS_WIDTH] = ts_ns_diff_reg[0 +: FNS_WIDTH];
                 diff_corr_valid_next = 1'b1;
-            end else if ($signed(ts_s_diff_reg) == -1 && ts_ns_diff_reg[30:16] == NS_PER_S[30:16]) begin
+            end else if ($signed(ts_s_diff_reg) == -1 && ts_ns_diff_reg[16+FNS_WIDTH +: 14] == NS_PER_S[30:16]) begin
                 // difference is small with 1 second difference; adjust and slew
-                ts_ns_diff_corr_next = ts_ns_diff_reg[16:0] - NS_PER_S[16:0];
-                ts_fns_diff_corr_next = ts_fns_diff_reg;
+                ts_ns_diff_corr_next[FNS_WIDTH +: NS_WIDTH] = ts_ns_diff_reg[FNS_WIDTH +: 17] - NS_PER_S[0 +: 17];
+                ts_ns_diff_corr_next[0 +: FNS_WIDTH] = ts_ns_diff_reg[0 +: FNS_WIDTH];
                 diff_corr_valid_next = 1'b1;
             end else begin
                 // difference is too large; step the clock
                 sec_mismatch_next = 1'b1;
             end
         end else if (TS_WIDTH == 64) begin
-            if ($signed(ts_ns_diff_reg[47:16]) == 0 || $signed(ts_ns_diff_reg[47:16]) == -1) begin
+            if ($signed(ts_ns_diff_reg[16+FNS_WIDTH +: 32]) == 0 || $signed(ts_ns_diff_reg[16+FNS_WIDTH +: 32]) == -1) begin
                 // difference is small enough to slew
-                ts_ns_diff_corr_next = ts_ns_diff_reg[16:0];
-                ts_fns_diff_corr_next = ts_fns_diff_reg;
+                ts_ns_diff_corr_next = ts_ns_diff_reg[16+FNS_WIDTH:0];
                 diff_corr_valid_next = 1'b1;
             end else begin
                 // difference is too large; step the clock
@@ -630,9 +598,9 @@ always @* begin
 
         // time integral of error
         if (ptp_locked_reg) begin
-            {ptp_ovf, time_err_int_next} = $signed({1'b0, time_err_int_reg}) + ($signed({ts_ns_diff_corr_reg, ts_fns_diff_corr_reg}) / 2**16);
+            {ptp_ovf, time_err_int_next} = $signed({1'b0, time_err_int_reg}) + ($signed(ts_ns_diff_corr_reg) / 2**16);
         end else begin
-            {ptp_ovf, time_err_int_next} = $signed({1'b0, time_err_int_reg}) + ($signed({ts_ns_diff_corr_reg, ts_fns_diff_corr_reg}) / 2**13);
+            {ptp_ovf, time_err_int_next} = $signed({1'b0, time_err_int_reg}) + ($signed(ts_ns_diff_corr_reg) / 2**13);
         end
 
         // saturate
@@ -646,29 +614,29 @@ always @* begin
 
         // compute output
         if (ptp_locked_reg) begin
-            {ptp_ovf, period_ns_next, period_fns_next} = $signed({1'b0, time_err_int_reg}) + ($signed({ts_ns_diff_corr_reg, ts_fns_diff_corr_reg}) / 2**10);
+            {ptp_ovf, period_ns_next} = $signed({1'b0, time_err_int_reg}) + ($signed(ts_ns_diff_corr_reg) / 2**10);
         end else begin
-            {ptp_ovf, period_ns_next, period_fns_next} = $signed({1'b0, time_err_int_reg}) + ($signed({ts_ns_diff_corr_reg, ts_fns_diff_corr_reg}) / 2**7);
+            {ptp_ovf, period_ns_next} = $signed({1'b0, time_err_int_reg}) + ($signed(ts_ns_diff_corr_reg) / 2**7);
         end
 
         // saturate
         if (ptp_ovf[1]) begin
             // sign bit set indicating underflow across zero; saturate to zero
-            {period_ns_next, period_fns_next} = {NS_WIDTH+FNS_WIDTH{1'b0}};
+            period_ns_next = {NS_WIDTH+FNS_WIDTH{1'b0}};
         end else if (ptp_ovf[0]) begin
             // sign bit clear but carry bit set indicating overflow; saturate to all 1
-            {period_ns_next, period_fns_next} = {NS_WIDTH+FNS_WIDTH{1'b1}};
+            period_ns_next = {NS_WIDTH+FNS_WIDTH{1'b1}};
         end
 
         // adjust period if integrator is saturated
         if (time_err_int_reg == 0) begin
-            {period_ns_next, period_fns_next} = {NS_WIDTH+FNS_WIDTH{1'b0}};
+            period_ns_next = {NS_WIDTH+FNS_WIDTH{1'b0}};
         end else if (~time_err_int_reg == 0) begin
-            {period_ns_next, period_fns_next} = {NS_WIDTH+FNS_WIDTH{1'b1}};
+            period_ns_next = {NS_WIDTH+FNS_WIDTH{1'b1}};
         end
 
         // locked status
-        if ($signed(ts_ns_diff_corr_reg[17-1:4]) == 0 || $signed(ts_ns_diff_corr_reg[17-1:4]) == -1) begin
+        if ($signed(ts_ns_diff_corr_reg[17+FNS_WIDTH-1:4+FNS_WIDTH]) == 0 || $signed(ts_ns_diff_corr_reg[17+FNS_WIDTH-1:4+FNS_WIDTH]) == -1) begin
             if (ptp_lock_count_reg == {PTP_LOCK_WIDTH{1'b1}}) begin
                 ptp_locked_next = 1'b1;
             end else begin
@@ -683,19 +651,13 @@ end
 
 always @(posedge output_clk) begin
     period_ns_reg <= period_ns_next;
-    period_fns_reg <= period_fns_next;
     period_ns_delay_reg <= period_ns_delay_next;
-    period_fns_delay_reg <= period_fns_delay_next;
     period_ns_ovf_reg <= period_ns_ovf_next;
-    period_fns_ovf_reg <= period_fns_ovf_next;
 
     ts_s_reg <= ts_s_next;
     ts_ns_reg <= ts_ns_next;
-    ts_fns_reg <= ts_fns_next;
     ts_ns_inc_reg <= ts_ns_inc_next;
-    ts_fns_inc_reg <= ts_fns_inc_next;
     ts_ns_ovf_reg <= ts_ns_ovf_next;
-    ts_fns_ovf_reg <= ts_fns_ovf_next;
 
     ts_step_reg <= ts_step_next;
 
@@ -706,10 +668,8 @@ always @(posedge output_clk) begin
     ts_s_msb_diff_reg <= ts_s_msb_diff_next;
     ts_s_diff_reg <= ts_s_diff_next;
     ts_ns_diff_reg <= ts_ns_diff_next;
-    ts_fns_diff_reg <= ts_fns_diff_next;
 
     ts_ns_diff_corr_reg <= ts_ns_diff_corr_next;
-    ts_fns_diff_corr_reg <= ts_fns_diff_corr_next;
 
     time_err_int_reg <= time_err_int_next;
 
@@ -718,7 +678,7 @@ always @(posedge output_clk) begin
 
     // PPS output
     if (TS_WIDTH == 96) begin
-        pps_reg <= !ts_ns_ovf_reg[30];
+        pps_reg <= !ts_ns_ovf_reg[30+FNS_WIDTH];
     end else if (TS_WIDTH == 64) begin
         pps_reg <= 1'b0; // not currently implemented for 64 bit timestamp format
     end
@@ -726,15 +686,13 @@ always @(posedge output_clk) begin
     // pipeline
     if (PIPELINE_OUTPUT > 0) begin
         ts_s_pipe_reg[0] <= ts_s_reg;
-        ts_ns_pipe_reg[0] <= ts_ns_reg;
-        ts_fns_pipe_reg[0] <= ts_fns_reg;
+        ts_ns_pipe_reg[0] <= ts_ns_reg >> FNS_WIDTH-TS_FNS_WIDTH;
         ts_step_pipe_reg[0] <= ts_step_reg;
         pps_pipe_reg[0] <= pps_reg;
 
         for (i = 0; i < PIPELINE_OUTPUT-1; i = i + 1) begin
             ts_s_pipe_reg[i+1] <= ts_s_pipe_reg[i];
             ts_ns_pipe_reg[i+1] <= ts_ns_pipe_reg[i];
-            ts_fns_pipe_reg[i+1] <= ts_fns_pipe_reg[i];
             ts_step_pipe_reg[i+1] <= ts_step_pipe_reg[i];
             pps_pipe_reg[i+1] <= pps_pipe_reg[i];
         end
@@ -742,16 +700,11 @@ always @(posedge output_clk) begin
 
     if (output_rst) begin
         period_ns_reg <= 0;
-        period_fns_reg <= 0;
         period_ns_delay_reg <= 0;
-        period_fns_delay_reg <= 0;
         period_ns_ovf_reg <= 0;
-        period_fns_ovf_reg <= 0;
         ts_s_reg <= 0;
         ts_ns_reg <= 0;
-        ts_fns_reg <= 0;
         ts_ns_inc_reg <= 0;
-        ts_fns_inc_reg <= 0;
         ts_ns_ovf_reg[30] <= 1'b1;
         ts_step_reg <= 0;
         pps_reg <= 0;
@@ -768,7 +721,6 @@ always @(posedge output_clk) begin
         for (i = 0; i < PIPELINE_OUTPUT; i = i + 1) begin
             ts_s_pipe_reg[i] <= 0;
             ts_ns_pipe_reg[i] <= 0;
-            ts_fns_pipe_reg[i] <= 0;
             ts_step_pipe_reg[i] <= 1'b0;
             pps_pipe_reg[i] <= 1'b0;
         end
