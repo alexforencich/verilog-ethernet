@@ -127,6 +127,8 @@ async def run_test_rx(dut, payload_lengths=None, payload_data=None, ifg=12):
     tb.log.info("Wait for PTP CDC lock")
     while not dut.rx_ptp.rx_ptp_cdc.locked.value.integer:
         await RisingEdge(dut.rx_clk)
+    for k in range(1000):
+        await RisingEdge(dut.rx_clk)
 
     # clear out sink buffer
     tb.axis_sink.clear()
@@ -179,6 +181,8 @@ async def run_test_tx(dut, payload_lengths=None, payload_data=None, ifg=12):
     tb.log.info("Wait for PTP CDC lock")
     while not dut.tx_ptp.tx_ptp_cdc.locked.value.integer:
         await RisingEdge(dut.tx_clk)
+    for k in range(1000):
+        await RisingEdge(dut.tx_clk)
 
     test_frames = [payload_data(x) for x in payload_lengths()]
 
@@ -228,6 +232,8 @@ async def run_test_tx_alignment(dut, payload_data=None, ifg=12):
 
     tb.log.info("Wait for PTP CDC lock")
     while not dut.tx_ptp.tx_ptp_cdc.locked.value.integer:
+        await RisingEdge(dut.tx_clk)
+    for k in range(1000):
         await RisingEdge(dut.tx_clk)
 
     for length in range(60, 92):
