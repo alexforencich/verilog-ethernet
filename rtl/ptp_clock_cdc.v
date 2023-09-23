@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2019-2021 Alex Forencich
+Copyright (c) 2019-2023 Alex Forencich
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -81,13 +81,19 @@ localparam FNS_WIDTH = 16;
 localparam TS_NS_WIDTH = TS_WIDTH == 96 ? 30 : 48;
 localparam TS_FNS_WIDTH = FNS_WIDTH > 16 ? 16 : FNS_WIDTH;
 
+localparam CMP_FNS_WIDTH = 4;
+
 localparam PHASE_CNT_WIDTH = LOG_RATE;
 localparam PHASE_ACC_WIDTH = PHASE_CNT_WIDTH+16;
 
 localparam LOG_SAMPLE_SYNC_RATE = LOG_RATE;
 localparam SAMPLE_ACC_WIDTH = LOG_SAMPLE_SYNC_RATE+2;
 
+localparam LOG_PHASE_ERR_RATE = 4;
+localparam PHASE_ERR_ACC_WIDTH = LOG_PHASE_ERR_RATE+2;
+
 localparam DEST_SYNC_LOCK_WIDTH = 7;
+localparam FREQ_LOCK_WIDTH = 8;
 localparam PTP_LOCK_WIDTH = 8;
 
 localparam TIME_ERR_INT_WIDTH = NS_WIDTH+FNS_WIDTH;
@@ -99,14 +105,14 @@ reg [NS_WIDTH+FNS_WIDTH-1:0] period_ns_delay_reg = 0, period_ns_delay_next;
 reg [31+FNS_WIDTH-1:0] period_ns_ovf_reg = 0, period_ns_ovf_next;
 
 reg [47:0] src_ts_s_capt_reg = 0;
-reg [TS_NS_WIDTH+TS_FNS_WIDTH-1:0] src_ts_ns_capt_reg = 0;
+reg [TS_NS_WIDTH+CMP_FNS_WIDTH-1:0] src_ts_ns_capt_reg = 0;
 reg src_ts_step_capt_reg = 0;
 
 reg [47:0] dest_ts_s_capt_reg = 0;
-reg [TS_NS_WIDTH+TS_FNS_WIDTH-1:0] dest_ts_ns_capt_reg = 0;
+reg [TS_NS_WIDTH+CMP_FNS_WIDTH-1:0] dest_ts_ns_capt_reg = 0;
 
 reg [47:0] src_ts_s_sync_reg = 0;
-reg [TS_NS_WIDTH+TS_FNS_WIDTH-1:0] src_ts_ns_sync_reg = 0;
+reg [TS_NS_WIDTH+CMP_FNS_WIDTH-1:0] src_ts_ns_sync_reg = 0;
 reg src_ts_step_sync_reg = 0;
 
 reg [47:0] ts_s_reg = 0, ts_s_next;
@@ -119,7 +125,7 @@ reg ts_step_reg = 1'b0, ts_step_next;
 reg pps_reg = 1'b0;
 
 reg [47:0] ts_s_pipe_reg[0:PIPELINE_OUTPUT-1];
-reg [TS_NS_WIDTH+TS_FNS_WIDTH-1:0] ts_ns_pipe_reg[0:PIPELINE_OUTPUT-1];
+reg [TS_NS_WIDTH+CMP_FNS_WIDTH-1:0] ts_ns_pipe_reg[0:PIPELINE_OUTPUT-1];
 reg ts_step_pipe_reg[0:PIPELINE_OUTPUT-1];
 reg pps_pipe_reg[0:PIPELINE_OUTPUT-1];
 
@@ -129,12 +135,20 @@ reg [PHASE_ACC_WIDTH-1:0] dest_phase_inc_reg = {PHASE_ACC_WIDTH{1'b0}}, dest_pha
 
 reg src_sync_reg = 1'b0;
 reg src_update_reg = 1'b0;
+reg src_phase_sync_reg = 1'b0;
 reg dest_sync_reg = 1'b0;
 reg dest_update_reg = 1'b0, dest_update_next = 1'b0;
+reg dest_phase_sync_reg = 1'b0;
 
 reg src_sync_sync1_reg = 1'b0;
 reg src_sync_sync2_reg = 1'b0;
 reg src_sync_sync3_reg = 1'b0;
+reg src_phase_sync_sync1_reg = 1'b0;
+reg src_phase_sync_sync2_reg = 1'b0;
+reg src_phase_sync_sync3_reg = 1'b0;
+reg dest_phase_sync_sync1_reg = 1'b0;
+reg dest_phase_sync_sync2_reg = 1'b0;
+reg dest_phase_sync_sync3_reg = 1'b0;
 
 reg src_sync_sample_sync1_reg = 1'b0;
 reg src_sync_sample_sync2_reg = 1'b0;
@@ -239,15 +253,17 @@ reg input_ts_step_reg = 1'b0;
 always @(posedge input_clk) begin
     input_ts_step_reg <= input_ts_step || input_ts_step_reg;
 
+    src_phase_sync_reg <= input_ts[16+8];
+
     {src_update_reg, src_phase_reg} <= src_phase_reg+1;
 
     if (src_update_reg) begin
         // capture source TS
         if (TS_WIDTH == 96) begin
             src_ts_s_capt_reg <= input_ts[95:48];
-            src_ts_ns_capt_reg <= input_ts[45:0] >> (16-TS_FNS_WIDTH);
+            src_ts_ns_capt_reg <= input_ts[45:0] >> (16-CMP_FNS_WIDTH);
         end else begin
-            src_ts_ns_capt_reg <= input_ts >> (16-TS_FNS_WIDTH);
+            src_ts_ns_capt_reg <= input_ts >> (16-CMP_FNS_WIDTH);
         end
         src_ts_step_capt_reg <= input_ts_step || input_ts_step_reg;
         input_ts_step_reg <= 1'b0;
@@ -268,6 +284,12 @@ always @(posedge output_clk) begin
     src_sync_sync1_reg <= src_sync_reg;
     src_sync_sync2_reg <= src_sync_sync1_reg;
     src_sync_sync3_reg <= src_sync_sync2_reg;
+    src_phase_sync_sync1_reg <= src_phase_sync_reg;
+    src_phase_sync_sync2_reg <= src_phase_sync_sync1_reg;
+    src_phase_sync_sync3_reg <= src_phase_sync_sync2_reg;
+    dest_phase_sync_sync1_reg <= dest_phase_sync_reg;
+    dest_phase_sync_sync2_reg <= dest_phase_sync_sync1_reg;
+    dest_phase_sync_sync3_reg <= dest_phase_sync_sync2_reg;
 end
 
 always @(posedge sample_clk) begin
@@ -391,6 +413,16 @@ always @* begin
     end
 end
 
+reg [PHASE_ERR_ACC_WIDTH-1:0] phase_err_acc_reg = 0;
+reg [PHASE_ERR_ACC_WIDTH-1:0] phase_err_out_reg = 0;
+reg [LOG_PHASE_ERR_RATE-1:0] phase_err_cnt_reg = 0;
+reg phase_err_out_valid_reg = 0;
+
+reg phase_edge_1_reg = 1'b0;
+reg phase_edge_2_reg = 1'b0;
+
+reg [5:0] phase_active_reg = 0;
+
 reg ts_sync_valid_reg = 1'b0;
 reg ts_capt_valid_reg = 1'b0;
 
@@ -406,6 +438,45 @@ always @(posedge output_clk) begin
         sample_acc_sync_valid_reg <= 1'b1;
     end
 
+    if (PIPELINE_OUTPUT > 0) begin
+        dest_phase_sync_reg <= ts_ns_pipe_reg[PIPELINE_OUTPUT-1][8+FNS_WIDTH];
+    end else begin
+        dest_phase_sync_reg <= ts_ns_reg[8+FNS_WIDTH];
+    end
+
+    // phase and frequency detector
+    if (dest_phase_sync_sync2_reg && !dest_phase_sync_sync3_reg) begin
+        if (src_phase_sync_sync2_reg && !src_phase_sync_sync3_reg) begin
+            phase_edge_1_reg <= 1'b0;
+            phase_edge_2_reg <= 1'b0;
+        end else begin
+            phase_edge_1_reg <= !phase_edge_2_reg;
+            phase_edge_2_reg <= 1'b0;
+        end
+    end else if (src_phase_sync_sync2_reg && !src_phase_sync_sync3_reg) begin
+        phase_edge_1_reg <= 1'b0;
+        phase_edge_2_reg <= !phase_edge_1_reg;
+    end
+
+    // accumulator
+    phase_err_acc_reg <= $signed(phase_err_acc_reg) + $signed({1'b0, phase_edge_2_reg}) - $signed({1'b0, phase_edge_1_reg});
+
+    phase_err_cnt_reg <= phase_err_cnt_reg + 1;
+
+    if (src_phase_sync_sync2_reg && !src_phase_sync_sync3_reg) begin
+        phase_active_reg[0] <= 1'b1;
+    end
+
+    phase_err_out_valid_reg <= 1'b0;
+    if (phase_err_cnt_reg == 0) begin
+        phase_active_reg <= {phase_active_reg, src_phase_sync_sync2_reg && !src_phase_sync_sync3_reg};
+        phase_err_acc_reg <= $signed({1'b0, phase_edge_2_reg}) - $signed({1'b0, phase_edge_1_reg});
+        phase_err_out_reg <= phase_err_acc_reg;
+        if (phase_active_reg != 0) begin
+            phase_err_out_valid_reg <= 1'b1;
+        end
+    end
+
     if (dest_update_reg) begin
         // capture local TS
         if (PIPELINE_OUTPUT > 0) begin
@@ -413,7 +484,7 @@ always @(posedge output_clk) begin
             dest_ts_ns_capt_reg <= ts_ns_pipe_reg[PIPELINE_OUTPUT-1];
         end else begin
             dest_ts_s_capt_reg <= ts_s_reg;
-            dest_ts_ns_capt_reg <= ts_ns_reg >> FNS_WIDTH-TS_FNS_WIDTH;
+            dest_ts_ns_capt_reg <= ts_ns_reg >> FNS_WIDTH-CMP_FNS_WIDTH;
         end
 
         dest_sync_reg <= !dest_sync_reg;
@@ -455,24 +526,25 @@ always @(posedge output_clk) begin
     end
 end
 
-reg sec_mismatch_reg = 1'b0, sec_mismatch_next;
-reg diff_valid_reg = 1'b0, diff_valid_next;
-reg diff_corr_valid_reg = 1'b0, diff_corr_valid_next;
+reg ts_diff_reg = 1'b0, ts_diff_next;
+reg ts_diff_valid_reg = 1'b0, ts_diff_valid_next;
+reg [3:0] mismatch_cnt_reg = 0, mismatch_cnt_next;
+reg load_ts_reg = 1'b0, load_ts_next;
 
-reg ts_s_msb_diff_reg = 1'b0, ts_s_msb_diff_next;
-reg [7:0] ts_s_diff_reg = 0, ts_s_diff_next;
-reg [TS_NS_WIDTH+TS_FNS_WIDTH+1-1:0] ts_ns_diff_reg = 0, ts_ns_diff_next;
-
-reg [17+TS_FNS_WIDTH-1:0] ts_ns_diff_corr_reg = 0, ts_ns_diff_corr_next;
+reg [9+CMP_FNS_WIDTH-1:0] ts_ns_diff_reg = 0, ts_ns_diff_next;
 
 reg [TIME_ERR_INT_WIDTH-1:0] time_err_int_reg = 0, time_err_int_next;
 
 reg [1:0] ptp_ovf;
 
+reg [FREQ_LOCK_WIDTH-1:0] freq_lock_count_reg = 0, freq_lock_count_next;
+reg freq_locked_reg = 1'b0, freq_locked_next;
 reg [PTP_LOCK_WIDTH-1:0] ptp_lock_count_reg = 0, ptp_lock_count_next;
 reg ptp_locked_reg = 1'b0, ptp_locked_next;
 
-assign locked = ptp_locked_reg && dest_sync_locked_reg;
+reg gain_sel_reg = 0, gain_sel_next;
+
+assign locked = ptp_locked_reg && freq_locked_reg && dest_sync_locked_reg;
 
 always @* begin
     period_ns_next = period_ns_reg;
@@ -484,20 +556,21 @@ always @* begin
 
     ts_step_next = 0;
 
-    sec_mismatch_next = sec_mismatch_reg;
-    diff_valid_next = 1'b0;
-    diff_corr_valid_next = 1'b0;
+    ts_diff_next = 1'b0;
+    ts_diff_valid_next = 1'b0;
+    mismatch_cnt_next = mismatch_cnt_reg;
+    load_ts_next = load_ts_reg;
 
-    ts_s_msb_diff_next = ts_s_msb_diff_reg;
-    ts_s_diff_next = ts_s_diff_reg;
     ts_ns_diff_next = ts_ns_diff_reg;
-
-    ts_ns_diff_corr_next = ts_ns_diff_corr_reg;
 
     time_err_int_next = time_err_int_reg;
 
+    freq_lock_count_next = freq_lock_count_reg;
+    freq_locked_next = freq_locked_reg;
     ptp_lock_count_next = ptp_lock_count_reg;
     ptp_locked_next = ptp_locked_reg;
+
+    gain_sel_next = gain_sel_reg;
 
     // PTP clock
     period_ns_delay_next = period_ns_reg;
@@ -525,83 +598,99 @@ always @* begin
     if (ts_sync_valid_reg) begin
         // Read new value
         if (TS_WIDTH == 96) begin
-            if (src_ts_step_sync_reg || sec_mismatch_reg) begin
+            if (src_ts_step_sync_reg || load_ts_reg) begin
                 // input stepped
-                sec_mismatch_next = 1'b0;
+                load_ts_next = 1'b0;
 
                 ts_s_next = src_ts_s_sync_reg;
-                ts_ns_next = src_ts_ns_sync_reg;
-                ts_ns_inc_next = src_ts_ns_sync_reg;
+                ts_ns_next[TS_NS_WIDTH+FNS_WIDTH-1:9+FNS_WIDTH] = src_ts_ns_sync_reg[TS_NS_WIDTH+CMP_FNS_WIDTH-1:9+CMP_FNS_WIDTH];
+                ts_ns_inc_next[TS_NS_WIDTH+FNS_WIDTH-1:9+FNS_WIDTH] = src_ts_ns_sync_reg[TS_NS_WIDTH+CMP_FNS_WIDTH-1:9+CMP_FNS_WIDTH];
                 ts_ns_ovf_next[30+FNS_WIDTH] = 1'b1;
                 ts_step_next = 1;
             end else begin
                 // input did not step
-                sec_mismatch_next = 1'b0;
-                diff_valid_next = 1'b1;
+                load_ts_next = 1'b0;
+                ts_diff_valid_next = freq_locked_reg;
             end
             // compute difference
-            ts_s_msb_diff_next = src_ts_s_sync_reg[47:8] != dest_ts_s_capt_reg[47:8];
-            ts_s_diff_next = src_ts_s_sync_reg[7:0] - dest_ts_s_capt_reg[7:0];
             ts_ns_diff_next = src_ts_ns_sync_reg - dest_ts_ns_capt_reg;
+            ts_diff_next = src_ts_s_sync_reg != dest_ts_s_capt_reg || src_ts_ns_sync_reg[TS_NS_WIDTH+CMP_FNS_WIDTH-1:9+CMP_FNS_WIDTH] != dest_ts_ns_capt_reg[TS_NS_WIDTH+CMP_FNS_WIDTH-1:9+CMP_FNS_WIDTH];
         end else if (TS_WIDTH == 64) begin
-            if (src_ts_step_sync_reg || sec_mismatch_reg) begin
+            if (src_ts_step_sync_reg || load_ts_reg) begin
                 // input stepped
-                sec_mismatch_next = 1'b0;
+                load_ts_next = 1'b0;
 
-                ts_ns_next = src_ts_ns_sync_reg;
+                ts_ns_next[TS_NS_WIDTH+FNS_WIDTH-1:9+FNS_WIDTH] = src_ts_ns_sync_reg[TS_NS_WIDTH+CMP_FNS_WIDTH-1:9+CMP_FNS_WIDTH];
                 ts_step_next = 1;
             end else begin
                 // input did not step
-                sec_mismatch_next = 1'b0;
-                diff_valid_next = 1'b1;
+                load_ts_next = 1'b0;
+                ts_diff_valid_next = freq_locked_reg;
             end
             // compute difference
             ts_ns_diff_next = src_ts_ns_sync_reg - dest_ts_ns_capt_reg;
+            ts_diff_next = src_ts_ns_sync_reg[TS_NS_WIDTH+CMP_FNS_WIDTH-1:9+CMP_FNS_WIDTH] != dest_ts_ns_capt_reg[TS_NS_WIDTH+CMP_FNS_WIDTH-1:9+CMP_FNS_WIDTH];
         end
     end
 
-    if (diff_valid_reg) begin
-        // seconds field correction
-        if (TS_WIDTH == 96) begin
-            if ($signed(ts_s_diff_reg) == 0 && ts_s_msb_diff_reg == 0 && ($signed(ts_ns_diff_reg[16+FNS_WIDTH +: 14]) == 0 || $signed(ts_ns_diff_reg[16+FNS_WIDTH +: 14]) == -1)) begin
-                // difference is small and no seconds difference; slew
-                ts_ns_diff_corr_next = ts_ns_diff_reg[16+FNS_WIDTH:0];
-                diff_corr_valid_next = 1'b1;
-            end else if ($signed(ts_s_diff_reg) == 1 && ts_ns_diff_reg[16+FNS_WIDTH +: 14] == ~NS_PER_S[30:16]) begin
-                // difference is small with 1 second difference; adjust and slew
-                ts_ns_diff_corr_next[FNS_WIDTH +: NS_WIDTH] = ts_ns_diff_reg[FNS_WIDTH +: 17] + NS_PER_S[0 +: 17];
-                ts_ns_diff_corr_next[0 +: FNS_WIDTH] = ts_ns_diff_reg[0 +: FNS_WIDTH];
-                diff_corr_valid_next = 1'b1;
-            end else if ($signed(ts_s_diff_reg) == -1 && ts_ns_diff_reg[16+FNS_WIDTH +: 14] == NS_PER_S[30:16]) begin
-                // difference is small with 1 second difference; adjust and slew
-                ts_ns_diff_corr_next[FNS_WIDTH +: NS_WIDTH] = ts_ns_diff_reg[FNS_WIDTH +: 17] - NS_PER_S[0 +: 17];
-                ts_ns_diff_corr_next[0 +: FNS_WIDTH] = ts_ns_diff_reg[0 +: FNS_WIDTH];
-                diff_corr_valid_next = 1'b1;
+    if (ts_diff_valid_reg) begin
+        if (ts_diff_reg) begin
+            if (&mismatch_cnt_reg) begin
+                load_ts_next = 1'b1;
+                mismatch_cnt_next = 0;
             end else begin
-                // difference is too large; step the clock
-                sec_mismatch_next = 1'b1;
+                mismatch_cnt_next = mismatch_cnt_reg + 1;
             end
-        end else if (TS_WIDTH == 64) begin
-            if ($signed(ts_ns_diff_reg[16+FNS_WIDTH +: 32]) == 0 || $signed(ts_ns_diff_reg[16+FNS_WIDTH +: 32]) == -1) begin
-                // difference is small enough to slew
-                ts_ns_diff_corr_next = ts_ns_diff_reg[16+FNS_WIDTH:0];
-                diff_corr_valid_next = 1'b1;
-            end else begin
-                // difference is too large; step the clock
-                sec_mismatch_next = 1'b1;
-            end
+        end else begin
+            mismatch_cnt_next = 0;
         end
     end
 
-    if (diff_corr_valid_reg) begin
+    if (phase_err_out_valid_reg) begin
+        // coarse phase/frequency lock of PTP clock
+        if ($signed(phase_err_out_reg) > 4 || $signed(phase_err_out_reg) < -4) begin
+            if (freq_lock_count_reg) begin
+                freq_lock_count_next = freq_lock_count_reg - 1;
+            end else begin
+                freq_locked_next = 1'b0;
+            end
+        end else begin
+            if (&freq_lock_count_reg) begin
+                freq_locked_next = 1'b1;
+            end else begin
+                freq_lock_count_next = freq_lock_count_reg + 1;
+            end
+        end
+
+        if (!freq_locked_reg) begin
+            ts_ns_diff_next = $signed(phase_err_out_reg) * 8 * 2**CMP_FNS_WIDTH;
+            ts_diff_valid_next = 1'b1;
+        end
+    end
+
+    if (ts_diff_valid_reg) begin
         // PI control
 
-        // time integral of error
-        if (ptp_locked_reg) begin
-            {ptp_ovf, time_err_int_next} = $signed({1'b0, time_err_int_reg}) + ($signed(ts_ns_diff_corr_reg) / 2**16);
+        // gain scheduling
+        if (!ts_ns_diff_reg[8+CMP_FNS_WIDTH]) begin
+            if (ts_ns_diff_reg[4+CMP_FNS_WIDTH +: 4]) begin
+                gain_sel_next = 1'b1;
+            end else begin
+                gain_sel_next = 1'b0;
+            end
         end else begin
-            {ptp_ovf, time_err_int_next} = $signed({1'b0, time_err_int_reg}) + ($signed(ts_ns_diff_corr_reg) / 2**13);
+            if (~ts_ns_diff_reg[4+CMP_FNS_WIDTH +: 4]) begin
+                gain_sel_next = 1'b1;
+            end else begin
+                gain_sel_next = 1'b0;
+            end
         end
+
+        // time integral of error
+        case (gain_sel_reg)
+            1'b0: {ptp_ovf, time_err_int_next} = $signed({1'b0, time_err_int_reg}) + ($signed(ts_ns_diff_reg) / 2**4);
+            1'b1: {ptp_ovf, time_err_int_next} = $signed({1'b0, time_err_int_reg}) + ($signed(ts_ns_diff_reg) * 2**2);
+        endcase
 
         // saturate
         if (ptp_ovf[1]) begin
@@ -613,11 +702,10 @@ always @* begin
         end
 
         // compute output
-        if (ptp_locked_reg) begin
-            {ptp_ovf, period_ns_next} = $signed({1'b0, time_err_int_reg}) + ($signed(ts_ns_diff_corr_reg) / 2**10);
-        end else begin
-            {ptp_ovf, period_ns_next} = $signed({1'b0, time_err_int_reg}) + ($signed(ts_ns_diff_corr_reg) / 2**7);
-        end
+        case (gain_sel_reg)
+            1'b0: {ptp_ovf, period_ns_next} = $signed({1'b0, time_err_int_reg}) + ($signed(ts_ns_diff_reg) * 2**2);
+            1'b1: {ptp_ovf, period_ns_next} = $signed({1'b0, time_err_int_reg}) + ($signed(ts_ns_diff_reg) * 2**6);
+        endcase
 
         // saturate
         if (ptp_ovf[1]) begin
@@ -636,15 +724,21 @@ always @* begin
         end
 
         // locked status
-        if ($signed(ts_ns_diff_corr_reg[17+FNS_WIDTH-1:4+FNS_WIDTH]) == 0 || $signed(ts_ns_diff_corr_reg[17+FNS_WIDTH-1:4+FNS_WIDTH]) == -1) begin
-            if (ptp_lock_count_reg == {PTP_LOCK_WIDTH{1'b1}}) begin
+        if (!freq_locked_reg) begin
+            ptp_lock_count_next = 0;
+            ptp_locked_next = 1'b0;
+        end else if (gain_sel_reg == 1'b0) begin
+            if (&ptp_lock_count_reg) begin
                 ptp_locked_next = 1'b1;
             end else begin
                 ptp_lock_count_next = ptp_lock_count_reg + 1;
             end
         end else begin
-            ptp_lock_count_next = 0;
-            ptp_locked_next = 1'b0;
+            if (ptp_lock_count_reg) begin
+                ptp_lock_count_next = ptp_lock_count_reg - 1;
+            end else begin
+                ptp_locked_next = 1'b0;
+            end
         end
     end
 end
@@ -661,20 +755,21 @@ always @(posedge output_clk) begin
 
     ts_step_reg <= ts_step_next;
 
-    sec_mismatch_reg <= sec_mismatch_next;
-    diff_valid_reg <= diff_valid_next;
-    diff_corr_valid_reg <= diff_corr_valid_next;
+    ts_diff_reg <= ts_diff_next;
+    ts_diff_valid_reg <= ts_diff_valid_next;
+    mismatch_cnt_reg <= mismatch_cnt_next;
+    load_ts_reg <= load_ts_next;
 
-    ts_s_msb_diff_reg <= ts_s_msb_diff_next;
-    ts_s_diff_reg <= ts_s_diff_next;
     ts_ns_diff_reg <= ts_ns_diff_next;
-
-    ts_ns_diff_corr_reg <= ts_ns_diff_corr_next;
 
     time_err_int_reg <= time_err_int_next;
 
+    freq_lock_count_reg <= freq_lock_count_next;
+    freq_locked_reg <= freq_locked_next;
     ptp_lock_count_reg <= ptp_lock_count_next;
     ptp_locked_reg <= ptp_locked_next;
+
+    gain_sel_reg <= gain_sel_next;
 
     // PPS output
     if (TS_WIDTH == 96) begin
@@ -705,16 +800,19 @@ always @(posedge output_clk) begin
         ts_s_reg <= 0;
         ts_ns_reg <= 0;
         ts_ns_inc_reg <= 0;
-        ts_ns_ovf_reg[30] <= 1'b1;
+        ts_ns_ovf_reg[30+FNS_WIDTH] <= 1'b1;
         ts_step_reg <= 0;
         pps_reg <= 0;
 
-        sec_mismatch_reg <= 1'b0;
-        diff_valid_reg <= 1'b0;
-        diff_corr_valid_reg <= 1'b0;
+        ts_diff_reg <= 1'b0;
+        ts_diff_valid_reg <= 1'b0;
+        mismatch_cnt_reg <= 0;
+        load_ts_reg <= 0;
 
         time_err_int_reg <= 0;
 
+        freq_lock_count_reg <= 0;
+        freq_locked_reg <= 1'b0;
         ptp_lock_count_reg <= 0;
         ptp_locked_reg <= 1'b0;
 

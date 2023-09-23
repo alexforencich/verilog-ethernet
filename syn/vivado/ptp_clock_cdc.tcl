@@ -1,4 +1,4 @@
-# Copyright (c) 2019-2021 Alex Forencich
+# Copyright (c) 2019-2023 Alex Forencich
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -79,12 +79,29 @@ foreach inst [get_cells -hier -filter {(ORIG_REF_NAME == ptp_clock_cdc || REF_NA
         set_bus_skew  -from [get_cells "$inst/sample_acc_out_reg_reg[*]"] -to [get_cells $inst/sample_acc_sync_reg_reg[*]] $output_clk_period
     }
 
-    # no sample clock
+    # timestamp transfer sync
     set sync_ffs [get_cells -quiet -hier -regexp ".*/src_sync_sync\[12\]_reg_reg" -filter "PARENT == $inst"]
 
     if {[llength $sync_ffs]} {
         set_property ASYNC_REG TRUE $sync_ffs
 
         set_max_delay -from [get_cells "$inst/src_sync_reg_reg"] -to [get_cells "$inst/src_sync_sync1_reg_reg"] -datapath_only $input_clk_period
+    }
+
+    # phase sync
+    set sync_ffs [get_cells -quiet -hier -regexp ".*/src_phase_sync_sync\[12\]_reg_reg" -filter "PARENT == $inst"]
+
+    if {[llength $sync_ffs]} {
+        set_property ASYNC_REG TRUE $sync_ffs
+
+        # hunt down source
+        set dest_pins [get_pins -of_objects [get_cells "$inst/src_phase_sync_sync1_reg_reg"] -filter {REF_PIN_NAME == "D"}]
+        set nets [get_nets -segments -of_objects $dest_pins]
+        set source_pins [get_pins -of_objects $nets -filter {IS_LEAF && DIRECTION == "OUT"}]
+        set source [get_cells -of_objects $source_pins]
+
+        if {[llength $source]} {
+            set_max_delay -from $source -to [get_cells "$inst/src_phase_sync_sync1_reg_reg"] -datapath_only $input_clk_period
+        }
     }
 }
