@@ -662,6 +662,8 @@ always @(posedge clk) begin
 
     swap_lanes_reg <= swap_lanes_next;
 
+    frame_min_count_reg <= frame_min_count_next;
+
     ifg_count_reg <= ifg_count_next;
     deficit_idle_count_reg <= deficit_idle_count_next;
 
