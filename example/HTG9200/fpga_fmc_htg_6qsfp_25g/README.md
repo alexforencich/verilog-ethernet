@@ -8,7 +8,7 @@ The design by default listens to UDP port 1234 at IP address 192.168.1.128 and w
 
 The design is configured to run all 15 QSFP28 modules synchronous to the GTY reference oscillator (U47) on the HTG-9200.  This is done by forwarding the MGT reference clock for QSFP1 through the FPGA to the SYNC_C2M pins on the FMC+, which is connected as a reference input to the Si5341 PLL (U7) on the FMC+.
 
-*  FPGA: xcvu9p-flgb2104-2-e
+*  FPGA: xcvu9p-flgb2104-2-e or xcvu13p-fhgb2104-2-e
 *  PHY: 10G BASE-R PHY IP core and internal GTY transceiver
 
 ## How to build

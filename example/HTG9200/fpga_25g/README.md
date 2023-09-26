@@ -8,7 +8,7 @@ The design by default listens to UDP port 1234 at IP address 192.168.1.128 and
 will echo back any packets received.  The design will also respond correctly
 to ARP requests.  
 
-*  FPGA: xcvu9p-flgb2104-2-e
+*  FPGA: xcvu9p-flgb2104-2-e or xcvu13p-fhgb2104-2-e
 *  PHY: 10G BASE-R PHY IP core and internal GTY transceiver
 
 ## How to build

@@ -1,5 +1,6 @@
 # XDC constraints for the HiTech Global HTG-9200 board
 # part: xcvu9p-flgb2104-2-e
+# part: xcvu13p-fhgb2104-2-e
 
 # General configuration
 set_property CFGBVS GND                                [current_design]
