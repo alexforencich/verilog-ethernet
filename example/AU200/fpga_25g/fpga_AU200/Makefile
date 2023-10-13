@@ -1,6 +1,6 @@
 
 # FPGA settings
-FPGA_PART = xcvu9p-fsgd2104-2L-e
+FPGA_PART = xcu200-fsgd2104-2-e
 FPGA_TOP = fpga
 FPGA_ARCH = virtexuplus
 
@@ -77,7 +77,7 @@ program: $(FPGA_TOP).bit
 	vivado -nojournal -nolog -mode batch -source program.tcl
 
 %.mcs %.prm: %.bit
-	echo "write_cfgmem -force -format mcs -size 128 -interface SPIx4 -loadbit {up 0x04000000 $*.bit} -checksum -file $*.mcs" > generate_mcs.tcl
+	echo "write_cfgmem -force -format mcs -size 128 -interface SPIx4 -loadbit {up 0x01002000 $*.bit} -checksum -file $*.mcs" > generate_mcs.tcl
 	echo "exit" >> generate_mcs.tcl
 	vivado -nojournal -nolog -mode batch -source generate_mcs.tcl
 	mkdir -p rev
@@ -112,4 +112,3 @@ flash: $(FPGA_TOP).mcs $(FPGA_TOP).prm
 	echo "boot_hw_device [current_hw_device]" >> flash.tcl
 	echo "exit" >> flash.tcl
 	vivado -nojournal -nolog -mode batch -source flash.tcl
-

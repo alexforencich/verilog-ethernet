@@ -1,29 +1,28 @@
-# Verilog Ethernet Alveo U200 Example Design
+# Verilog Ethernet Alveo U200/Alveo U250/VCU1525 Example Design
 
 ## Introduction
 
-This example design targets the Xilinx Alveo U200 FPGA board.
+This example design targets the Xilinx Alveo U200/Alveo U250/VCU1525 FPGA board.
 
-The design by default listens to UDP port 1234 at IP address 192.168.1.128 and
-will echo back any packets received.  The design will also respond correctly
-to ARP requests.
+The design by default listens to UDP port 1234 at IP address 192.168.1.128 and will echo back any packets received.  The design will also respond correctly to ARP requests.
 
-*  FPGA: xcu200-fsgd2104-2-e
-*  PHY: 10G BASE-R PHY IP core and internal GTY transceiver
+* FPGA
+  * AU200: xcu200-fsgd2104-2-e
+  * AU250: xcu250-fsgd2104-2-e
+  * VCU1525: xcvu9p-fsgd2104-2L-e
+* PHY: 10G BASE-R PHY IP core and internal GTY transceiver
 
 ## How to build
 
-Run make to build.  Ensure that the Xilinx Vivado toolchain components are
-in PATH.  
+Run make to build.  Ensure that the Xilinx Vivado toolchain components are in PATH.
 
 ## How to test
 
-Run make program to program the Alveo U200 board with Vivado.  Then run
+Run make program to program the FPGA board with Vivado.  Then run
 
     netcat -u 192.168.1.128 1234
 
-to open a UDP connection to port 1234.  Any text entered into netcat will be
-echoed back after pressing enter.
+to open a UDP connection to port 1234.  Any text entered into netcat will be echoed back after pressing enter.
 
 It is also possible to use hping to test the design by running
 

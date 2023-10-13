@@ -1,5 +1,7 @@
-# XDC constraints for the Xilinx Alveo U200 board
-# part: xcu200-fsgd2104-2-e
+# XDC constraints for Xilinx AU200/AU250/VCU1525
+# AU200 part: xcu200-fsgd2104-2-e
+# AU250 part: xcu250-figd2104-2-e
+# VCU1525 part: xcvu9p-fsgd2104-2L-e
 
 # General configuration
 set_property CFGBVS GND                                [current_design]

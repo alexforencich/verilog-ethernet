@@ -112,4 +112,3 @@ flash: $(FPGA_TOP).mcs $(FPGA_TOP).prm
 	echo "boot_hw_device [current_hw_device]" >> flash.tcl
 	echo "exit" >> flash.tcl
 	vivado -nojournal -nolog -mode batch -source flash.tcl
-
