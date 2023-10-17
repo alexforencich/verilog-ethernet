@@ -8,8 +8,8 @@
 # 
 # Parameters:
 # FPGA_TOP - Top module name
-# FPGA_FAMILY - FPGA family (e.g. VirtexUltrascale)
-# FPGA_DEVICE - FPGA device (e.g. xcvu095-ffva2104-2-e)
+# FPGA_FAMILY - FPGA family (e.g. KintexUltrascale)
+# FPGA_DEVICE - FPGA device (e.g. xcku040-ffva1156-2-e)
 # SYN_FILES - space-separated list of source files
 # INC_FILES - space-separated list of include files
 # XDC_FILES - space-separated list of timing constraint files
@@ -18,8 +18,8 @@
 # Example:
 # 
 # FPGA_TOP = fpga
-# FPGA_FAMILY = VirtexUltrascale
-# FPGA_DEVICE = xcvu095-ffva2104-2-e
+# FPGA_FAMILY = KintexUltrascale
+# FPGA_DEVICE = xcku040-ffva1156-2-e
 # SYN_FILES = rtl/fpga.v
 # XDC_FILES = fpga.xdc
 # XCI_FILES = ip/pcspma.xci
