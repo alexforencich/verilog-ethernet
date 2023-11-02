@@ -100,9 +100,9 @@ localparam TIME_ERR_INT_WIDTH = NS_WIDTH+FNS_WIDTH;
 
 localparam [30:0] NS_PER_S = 31'd1_000_000_000;
 
-reg [NS_WIDTH+FNS_WIDTH-1:0] period_ns_reg = 0, period_ns_next;
-reg [NS_WIDTH+FNS_WIDTH-1:0] period_ns_delay_reg = 0, period_ns_delay_next;
-reg [31+FNS_WIDTH-1:0] period_ns_ovf_reg = 0, period_ns_ovf_next;
+reg [NS_WIDTH+FNS_WIDTH-1:0] period_ns_reg = 0, period_ns_next = 0;
+reg [NS_WIDTH+FNS_WIDTH-1:0] period_ns_delay_reg = 0, period_ns_delay_next = 0;
+reg [31+FNS_WIDTH-1:0] period_ns_ovf_reg = 0, period_ns_ovf_next = 0;
 
 reg [47:0] src_ts_s_capt_reg = 0;
 reg [TS_NS_WIDTH+CMP_FNS_WIDTH-1:0] src_ts_ns_capt_reg = 0;
@@ -115,10 +115,10 @@ reg [47:0] src_ts_s_sync_reg = 0;
 reg [TS_NS_WIDTH+CMP_FNS_WIDTH-1:0] src_ts_ns_sync_reg = 0;
 reg src_ts_step_sync_reg = 0;
 
-reg [47:0] ts_s_reg = 0, ts_s_next;
-reg [TS_NS_WIDTH+FNS_WIDTH-1:0] ts_ns_reg = 0, ts_ns_next;
-reg [TS_NS_WIDTH+FNS_WIDTH-1:0] ts_ns_inc_reg = 0, ts_ns_inc_next;
-reg [TS_NS_WIDTH+FNS_WIDTH+1-1:0] ts_ns_ovf_reg = {TS_NS_WIDTH+FNS_WIDTH+1{1'b1}}, ts_ns_ovf_next;
+reg [47:0] ts_s_reg = 0, ts_s_next = 0;
+reg [TS_NS_WIDTH+FNS_WIDTH-1:0] ts_ns_reg = 0, ts_ns_next = 0;
+reg [TS_NS_WIDTH+FNS_WIDTH-1:0] ts_ns_inc_reg = 0, ts_ns_inc_next = 0;
+reg [TS_NS_WIDTH+FNS_WIDTH+1-1:0] ts_ns_ovf_reg = {TS_NS_WIDTH+FNS_WIDTH+1{1'b1}}, ts_ns_ovf_next = 0;
 
 reg ts_step_reg = 1'b0, ts_step_next;
 
@@ -795,8 +795,6 @@ always @(posedge output_clk) begin
 
     if (output_rst) begin
         period_ns_reg <= 0;
-        period_ns_delay_reg <= 0;
-        period_ns_ovf_reg <= 0;
         ts_s_reg <= 0;
         ts_ns_reg <= 0;
         ts_ns_inc_reg <= 0;

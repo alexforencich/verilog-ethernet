@@ -302,12 +302,6 @@ always @(posedge clk) begin
         drift_ns_reg <= DRIFT_NS;
         drift_fns_reg <= DRIFT_FNS;
         drift_rate_reg <= DRIFT_RATE;
-        ts_inc_ns_reg <= 0;
-        ts_inc_fns_reg <= 0;
-        ts_inc_ns_delay_reg <= 0;
-        ts_inc_fns_delay_reg <= 0;
-        ts_inc_ns_ovf_reg <= 0;
-        ts_inc_fns_ovf_reg <= 0;
         ts_96_s_reg <= 0;
         ts_96_ns_reg <= 0;
         ts_96_fns_reg <= 0;
