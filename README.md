@@ -307,6 +307,14 @@ PTP clock CDC module with PPS output.  Use this module to transfer and deskew a
 free-running PTP clock across clock domains.  Supports both 64 and 96 bit
 timestamp formats.
 
+### `ptp_td_leaf` module
+
+PTP time distribution leaf clock module.  Accepts PTP time distribution messages from the `ptp_td_phc` module, and outputs both the 96-bit time-of-day timestamp and 64-bit relative timestamp in the destination clock domain, as well as both single-cycle and stretched PPS outputs.  Also supports pipelining the serial data input, automatically compensating for the pipeline delay.
+
+### `ptp_td_phc` module
+
+PTP time distribution master clock module.  Generates PTP time distribution messages over a serial interface that can provide PTP time to one or more leaf clocks (`ptp_td_leaf`), as well as both single-cycle and stretched PPS outputs.  The fractional nanoseconds portion is shared between the time-of-day and relative timestamps to support reconstruction of the 96-bit time-of-day timestamp from a truncated relative timestamp.  The module supports coarse setting of both the ToD and relative timestamps as well as atomically applying offsets to the ToD and relative timestamps and the shared fractional nanoseconds.
+
 ### `ptp_ts_extract` module
 
 PTP timestamp extract module.  Use this module to extract a PTP timestamp
@@ -466,6 +474,8 @@ and data lines.
     rtl/oddr.v                      : Generic DDR output register
     rtl/ptp_clock.v                 : PTP clock
     rtl/ptp_clock_cdc.v             : PTP clock CDC
+    rtl/ptp_td_leaf.v               : PTP time distribution leaf clock
+    rtl/ptp_td_phc.v                : PTP time distribution master clock
     rtl/ptp_ts_extract.v            : PTP timestamp extract
     rtl/ptp_perout.v                : PTP period out
     rtl/rgmii_phy_if.v              : RGMII PHY interface
