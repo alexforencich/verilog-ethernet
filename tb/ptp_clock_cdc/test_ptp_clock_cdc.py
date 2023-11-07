@@ -49,7 +49,7 @@ class TB:
 
         if len(dut.input_ts) == 64:
             self.ptp_clock = PtpClock(
-                ts_64=dut.input_ts,
+                ts_rel=dut.input_ts,
                 ts_step=dut.input_ts_step,
                 clock=dut.input_clk,
                 reset=dut.input_rst,
@@ -57,7 +57,7 @@ class TB:
             )
         else:
             self.ptp_clock = PtpClock(
-                ts_96=dut.input_ts,
+                ts_tod=dut.input_ts,
                 ts_step=dut.input_ts_step,
                 clock=dut.input_clk,
                 reset=dut.input_rst,

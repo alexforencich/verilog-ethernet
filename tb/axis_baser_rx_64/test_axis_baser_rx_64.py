@@ -62,7 +62,7 @@ class TB:
         self.source = BaseRSerdesSource(dut.encoded_rx_data, dut.encoded_rx_hdr, dut.clk, scramble=False)
         self.sink = AxiStreamSink(AxiStreamBus.from_prefix(dut, "m_axis"), dut.clk, dut.rst)
 
-        self.ptp_clock = PtpClockSimTime(ts_64=dut.ptp_ts, clock=dut.clk)
+        self.ptp_clock = PtpClockSimTime(ts_tod=dut.ptp_ts, clock=dut.clk)
 
         dut.cfg_rx_enable.setimmediatevalue(0)
 

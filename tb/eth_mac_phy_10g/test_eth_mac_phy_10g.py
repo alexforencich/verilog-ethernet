@@ -79,8 +79,8 @@ class TB:
         self.axis_source = AxiStreamSource(AxiStreamBus.from_prefix(dut, "tx_axis"), dut.tx_clk, dut.tx_rst)
         self.axis_sink = AxiStreamSink(AxiStreamBus.from_prefix(dut, "rx_axis"), dut.rx_clk, dut.rx_rst)
 
-        self.rx_ptp_clock = PtpClockSimTime(ts_64=dut.rx_ptp_ts, clock=dut.rx_clk)
-        self.tx_ptp_clock = PtpClockSimTime(ts_64=dut.tx_ptp_ts, clock=dut.tx_clk)
+        self.rx_ptp_clock = PtpClockSimTime(ts_tod=dut.rx_ptp_ts, clock=dut.rx_clk)
+        self.tx_ptp_clock = PtpClockSimTime(ts_tod=dut.tx_ptp_ts, clock=dut.tx_clk)
         self.tx_ptp_ts_sink = PtpTsSink(PtpTsBus.from_prefix(dut, "tx_axis_ptp"), dut.tx_clk, dut.tx_rst)
 
         dut.cfg_ifg.setimmediatevalue(0)

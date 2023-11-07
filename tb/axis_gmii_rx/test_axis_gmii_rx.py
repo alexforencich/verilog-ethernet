@@ -55,7 +55,7 @@ class TB:
             dut.clk, dut.rst, dut.clk_enable, dut.mii_select)
         self.sink = AxiStreamSink(AxiStreamBus.from_prefix(dut, "m_axis"), dut.clk, dut.rst)
 
-        self.ptp_clock = PtpClockSimTime(ts_64=dut.ptp_ts, clock=dut.clk)
+        self.ptp_clock = PtpClockSimTime(ts_tod=dut.ptp_ts, clock=dut.clk)
 
         dut.clk_enable.setimmediatevalue(1)
         dut.mii_select.setimmediatevalue(0)

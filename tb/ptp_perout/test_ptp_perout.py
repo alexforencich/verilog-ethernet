@@ -45,7 +45,7 @@ class TB:
         cocotb.start_soon(Clock(dut.clk, 6.4, units="ns").start())
 
         self.ptp_clock = PtpClock(
-            ts_96=dut.input_ts_96,
+            ts_tod=dut.input_ts_96,
             ts_step=dut.input_ts_step,
             clock=dut.clk,
             reset=dut.rst,

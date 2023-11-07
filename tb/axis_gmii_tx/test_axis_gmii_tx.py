@@ -62,7 +62,7 @@ class TB:
         self.sink = GmiiSink(dut.gmii_txd, dut.gmii_tx_er, dut.gmii_tx_en,
             dut.clk, dut.rst, dut.clk_enable, dut.mii_select)
 
-        self.ptp_clock = PtpClockSimTime(ts_64=dut.ptp_ts, clock=dut.clk)
+        self.ptp_clock = PtpClockSimTime(ts_tod=dut.ptp_ts, clock=dut.clk)
         self.ptp_ts_sink = PtpTsSink(PtpTsBus.from_prefix(dut, "m_axis_ptp"), dut.clk, dut.rst)
 
         dut.clk_enable.setimmediatevalue(1)
