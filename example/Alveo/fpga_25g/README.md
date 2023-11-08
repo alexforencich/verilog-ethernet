@@ -1,8 +1,8 @@
-# Verilog Ethernet Alveo U200/Alveo U250/VCU1525 Example Design
+# Verilog Ethernet Alveo Example Design
 
 ## Introduction
 
-This example design targets the Xilinx Alveo U200/Alveo U250/VCU1525 FPGA board.
+This design targets multiple FPGA boards, including most of the Xilinx Alveo line.
 
 The design by default listens to UDP port 1234 at IP address 192.168.1.128 and will echo back any packets received.  The design will also respond correctly to ARP requests.
 
