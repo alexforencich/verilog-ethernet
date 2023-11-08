@@ -60,12 +60,13 @@ VERILOG_SOURCES += ../../lib/eth/lib/axis/rtl/axis_async_fifo.v
 VERILOG_SOURCES += ../../lib/eth/lib/axis/rtl/axis_async_fifo_adapter.v
 
 # module parameters
-#export PARAM_A := value
+export PARAM_QUAD_CNT := 17
+export PARAM_CH_CNT := $(shell expr $(PARAM_QUAD_CNT) \* 4)
 
 ifeq ($(SIM), icarus)
 	PLUSARGS += -fst
 
-#	COMPILE_ARGS += -P $(TOPLEVEL).A=$(PARAM_A)
+	COMPILE_ARGS += $(foreach v,$(filter PARAM_%,$(.VARIABLES)),-P $(TOPLEVEL).$(subst PARAM_,,$(v))=$($(v)))
 
 	ifeq ($(WAVES), 1)
 		VERILOG_SOURCES += iverilog_dump.v
@@ -74,7 +75,7 @@ ifeq ($(SIM), icarus)
 else ifeq ($(SIM), verilator)
 	COMPILE_ARGS += -Wno-SELRANGE -Wno-WIDTH
 
-#	COMPILE_ARGS += -GA=$(PARAM_A)
+	COMPILE_ARGS += $(foreach v,$(filter PARAM_%,$(.VARIABLES)),-G$(subst PARAM_,,$(v))=$($(v)))
 
 	ifeq ($(WAVES), 1)
 		COMPILE_ARGS += --trace-fst

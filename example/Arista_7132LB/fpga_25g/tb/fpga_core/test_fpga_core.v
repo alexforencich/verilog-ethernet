@@ -31,17 +31,19 @@ THE SOFTWARE.
 /*
  * Testbench top-level module
  */
-module test_fpga_core ();
+module test_fpga_core #
+(
+    parameter QUAD_CNT = 17,
+    parameter CH_CNT = QUAD_CNT*4
+)
+(
+    input wire clk,
+    input wire rst
+);
 
 genvar n;
 
-wire clk;
-wire rst;
-
 // XGMII 10G PHY
-parameter QUAD_CNT = 17;
-parameter CH_CNT = QUAD_CNT*4;
-
 wire [CH_CNT-1:0]     eth_tx_clk;
 wire [CH_CNT-1:0]     eth_tx_rst;
 wire [CH_CNT*64-1:0]  eth_txd;
@@ -77,7 +79,9 @@ end
 
 endgenerate
 
-fpga_core
+fpga_core #(
+    .CH_CNT(CH_CNT)
+)
 core_inst (
     /*
      * Clock: 156.25 MHz

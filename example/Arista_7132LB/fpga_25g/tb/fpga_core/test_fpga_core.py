@@ -202,7 +202,8 @@ def test_fpga_core(request):
 
     parameters = {}
 
-    # parameters['A'] = val
+    parameters['QUAD_CNT'] = 17
+    parameters['CH_CNT'] = parameters['QUAD_CNT']*4
 
     extra_env = {f'PARAM_{k}': str(v) for k, v in parameters.items()}
 

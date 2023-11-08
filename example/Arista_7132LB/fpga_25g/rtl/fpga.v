@@ -31,22 +31,27 @@ THE SOFTWARE.
 /*
  * FPGA top-level module
  */
-module fpga (
+module fpga  #
+(
+    parameter QUAD_CNT = 17,
+    parameter CH_CNT = QUAD_CNT*4
+)
+(
     /*
      * Clock: 156.25MHz
      */
-    input  wire [1:0]  refclk_user_p,
-    input  wire [1:0]  refclk_user_n,
+    input  wire [1:0]          refclk_user_p,
+    input  wire [1:0]          refclk_user_n,
 
     /*
      * Ethernet: QSFP28
      */
-    input  wire [67:0] eth_gt_ch_rx_p,
-    input  wire [67:0] eth_gt_ch_rx_n,
-    output wire [67:0] eth_gt_ch_tx_p,
-    output wire [67:0] eth_gt_ch_tx_n,
-    input  wire [16:0] eth_gt_pri_refclk_p,
-    input  wire [16:0] eth_gt_pri_refclk_n
+    input  wire [CH_CNT-1:0]   eth_gt_ch_rx_p,
+    input  wire [CH_CNT-1:0]   eth_gt_ch_rx_n,
+    output wire [CH_CNT-1:0]   eth_gt_ch_tx_p,
+    output wire [CH_CNT-1:0]   eth_gt_ch_tx_n,
+    input  wire [QUAD_CNT-1:0] eth_gt_pri_refclk_p,
+    input  wire [QUAD_CNT-1:0] eth_gt_pri_refclk_n
 );
 
 genvar n;
@@ -161,9 +166,6 @@ sync_reset_125mhz_inst (
 );
 
 // XGMII 10G PHY
-parameter QUAD_CNT = 17;
-parameter CH_CNT = QUAD_CNT*4;
-
 wire [CH_CNT-1:0]     eth_tx_clk;
 wire [CH_CNT-1:0]     eth_tx_rst;
 wire [CH_CNT*64-1:0]  eth_txd;
