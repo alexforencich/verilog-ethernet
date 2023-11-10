@@ -5,7 +5,7 @@ FPGA_TOP = fpga
 FPGA_ARCH = virtexuplus
 
 # Files for synthesis
-SYN_FILES = rtl/fpga.v
+SYN_FILES = rtl/fpga_au50.v
 SYN_FILES += rtl/fpga_core.v
 SYN_FILES += rtl/eth_xcvr_phy_wrapper.v
 SYN_FILES += rtl/eth_xcvr_phy_quad_wrapper.v
@@ -51,7 +51,7 @@ SYN_FILES += lib/eth/lib/axis/rtl/axis_async_fifo_adapter.v
 SYN_FILES += lib/eth/lib/axis/rtl/sync_reset.v
 
 # XDC files
-XDC_FILES = fpga.xdc
+XDC_FILES = fpga_au50.xdc
 XDC_FILES += lib/eth/syn/vivado/eth_mac_fifo.tcl
 XDC_FILES += lib/eth/lib/axis/syn/vivado/axis_async_fifo.tcl
 XDC_FILES += lib/eth/lib/axis/syn/vivado/sync_reset.tcl

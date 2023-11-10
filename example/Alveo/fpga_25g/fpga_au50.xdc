@@ -37,17 +37,17 @@ set_false_path -to [get_ports {qsfp_led_act qsfp_led_stat_g qsfp_led_stat_y}]
 set_output_delay 0 [get_ports {qsfp_led_act qsfp_led_stat_g qsfp_led_stat_y}]
 
 # UART
-#set_property -dict {LOC BE26 IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 8} [get_ports usb_uart0_txd]
-#set_property -dict {LOC BF26 IOSTANDARD LVCMOS18} [get_ports usb_uart0_rxd]
-#set_property -dict {LOC A17  IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 8} [get_ports usb_uart1_txd]
-#set_property -dict {LOC B15  IOSTANDARD LVCMOS18} [get_ports usb_uart1_rxd]
-#set_property -dict {LOC A19  IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 8} [get_ports usb_uart2_txd]
-#set_property -dict {LOC A18  IOSTANDARD LVCMOS18} [get_ports usb_uart2_rxd]
+set_property -dict {LOC BE26 IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 8} [get_ports {uart_txd[0]}]
+set_property -dict {LOC BF26 IOSTANDARD LVCMOS18} [get_ports {uart_rxd[0]}]
+set_property -dict {LOC A17  IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 8} [get_ports {uart_txd[1]}]
+set_property -dict {LOC B15  IOSTANDARD LVCMOS18} [get_ports {uart_rxd[1]}]
+set_property -dict {LOC A19  IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 8} [get_ports {uart_txd[2]}]
+set_property -dict {LOC A18  IOSTANDARD LVCMOS18} [get_ports {uart_rxd[2]}]
 
-#set_false_path -to [get_ports {usb_uart0_txd usb_uart1_txd usb_uart2_txd}]
-#set_output_delay 0 [get_ports {usb_uart0_txd usb_uart1_txd usb_uart2_txd}]
-#set_false_path -from [get_ports {usb_uart0_rxd usb_uart1_rxd usb_uart2_rxd}]
-#set_input_delay 0 [get_ports {usb_uart0_rxd usb_uart1_rxd usb_uart2_rxd}]
+#set_false_path -to [get_ports {uart_txd[*]}]
+#set_output_delay 0 [get_ports {uart_txd[*]}]
+#set_false_path -from [get_ports {uart_rxd[*]}]
+#set_input_delay 0 [get_ports {uart_rxd[*]}]
 
 # BMC
 #set_property -dict {LOC C16  IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 4} [get_ports {msp_gpio[0]}]

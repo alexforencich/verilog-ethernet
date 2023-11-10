@@ -31,26 +31,37 @@ THE SOFTWARE.
 /*
  * FPGA top-level module
  */
-module fpga (
+module fpga #
+(
+    parameter QSFP_CNT = 1,
+    parameter UART_CNT = 3
+)
+(
     /*
      * GPIO
      */
-    output wire       qsfp_led_act,
-    output wire       qsfp_led_stat_g,
-    output wire       qsfp_led_stat_y,
-    output wire       hbm_cattrip,
+    output wire [QSFP_CNT-1:0]  qsfp_led_act,
+    output wire [QSFP_CNT-1:0]  qsfp_led_stat_g,
+    output wire [QSFP_CNT-1:0]  qsfp_led_stat_y,
+    output wire                 hbm_cattrip,
+
+    /*
+     * UART
+     */
+    output wire [UART_CNT-1:0]  uart_txd,
+    input  wire [UART_CNT-1:0]  uart_rxd,
 
     /*
      * Ethernet: QSFP28
      */
-    output wire [3:0] qsfp_tx_p,
-    output wire [3:0] qsfp_tx_n,
-    input  wire [3:0] qsfp_rx_p,
-    input  wire [3:0] qsfp_rx_n,
-    input  wire       qsfp_mgt_refclk_0_p,
-    input  wire       qsfp_mgt_refclk_0_n
-    // input  wire       qsfp_mgt_refclk_1_p,
-    // input  wire       qsfp_mgt_refclk_1_n
+    output wire [3:0]           qsfp_tx_p,
+    output wire [3:0]           qsfp_tx_n,
+    input  wire [3:0]           qsfp_rx_p,
+    input  wire [3:0]           qsfp_rx_n,
+    input  wire                 qsfp_mgt_refclk_0_p,
+    input  wire                 qsfp_mgt_refclk_0_n
+    // input  wire                 qsfp_mgt_refclk_1_p,
+    // input  wire                 qsfp_mgt_refclk_1_n
 );
 
 // Clock and reset
@@ -147,41 +158,19 @@ sync_reset_125mhz_inst (
 assign hbm_cattrip = 1'b0;
 
 // XGMII 10G PHY
-wire        qsfp_tx_clk_1_int;
-wire        qsfp_tx_rst_1_int;
-wire [63:0] qsfp_txd_1_int;
-wire [7:0]  qsfp_txc_1_int;
-wire        qsfp_rx_clk_1_int;
-wire        qsfp_rx_rst_1_int;
-wire [63:0] qsfp_rxd_1_int;
-wire [7:0]  qsfp_rxc_1_int;
-wire        qsfp_tx_clk_2_int;
-wire        qsfp_tx_rst_2_int;
-wire [63:0] qsfp_txd_2_int;
-wire [7:0]  qsfp_txc_2_int;
-wire        qsfp_rx_clk_2_int;
-wire        qsfp_rx_rst_2_int;
-wire [63:0] qsfp_rxd_2_int;
-wire [7:0]  qsfp_rxc_2_int;
-wire        qsfp_tx_clk_3_int;
-wire        qsfp_tx_rst_3_int;
-wire [63:0] qsfp_txd_3_int;
-wire [7:0]  qsfp_txc_3_int;
-wire        qsfp_rx_clk_3_int;
-wire        qsfp_rx_rst_3_int;
-wire [63:0] qsfp_rxd_3_int;
-wire [7:0]  qsfp_rxc_3_int;
-wire        qsfp_tx_clk_4_int;
-wire        qsfp_tx_rst_4_int;
-wire [63:0] qsfp_txd_4_int;
-wire [7:0]  qsfp_txc_4_int;
-wire        qsfp_rx_clk_4_int;
-wire        qsfp_rx_rst_4_int;
-wire [63:0] qsfp_rxd_4_int;
-wire [7:0]  qsfp_rxc_4_int;
+localparam CH_CNT = QSFP_CNT*4;
 
-assign clk_156mhz_int = qsfp_tx_clk_1_int;
-assign rst_156mhz_int = qsfp_tx_rst_1_int;
+wire [CH_CNT-1:0]     eth_tx_clk;
+wire [CH_CNT-1:0]     eth_tx_rst;
+wire [CH_CNT*64-1:0]  eth_txd;
+wire [CH_CNT*8-1:0]   eth_txc;
+wire [CH_CNT-1:0]     eth_rx_clk;
+wire [CH_CNT-1:0]     eth_rx_rst;
+wire [CH_CNT*64-1:0]  eth_rxd;
+wire [CH_CNT*8-1:0]   eth_rxc;
+
+assign clk_156mhz_int = eth_tx_clk[0];
+assign rst_156mhz_int = eth_tx_rst[0];
 
 wire qsfp_rx_block_lock_1;
 wire qsfp_rx_block_lock_2;
@@ -244,14 +233,14 @@ qsfp_phy_inst (
     /*
      * PHY connections
      */
-    .phy_1_tx_clk(qsfp_tx_clk_1_int),
-    .phy_1_tx_rst(qsfp_tx_rst_1_int),
-    .phy_1_xgmii_txd(qsfp_txd_1_int),
-    .phy_1_xgmii_txc(qsfp_txc_1_int),
-    .phy_1_rx_clk(qsfp_rx_clk_1_int),
-    .phy_1_rx_rst(qsfp_rx_rst_1_int),
-    .phy_1_xgmii_rxd(qsfp_rxd_1_int),
-    .phy_1_xgmii_rxc(qsfp_rxc_1_int),
+    .phy_1_tx_clk(eth_tx_clk[0*4+0 +: 1]),
+    .phy_1_tx_rst(eth_tx_rst[0*4+0 +: 1]),
+    .phy_1_xgmii_txd(eth_txd[(0*4+0)*64 +: 64]),
+    .phy_1_xgmii_txc(eth_txc[(0*4+0)*8 +: 8]),
+    .phy_1_rx_clk(eth_rx_clk[0*4+0 +: 1]),
+    .phy_1_rx_rst(eth_rx_rst[0*4+0 +: 1]),
+    .phy_1_xgmii_rxd(eth_rxd[(0*4+0)*64 +: 64]),
+    .phy_1_xgmii_rxc(eth_rxc[(0*4+0)*8 +: 8]),
     .phy_1_tx_bad_block(),
     .phy_1_rx_error_count(),
     .phy_1_rx_bad_block(),
@@ -261,14 +250,14 @@ qsfp_phy_inst (
     .phy_1_cfg_tx_prbs31_enable(1'b0),
     .phy_1_cfg_rx_prbs31_enable(1'b0),
 
-    .phy_2_tx_clk(qsfp_tx_clk_2_int),
-    .phy_2_tx_rst(qsfp_tx_rst_2_int),
-    .phy_2_xgmii_txd(qsfp_txd_2_int),
-    .phy_2_xgmii_txc(qsfp_txc_2_int),
-    .phy_2_rx_clk(qsfp_rx_clk_2_int),
-    .phy_2_rx_rst(qsfp_rx_rst_2_int),
-    .phy_2_xgmii_rxd(qsfp_rxd_2_int),
-    .phy_2_xgmii_rxc(qsfp_rxc_2_int),
+    .phy_2_tx_clk(eth_tx_clk[0*4+1 +: 1]),
+    .phy_2_tx_rst(eth_tx_rst[0*4+1 +: 1]),
+    .phy_2_xgmii_txd(eth_txd[(0*4+1)*64 +: 64]),
+    .phy_2_xgmii_txc(eth_txc[(0*4+1)*8 +: 8]),
+    .phy_2_rx_clk(eth_rx_clk[0*4+1 +: 1]),
+    .phy_2_rx_rst(eth_rx_rst[0*4+1 +: 1]),
+    .phy_2_xgmii_rxd(eth_rxd[(0*4+1)*64 +: 64]),
+    .phy_2_xgmii_rxc(eth_rxc[(0*4+1)*8 +: 8]),
     .phy_2_tx_bad_block(),
     .phy_2_rx_error_count(),
     .phy_2_rx_bad_block(),
@@ -278,14 +267,14 @@ qsfp_phy_inst (
     .phy_2_cfg_tx_prbs31_enable(1'b0),
     .phy_2_cfg_rx_prbs31_enable(1'b0),
 
-    .phy_3_tx_clk(qsfp_tx_clk_3_int),
-    .phy_3_tx_rst(qsfp_tx_rst_3_int),
-    .phy_3_xgmii_txd(qsfp_txd_3_int),
-    .phy_3_xgmii_txc(qsfp_txc_3_int),
-    .phy_3_rx_clk(qsfp_rx_clk_3_int),
-    .phy_3_rx_rst(qsfp_rx_rst_3_int),
-    .phy_3_xgmii_rxd(qsfp_rxd_3_int),
-    .phy_3_xgmii_rxc(qsfp_rxc_3_int),
+    .phy_3_tx_clk(eth_tx_clk[0*4+2 +: 1]),
+    .phy_3_tx_rst(eth_tx_rst[0*4+2 +: 1]),
+    .phy_3_xgmii_txd(eth_txd[(0*4+2)*64 +: 64]),
+    .phy_3_xgmii_txc(eth_txc[(0*4+2)*8 +: 8]),
+    .phy_3_rx_clk(eth_rx_clk[0*4+2 +: 1]),
+    .phy_3_rx_rst(eth_rx_rst[0*4+2 +: 1]),
+    .phy_3_xgmii_rxd(eth_rxd[(0*4+2)*64 +: 64]),
+    .phy_3_xgmii_rxc(eth_rxc[(0*4+2)*8 +: 8]),
     .phy_3_tx_bad_block(),
     .phy_3_rx_error_count(),
     .phy_3_rx_bad_block(),
@@ -295,14 +284,14 @@ qsfp_phy_inst (
     .phy_3_cfg_tx_prbs31_enable(1'b0),
     .phy_3_cfg_rx_prbs31_enable(1'b0),
 
-    .phy_4_tx_clk(qsfp_tx_clk_4_int),
-    .phy_4_tx_rst(qsfp_tx_rst_4_int),
-    .phy_4_xgmii_txd(qsfp_txd_4_int),
-    .phy_4_xgmii_txc(qsfp_txc_4_int),
-    .phy_4_rx_clk(qsfp_rx_clk_4_int),
-    .phy_4_rx_rst(qsfp_rx_rst_4_int),
-    .phy_4_xgmii_rxd(qsfp_rxd_4_int),
-    .phy_4_xgmii_rxc(qsfp_rxc_4_int),
+    .phy_4_tx_clk(eth_tx_clk[0*4+3 +: 1]),
+    .phy_4_tx_rst(eth_tx_rst[0*4+3 +: 1]),
+    .phy_4_xgmii_txd(eth_txd[(0*4+3)*64 +: 64]),
+    .phy_4_xgmii_txc(eth_txc[(0*4+3)*8 +: 8]),
+    .phy_4_rx_clk(eth_rx_clk[0*4+3 +: 1]),
+    .phy_4_rx_rst(eth_rx_rst[0*4+3 +: 1]),
+    .phy_4_xgmii_rxd(eth_rxd[(0*4+3)*64 +: 64]),
+    .phy_4_xgmii_rxc(eth_rxc[(0*4+3)*8 +: 8]),
     .phy_4_tx_bad_block(),
     .phy_4_rx_error_count(),
     .phy_4_rx_bad_block(),
@@ -313,7 +302,11 @@ qsfp_phy_inst (
     .phy_4_cfg_rx_prbs31_enable(1'b0)
 );
 
-fpga_core
+fpga_core #(
+    .UART_CNT(UART_CNT),
+    .QSFP_CNT(QSFP_CNT),
+    .CH_CNT(CH_CNT)
+)
 core_inst (
     /*
      * Clock: 156.25 MHz
@@ -321,47 +314,33 @@ core_inst (
      */
     .clk(clk_156mhz_int),
     .rst(rst_156mhz_int),
+
     /*
      * GPIO
      */
+    .sw(0),
+    .led(),
     .qsfp_led_act(qsfp_led_act),
     .qsfp_led_stat_g(qsfp_led_stat_g),
     .qsfp_led_stat_y(qsfp_led_stat_y),
+
+    /*
+     * UART
+     */
+    .uart_txd(uart_txd),
+    .uart_rxd(uart_rxd),
+
     /*
      * Ethernet: QSFP28
      */
-    .qsfp_tx_clk_1(qsfp_tx_clk_1_int),
-    .qsfp_tx_rst_1(qsfp_tx_rst_1_int),
-    .qsfp_txd_1(qsfp_txd_1_int),
-    .qsfp_txc_1(qsfp_txc_1_int),
-    .qsfp_rx_clk_1(qsfp_rx_clk_1_int),
-    .qsfp_rx_rst_1(qsfp_rx_rst_1_int),
-    .qsfp_rxd_1(qsfp_rxd_1_int),
-    .qsfp_rxc_1(qsfp_rxc_1_int),
-    .qsfp_tx_clk_2(qsfp_tx_clk_2_int),
-    .qsfp_tx_rst_2(qsfp_tx_rst_2_int),
-    .qsfp_txd_2(qsfp_txd_2_int),
-    .qsfp_txc_2(qsfp_txc_2_int),
-    .qsfp_rx_clk_2(qsfp_rx_clk_2_int),
-    .qsfp_rx_rst_2(qsfp_rx_rst_2_int),
-    .qsfp_rxd_2(qsfp_rxd_2_int),
-    .qsfp_rxc_2(qsfp_rxc_2_int),
-    .qsfp_tx_clk_3(qsfp_tx_clk_3_int),
-    .qsfp_tx_rst_3(qsfp_tx_rst_3_int),
-    .qsfp_txd_3(qsfp_txd_3_int),
-    .qsfp_txc_3(qsfp_txc_3_int),
-    .qsfp_rx_clk_3(qsfp_rx_clk_3_int),
-    .qsfp_rx_rst_3(qsfp_rx_rst_3_int),
-    .qsfp_rxd_3(qsfp_rxd_3_int),
-    .qsfp_rxc_3(qsfp_rxc_3_int),
-    .qsfp_tx_clk_4(qsfp_tx_clk_4_int),
-    .qsfp_tx_rst_4(qsfp_tx_rst_4_int),
-    .qsfp_txd_4(qsfp_txd_4_int),
-    .qsfp_txc_4(qsfp_txc_4_int),
-    .qsfp_rx_clk_4(qsfp_rx_clk_4_int),
-    .qsfp_rx_rst_4(qsfp_rx_rst_4_int),
-    .qsfp_rxd_4(qsfp_rxd_4_int),
-    .qsfp_rxc_4(qsfp_rxc_4_int)
+    .eth_tx_clk(eth_tx_clk),
+    .eth_tx_rst(eth_tx_rst),
+    .eth_txd(eth_txd),
+    .eth_txc(eth_txc),
+    .eth_rx_clk(eth_rx_clk),
+    .eth_rx_rst(eth_rx_rst),
+    .eth_rxd(eth_rxd),
+    .eth_rxc(eth_rxc)
 );
 
 endmodule

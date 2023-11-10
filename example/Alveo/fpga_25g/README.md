@@ -7,6 +7,7 @@ This design targets multiple FPGA boards, including most of the Xilinx Alveo lin
 The design by default listens to UDP port 1234 at IP address 192.168.1.128 and will echo back any packets received.  The design will also respond correctly to ARP requests.
 
 * FPGA
+  * AU50: xcu50-fsvh2104-2-e
   * AU200: xcu200-fsgd2104-2-e
   * AU250: xcu250-fsgd2104-2-e
   * AU280: xcu280-fsvh2892-2L-e
