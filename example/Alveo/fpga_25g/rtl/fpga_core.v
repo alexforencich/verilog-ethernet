@@ -33,95 +33,46 @@ THE SOFTWARE.
  */
 module fpga_core #
 (
-    parameter TARGET = "XILINX"
+    parameter SW_CNT = 4,
+    parameter LED_CNT = 3,
+    parameter UART_CNT = 1,
+    parameter QSFP_CNT = 2,
+    parameter CH_CNT = QSFP_CNT*4
 )
 (
     /*
      * Clock: 156.25MHz
      * Synchronous reset
      */
-    input  wire       clk,
-    input  wire       rst,
+    input  wire                  clk,
+    input  wire                  rst,
 
     /*
      * GPIO
      */
-    input  wire [3:0] sw,
-    output wire [2:0] led,
+    input  wire [SW_CNT-1:0]     sw,
+    output wire [LED_CNT-1:0]    led,
+    output wire [QSFP_CNT-1:0]   qsfp_led_act,
+    output wire [QSFP_CNT-1:0]   qsfp_led_stat_g,
+    output wire [QSFP_CNT-1:0]   qsfp_led_stat_y,
 
     /*
-     * Ethernet: QSFP28
+     * UART
      */
-    input  wire        qsfp0_tx_clk_1,
-    input  wire        qsfp0_tx_rst_1,
-    output wire [63:0] qsfp0_txd_1,
-    output wire [7:0]  qsfp0_txc_1,
-    input  wire        qsfp0_rx_clk_1,
-    input  wire        qsfp0_rx_rst_1,
-    input  wire [63:0] qsfp0_rxd_1,
-    input  wire [7:0]  qsfp0_rxc_1,
-    input  wire        qsfp0_tx_clk_2,
-    input  wire        qsfp0_tx_rst_2,
-    output wire [63:0] qsfp0_txd_2,
-    output wire [7:0]  qsfp0_txc_2,
-    input  wire        qsfp0_rx_clk_2,
-    input  wire        qsfp0_rx_rst_2,
-    input  wire [63:0] qsfp0_rxd_2,
-    input  wire [7:0]  qsfp0_rxc_2,
-    input  wire        qsfp0_tx_clk_3,
-    input  wire        qsfp0_tx_rst_3,
-    output wire [63:0] qsfp0_txd_3,
-    output wire [7:0]  qsfp0_txc_3,
-    input  wire        qsfp0_rx_clk_3,
-    input  wire        qsfp0_rx_rst_3,
-    input  wire [63:0] qsfp0_rxd_3,
-    input  wire [7:0]  qsfp0_rxc_3,
-    input  wire        qsfp0_tx_clk_4,
-    input  wire        qsfp0_tx_rst_4,
-    output wire [63:0] qsfp0_txd_4,
-    output wire [7:0]  qsfp0_txc_4,
-    input  wire        qsfp0_rx_clk_4,
-    input  wire        qsfp0_rx_rst_4,
-    input  wire [63:0] qsfp0_rxd_4,
-    input  wire [7:0]  qsfp0_rxc_4,
-    input  wire        qsfp1_tx_clk_1,
-    input  wire        qsfp1_tx_rst_1,
-    output wire [63:0] qsfp1_txd_1,
-    output wire [7:0]  qsfp1_txc_1,
-    input  wire        qsfp1_rx_clk_1,
-    input  wire        qsfp1_rx_rst_1,
-    input  wire [63:0] qsfp1_rxd_1,
-    input  wire [7:0]  qsfp1_rxc_1,
-    input  wire        qsfp1_tx_clk_2,
-    input  wire        qsfp1_tx_rst_2,
-    output wire [63:0] qsfp1_txd_2,
-    output wire [7:0]  qsfp1_txc_2,
-    input  wire        qsfp1_rx_clk_2,
-    input  wire        qsfp1_rx_rst_2,
-    input  wire [63:0] qsfp1_rxd_2,
-    input  wire [7:0]  qsfp1_rxc_2,
-    input  wire        qsfp1_tx_clk_3,
-    input  wire        qsfp1_tx_rst_3,
-    output wire [63:0] qsfp1_txd_3,
-    output wire [7:0]  qsfp1_txc_3,
-    input  wire        qsfp1_rx_clk_3,
-    input  wire        qsfp1_rx_rst_3,
-    input  wire [63:0] qsfp1_rxd_3,
-    input  wire [7:0]  qsfp1_rxc_3,
-    input  wire        qsfp1_tx_clk_4,
-    input  wire        qsfp1_tx_rst_4,
-    output wire [63:0] qsfp1_txd_4,
-    output wire [7:0]  qsfp1_txc_4,
-    input  wire        qsfp1_rx_clk_4,
-    input  wire        qsfp1_rx_rst_4,
-    input  wire [63:0] qsfp1_rxd_4,
-    input  wire [7:0]  qsfp1_rxc_4,
+    output wire [UART_CNT-1:0]   uart_txd,
+    input  wire [UART_CNT-1:0]   uart_rxd,
 
     /*
-     * UART: 115200 bps, 8N1
+     * Ethernet
      */
-    output wire       uart_rxd,
-    input  wire       uart_txd
+    input  wire [CH_CNT-1:0]     eth_tx_clk,
+    input  wire [CH_CNT-1:0]     eth_tx_rst,
+    output wire [CH_CNT*64-1:0]  eth_txd,
+    output wire [CH_CNT*8-1:0]   eth_txc,
+    input  wire [CH_CNT-1:0]     eth_rx_clk,
+    input  wire [CH_CNT-1:0]     eth_rx_rst,
+    input  wire [CH_CNT*64-1:0]  eth_rxd,
+    input  wire [CH_CNT*8-1:0]   eth_rxc
 );
 
 // AXI between MAC and Ethernet modules
@@ -361,21 +312,18 @@ end
 //assign led = sw;
 assign led = led_reg;
 
-assign qsfp0_txd_2 = 64'h0707070707070707;
-assign qsfp0_txc_2 = 8'hff;
-assign qsfp0_txd_3 = 64'h0707070707070707;
-assign qsfp0_txc_3 = 8'hff;
-assign qsfp0_txd_4 = 64'h0707070707070707;
-assign qsfp0_txc_4 = 8'hff;
+assign uart_txd = uart_rxd;
 
-assign qsfp1_txd_1 = 64'h0707070707070707;
-assign qsfp1_txc_1 = 8'hff;
-assign qsfp1_txd_2 = 64'h0707070707070707;
-assign qsfp1_txc_2 = 8'hff;
-assign qsfp1_txd_3 = 64'h0707070707070707;
-assign qsfp1_txc_3 = 8'hff;
-assign qsfp1_txd_4 = 64'h0707070707070707;
-assign qsfp1_txc_4 = 8'hff;
+generate
+
+genvar n;
+
+for (n = 1; n < CH_CNT; n = n + 1) begin
+    assign eth_txd[n*64 +: 64] = 64'h0707070707070707;
+    assign eth_txc[n*8 +: 8] = 8'hff;
+end
+
+endgenerate
 
 eth_mac_10g_fifo #(
     .ENABLE_PADDING(1),
@@ -387,10 +335,10 @@ eth_mac_10g_fifo #(
     .RX_FRAME_FIFO(1)
 )
 eth_mac_10g_fifo_inst (
-    .rx_clk(qsfp0_rx_clk_1),
-    .rx_rst(qsfp0_rx_rst_1),
-    .tx_clk(qsfp0_tx_clk_1),
-    .tx_rst(qsfp0_tx_rst_1),
+    .rx_clk(eth_rx_clk[0 +: 1]),
+    .rx_rst(eth_rx_rst[0 +: 1]),
+    .tx_clk(eth_tx_clk[0 +: 1]),
+    .tx_rst(eth_tx_rst[0 +: 1]),
     .logic_clk(clk),
     .logic_rst(rst),
 
@@ -408,10 +356,10 @@ eth_mac_10g_fifo_inst (
     .rx_axis_tlast(rx_axis_tlast),
     .rx_axis_tuser(rx_axis_tuser),
 
-    .xgmii_rxd(qsfp0_rxd_1),
-    .xgmii_rxc(qsfp0_rxc_1),
-    .xgmii_txd(qsfp0_txd_1),
-    .xgmii_txc(qsfp0_txc_1),
+    .xgmii_rxd(eth_rxd[0*64 +: 64]),
+    .xgmii_rxc(eth_rxc[0*8 +: 8]),
+    .xgmii_txd(eth_txd[0*64 +: 64]),
+    .xgmii_txc(eth_txc[0*8 +: 8]),
 
     .tx_fifo_overflow(),
     .tx_fifo_bad_frame(),

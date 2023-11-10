@@ -27,8 +27,9 @@ COCOTB_HDL_TIMEUNIT = 1ns
 COCOTB_HDL_TIMEPRECISION = 1ps
 
 DUT      = fpga_core
-TOPLEVEL = $(DUT)
+TOPLEVEL = test_$(DUT)
 MODULE   = test_$(DUT)
+VERILOG_SOURCES += $(TOPLEVEL).v
 VERILOG_SOURCES += ../../rtl/$(DUT).v
 VERILOG_SOURCES += ../../lib/eth/rtl/eth_mac_10g_fifo.v
 VERILOG_SOURCES += ../../lib/eth/rtl/eth_mac_10g.v
@@ -59,12 +60,16 @@ VERILOG_SOURCES += ../../lib/eth/lib/axis/rtl/axis_async_fifo.v
 VERILOG_SOURCES += ../../lib/eth/lib/axis/rtl/axis_async_fifo_adapter.v
 
 # module parameters
-#export PARAM_A := value
+export PARAM_SW_CNT := 4
+export PARAM_LED_CNT := 3
+export PARAM_UART_CNT := 1
+export PARAM_QSFP_CNT := 2
+export PARAM_CH_CNT := $(shell expr $(PARAM_QSFP_CNT) \* 4)
 
 ifeq ($(SIM), icarus)
 	PLUSARGS += -fst
 
-#	COMPILE_ARGS += -P $(TOPLEVEL).A=$(PARAM_A)
+	COMPILE_ARGS += $(foreach v,$(filter PARAM_%,$(.VARIABLES)),-P $(TOPLEVEL).$(subst PARAM_,,$(v))=$($(v)))
 
 	ifeq ($(WAVES), 1)
 		VERILOG_SOURCES += iverilog_dump.v
@@ -73,7 +78,7 @@ ifeq ($(SIM), icarus)
 else ifeq ($(SIM), verilator)
 	COMPILE_ARGS += -Wno-SELRANGE -Wno-WIDTH
 
-#	COMPILE_ARGS += -GA=$(PARAM_A)
+	COMPILE_ARGS += $(foreach v,$(filter PARAM_%,$(.VARIABLES)),-G$(subst PARAM_,,$(v))=$($(v)))
 
 	ifeq ($(WAVES), 1)
 		COMPILE_ARGS += --trace-fst

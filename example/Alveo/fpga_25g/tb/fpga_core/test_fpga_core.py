@@ -48,49 +48,39 @@ class TB:
         cocotb.start_soon(Clock(dut.clk, 2.56, units="ns").start())
 
         # Ethernet
-        self.qsfp_source = []
-        self.qsfp_sink = []
+        self.ch_source = []
+        self.ch_sink = []
 
-        for x in range(2):
-            sources = []
-            sinks = []
-            for y in range(1, 5):
-                cocotb.start_soon(Clock(getattr(dut, f"qsfp{x}_rx_clk_{y}"), 2.56, units="ns").start())
-                source = XgmiiSource(getattr(dut, f"qsfp{x}_rxd_{y}"), getattr(dut, f"qsfp{x}_rxc_{y}"), getattr(dut, f"qsfp{x}_rx_clk_{y}"), getattr(dut, f"qsfp{x}_rx_rst_{y}"))
-                sources.append(source)
-                cocotb.start_soon(Clock(getattr(dut, f"qsfp{x}_tx_clk_{y}"), 2.56, units="ns").start())
-                sink = XgmiiSink(getattr(dut, f"qsfp{x}_txd_{y}"), getattr(dut, f"qsfp{x}_txc_{y}"), getattr(dut, f"qsfp{x}_tx_clk_{y}"), getattr(dut, f"qsfp{x}_tx_rst_{y}"))
-                sinks.append(sink)
-            self.qsfp_source.append(sources)
-            self.qsfp_sink.append(sinks)
-
-        dut.sw.setimmediatevalue(0)
+        for ch in self.dut.ch:
+            cocotb.start_soon(Clock(ch.ch_rx_clk, 2.56, units="ns").start())
+            source = XgmiiSource(ch.ch_rxd, ch.ch_rxc, ch.ch_rx_clk, ch.ch_rx_rst)
+            self.ch_source.append(source)
+            cocotb.start_soon(Clock(ch.ch_tx_clk, 2.56, units="ns").start())
+            sink = XgmiiSink(ch.ch_txd, ch.ch_txc, ch.ch_tx_clk, ch.ch_tx_rst)
+            self.ch_sink.append(sink)
 
     async def init(self):
 
         self.dut.rst.setimmediatevalue(0)
-        for x in range(2):
-            for y in range(1, 5):
-                getattr(self.dut, f"qsfp{x}_rx_rst_{y}").setimmediatevalue(0)
-                getattr(self.dut, f"qsfp{x}_tx_rst_{y}").setimmediatevalue(0)
+        for ch in self.dut.ch:
+            ch.ch_rx_rst.setimmediatevalue(0)
+            ch.ch_tx_rst.setimmediatevalue(0)
 
         for k in range(10):
             await RisingEdge(self.dut.clk)
 
         self.dut.rst.value = 1
-        for x in range(2):
-            for y in range(1, 5):
-                getattr(self.dut, f"qsfp{x}_rx_rst_{y}").value = 1
-                getattr(self.dut, f"qsfp{x}_tx_rst_{y}").value = 1
+        for ch in self.dut.ch:
+            ch.ch_rx_rst.value = 1
+            ch.ch_tx_rst.value = 1
 
         for k in range(10):
             await RisingEdge(self.dut.clk)
 
         self.dut.rst.value = 0
-        for x in range(2):
-            for y in range(1, 5):
-                getattr(self.dut, f"qsfp{x}_rx_rst_{y}").value = 0
-                getattr(self.dut, f"qsfp{x}_tx_rst_{y}").value = 0
+        for ch in self.dut.ch:
+            ch.ch_rx_rst.value = 0
+            ch.ch_tx_rst.value = 0
 
 
 @cocotb.test()
@@ -110,11 +100,11 @@ async def run_test(dut):
 
     test_frame = XgmiiFrame.from_payload(test_pkt.build())
 
-    await tb.qsfp_source[0][0].send(test_frame)
+    await tb.ch_source[0].send(test_frame)
 
     tb.log.info("receive ARP request")
 
-    rx_frame = await tb.qsfp_sink[0][0].recv()
+    rx_frame = await tb.ch_sink[0].recv()
 
     rx_pkt = Ether(bytes(rx_frame.get_payload()))
 
@@ -142,11 +132,11 @@ async def run_test(dut):
 
     resp_frame = XgmiiFrame.from_payload(resp_pkt.build())
 
-    await tb.qsfp_source[0][0].send(resp_frame)
+    await tb.ch_source[0].send(resp_frame)
 
     tb.log.info("receive UDP packet")
 
-    rx_frame = await tb.qsfp_sink[0][0].recv()
+    rx_frame = await tb.ch_sink[0].recv()
 
     rx_pkt = Ether(bytes(rx_frame.get_payload()))
 
@@ -176,9 +166,10 @@ eth_rtl_dir = os.path.abspath(os.path.join(lib_dir, 'eth', 'rtl'))
 def test_fpga_core(request):
     dut = "fpga_core"
     module = os.path.splitext(os.path.basename(__file__))[0]
-    toplevel = dut
+    toplevel = "test_fpga_core"
 
     verilog_sources = [
+        os.path.join(tests_dir, f"{toplevel}.v"),
         os.path.join(rtl_dir, f"{dut}.v"),
         os.path.join(eth_rtl_dir, "eth_mac_10g_fifo.v"),
         os.path.join(eth_rtl_dir, "eth_mac_10g.v"),
@@ -211,7 +202,11 @@ def test_fpga_core(request):
 
     parameters = {}
 
-    # parameters['A'] = val
+    parameters['SW_CNT'] = 4
+    parameters['LED_CNT'] = 3
+    parameters['UART_CNT'] = 1
+    parameters['QSFP_CNT'] = 2
+    parameters['CH_CNT'] = parameters['QSFP_CNT']*4
 
     extra_env = {f'PARAM_{k}': str(v) for k, v in parameters.items()}
 
