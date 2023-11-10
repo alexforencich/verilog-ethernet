@@ -45,8 +45,8 @@ set_false_path -from [get_ports {reset}]
 set_input_delay 0 [get_ports {reset}]
 
 # UART
-#set_property -dict {LOC A28 IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 8} [get_ports usb_uart_txd]
-#set_property -dict {LOC B33 IOSTANDARD LVCMOS18} [get_ports usb_uart_rxd]
+set_property -dict {LOC A28 IOSTANDARD LVCMOS18 SLEW SLOW DRIVE 8} [get_ports uart_txd]
+set_property -dict {LOC B33 IOSTANDARD LVCMOS18} [get_ports uart_rxd]
 
 #set_false_path -to [get_ports {uart_txd}]
 #set_output_delay 0 [get_ports {uart_txd}]

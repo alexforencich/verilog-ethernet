@@ -9,6 +9,7 @@ The design by default listens to UDP port 1234 at IP address 192.168.1.128 and w
 * FPGA
   * AU200: xcu200-fsgd2104-2-e
   * AU250: xcu250-fsgd2104-2-e
+  * AU280: xcu280-fsvh2892-2L-e
   * VCU1525: xcvu9p-fsgd2104-2L-e
 * PHY: 10G BASE-R PHY IP core and internal GTY transceiver
 
