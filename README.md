@@ -55,6 +55,8 @@ following boards:
 *  Intel Stratix 10 DX dev kit (Intel Stratix 10 DX 1SD280PT2F55E1VG)
 *  Intel Stratix 10 MX dev kit (Intel Stratix 10 MX 1SM21CHU1F53E1VG)
 *  Xilinx Alveo U50 (Xilinx Virtex UltraScale+ XCU50)
+*  Xilinx Alveo U55C (Xilinx Virtex UltraScale+ XCU55C)
+*  Xilinx Alveo U55N/Varium C1100 (Xilinx Virtex UltraScale+ XCU55N)
 *  Xilinx Alveo U200 (Xilinx Virtex UltraScale+ XCU200)
 *  Xilinx Alveo U250 (Xilinx Virtex UltraScale+ XCU250)
 *  Xilinx Alveo U280 (Xilinx Virtex UltraScale+ XCU280)
