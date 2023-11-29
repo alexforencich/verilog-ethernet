@@ -35,6 +35,11 @@ create_clock -period 8.000 -name clk_125mhz [get_ports clk_125mhz_p]
 #set_property -dict {LOC AL20 IOSTANDARD LVCMOS18} [get_ports clk_90mhz]
 #create_clock -period 11.111 -name clk_90mhz [get_ports clk_90mhz]
 
+# User SMA clock J34/J35
+#set_property -dict {LOC R32 IOSTANDARD LVDS} [get_ports user_sma_clk_p]
+#set_property -dict {LOC P32 IOSTANDARD LVDS} [get_ports user_sma_clk_n]
+#create_clock -period 8.000 -name user_sma_clk [get_ports user_sma_clk_p]
+
 # LEDs
 set_property -dict {LOC AT32 IOSTANDARD LVCMOS12 SLEW SLOW DRIVE 8} [get_ports {led[0]}]
 set_property -dict {LOC AV34 IOSTANDARD LVCMOS12 SLEW SLOW DRIVE 8} [get_ports {led[1]}]
