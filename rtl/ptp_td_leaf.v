@@ -533,14 +533,11 @@ always @(posedge clk) begin
         dst_load_cnt_reg <= dst_load_cnt_reg + 1;
     end
 
-    ts_sync_valid_reg <= 1'b0;
-
     if (src_sync_sync2_reg ^ src_sync_sync3_reg) begin
         // store captured source TS
         src_ns_sync_reg <= src_ns_reg >> (SRC_FNS_W-CMP_FNS_W);
 
-        ts_sync_valid_reg <= ts_capt_valid_reg;
-        ts_capt_valid_reg <= 1'b0;
+        ts_sync_valid_reg <= 1'b1;
     end
 
     if (src_marker_sync2_reg ^ src_marker_sync3_reg) begin
@@ -548,8 +545,11 @@ always @(posedge clk) begin
     end
 
     phase_err_out_valid_reg <= 1'b0;
-    if (ts_sync_valid_reg) begin
+    if (ts_sync_valid_reg && ts_capt_valid_reg) begin
         // coarse phase locking
+
+        ts_sync_valid_reg <= 1'b0;
+        ts_capt_valid_reg <= 1'b0;
 
         // phase and frequency detector
         phase_last_src_reg <= src_ns_sync_reg[8+CMP_FNS_W];
@@ -827,7 +827,7 @@ always @* begin
         end
     end
 
-    if (ts_sync_valid_reg) begin
+    if (ts_sync_valid_reg && ts_capt_valid_reg) begin
         // compute difference
         ts_ns_diff_valid_next = freq_locked_reg;
         ts_ns_diff_next = src_ns_sync_reg - dst_ns_capt_reg;

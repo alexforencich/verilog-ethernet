@@ -491,8 +491,6 @@ always @(posedge output_clk) begin
         ts_capt_valid_reg <= 1'b1;
     end
 
-    ts_sync_valid_reg <= 1'b0;
-
     if (src_sync_sync2_reg ^ src_sync_sync3_reg) begin
         // store captured source TS
         if (TS_WIDTH == 96) begin
@@ -501,7 +499,11 @@ always @(posedge output_clk) begin
         src_ts_ns_sync_reg <= src_ts_ns_capt_reg;
         src_ts_step_sync_reg <= src_ts_step_capt_reg;
 
-        ts_sync_valid_reg <= ts_capt_valid_reg;
+        ts_sync_valid_reg <= 1'b1;
+    end
+
+    if (ts_sync_valid_reg && ts_capt_valid_reg) begin
+        ts_sync_valid_reg <= 1'b0;
         ts_capt_valid_reg <= 1'b0;
     end
 
@@ -595,7 +597,7 @@ always @* begin
         ts_ns_next = ts_ns_reg + period_ns_reg;
     end
 
-    if (ts_sync_valid_reg) begin
+    if (ts_sync_valid_reg && ts_capt_valid_reg) begin
         // Read new value
         if (TS_WIDTH == 96) begin
             if (src_ts_step_sync_reg || load_ts_reg) begin
