@@ -225,8 +225,6 @@ reg [PERIOD_NS_W+32-1:0] src_period_shadow_reg = 0;
 
 reg [9+SRC_FNS_W-1:0] src_ns_reg = 0;
 reg [9+32-1:0] src_ns_shadow_reg = 0;
-reg src_fns_shadow_valid_reg = 1'b0;
-reg src_ns_shadow_valid_reg = 1'b0;
 
 always @(posedge ptp_clk) begin
     src_load_reg <= 1'b0;
@@ -242,15 +240,12 @@ always @(posedge ptp_clk) begin
     if (td_tvalid_reg) begin
         if (td_tid_reg[3:0] == 4'd6) begin
             src_ns_shadow_reg[15:0] <= td_tdata_reg;
-            src_fns_shadow_valid_reg <= 1'b0;
         end
         if (td_tid_reg[3:0] == 4'd7) begin
             src_ns_shadow_reg[31:16] <= td_tdata_reg;
-            src_fns_shadow_valid_reg <= 1'b1;
         end
         if (td_tid_reg[3:0] == 4'd8) begin
             src_ns_shadow_reg[40:32] <= td_tdata_reg;
-            src_ns_shadow_valid_reg <= 1'b1;
         end
         if (td_tid_reg[3:0] == 4'd11) begin
             src_period_shadow_reg[15:0] <= td_tdata_reg;
@@ -264,11 +259,7 @@ always @(posedge ptp_clk) begin
     end
 
     if (src_load_reg) begin
-        if (src_ns_shadow_valid_reg && src_fns_shadow_valid_reg) begin
-            src_ns_reg <= src_ns_shadow_reg >> (32-SRC_FNS_W);
-        end
-        src_fns_shadow_valid_reg <= 1'b0;
-        src_ns_shadow_valid_reg <= 1'b0;
+        src_ns_reg <= src_ns_shadow_reg >> (32-SRC_FNS_W);
         src_period_reg <= src_period_shadow_reg;
         src_marker_reg <= !src_marker_reg;
     end
