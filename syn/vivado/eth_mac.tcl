@@ -20,8 +20,8 @@
 
 # Ethernet MAC timing constraints
 
-foreach inst [get_cells -hier -filter {(ORIG_REF_NAME == eth_mac_1g || REF_NAME == eth_mac_1g || \
-            ORIG_REF_NAME == eth_mac_10g || REF_NAME == eth_mac_10g)}] {
+foreach inst [get_cells -hier -regexp -filter {(ORIG_REF_NAME =~ "eth_mac_(1g|10g)(__\w+__\d+)?" ||
+        REF_NAME =~ "eth_mac_(1g|10g)(__\w+__\d+)?")}] {
     puts "Inserting timing constraints for Ethernet MAC instance $inst"
 
     set sync_ffs [get_cells -quiet -hier -regexp ".*/mac_ctrl.tx_lfc_req_sync_reg_\[1234\]_reg" -filter "PARENT == $inst"]

@@ -20,11 +20,12 @@
 
 # GMII PHY IF timing constraints
 
-foreach if_inst [get_cells -hier -filter {(ORIG_REF_NAME == gmii_phy_if || REF_NAME == gmii_phy_if)}] {
-    puts "Inserting timing constraints for gmii_phy_if instance $if_inst"
+foreach inst [get_cells -hier -regexp -filter {(ORIG_REF_NAME =~ "gmii_phy_if(__\w+__\d+)?" ||
+        REF_NAME =~ "gmii_phy_if(__\w+__\d+)?")}] {
+    puts "Inserting timing constraints for gmii_phy_if instance $inst"
 
     # reset synchronization
-    set reset_ffs [get_cells -hier -regexp ".*/(rx|tx)_rst_reg_reg\\\[\\d\\\]" -filter "PARENT == $if_inst"]
+    set reset_ffs [get_cells -hier -regexp ".*/(rx|tx)_rst_reg_reg\\\[\\d\\\]" -filter "PARENT == $inst"]
 
     set_property ASYNC_REG TRUE $reset_ffs
     set_false_path -to [get_pins -of_objects $reset_ffs -filter {IS_PRESET || IS_RESET}]

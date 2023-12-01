@@ -20,7 +20,8 @@
 
 # PTP time distribution leaf module
 
-foreach inst [get_cells -hier -filter {(ORIG_REF_NAME == ptp_td_leaf || REF_NAME == ptp_td_leaf)}] {
+foreach inst [get_cells -hier -regexp -filter {(ORIG_REF_NAME =~ "ptp_td_leaf(__\w+__\d+)?" ||
+        REF_NAME =~ "ptp_td_leaf(__\w+__\d+)?")}] {
     puts "Inserting timing constraints for ptp_td_leaf instance $inst"
 
     # get clock periods

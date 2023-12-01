@@ -20,7 +20,8 @@
 
 # PTP timestamp capture module
 
-foreach inst [get_cells -hier -filter {(ORIG_REF_NAME == ptp_clock_cdc || REF_NAME == ptp_clock_cdc)}] {
+foreach inst [get_cells -hier -regexp -filter {(ORIG_REF_NAME =~ "ptp_clock_cdc(__\w+__\d+)?" ||
+        REF_NAME =~ "ptp_clock_cdc(__\w+__\d+)?")}] {
     puts "Inserting timing constraints for ptp_clock_cdc instance $inst"
 
     # get clock periods
