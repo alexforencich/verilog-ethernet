@@ -688,6 +688,10 @@ always @* begin
     // extract data
     if (dst_td_tvalid_reg) begin
         if (TS_TOD_EN) begin
+            if (dst_td_tid_reg[3:0] == 4'd1) begin
+                // prevent stale data from being used in time sync
+                dst_tod_shadow_valid_next = 1'b0;
+            end
             if (dst_td_tid_reg == {4'd0, 4'd1}) begin
                 dst_tod_ns_shadow_next[15:0] = dst_td_tdata_reg;
                 dst_tod_shadow_valid_next = 1'b0;
