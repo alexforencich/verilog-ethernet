@@ -89,7 +89,7 @@ localparam LOG_RATE = 3;
 
 localparam PHASE_CNT_W = LOG_RATE;
 localparam PHASE_ACC_W = PHASE_CNT_W+16;
-localparam LOAD_CNT_W = 8-LOG_RATE;
+localparam LOAD_CNT_W = 8-LOG_RATE-1;
 
 localparam LOG_SAMPLE_SYNC_RATE = 4;
 localparam SAMPLE_ACC_W = LOG_SAMPLE_SYNC_RATE+2;
@@ -261,6 +261,7 @@ always @(posedge ptp_clk) begin
     if (src_load_reg) begin
         src_ns_reg <= src_ns_shadow_reg >> (32-SRC_FNS_W);
         src_period_reg <= src_period_shadow_reg;
+        src_sync_reg <= 1'b1;
         src_marker_reg <= !src_marker_reg;
     end
 
@@ -519,7 +520,9 @@ always @(posedge clk) begin
         dst_sync_reg <= !dst_sync_reg;
         ts_capt_valid_reg <= 1'b1;
 
-        dst_load_cnt_reg <= dst_load_cnt_reg + 1;
+        if (dst_sync_reg) begin
+            dst_load_cnt_reg <= dst_load_cnt_reg + 1;
+        end
     end
 
     if (src_sync_sync2_reg ^ src_sync_sync3_reg) begin
@@ -738,7 +741,7 @@ always @* begin
     ts_rel_ns_next = ({ts_rel_ns_reg, ts_fns_reg} + period_ns_reg) >> FNS_W;
 
     if (TS_REL_EN) begin
-        if (dst_update_reg && dst_rel_shadow_valid_reg && (dst_load_cnt_reg == {LOAD_CNT_W{1'b1}})) begin
+        if (dst_update_reg && !dst_sync_reg && dst_rel_shadow_valid_reg && (dst_load_cnt_reg == 0)) begin
             // check timestamp MSBs
             if (dst_rel_step_shadow_reg || ts_rel_load_ts_reg) begin
                 // input stepped
@@ -786,7 +789,7 @@ always @* begin
             end
         end
 
-        if (dst_update_reg && dst_tod_shadow_valid_reg && (dst_load_cnt_reg == {LOAD_CNT_W{1'b1}})) begin
+        if (dst_update_reg && !dst_sync_reg && dst_tod_shadow_valid_reg && (dst_load_cnt_reg == 0)) begin
             // check timestamp MSBs
             if (dst_tod_step_shadow_reg || ts_tod_load_ts_reg) begin
                 // input stepped
