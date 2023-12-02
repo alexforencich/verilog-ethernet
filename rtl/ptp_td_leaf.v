@@ -426,19 +426,17 @@ always @* begin
         // updated sampled dst_phase error
 
         // gain scheduling
-        if (!sample_acc_sync_reg[SAMPLE_ACC_W-1]) begin
-            if (sample_acc_sync_reg[SAMPLE_ACC_W-4 +: 3]) begin
-                dst_gain_sel_next = 1'b1;
-            end else begin
-                dst_gain_sel_next = 1'b0;
-            end
-        end else begin
-            if (~sample_acc_sync_reg[SAMPLE_ACC_W-4 +: 3]) begin
-                dst_gain_sel_next = 1'b1;
-            end else begin
-                dst_gain_sel_next = 1'b0;
-            end
-        end
+        casez (sample_acc_sync_reg[SAMPLE_ACC_W-4 +: 4])
+            4'b01zz: dst_gain_sel_next = 1'b1;
+            4'b001z: dst_gain_sel_next = 1'b1;
+            4'b0001: dst_gain_sel_next = 1'b1;
+            4'b0000: dst_gain_sel_next = 1'b0;
+            4'b1111: dst_gain_sel_next = 1'b0;
+            4'b1110: dst_gain_sel_next = 1'b1;
+            4'b110z: dst_gain_sel_next = 1'b1;
+            4'b10zz: dst_gain_sel_next = 1'b1;
+            default: dst_gain_sel_next = 1'b0;
+        endcase
 
         // time integral of error
         case (dst_gain_sel_reg)
@@ -850,19 +848,19 @@ always @* begin
         // PI control
 
         // gain scheduling
-        if (!ts_ns_diff_reg[8+CMP_FNS_W]) begin
-            if (ts_ns_diff_reg[4+CMP_FNS_W +: 4]) begin
-                gain_sel_next = 1'b1;
-            end else begin
-                gain_sel_next = 1'b0;
-            end
-        end else begin
-            if (~ts_ns_diff_reg[4+CMP_FNS_W +: 4]) begin
-                gain_sel_next = 1'b1;
-            end else begin
-                gain_sel_next = 1'b0;
-            end
-        end
+        casez (ts_ns_diff_reg[9+CMP_FNS_W-5 +: 5])
+            5'b01zzz: gain_sel_next = 1'b1;
+            5'b001zz: gain_sel_next = 1'b1;
+            5'b0001z: gain_sel_next = 1'b1;
+            5'b00001: gain_sel_next = 1'b1;
+            5'b00000: gain_sel_next = 1'b0;
+            5'b11111: gain_sel_next = 1'b0;
+            5'b11110: gain_sel_next = 1'b1;
+            5'b1110z: gain_sel_next = 1'b1;
+            5'b110zz: gain_sel_next = 1'b1;
+            5'b10zzz: gain_sel_next = 1'b1;
+            default: gain_sel_next = 1'b0;
+        endcase
 
         // time integral of error
         case (gain_sel_reg)

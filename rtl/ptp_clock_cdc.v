@@ -674,19 +674,19 @@ always @* begin
         // PI control
 
         // gain scheduling
-        if (!ts_ns_diff_reg[8+CMP_FNS_WIDTH]) begin
-            if (ts_ns_diff_reg[4+CMP_FNS_WIDTH +: 4]) begin
-                gain_sel_next = 1'b1;
-            end else begin
-                gain_sel_next = 1'b0;
-            end
-        end else begin
-            if (~ts_ns_diff_reg[4+CMP_FNS_WIDTH +: 4]) begin
-                gain_sel_next = 1'b1;
-            end else begin
-                gain_sel_next = 1'b0;
-            end
-        end
+        casez (ts_ns_diff_reg[9+CMP_FNS_WIDTH-5 +: 5])
+            5'b01zzz: gain_sel_next = 1'b1;
+            5'b001zz: gain_sel_next = 1'b1;
+            5'b0001z: gain_sel_next = 1'b1;
+            5'b00001: gain_sel_next = 1'b1;
+            5'b00000: gain_sel_next = 1'b0;
+            5'b11111: gain_sel_next = 1'b0;
+            5'b11110: gain_sel_next = 1'b1;
+            5'b1110z: gain_sel_next = 1'b1;
+            5'b110zz: gain_sel_next = 1'b1;
+            5'b10zzz: gain_sel_next = 1'b1;
+            default: gain_sel_next = 1'b0;
+        endcase
 
         // time integral of error
         case (gain_sel_reg)
