@@ -154,10 +154,9 @@ reg [3:0] update_state_reg = 0;
 reg [47:0] adder_a_reg = 0;
 reg [47:0] adder_b_reg = 0;
 reg adder_cin_reg = 0;
-wire [47:0] adder_sum;
-wire adder_cout;
-
-assign {adder_cout, adder_sum} = adder_a_reg + adder_b_reg + adder_cin_reg;
+reg [47:0] adder_sum_reg = 0;
+reg adder_cout_reg = 0;
+reg adder_busy_reg = 0;
 
 assign input_ts_tod_ready = input_ts_tod_ready_reg;
 assign input_ts_tod_offset_ready = input_ts_tod_offset_ready_reg;
@@ -225,8 +224,7 @@ always @(posedge clk) begin
     pps_gen_ns_reg <= pps_gen_ns_reg + pps_gen_ns_inc_reg;
 
     if (!pps_gen_ns_reg[30]) begin
-        // pps_delay_reg <= 14*17 + 32 + 1;
-        pps_delay_reg <= 14*17 + 32 + 248;
+        pps_delay_reg <= 14*17 + 32 + 240;
         pps_gen_ns_reg[30] <= 1'b1;
     end
 
@@ -245,231 +243,269 @@ always @(posedge clk) begin
     end
 
     // update state machine
-    case (update_state_reg)
-        0: begin
-            // idle
+    {adder_cout_reg, adder_sum_reg} <= adder_a_reg + adder_b_reg + adder_cin_reg;
+    adder_busy_reg <= 1'b0;
 
-            // set relative timestamp
-            if (input_ts_rel_valid) begin
-                ts_rel_ns_reg <= input_ts_rel_ns;
-                input_ts_rel_ready_reg <= 1'b1;
-                ts_rel_updated_reg <= 1'b1;
-            end
+    // computes the following:
+    // {ts_inc_ns_reg, ts_fns_reg} = drift_acc_reg + $signed(input_ts_offset_fns) + {period_ns_reg, period_fns_reg} * 256 + ts_fns_reg
+    // ts_rel_ns_reg = ts_rel_ns_reg + ts_inc_ns_reg + $signed(input_ts_rel_offset_ns);
+    // ts_tod_ns_reg = ts_tod_ns_reg + ts_inc_ns_reg + $signed(input_ts_tod_offset_ns);
+    //   if that borrowed,
+    //     ts_tod_ns_reg = ts_tod_ns_reg + NS_PER_S
+    //     ts_tod_s_reg = ts_tod_s_reg - 1
+    //   else
+    //     pps_gen_ns_reg = ts_tod_ns_reg - NS_PER_S
+    //       if that did not borrow,
+    //         ts_tod_ns_reg = ts_tod_ns_reg - NS_PER_S
+    //         ts_tod_s_reg = ts_tod_s_reg + 1
+    // ts_tod_offset_ns_reg = ts_tod_ns_reg - ts_rel_ns_reg
+    //   if ts_tod_ns_reg[29]
+    //     ts_tod_alt_offset_ns_reg = ts_tod_offset_ns_reg - NS_PER_S
+    //     ts_tod_alt_s_reg = ts_tod_s_reg + 1
+    //   else
+    //     ts_tod_alt_offset_ns_reg = ts_tod_offset_ns_reg + NS_PER_S
+    //     ts_tod_alt_s_reg = ts_tod_s_reg - 1
 
-            // set ToD timestamp
-            if (input_ts_tod_valid) begin
-                ts_tod_s_reg <= input_ts_tod_s;
-                ts_tod_ns_reg <= input_ts_tod_ns;
-                input_ts_tod_ready_reg <= 1'b1;
-                ts_tod_updated_reg <= 1'b1;
-            end
+    if (!adder_busy_reg) begin
+        case (update_state_reg)
+            0: begin
+                // idle
 
-            // compute period 1 - add drift and requested offset
-            if (drift_apply_reg) begin
-                adder_a_reg <= drift_acc_reg + drift_num_reg;
-            end else begin
-                adder_a_reg <= drift_acc_reg;
-            end
-            adder_b_reg <= input_ts_offset_valid ? $signed(input_ts_offset_fns) : 0;
-            adder_cin_reg <= 0;
+                // set relative timestamp
+                if (input_ts_rel_valid) begin
+                    ts_rel_ns_reg <= input_ts_rel_ns;
+                    input_ts_rel_ready_reg <= 1'b1;
+                    ts_rel_updated_reg <= 1'b1;
+                end
 
-            if (td_update_reg) begin
-                drift_acc_reg <= 0;
-                input_ts_offset_ready_reg <= input_ts_offset_valid;
-                update_state_reg <= 1;
-            end else begin
-                update_state_reg <= 0;
-            end
-        end
-        1: begin
-            // compute period 2 - add drift and offset to period
-            adder_a_reg <= adder_sum;
-            adder_b_reg <= {period_ns_reg, period_fns_reg, 8'd0};
-            adder_cin_reg <= 0;
+                // set ToD timestamp
+                if (input_ts_tod_valid) begin
+                    ts_tod_s_reg <= input_ts_tod_s;
+                    ts_tod_ns_reg <= input_ts_tod_ns;
+                    input_ts_tod_ready_reg <= 1'b1;
+                    ts_tod_updated_reg <= 1'b1;
+                end
 
-            update_state_reg <= 2;
-        end
-        2: begin
-            // compute next fns
-            adder_a_reg <= adder_sum;
-            adder_b_reg <= ts_fns_reg;
-            adder_cin_reg <= 0;
-
-            update_state_reg <= 3;
-        end
-        3: begin
-            // store fns; compute relative timestamp 1 - add previous value and offset
-            {ts_inc_ns_reg, ts_fns_reg} <= {adder_cout, adder_sum};
-
-            adder_a_reg <= ts_rel_ns_reg;
-            adder_b_reg <= 0;
-            adder_cin_reg <= 0;
-
-            // offset relative timestamp if requested
-            if (input_ts_rel_offset_valid) begin
-                adder_b_reg <= $signed(input_ts_rel_offset_ns);
-                input_ts_rel_offset_ready_reg <= 1'b1;
-                ts_rel_updated_reg <= 1'b1;
-            end
-
-            update_state_reg <= 4;
-        end
-        4: begin
-            // compute relative timestamp 2 - add increment
-            adder_a_reg <= adder_sum;
-            adder_b_reg <= ts_inc_ns_reg;
-            adder_cin_reg <= 0;
-
-            update_state_reg <= 5;
-        end
-        5: begin
-            // store relative timestamp; compute ToD timestamp 1 - add previous value and increment
-            ts_rel_ns_reg <= adder_sum;
-
-            adder_a_reg <= ts_tod_ns_reg;
-            adder_b_reg <= ts_inc_ns_reg;
-            adder_cin_reg <= 0;
-
-            update_state_reg <= 6;
-        end
-        6: begin
-            // compute ToD timestamp 2 - add offset
-            adder_a_reg <= adder_sum;
-            adder_b_reg <= 0;
-            adder_cin_reg <= 0;
-
-            // offset ToD timestamp if requested
-            if (input_ts_tod_offset_valid) begin
-                adder_b_reg <= $signed(input_ts_tod_offset_ns);
-                input_ts_tod_offset_ready_reg <= 1'b1;
-                ts_tod_updated_reg <= 1'b1;
-            end
-            
-            update_state_reg <= 7;
-        end
-        7: begin
-            // compute ToD timestamp 2 - check for underflow/overflow
-            ts_tod_ns_reg <= adder_sum;
-
-            if (adder_b_reg[47] && !adder_cout) begin
-                // borrowed; add 1 billion
-                adder_a_reg <= adder_sum;
-                adder_b_reg <= NS_PER_S;
+                // compute period 1 - add drift and requested offset
+                if (drift_apply_reg) begin
+                    adder_a_reg <= drift_acc_reg + drift_num_reg;
+                end else begin
+                    adder_a_reg <= drift_acc_reg;
+                end
+                adder_b_reg <= input_ts_offset_valid ? $signed(input_ts_offset_fns) : 0;
                 adder_cin_reg <= 0;
 
-                update_state_reg <= 8;
-            end else begin
-                // did not borrow; subtract 1 billion to check for overflow
-                adder_a_reg <= adder_sum;
+                if (td_update_reg) begin
+                    drift_acc_reg <= 0;
+                    input_ts_offset_ready_reg <= input_ts_offset_valid;
+                    update_state_reg <= 1;
+                    adder_busy_reg <= 1'b1;
+                end else begin
+                    update_state_reg <= 0;
+                end
+            end
+            1: begin
+                // compute period 2 - add drift and offset to period
+                adder_a_reg <= adder_sum_reg;
+                adder_b_reg <= {period_ns_reg, period_fns_reg, 8'd0};
+                adder_cin_reg <= 0;
+
+                update_state_reg <= 2;
+                adder_busy_reg <= 1'b1;
+            end
+            2: begin
+                // compute next fns
+                adder_a_reg <= adder_sum_reg;
+                adder_b_reg <= ts_fns_reg;
+                adder_cin_reg <= 0;
+
+                update_state_reg <= 3;
+                adder_busy_reg <= 1'b1;
+            end
+            3: begin
+                // store fns
+                {ts_inc_ns_reg, ts_fns_reg} <= {adder_cout_reg, adder_sum_reg};
+
+                // compute relative timestamp 1 - add previous value and increment
+                adder_a_reg <= ts_rel_ns_reg;
+                adder_b_reg <= {adder_cout_reg, adder_sum_reg} >> FNS_W; // ts_inc_ns_reg
+                adder_cin_reg <= 0;
+
+                update_state_reg <= 4;
+                adder_busy_reg <= 1'b1;
+            end
+            4: begin
+                // compute relative timestamp 2 - add offset
+                adder_a_reg <= adder_sum_reg;
+                adder_b_reg <= 0;
+                adder_cin_reg <= 0;
+
+                // offset relative timestamp if requested
+                if (input_ts_rel_offset_valid) begin
+                    adder_b_reg <= $signed(input_ts_rel_offset_ns);
+                    input_ts_rel_offset_ready_reg <= 1'b1;
+                    ts_rel_updated_reg <= 1'b1;
+                end
+
+                update_state_reg <= 5;
+                adder_busy_reg <= 1'b1;
+            end
+            5: begin
+                // store relative timestamp
+                ts_rel_ns_reg <= adder_sum_reg;
+
+                // compute ToD timestamp 1 - add previous value and increment
+                adder_a_reg <= ts_tod_ns_reg;
+                adder_b_reg <= ts_inc_ns_reg;
+                adder_cin_reg <= 0;
+
+                update_state_reg <= 6;
+                adder_busy_reg <= 1'b1;
+            end
+            6: begin
+                // compute ToD timestamp 2 - add offset
+                adder_a_reg <= adder_sum_reg;
+                adder_b_reg <= 0;
+                adder_cin_reg <= 0;
+
+                // offset ToD timestamp if requested
+                if (input_ts_tod_offset_valid) begin
+                    adder_b_reg <= $signed(input_ts_tod_offset_ns);
+                    input_ts_tod_offset_ready_reg <= 1'b1;
+                    ts_tod_updated_reg <= 1'b1;
+                end
+                
+                update_state_reg <= 7;
+                adder_busy_reg <= 1'b1;
+            end
+            7: begin
+                // compute ToD timestamp 3 - check for underflow/overflow
+                ts_tod_ns_reg <= adder_sum_reg;
+
+                if (adder_b_reg[47] && !adder_cout_reg) begin
+                    // borrowed; add 1 billion
+                    adder_a_reg <= adder_sum_reg;
+                    adder_b_reg <= NS_PER_S;
+                    adder_cin_reg <= 0;
+
+                    update_state_reg <= 8;
+                    adder_busy_reg <= 1'b1;
+                end else begin
+                    // did not borrow; subtract 1 billion to check for overflow
+                    adder_a_reg <= adder_sum_reg;
+                    adder_b_reg <= -NS_PER_S;
+                    adder_cin_reg <= 0;
+
+                    update_state_reg <= 9;
+                    adder_busy_reg <= 1'b1;
+                end
+            end
+            8: begin
+                // seconds decrement
+                ts_tod_ns_reg <= adder_sum_reg;
+                pps_gen_ns_reg[30] <= 1'b1;
+
+                adder_a_reg <= ts_tod_s_reg;
+                adder_b_reg <= -1;
+                adder_cin_reg <= 0;
+
+                update_state_reg <= 10;
+                adder_busy_reg <= 1'b1;
+            end
+            9: begin
+                // seconds increment
+                pps_gen_ns_reg <= adder_sum_reg;
+
+                if (!adder_cout_reg) begin
+                    // borrowed; leave seconds alone
+
+                    adder_a_reg <= ts_tod_s_reg;
+                    adder_b_reg <= 0;
+                    adder_cin_reg <= 0;
+                end else begin
+                    // did not borrow; increment seconds
+                    ts_tod_ns_reg <= adder_sum_reg;
+
+                    adder_a_reg <= ts_tod_s_reg;
+                    adder_b_reg <= 1;
+                    adder_cin_reg <= 0;
+                end
+
+                update_state_reg <= 10;
+                adder_busy_reg <= 1'b1;
+            end
+            10: begin
+                // store seconds
+                ts_tod_s_reg <= adder_sum_reg;
+
+                // compute offset
+                adder_a_reg <= ts_tod_ns_reg;
+                adder_b_reg <= ~ts_rel_ns_reg;
+                adder_cin_reg <= 1;
+
+                update_state_reg <= 11;
+                adder_busy_reg <= 1'b1;
+            end
+            11: begin
+                // store offset
+                ts_tod_offset_ns_reg <= adder_sum_reg;
+
+                adder_a_reg <= adder_sum_reg;
                 adder_b_reg <= -NS_PER_S;
                 adder_cin_reg <= 0;
 
-                update_state_reg <= 9;
+                if (ts_tod_ns_reg[29]) begin
+                    // latter half of second; compute offset for next second
+                    adder_b_reg <= -NS_PER_S;
+                    update_state_reg <= 12;
+                    adder_busy_reg <= 1'b1;
+                end else begin
+                    // former half of second; compute offset for previous second
+                    adder_b_reg <= NS_PER_S;
+                    update_state_reg <= 14;
+                    adder_busy_reg <= 1'b1;
+                end
             end
-        end
-        8: begin
-            // seconds decrement
-            ts_tod_ns_reg <= adder_sum;
-            pps_gen_ns_reg[30] <= 1'b1;
-
-            adder_a_reg <= ts_tod_s_reg;
-            adder_b_reg <= -1;
-            adder_cin_reg <= 0;
-
-            update_state_reg <= 10;
-        end
-        9: begin
-            // seconds increment
-            pps_gen_ns_reg <= adder_sum;
-
-            if (!adder_cout) begin
-                // borrowed; leave seconds alone
-
-                adder_a_reg <= ts_tod_s_reg;
-                adder_b_reg <= 0;
-                adder_cin_reg <= 0;
-            end else begin
-                // did not borrow; decrement seconds
-                ts_tod_ns_reg <= adder_sum;
+            12: begin
+                // store alternate offset for next second
+                ts_tod_alt_offset_ns_reg <= adder_sum_reg;
 
                 adder_a_reg <= ts_tod_s_reg;
                 adder_b_reg <= 1;
                 adder_cin_reg <= 0;
+
+                update_state_reg <= 13;
+                adder_busy_reg <= 1'b1;
             end
+            13: begin
+                // store alternate second for next second
+                ts_tod_alt_s_reg <= adder_sum_reg;
 
-            update_state_reg <= 10;
-        end
-        10: begin
-            // store seconds; compute offset
-            ts_tod_s_reg <= adder_sum;
-
-            if (adder_sum == ts_tod_alt_s_reg) begin
-                // store previous offset as alternate
-                ts_tod_alt_s_reg <= ts_tod_s_reg;
-                ts_tod_alt_offset_ns_reg <= ts_tod_offset_ns_reg;
+                update_state_reg <= 0;
             end
+            14: begin
+                // store alternate offset for previous second
+                ts_tod_alt_offset_ns_reg <= adder_sum_reg;
 
-            adder_a_reg <= ts_tod_ns_reg;
-            adder_b_reg <= ~ts_rel_ns_reg;
-            adder_cin_reg <= 1;
+                adder_a_reg <= ts_tod_s_reg;
+                adder_b_reg <= -1;
+                adder_cin_reg <= 0;
 
-            update_state_reg <= 11;
-        end
-        11: begin
-            // store offset
-            ts_tod_offset_ns_reg <= adder_sum;
-
-            adder_a_reg <= adder_sum;
-            adder_b_reg <= -NS_PER_S;
-            adder_cin_reg <= 0;
-
-            if (ts_tod_ns_reg[29]) begin
-                // latter half of second; compute offset for next second
-                adder_b_reg <= -NS_PER_S;
-                update_state_reg <= 12;
-            end else begin
-                // former half of second; compute offset for previous second
-                adder_b_reg <= NS_PER_S;
-                update_state_reg <= 14;
+                update_state_reg <= 15;
+                adder_busy_reg <= 1'b1;
             end
-        end
-        12: begin
-            // store alternate offset for next second
-            ts_tod_alt_offset_ns_reg <= adder_sum;
+            15: begin
+                // store alternate second for previous second
+                ts_tod_alt_s_reg <= adder_sum_reg;
 
-            adder_a_reg <= ts_tod_s_reg;
-            adder_b_reg <= 1;
-            adder_cin_reg <= 0;
-
-            update_state_reg <= 13;
-        end
-        13: begin
-            // store alternate second for next second
-            ts_tod_alt_s_reg <= adder_sum;
-
-            update_state_reg <= 0;
-        end
-        14: begin
-            // store alternate offset for previous second
-            ts_tod_alt_offset_ns_reg <= adder_sum;
-
-            adder_a_reg <= ts_tod_s_reg;
-            adder_b_reg <= -1;
-            adder_cin_reg <= 0;
-
-            update_state_reg <= 15;
-        end
-        15: begin
-            // store alternate second for previous second
-            ts_tod_alt_s_reg <= adder_sum;
-
-            update_state_reg <= 0;
-        end
-        default: begin
-            // invalid state; return to idle
-            update_state_reg <= 0;
-        end
-    endcase
+                update_state_reg <= 0;
+            end
+            default: begin
+                // invalid state; return to idle
+                update_state_reg <= 0;
+            end
+        endcase
+    end
 
     // time distribution message generation
     td_shift_reg <= {1'b1, td_shift_reg} >> 1;
