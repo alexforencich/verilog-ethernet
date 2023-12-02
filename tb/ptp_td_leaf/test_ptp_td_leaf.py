@@ -422,6 +422,40 @@ async def run_test(dut):
     assert abs(mean(tod_diffs)) < 5
 
     await RisingEdge(dut.clk)
+    tb.log.info("Coherent tracking (250 MHz +0/-0.5%)")
+
+    tb.set_ptp_clock_period(6.4)
+    tb.set_clock_period(4.0)
+
+    await RisingEdge(dut.clk)
+
+    period = 4.000
+    step = 0.0002
+    period_min = 4.0
+    period_max = 4.0*(1+0.005)
+
+    for i in range(5000):
+        period += step
+
+        if period <= period_min:
+            step = abs(step)
+        if period >= period_max:
+            step = -abs(step)
+
+        tb.set_clock_period(period)
+
+        for i in range(20):
+            await RisingEdge(dut.clk)
+
+    assert tb.dut.locked.value.integer
+
+    rel_diffs, tod_diffs = await tb.measure_ts_diff()
+    tb.log.info(f"Difference (rel): {mean(rel_diffs)} ns (stdev: {stdev(rel_diffs)})")
+    tb.log.info(f"Difference (ToD): {mean(tod_diffs)} ns (stdev: {stdev(tod_diffs)})")
+    assert abs(mean(rel_diffs)) < 5
+    assert abs(mean(tod_diffs)) < 5
+
+    await RisingEdge(dut.clk)
     tb.log.info("Significantly slower (100 MHz)")
 
     tb.set_ptp_clock_period(6.4)
