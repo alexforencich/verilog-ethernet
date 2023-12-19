@@ -524,6 +524,8 @@ always @(posedge clk) begin
     ifg_count_reg <= ifg_count_next;
     deficit_idle_count_reg <= deficit_idle_count_next;
 
+    frame_min_count_reg <= frame_min_count_next;
+
     s_tdata_reg <= s_tdata_next;
     s_empty_reg <= s_empty_next;
 
@@ -550,6 +552,8 @@ always @(posedge clk) begin
 
         ifg_count_reg <= 8'd0;
         deficit_idle_count_reg <= 2'd0;
+
+        frame_min_count_reg <= {MIN_LEN_WIDTH{1'b0}};
 
         s_axis_tready_reg <= 1'b0;
 
