@@ -155,9 +155,8 @@ reg [PTP_TS_WIDTH-1:0] m_axis_ptp_ts_reg = 0, m_axis_ptp_ts_next;
 reg [PTP_TAG_WIDTH-1:0] m_axis_ptp_ts_tag_reg = 0, m_axis_ptp_ts_tag_next;
 reg m_axis_ptp_ts_valid_reg = 1'b0, m_axis_ptp_ts_valid_next;
 
-reg [31:0] crc_state = 32'hFFFFFFFF;
-
-wire [31:0] crc_next[3:0];
+reg [31:0] crc_state_reg[3:0];
+wire [31:0] crc_state_next[3:0];
 
 reg [DATA_WIDTH-1:0] xgmii_txd_reg = {CTRL_WIDTH{XGMII_IDLE}}, xgmii_txd_next;
 reg [CTRL_WIDTH-1:0] xgmii_txc_reg = {CTRL_WIDTH{1'b1}}, xgmii_txc_next;
@@ -192,9 +191,9 @@ generate
         )
         eth_crc (
             .data_in(s_tdata_reg[0 +: 8*(n+1)]),
-            .state_in(crc_state),
+            .state_in(crc_state_reg[3]),
             .data_out(),
-            .state_out(crc_next[n])
+            .state_out(crc_state_next[n])
         );
     end
 
@@ -224,24 +223,24 @@ end
 always @* begin
     casez (s_empty_reg)
         2'd3: begin
-            fcs_output_txd_0 = {~crc_next[0][23:0], s_tdata_reg[7:0]};
-            fcs_output_txd_1 = {{2{XGMII_IDLE}}, XGMII_TERM, ~crc_next[0][31:24]};
+            fcs_output_txd_0 = {~crc_state_next[0][23:0], s_tdata_reg[7:0]};
+            fcs_output_txd_1 = {{2{XGMII_IDLE}}, XGMII_TERM, ~crc_state_reg[0][31:24]};
             fcs_output_txc_0 = 4'b0000;
             fcs_output_txc_1 = 4'b1110;
             ifg_offset = 8'd3;
             extra_cycle = 1'b0;
         end
         2'd2: begin
-            fcs_output_txd_0 = {~crc_next[1][15:0], s_tdata_reg[15:0]};
-            fcs_output_txd_1 = {XGMII_IDLE, XGMII_TERM, ~crc_next[1][31:16]};
+            fcs_output_txd_0 = {~crc_state_next[1][15:0], s_tdata_reg[15:0]};
+            fcs_output_txd_1 = {XGMII_IDLE, XGMII_TERM, ~crc_state_reg[1][31:16]};
             fcs_output_txc_0 = 4'b0000;
             fcs_output_txc_1 = 4'b1100;
             ifg_offset = 8'd2;
             extra_cycle = 1'b0;
         end
         2'd1: begin
-            fcs_output_txd_0 = {~crc_next[2][7:0], s_tdata_reg[23:0]};
-            fcs_output_txd_1 = {XGMII_TERM, ~crc_next[2][31:8]};
+            fcs_output_txd_0 = {~crc_state_next[2][7:0], s_tdata_reg[23:0]};
+            fcs_output_txd_1 = {XGMII_TERM, ~crc_state_reg[2][31:8]};
             fcs_output_txc_0 = 4'b0000;
             fcs_output_txc_1 = 4'b1000;
             ifg_offset = 8'd1;
@@ -249,7 +248,7 @@ always @* begin
         end
         2'd0: begin
             fcs_output_txd_0 = s_tdata_reg;
-            fcs_output_txd_1 = ~crc_next[3];
+            fcs_output_txd_1 = ~crc_state_reg[3];
             fcs_output_txc_0 = 4'b0000;
             fcs_output_txc_1 = 4'b0000;
             ifg_offset = 8'd4;
@@ -323,6 +322,7 @@ always @* begin
         end
         STATE_PREAMBLE: begin
             // send preamble
+            reset_crc = 1'b1;
 
             s_tdata_next = s_axis_tdata_masked;
             s_empty_next = keep2empty(s_axis_tkeep);
@@ -414,6 +414,8 @@ always @* begin
 
             xgmii_txd_next = fcs_output_txd_0;
             xgmii_txc_next = fcs_output_txc_0;
+
+            update_crc = 1'b1;
 
             ifg_count_next = (cfg_ifg > 8'd12 ? cfg_ifg : 8'd12) - ifg_offset + deficit_idle_count_reg;
             state_next = STATE_FCS_2;
@@ -533,10 +535,16 @@ always @(posedge clk) begin
     m_axis_ptp_ts_tag_reg <= m_axis_ptp_ts_tag_next;
     m_axis_ptp_ts_valid_reg <= m_axis_ptp_ts_valid_next;
 
+    crc_state_reg[0] <= crc_state_next[0];
+    crc_state_reg[1] <= crc_state_next[1];
+    crc_state_reg[2] <= crc_state_next[2];
+
+    if (update_crc) begin
+        crc_state_reg[3] <= crc_state_next[3];
+    end
+
     if (reset_crc) begin
-        crc_state <= 32'hFFFFFFFF;
-    end else if (update_crc) begin
-        crc_state <= crc_next[3];
+        crc_state_reg[3] <= 32'hFFFFFFFF;
     end
 
     xgmii_txd_reg <= xgmii_txd_next;
