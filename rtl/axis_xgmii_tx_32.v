@@ -523,6 +523,8 @@ end
 always @(posedge clk) begin
     state_reg <= state_next;
 
+    frame_min_count_reg <= frame_min_count_next;
+
     ifg_count_reg <= ifg_count_next;
     deficit_idle_count_reg <= deficit_idle_count_next;
 
