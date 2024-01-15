@@ -147,6 +147,7 @@ wire [57:0] scrambler_state;
 reg [30:0] prbs31_state_reg = 31'h7fffffff;
 wire [30:0] prbs31_state;
 wire [DATA_WIDTH+HDR_WIDTH-1:0] prbs31_data;
+reg [DATA_WIDTH+HDR_WIDTH-1:0] prbs31_data_reg = 0;
 
 reg [6:0] rx_error_count_reg = 0;
 reg [5:0] rx_error_count_1_reg = 0;
@@ -193,9 +194,9 @@ always @* begin
     rx_error_count_2_temp = 0;
     for (i = 0; i < DATA_WIDTH+HDR_WIDTH; i = i + 1) begin
         if (i & 1) begin
-            rx_error_count_1_temp = rx_error_count_1_temp + prbs31_data[i];
+            rx_error_count_1_temp = rx_error_count_1_temp + prbs31_data_reg[i];
         end else begin
-            rx_error_count_2_temp = rx_error_count_2_temp + prbs31_data[i];
+            rx_error_count_2_temp = rx_error_count_2_temp + prbs31_data_reg[i];
         end
     end
 end
@@ -206,12 +207,19 @@ always @(posedge clk) begin
     encoded_rx_data_reg <= SCRAMBLER_DISABLE ? serdes_rx_data_int : descrambled_rx_data;
     encoded_rx_hdr_reg <= serdes_rx_hdr_int;
 
-    if (PRBS31_ENABLE && cfg_rx_prbs31_enable) begin
-        prbs31_state_reg <= prbs31_state;
+    if (PRBS31_ENABLE) begin
+        if (cfg_rx_prbs31_enable) begin
+            prbs31_state_reg <= prbs31_state;
+            prbs31_data_reg <= prbs31_data;
+        end else begin
+            prbs31_data_reg <= 0;
+        end
 
         rx_error_count_1_reg <= rx_error_count_1_temp;
         rx_error_count_2_reg <= rx_error_count_2_temp;
         rx_error_count_reg <= rx_error_count_1_reg + rx_error_count_2_reg;
+    end else begin
+        rx_error_count_reg <= 0;
     end
 end
 
