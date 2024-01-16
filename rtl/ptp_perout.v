@@ -118,6 +118,7 @@ reg [15:0] ts_96_fns_ovf_reg = 0, ts_96_fns_ovf_next;
 
 reg locked_reg = 1'b0, locked_next;
 reg error_reg = 1'b0, error_next;
+reg ffwd_reg = 1'b0, ffwd_next;
 reg level_reg = 1'b0, level_next;
 reg output_reg = 1'b0, output_next;
 
@@ -144,6 +145,7 @@ always @* begin
 
     locked_next = locked_reg;
     error_next = error_reg;
+    ffwd_next = ffwd_reg;
     level_next = level_reg;
     output_next = output_reg;
 
@@ -163,9 +165,10 @@ always @* begin
                     next_rise_fns_next = start_fns_reg;
                 end
                 locked_next = 1'b0;
-                level_next = 1'b0;
+                ffwd_next = 1'b1;
                 output_next = 1'b0;
-                state_next = STATE_UPDATE_FALL_1;
+                level_next = 1'b0;
+                state_next = STATE_WAIT_EDGE;
             end
             STATE_UPDATE_RISE_1: begin
                 // set next rise time to next rise time plus period
@@ -208,19 +211,26 @@ always @* begin
                 state_next = STATE_WAIT_EDGE;
             end
             STATE_WAIT_EDGE: begin
-                if ((time_s_reg > next_rise_s_reg) || (time_s_reg == next_rise_s_reg && {time_ns_reg, time_fns_reg} > {next_rise_ns_reg, next_rise_fns_reg})) begin
+                if ((!level_reg || ffwd_reg) && ((time_s_reg > next_rise_s_reg) || (time_s_reg == next_rise_s_reg && {time_ns_reg, time_fns_reg} > {next_rise_ns_reg, next_rise_fns_reg}))) begin
                     // rising edge
-                    level_next = 1'b1;
-                    output_next = enable && locked_reg;
-                    state_next = STATE_UPDATE_RISE_1;
-                end else if ((time_s_reg > next_fall_s_reg) || (time_s_reg == next_fall_s_reg && {time_ns_reg, time_fns_reg} > {next_fall_ns_reg, next_fall_fns_reg})) begin
+                    if (ffwd_reg) begin
+                        output_next = 1'b0;
+                        level_next = 1'b0;
+                        state_next = STATE_UPDATE_RISE_1;
+                    end else begin
+                        locked_next = 1'b1;
+                        error_next = 1'b0;
+                        output_next = enable;
+                        level_next = 1'b1;
+                        state_next = STATE_UPDATE_FALL_1;
+                    end
+                end else if (level_reg && ((time_s_reg > next_fall_s_reg) || (time_s_reg == next_fall_s_reg && {time_ns_reg, time_fns_reg} > {next_fall_ns_reg, next_fall_fns_reg}))) begin
                     // falling edge
-                    level_next = 1'b0;
                     output_next = 1'b0;
-                    state_next = STATE_UPDATE_FALL_1;
+                    level_next = 1'b0;
+                    state_next = STATE_UPDATE_RISE_1;
                 end else begin
-                    locked_next = locked_reg || level_reg;
-                    error_next = error_reg && !(locked_reg || level_reg);
+                    ffwd_next = 1'b0;
                     state_next = STATE_WAIT_EDGE;
                 end
             end
@@ -285,6 +295,7 @@ always @(posedge clk) begin
 
     locked_reg <= locked_next;
     error_reg <= error_next;
+    ffwd_reg <= ffwd_next;
     level_reg <= level_next;
     output_reg <= output_next;
 
