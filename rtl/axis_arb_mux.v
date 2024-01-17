@@ -168,7 +168,7 @@ arb_inst (
     .grant_encoded(grant_encoded)
 );
 
-assign request = (s_axis_tvalid_reg & ~grant) | (s_axis_tvalid & grant);
+assign request = s_axis_tvalid | (s_axis_tvalid_reg & ~grant);
 assign acknowledge = grant & s_axis_tvalid_reg & {S_COUNT{m_axis_tready_int_reg}} & (LAST_ENABLE ? s_axis_tlast_reg : {S_COUNT{1'b1}});
 
 always @* begin
