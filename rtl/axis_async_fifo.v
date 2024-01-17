@@ -861,17 +861,20 @@ if (PAUSE_ENABLE) begin : pause
 
     always @(posedge m_clk) begin
         if (FRAME_PAUSE) begin
-            if (m_axis_tvalid && m_axis_tready) begin
-                if (m_axis_tlast) begin
+            if (pause_reg) begin
+                // paused; update pause status
+                pause_reg <= m_pause_req || s_pause_req_sync3_reg;
+            end else if (m_axis_tvalid_out) begin
+                // frame transfer; set frame bit
+                pause_frame_reg <= 1'b1;
+                if (m_axis_tready && m_axis_tlast) begin
+                    // end of frame; clear frame bit and update pause status
                     pause_frame_reg <= 1'b0;
                     pause_reg <= m_pause_req || s_pause_req_sync3_reg;
-                end else begin
-                    pause_frame_reg <= 1'b1;
                 end
-            end else begin
-                if (!pause_frame_reg) begin
-                    pause_reg <= m_pause_req || s_pause_req_sync3_reg;
-                end
+            end else if (!pause_frame_reg) begin
+                // idle; update pause status
+                pause_reg <= m_pause_req || s_pause_req_sync3_reg;
             end
         end else begin
             pause_reg <= m_pause_req || s_pause_req_sync3_reg;
