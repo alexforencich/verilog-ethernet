@@ -611,7 +611,9 @@ generate
         assign int_cmd_len[m*ADDR_WIDTH +: ADDR_WIDTH] = cmd_len_reg;
         assign int_cmd_id[m*CMD_ADDR_WIDTH +: CMD_ADDR_WIDTH] = cmd_id_reg;
         assign int_cmd_tkeep[m*KEEP_WIDTH +: KEEP_WIDTH] = cmd_tkeep_reg;
-        assign int_cmd_tid[m*S_ID_WIDTH +: S_ID_WIDTH_INT] = cmd_tid_reg;
+        if (ID_ENABLE && S_ID_WIDTH > 0) begin
+            assign int_cmd_tid[m*S_ID_WIDTH +: S_ID_WIDTH_INT] = cmd_tid_reg;
+        end
         assign int_cmd_tdest[m*S_DEST_WIDTH +: S_DEST_WIDTH] = cmd_tdest_reg;
         assign int_cmd_tuser[m*USER_WIDTH +: USER_WIDTH] = cmd_tuser_reg;
         assign int_cmd_valid[m*M_COUNT +: M_COUNT] = cmd_valid_reg;
