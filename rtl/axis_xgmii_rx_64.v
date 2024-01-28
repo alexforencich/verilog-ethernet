@@ -221,10 +221,6 @@ always @* begin
             if (xgmii_start_d1 && cfg_rx_enable) begin
                 // start condition
 
-                if (PTP_TS_ENABLE) begin
-                    m_axis_tuser_next[1 +: PTP_TS_WIDTH] = (PTP_TS_WIDTH != 96 || ptp_ts_borrow_reg) ? ptp_ts_reg : ptp_ts_adj_reg;
-                end
-
                 if (framing_error_reg) begin
                     // control or error characters in first data word
                     m_axis_tdata_next = {DATA_WIDTH{1'b0}};
@@ -249,6 +245,10 @@ always @* begin
             m_axis_tvalid_next = 1'b1;
             m_axis_tlast_next = 1'b0;
             m_axis_tuser_next[0] = 1'b0;
+
+            if (PTP_TS_ENABLE) begin
+                m_axis_tuser_next[1 +: PTP_TS_WIDTH] = (PTP_TS_WIDTH != 96 || ptp_ts_borrow_reg) ? ptp_ts_reg : ptp_ts_adj_reg;
+            end
 
             if (framing_error_reg) begin
                 // control or error characters in packet
