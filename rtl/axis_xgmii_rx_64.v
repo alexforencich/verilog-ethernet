@@ -121,7 +121,7 @@ reg [DATA_WIDTH-1:0] xgmii_rxd_masked = {DATA_WIDTH{1'b0}};
 reg [CTRL_WIDTH-1:0] xgmii_term = {CTRL_WIDTH{1'b0}};
 reg [2:0] term_lane_reg = 0, term_lane_d0_reg = 0;
 reg term_present_reg = 1'b0;
-reg framing_error_reg = 1'b0;
+reg framing_error_reg = 1'b0, framing_error_d0_reg = 1'b0;
 
 reg [DATA_WIDTH-1:0] xgmii_rxd_d0 = {DATA_WIDTH{1'b0}};
 reg [DATA_WIDTH-1:0] xgmii_rxd_d1 = {DATA_WIDTH{1'b0}};
@@ -221,19 +221,8 @@ always @* begin
             if (xgmii_start_d1 && cfg_rx_enable) begin
                 // start condition
 
-                if (framing_error_reg) begin
-                    // control or error characters in first data word
-                    m_axis_tdata_next = xgmii_rxd_d1;
-                    m_axis_tkeep_next = 8'h01;
-                    m_axis_tvalid_next = 1'b1;
-                    m_axis_tlast_next = 1'b1;
-                    m_axis_tuser_next[0] = 1'b1;
-                    error_bad_frame_next = 1'b1;
-                    state_next = STATE_IDLE;
-                end else begin
-                    reset_crc = 1'b0;
-                    state_next = STATE_PAYLOAD;
-                end
+                reset_crc = 1'b0;
+                state_next = STATE_PAYLOAD;
             end else begin
                 state_next = STATE_IDLE;
             end
@@ -250,7 +239,7 @@ always @* begin
                 m_axis_tuser_next[1 +: PTP_TS_WIDTH] = (PTP_TS_WIDTH != 96 || ptp_ts_borrow_reg) ? ptp_ts_reg : ptp_ts_adj_reg;
             end
 
-            if (framing_error_reg) begin
+            if (framing_error_reg || framing_error_d0_reg) begin
                 // control or error characters in packet
                 m_axis_tlast_next = 1'b1;
                 m_axis_tuser_next[0] = 1'b1;
@@ -303,21 +292,11 @@ always @* begin
                 error_bad_fcs_next = 1'b1;
             end
 
-            if (xgmii_start_d1) begin
+            if (xgmii_start_d1 && cfg_rx_enable) begin
                 // start condition
-                if (framing_error_reg) begin
-                    // control or error characters in first data word
-                    m_axis_tdata_next = xgmii_rxd_d1;
-                    m_axis_tkeep_next = 8'h01;
-                    m_axis_tvalid_next = 1'b1;
-                    m_axis_tlast_next = 1'b1;
-                    m_axis_tuser_next[0] = 1'b1;
-                    error_bad_frame_next = 1'b1;
-                    state_next = STATE_IDLE;
-                end else begin
-                    reset_crc = 1'b0;
-                    state_next = STATE_PAYLOAD;
-                end
+
+                reset_crc = 1'b0;
+                state_next = STATE_PAYLOAD;
             end else begin
                 state_next = STATE_IDLE;
             end
@@ -389,13 +368,15 @@ always @(posedge clk) begin
         end
     end
 
-    term_lane_d0_reg <= term_lane_reg;
-
     if (xgmii_rxc[0] && xgmii_rxd[7:0] == XGMII_START) begin
         lanes_swapped <= 1'b0;
         start_packet_reg <= 2'b01;
 
         xgmii_start_d0 <= 1'b1;
+
+        term_lane_reg <= 0;
+        term_present_reg <= 1'b0;
+        framing_error_reg <= xgmii_rxc[7:1] != 0;
 
         if (PTP_TS_WIDTH == 96) begin
             ptp_ts_reg[45:0] <= ptp_ts[45:0] + (PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS);
@@ -409,6 +390,10 @@ always @(posedge clk) begin
 
         xgmii_start_swap <= 1'b1;
 
+        term_lane_reg <= 0;
+        term_present_reg <= 1'b0;
+        framing_error_reg <= xgmii_rxc[7:5] != 0;
+
         if (PTP_TS_WIDTH == 96) begin
             ptp_ts_reg[45:0] <= ptp_ts[45:0] + (((PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS) * 3) >> 1);
             ptp_ts_reg[95:48] <= ptp_ts[95:48];
@@ -416,6 +401,9 @@ always @(posedge clk) begin
             ptp_ts_reg <= ptp_ts + (((PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS) * 3) >> 1);
         end
     end
+
+    term_lane_d0_reg <= term_lane_reg;
+    framing_error_d0_reg <= framing_error_reg;
 
     if (reset_crc) begin
         crc_state <= 32'hFFFFFFFF;
