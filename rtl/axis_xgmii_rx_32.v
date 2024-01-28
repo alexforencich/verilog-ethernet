@@ -180,7 +180,7 @@ always @* begin
 
     reset_crc = 1'b0;
 
-    m_axis_tdata_next = {DATA_WIDTH{1'b0}};
+    m_axis_tdata_next = xgmii_rxd_d2;
     m_axis_tkeep_next = {KEEP_WIDTH{1'b1}};
     m_axis_tvalid_next = 1'b0;
     m_axis_tlast_next = 1'b0;
@@ -200,7 +200,7 @@ always @* begin
                 // start condition
                 if (framing_error_reg) begin
                     // control or error characters in first data word
-                    m_axis_tdata_next = {DATA_WIDTH{1'b0}};
+                    m_axis_tdata_next = xgmii_rxd_d2;
                     m_axis_tkeep_next = 4'h1;
                     m_axis_tvalid_next = 1'b1;
                     m_axis_tlast_next = 1'b1;
