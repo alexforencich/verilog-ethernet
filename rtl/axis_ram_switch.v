@@ -912,11 +912,17 @@ generate
             assign port_cmd_status_ready[m] = int_cmd_status_ready[m*M_COUNT+n];
         end
 
+        (* ram_style = "distributed", ramstyle = "no_rw_check, mlab" *)
         reg [DATA_WIDTH-1:0] out_fifo_tdata[31:0];
+        (* ram_style = "distributed", ramstyle = "no_rw_check, mlab" *)
         reg [KEEP_WIDTH-1:0] out_fifo_tkeep[31:0];
+        (* ram_style = "distributed", ramstyle = "no_rw_check, mlab" *)
         reg out_fifo_tlast[31:0];
+        (* ram_style = "distributed", ramstyle = "no_rw_check, mlab" *)
         reg [M_ID_WIDTH-1:0] out_fifo_tid[31:0];
+        (* ram_style = "distributed", ramstyle = "no_rw_check, mlab" *)
         reg [M_DEST_WIDTH-1:0] out_fifo_tdest[31:0];
+        (* ram_style = "distributed", ramstyle = "no_rw_check, mlab" *)
         reg [USER_WIDTH-1:0] out_fifo_tuser[31:0];
 
         reg [5:0] out_fifo_data_wr_ptr_reg = 0;
