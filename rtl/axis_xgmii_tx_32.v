@@ -328,7 +328,8 @@ always @* begin
             s_empty_next = keep2empty(s_axis_tkeep);
 
             xgmii_txd_next = {ETH_SFD, {3{ETH_PRE}}};
-            xgmii_txc_next = 4'b0000;
+            xgmii_txc_next = {CTRL_WIDTH{1'b0}};
+
             s_axis_tready_next = 1'b1;
             start_packet_next = 1'b1;
             state_next = STATE_PAYLOAD;
@@ -345,7 +346,7 @@ always @* begin
             end
 
             xgmii_txd_next = s_tdata_reg;
-            xgmii_txc_next = 4'b0000;
+            xgmii_txc_next = {CTRL_WIDTH{1'b0}};
 
             s_tdata_next = s_axis_tdata_masked;
             s_empty_next = keep2empty(s_axis_tkeep);
@@ -355,7 +356,7 @@ always @* begin
                     s_axis_tready_next = 1'b0;
                     if (s_axis_tuser[0]) begin
                         xgmii_txd_next = {XGMII_TERM, {3{XGMII_ERROR}}};
-                        xgmii_txc_next = 4'b1111;
+                        xgmii_txc_next = {CTRL_WIDTH{1'b1}};
                         ifg_count_next = 8'd10;
                         state_next = STATE_IFG;
                     end else begin
@@ -381,7 +382,7 @@ always @* begin
             end else begin
                 // tvalid deassert, fail frame
                 xgmii_txd_next = {XGMII_TERM, {3{XGMII_ERROR}}};
-                xgmii_txc_next = 4'b1111;
+                xgmii_txc_next = {CTRL_WIDTH{1'b1}};
                 ifg_count_next = 8'd10;
                 error_underflow_next = 1'b1;
                 state_next = STATE_WAIT_END;
@@ -438,7 +439,7 @@ always @* begin
             s_axis_tready_next = 1'b0;
 
             xgmii_txd_next = {{3{XGMII_IDLE}}, XGMII_TERM};
-            xgmii_txc_next = 4'b1111;
+            xgmii_txc_next = {CTRL_WIDTH{1'b1}};
 
             if (ENABLE_DIC) begin
                 if (ifg_count_next > 8'd3) begin
@@ -459,6 +460,11 @@ always @* begin
         end
         STATE_IFG: begin
             // send IFG
+
+            // XGMII idle
+            xgmii_txd_next = {CTRL_WIDTH{XGMII_IDLE}};
+            xgmii_txc_next = {CTRL_WIDTH{1'b1}};
+
             if (ifg_count_reg > 8'd4) begin
                 ifg_count_next = ifg_count_reg - 8'd4;
             end else begin
@@ -484,6 +490,10 @@ always @* begin
         STATE_WAIT_END: begin
             // wait for end of frame
             s_axis_tready_next = 1'b1;
+
+            // XGMII idle
+            xgmii_txd_next = {CTRL_WIDTH{XGMII_IDLE}};
+            xgmii_txc_next = {CTRL_WIDTH{1'b1}};
 
             if (ifg_count_reg > 8'd4) begin
                 ifg_count_next = ifg_count_reg - 8'd4;
