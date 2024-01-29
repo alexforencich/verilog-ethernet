@@ -386,7 +386,7 @@ always @* begin
 
                 if (s_axis_tvalid) begin
                     if (s_axis_tlast) begin
-                        s_axis_tready_next = 1'b0;
+                        s_axis_tready_next = !s_axis_tready_reg;
                         if (frame_ptr_reg < cfg_ifg-1) begin
                             state_next = STATE_IFG;
                         end else begin
