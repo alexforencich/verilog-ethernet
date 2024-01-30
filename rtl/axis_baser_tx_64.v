@@ -171,8 +171,8 @@ localparam [2:0]
     STATE_PAD = 3'd2,
     STATE_FCS_1 = 3'd3,
     STATE_FCS_2 = 3'd4,
-    STATE_IFG = 3'd5,
-    STATE_WAIT_END = 3'd6;
+    STATE_ERR = 3'd5,
+    STATE_IFG = 3'd6;
 
 reg [2:0] state_reg = STATE_IDLE, state_next;
 
@@ -198,6 +198,8 @@ reg [3:0] fcs_output_type_1;
 
 reg [7:0] ifg_offset;
 
+reg frame_reg = 1'b0, frame_next;
+reg frame_error_reg = 1'b0, frame_error_next;
 reg [MIN_LEN_WIDTH-1:0] frame_min_count_reg = 0, frame_min_count_next;
 
 reg [7:0] ifg_count_reg = 8'd0, ifg_count_next;
@@ -353,6 +355,8 @@ always @* begin
 
     swap_lanes_next = swap_lanes_reg;
 
+    frame_next = frame_reg;
+    frame_error_next = frame_error_reg;
     frame_min_count_next = frame_min_count_reg;
 
     ifg_count_next = ifg_count_reg;
@@ -376,6 +380,10 @@ always @* begin
     start_packet_next = 2'b00;
     error_underflow_next = 1'b0;
 
+    if (s_axis_tvalid && s_axis_tready) begin
+        frame_next = !s_axis_tlast;
+    end
+
     if (PTP_TS_ENABLE && PTP_TS_WIDTH == 96) begin
         m_axis_ptp_ts_valid_next = m_axis_ptp_ts_valid_int_reg;
         m_axis_ptp_ts_adj_next[15:0] = m_axis_ptp_ts_reg[15:0];
@@ -387,6 +395,7 @@ always @* begin
     case (state_reg)
         STATE_IDLE: begin
             // idle state - wait for data
+            frame_error_next = 1'b0;
             frame_min_count_next = MIN_FRAME_LENGTH-4-KEEP_WIDTH;
             reset_crc = 1'b1;
             s_axis_tready_next = 1'b1;
@@ -467,44 +476,39 @@ always @* begin
             s_tdata_next = s_axis_tdata_masked;
             s_empty_next = keep2empty(s_axis_tkeep);
 
-            if (s_axis_tvalid) begin
-                if (s_axis_tlast) begin
-                    s_axis_tready_next = 1'b0;
-                    if (s_axis_tuser[0]) begin
-                        output_type_next = OUTPUT_TYPE_ERROR;
-                        ifg_count_next = 8'd8;
-                        state_next = STATE_IFG;
-                    end else begin
-                        s_axis_tready_next = 1'b0;
+            if (!s_axis_tvalid || s_axis_tlast) begin
+                s_axis_tready_next = frame_next; // drop frame
+                frame_error_next = !s_axis_tvalid || s_axis_tuser[0];
+                error_underflow_next = !s_axis_tvalid;
 
-                        if (ENABLE_PADDING && frame_min_count_reg) begin
-                            if (frame_min_count_reg > KEEP_WIDTH) begin
-                                s_empty_next = 0;
-                                state_next = STATE_PAD;
-                            end else begin
-                                if (keep2empty(s_axis_tkeep) > KEEP_WIDTH-frame_min_count_reg) begin
-                                    s_empty_next = KEEP_WIDTH-frame_min_count_reg;
-                                end
-                                state_next = STATE_FCS_1;
-                            end
+                if (ENABLE_PADDING && frame_min_count_reg) begin
+                    if (frame_min_count_reg > KEEP_WIDTH) begin
+                        s_empty_next = 0;
+                        state_next = STATE_PAD;
+                    end else begin
+                        if (keep2empty(s_axis_tkeep) > KEEP_WIDTH-frame_min_count_reg) begin
+                            s_empty_next = KEEP_WIDTH-frame_min_count_reg;
+                        end
+                        if (frame_error_next) begin
+                            state_next = STATE_ERR;
                         end else begin
                             state_next = STATE_FCS_1;
                         end
                     end
                 end else begin
-                    state_next = STATE_PAYLOAD;
+                    if (frame_error_next) begin
+                        state_next = STATE_ERR;
+                    end else begin
+                        state_next = STATE_FCS_1;
+                    end
                 end
             end else begin
-                // tvalid deassert, fail frame
-                output_type_next = OUTPUT_TYPE_ERROR;
-                ifg_count_next = 8'd8;
-                error_underflow_next = 1'b1;
-                state_next = STATE_WAIT_END;
+                state_next = STATE_PAYLOAD;
             end
         end
         STATE_PAD: begin
             // pad frame to MIN_FRAME_LENGTH
-            s_axis_tready_next = 1'b0;
+            s_axis_tready_next = frame_next; // drop frame
 
             output_data_next = s_tdata_reg;
             output_type_next = OUTPUT_TYPE_DATA;
@@ -520,12 +524,16 @@ always @* begin
             end else begin
                 frame_min_count_next = 0;
                 s_empty_next = KEEP_WIDTH-frame_min_count_reg;
-                state_next = STATE_FCS_1;
+                if (frame_error_reg) begin
+                    state_next = STATE_ERR;
+                end else begin
+                    state_next = STATE_FCS_1;
+                end
             end
         end
         STATE_FCS_1: begin
             // last cycle
-            s_axis_tready_next = 1'b0;
+            s_axis_tready_next = frame_next; // drop frame
 
             output_data_next = fcs_output_data_0;
             output_type_next = fcs_output_type_0;
@@ -541,7 +549,7 @@ always @* begin
         end
         STATE_FCS_2: begin
             // last cycle
-            s_axis_tready_next = 1'b0;
+            s_axis_tready_next = frame_next; // drop frame
 
             output_data_next = fcs_output_data_1;
             output_type_next = fcs_output_type_1;
@@ -573,8 +581,24 @@ always @* begin
                 end
             end
         end
+        STATE_ERR: begin
+            // terminate packet with error
+            s_axis_tready_next = frame_next; // drop frame
+
+            output_data_next = s_tdata_reg;
+            output_type_next = OUTPUT_TYPE_ERROR;
+
+            ifg_count_next = 8'd12;
+
+            state_next = STATE_IFG;
+        end
         STATE_IFG: begin
             // send IFG
+            s_axis_tready_next = frame_next; // drop frame
+
+            output_data_next = s_tdata_reg;
+            output_type_next = OUTPUT_TYPE_IDLE;
+
             if (ifg_count_reg > 8'd8) begin
                 ifg_count_next = ifg_count_reg - 8'd8;
             end else begin
@@ -584,7 +608,7 @@ always @* begin
             reset_crc = 1'b1;
 
             if (ENABLE_DIC) begin
-                if (ifg_count_next > 8'd7) begin
+                if (ifg_count_next > 8'd7 || frame_reg) begin
                     state_next = STATE_IFG;
                 end else begin
                     if (ifg_count_next >= 8'd4) begin
@@ -599,60 +623,13 @@ always @* begin
                     state_next = STATE_IDLE;
                 end
             end else begin
-                if (ifg_count_next > 8'd4) begin
+                if (ifg_count_next > 8'd4 || frame_reg) begin
                     state_next = STATE_IFG;
                 end else begin
                     s_axis_tready_next = 1'b1;
                     swap_lanes_next = ifg_count_next != 0;
                     state_next = STATE_IDLE;
                 end
-            end
-        end
-        STATE_WAIT_END: begin
-            // wait for end of frame
-            s_axis_tready_next = 1'b1;
-
-            if (ifg_count_reg > 8'd4) begin
-                ifg_count_next = ifg_count_reg - 8'd4;
-            end else begin
-                ifg_count_next = 8'd0;
-            end
-
-            reset_crc = 1'b1;
-
-            if (s_axis_tvalid) begin
-                if (s_axis_tlast) begin
-                    s_axis_tready_next = 1'b0;
-
-                    if (ENABLE_DIC) begin
-                        if (ifg_count_next > 8'd7) begin
-                            state_next = STATE_IFG;
-                        end else begin
-                            if (ifg_count_next >= 8'd4) begin
-                                deficit_idle_count_next = ifg_count_next - 8'd4;
-                                swap_lanes_next = 1'b1;
-                            end else begin
-                                deficit_idle_count_next = ifg_count_next;
-                                ifg_count_next = 8'd0;
-                                swap_lanes_next = 1'b0;
-                            end
-                            s_axis_tready_next = 1'b1;
-                            state_next = STATE_IDLE;
-                        end
-                    end else begin
-                        if (ifg_count_next > 8'd4) begin
-                            state_next = STATE_IFG;
-                        end else begin
-                            s_axis_tready_next = 1'b1;
-                            swap_lanes_next = ifg_count_next != 0;
-                            state_next = STATE_IDLE;
-                        end
-                    end
-                end else begin
-                    state_next = STATE_WAIT_END;
-                end
-            end else begin
-                state_next = STATE_WAIT_END;
             end
         end
     endcase
@@ -663,6 +640,8 @@ always @(posedge clk) begin
 
     swap_lanes_reg <= swap_lanes_next;
 
+    frame_reg <= frame_next;
+    frame_error_reg <= frame_error_next;
     frame_min_count_reg <= frame_min_count_next;
 
     ifg_count_reg <= ifg_count_next;
@@ -787,6 +766,8 @@ always @(posedge clk) begin
 
     if (rst) begin
         state_reg <= STATE_IDLE;
+
+        frame_reg <= 1'b0;
 
         swap_lanes_reg <= 1'b0;
 

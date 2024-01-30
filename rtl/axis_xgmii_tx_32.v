@@ -121,8 +121,8 @@ localparam [3:0]
     STATE_FCS_1 = 4'd4,
     STATE_FCS_2 = 4'd5,
     STATE_FCS_3 = 4'd6,
-    STATE_IFG = 4'd7,
-    STATE_WAIT_END = 4'd8;
+    STATE_ERR = 4'd7,
+    STATE_IFG = 4'd8;
 
 reg [3:0] state_reg = STATE_IDLE, state_next;
 
@@ -144,6 +144,8 @@ reg [7:0] ifg_offset;
 
 reg extra_cycle;
 
+reg frame_reg = 1'b0, frame_next;
+reg frame_error_reg = 1'b0, frame_error_next;
 reg [MIN_LEN_WIDTH-1:0] frame_min_count_reg = 0, frame_min_count_next;
 
 reg [7:0] ifg_count_reg = 8'd0, ifg_count_next;
@@ -263,6 +265,8 @@ always @* begin
     reset_crc = 1'b0;
     update_crc = 1'b0;
 
+    frame_next = frame_reg;
+    frame_error_next = frame_error_reg;
     frame_min_count_next = frame_min_count_reg;
 
     ifg_count_next = ifg_count_reg;
@@ -295,9 +299,14 @@ always @* begin
     start_packet_next = 1'b0;
     error_underflow_next = 1'b0;
 
+    if (s_axis_tvalid && s_axis_tready) begin
+        frame_next = !s_axis_tlast;
+    end
+
     case (state_reg)
         STATE_IDLE: begin
             // idle state - wait for data
+            frame_error_next = 1'b0;
             frame_min_count_next = MIN_FRAME_LENGTH-4-CTRL_WIDTH;
             reset_crc = 1'b1;
 
@@ -351,46 +360,31 @@ always @* begin
             s_tdata_next = s_axis_tdata_masked;
             s_empty_next = keep2empty(s_axis_tkeep);
 
-            if (s_axis_tvalid) begin
-                if (s_axis_tlast) begin
-                    s_axis_tready_next = 1'b0;
-                    if (s_axis_tuser[0]) begin
-                        xgmii_txd_next = {XGMII_TERM, {3{XGMII_ERROR}}};
-                        xgmii_txc_next = {CTRL_WIDTH{1'b1}};
-                        ifg_count_next = 8'd10;
-                        state_next = STATE_IFG;
-                    end else begin
-                        s_axis_tready_next = 1'b0;
+            if (!s_axis_tvalid || s_axis_tlast) begin
+                s_axis_tready_next = frame_next; // drop frame
+                frame_error_next = !s_axis_tvalid || s_axis_tuser[0];
+                error_underflow_next = !s_axis_tvalid;
 
-                        if (ENABLE_PADDING && frame_min_count_reg) begin
-                            if (frame_min_count_reg > CTRL_WIDTH) begin
-                                s_empty_next = 0;
-                                state_next = STATE_PAD;
-                            end else begin
-                                if (keep2empty(s_axis_tkeep) > CTRL_WIDTH-frame_min_count_reg) begin
-                                    s_empty_next = CTRL_WIDTH-frame_min_count_reg;
-                                end
-                                state_next = STATE_FCS_1;
-                            end
-                        end else begin
-                            state_next = STATE_FCS_1;
+                if (ENABLE_PADDING && frame_min_count_reg) begin
+                    if (frame_min_count_reg > CTRL_WIDTH) begin
+                        s_empty_next = 0;
+                        state_next = STATE_PAD;
+                    end else begin
+                        if (keep2empty(s_axis_tkeep) > CTRL_WIDTH-frame_min_count_reg) begin
+                            s_empty_next = CTRL_WIDTH-frame_min_count_reg;
                         end
+                        state_next = STATE_FCS_1;
                     end
                 end else begin
-                    state_next = STATE_PAYLOAD;
+                    state_next = STATE_FCS_1;
                 end
             end else begin
-                // tvalid deassert, fail frame
-                xgmii_txd_next = {XGMII_TERM, {3{XGMII_ERROR}}};
-                xgmii_txc_next = {CTRL_WIDTH{1'b1}};
-                ifg_count_next = 8'd10;
-                error_underflow_next = 1'b1;
-                state_next = STATE_WAIT_END;
+                state_next = STATE_PAYLOAD;
             end
         end
         STATE_PAD: begin
             // pad frame to MIN_FRAME_LENGTH
-            s_axis_tready_next = 1'b0;
+            s_axis_tready_next = frame_next; // drop frame
 
             xgmii_txd_next = s_tdata_reg;
             xgmii_txc_next = {CTRL_WIDTH{1'b0}};
@@ -411,7 +405,7 @@ always @* begin
         end
         STATE_FCS_1: begin
             // last cycle
-            s_axis_tready_next = 1'b0;
+            s_axis_tready_next = frame_next; // drop frame
 
             xgmii_txd_next = fcs_output_txd_0;
             xgmii_txc_next = fcs_output_txc_0;
@@ -419,11 +413,15 @@ always @* begin
             update_crc = 1'b1;
 
             ifg_count_next = (cfg_ifg > 8'd12 ? cfg_ifg : 8'd12) - ifg_offset + deficit_idle_count_reg;
-            state_next = STATE_FCS_2;
+            if (frame_error_reg) begin
+                state_next = STATE_ERR;
+            end else begin
+                state_next = STATE_FCS_2;
+            end
         end
         STATE_FCS_2: begin
             // last cycle
-            s_axis_tready_next = 1'b0;
+            s_axis_tready_next = frame_next; // drop frame
 
             xgmii_txd_next = fcs_output_txd_1;
             xgmii_txc_next = fcs_output_txc_1;
@@ -436,7 +434,7 @@ always @* begin
         end
         STATE_FCS_3: begin
             // last cycle
-            s_axis_tready_next = 1'b0;
+            s_axis_tready_next = frame_next; // drop frame
 
             xgmii_txd_next = {{3{XGMII_IDLE}}, XGMII_TERM};
             xgmii_txc_next = {CTRL_WIDTH{1'b1}};
@@ -458,8 +456,21 @@ always @* begin
                 end
             end
         end
+        STATE_ERR: begin
+            // terminate packet with error
+            s_axis_tready_next = frame_next; // drop frame
+
+            // XGMII error
+            xgmii_txd_next = {XGMII_TERM, {3{XGMII_ERROR}}};
+            xgmii_txc_next = {CTRL_WIDTH{1'b1}};
+
+            ifg_count_next = 8'd12;
+
+            state_next = STATE_IFG;
+        end
         STATE_IFG: begin
             // send IFG
+            s_axis_tready_next = frame_next; // drop frame
 
             // XGMII idle
             xgmii_txd_next = {CTRL_WIDTH{XGMII_IDLE}};
@@ -472,7 +483,7 @@ always @* begin
             end
 
             if (ENABLE_DIC) begin
-                if (ifg_count_next > 8'd3) begin
+                if (ifg_count_next > 8'd3 || frame_reg) begin
                     state_next = STATE_IFG;
                 end else begin
                     deficit_idle_count_next = ifg_count_next;
@@ -480,51 +491,11 @@ always @* begin
                     state_next = STATE_IDLE;
                 end
             end else begin
-                if (ifg_count_next > 8'd0) begin
+                if (ifg_count_next > 8'd0 || frame_reg) begin
                     state_next = STATE_IFG;
                 end else begin
                     state_next = STATE_IDLE;
                 end
-            end
-        end
-        STATE_WAIT_END: begin
-            // wait for end of frame
-            s_axis_tready_next = 1'b1;
-
-            // XGMII idle
-            xgmii_txd_next = {CTRL_WIDTH{XGMII_IDLE}};
-            xgmii_txc_next = {CTRL_WIDTH{1'b1}};
-
-            if (ifg_count_reg > 8'd4) begin
-                ifg_count_next = ifg_count_reg - 8'd4;
-            end else begin
-                ifg_count_next = 8'd0;
-            end
-
-            if (s_axis_tvalid) begin
-                if (s_axis_tlast) begin
-                    s_axis_tready_next = 1'b0;
-
-                    if (ENABLE_DIC) begin
-                        if (ifg_count_next > 8'd3) begin
-                            state_next = STATE_IFG;
-                        end else begin
-                            deficit_idle_count_next = ifg_count_next;
-                            ifg_count_next = 8'd0;
-                            state_next = STATE_IDLE;
-                        end
-                    end else begin
-                        if (ifg_count_next > 8'd0) begin
-                            state_next = STATE_IFG;
-                        end else begin
-                            state_next = STATE_IDLE;
-                        end
-                    end
-                end else begin
-                    state_next = STATE_WAIT_END;
-                end
-            end else begin
-                state_next = STATE_WAIT_END;
             end
         end
     endcase
@@ -533,6 +504,8 @@ end
 always @(posedge clk) begin
     state_reg <= state_next;
 
+    frame_reg <= frame_next;
+    frame_error_reg <= frame_error_next;
     frame_min_count_reg <= frame_min_count_next;
 
     ifg_count_reg <= ifg_count_next;
@@ -567,6 +540,8 @@ always @(posedge clk) begin
 
     if (rst) begin
         state_reg <= STATE_IDLE;
+
+        frame_reg <= 1'b0;
 
         ifg_count_reg <= 8'd0;
         deficit_idle_count_reg <= 2'd0;
