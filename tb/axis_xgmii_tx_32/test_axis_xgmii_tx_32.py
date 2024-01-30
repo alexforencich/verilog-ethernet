@@ -197,6 +197,82 @@ async def run_test_alignment(dut, payload_data=None, ifg=12):
     await RisingEdge(dut.clk)
 
 
+async def run_test_underrun(dut, ifg=12):
+
+    tb = TB(dut)
+
+    tb.dut.cfg_ifg.value = ifg
+    tb.dut.cfg_tx_enable.value = 1
+
+    await tb.reset()
+
+    test_data = bytes(x for x in range(60))
+
+    for k in range(3):
+        test_frame = AxiStreamFrame(test_data)
+        await tb.source.send(test_frame)
+
+    for k in range(32):
+        await RisingEdge(dut.clk)
+
+    tb.source.pause = True
+
+    for k in range(4):
+        await RisingEdge(dut.clk)
+
+    tb.source.pause = False
+
+    for k in range(3):
+        rx_frame = await tb.sink.recv()
+
+        if k == 1:
+            assert rx_frame.data[-1] == 0xFE
+            assert rx_frame.ctrl[-1] == 1
+        else:
+            assert rx_frame.get_payload() == test_data
+            assert rx_frame.check_fcs()
+            assert rx_frame.ctrl is None
+
+    assert tb.sink.empty()
+
+    await RisingEdge(dut.clk)
+    await RisingEdge(dut.clk)
+
+
+async def run_test_error(dut, ifg=12):
+
+    tb = TB(dut)
+
+    tb.dut.cfg_ifg.value = ifg
+    tb.dut.cfg_tx_enable.value = 1
+
+    await tb.reset()
+
+    test_data = bytes(x for x in range(60))
+
+    for k in range(3):
+        test_frame = AxiStreamFrame(test_data)
+        if k == 1:
+            test_frame.tuser = 1
+        await tb.source.send(test_frame)
+
+    for k in range(3):
+        rx_frame = await tb.sink.recv()
+
+        if k == 1:
+            assert rx_frame.data[-1] == 0xFE
+            assert rx_frame.ctrl[-1] == 1
+        else:
+            assert rx_frame.get_payload() == test_data
+            assert rx_frame.check_fcs()
+            assert rx_frame.ctrl is None
+
+    assert tb.sink.empty()
+
+    await RisingEdge(dut.clk)
+    await RisingEdge(dut.clk)
+
+
 def size_list():
     return list(range(60, 128)) + [512, 1514, 9214] + [60]*10
 
@@ -221,6 +297,12 @@ if cocotb.SIM_NAME:
     factory.add_option("payload_data", [incrementing_payload])
     factory.add_option("ifg", [12])
     factory.generate_tests()
+
+    for test in [run_test_underrun, run_test_error]:
+
+        factory = TestFactory(test)
+        factory.add_option("ifg", [12])
+        factory.generate_tests()
 
 
 # cocotb-test

@@ -288,6 +288,84 @@ async def run_test_tx_alignment(dut, payload_data=None, ifg=12):
     await RisingEdge(dut.tx_clk)
 
 
+async def run_test_tx_underrun(dut, ifg=12):
+
+    tb = TB(dut)
+
+    tb.serdes_source.ifg = ifg
+    tb.dut.cfg_ifg.value = ifg
+    tb.dut.cfg_tx_enable.value = 1
+
+    await tb.reset()
+
+    test_data = bytes(x for x in range(60))
+
+    for k in range(3):
+        test_frame = AxiStreamFrame(test_data)
+        await tb.axis_source.send(test_frame)
+
+    for k in range(64*16 // tb.axis_source.width):
+        await RisingEdge(dut.tx_clk)
+
+    tb.axis_source.pause = True
+
+    for k in range(4):
+        await RisingEdge(dut.tx_clk)
+
+    tb.axis_source.pause = False
+
+    for k in range(3):
+        rx_frame = await tb.serdes_sink.recv()
+
+        if k == 1:
+            assert rx_frame.data[-1] == 0xFE
+            assert rx_frame.ctrl[-1] == 1
+        else:
+            assert rx_frame.get_payload() == test_data
+            assert rx_frame.check_fcs()
+            assert rx_frame.ctrl is None
+
+    assert tb.serdes_sink.empty()
+
+    await RisingEdge(dut.tx_clk)
+    await RisingEdge(dut.tx_clk)
+
+
+async def run_test_tx_error(dut, ifg=12):
+
+    tb = TB(dut)
+
+    tb.serdes_source.ifg = ifg
+    tb.dut.cfg_ifg.value = ifg
+    tb.dut.cfg_tx_enable.value = 1
+
+    await tb.reset()
+
+    test_data = bytes(x for x in range(60))
+
+    for k in range(3):
+        test_frame = AxiStreamFrame(test_data)
+        if k == 1:
+            test_frame.tuser = 1
+        await tb.axis_source.send(test_frame)
+
+    for k in range(3):
+        rx_frame = await tb.serdes_sink.recv()
+
+        if k == 1:
+            assert rx_frame.data[-1] == 0xFE
+            assert rx_frame.ctrl[-1] == 1
+        else:
+            assert rx_frame.get_payload() == test_data
+            assert rx_frame.check_fcs()
+            assert rx_frame.ctrl is None
+
+    assert tb.serdes_sink.empty()
+
+    await RisingEdge(dut.tx_clk)
+    await RisingEdge(dut.tx_clk)
+
+
 async def run_test_rx_frame_sync(dut):
 
     tb = TB(dut)
@@ -352,6 +430,12 @@ if cocotb.SIM_NAME:
     factory.add_option("payload_data", [incrementing_payload])
     factory.add_option("ifg", [12])
     factory.generate_tests()
+
+    for test in [run_test_tx_underrun, run_test_tx_error]:
+
+        factory = TestFactory(test)
+        factory.add_option("ifg", [12])
+        factory.generate_tests()
 
     factory = TestFactory(run_test_rx_frame_sync)
     factory.generate_tests()
