@@ -109,57 +109,49 @@ assign mac_gmii_rx_er = rgmii_rx_ctl_1 ^ rgmii_rx_ctl_2;
 
 reg rgmii_tx_clk_1 = 1'b1;
 reg rgmii_tx_clk_2 = 1'b0;
-reg rgmii_tx_clk_rise = 1'b1;
-reg rgmii_tx_clk_fall = 1'b1;
+reg rgmii_tx_clk_en = 1'b1;
 
 reg [5:0] count_reg = 6'd0, count_next;
 
 always @(posedge clk) begin
+    rgmii_tx_clk_1 <= rgmii_tx_clk_2;
+
+    if (speed == 2'b00) begin
+        // 10M
+        count_reg <= count_reg + 1;
+        rgmii_tx_clk_en <= 1'b0;
+        if (count_reg == 24) begin
+            rgmii_tx_clk_1 <= 1'b1;
+            rgmii_tx_clk_2 <= 1'b1;
+        end else if (count_reg >= 49) begin
+            rgmii_tx_clk_2 <= 1'b0;
+            rgmii_tx_clk_en <= 1'b1;
+            count_reg <= 0;
+        end
+    end else if (speed == 2'b01) begin
+        // 100M
+        count_reg <= count_reg + 1;
+        rgmii_tx_clk_en <= 1'b0;
+        if (count_reg == 2) begin
+            rgmii_tx_clk_1 <= 1'b1;
+            rgmii_tx_clk_2 <= 1'b1;
+        end else if (count_reg >= 4) begin
+            rgmii_tx_clk_2 <= 1'b0;
+            rgmii_tx_clk_en <= 1'b1;
+            count_reg <= 0;
+        end
+    end else begin
+        // 1000M
+        rgmii_tx_clk_1 <= 1'b1;
+        rgmii_tx_clk_2 <= 1'b0;
+        rgmii_tx_clk_en <= 1'b1;
+    end
+
     if (rst) begin
         rgmii_tx_clk_1 <= 1'b1;
         rgmii_tx_clk_2 <= 1'b0;
-        rgmii_tx_clk_rise <= 1'b1;
-        rgmii_tx_clk_fall <= 1'b1;
+        rgmii_tx_clk_en <= 1'b1;
         count_reg <= 0;
-    end else begin
-        rgmii_tx_clk_1 <= rgmii_tx_clk_2;
-
-        if (speed == 2'b00) begin
-            // 10M
-            count_reg <= count_reg + 1;
-            rgmii_tx_clk_rise <= 1'b0;
-            rgmii_tx_clk_fall <= 1'b0;
-            if (count_reg == 24) begin
-                rgmii_tx_clk_1 <= 1'b1;
-                rgmii_tx_clk_2 <= 1'b1;
-                rgmii_tx_clk_rise <= 1'b1;
-            end else if (count_reg >= 49) begin
-                rgmii_tx_clk_1 <= 1'b0;
-                rgmii_tx_clk_2 <= 1'b0;
-                rgmii_tx_clk_fall <= 1'b1;
-                count_reg <= 0;
-            end
-        end else if (speed == 2'b01) begin
-            // 100M
-            count_reg <= count_reg + 1;
-            rgmii_tx_clk_rise <= 1'b0;
-            rgmii_tx_clk_fall <= 1'b0;
-            if (count_reg == 2) begin
-                rgmii_tx_clk_1 <= 1'b1;
-                rgmii_tx_clk_2 <= 1'b1;
-                rgmii_tx_clk_rise <= 1'b1;
-            end else if (count_reg >= 4) begin
-                rgmii_tx_clk_2 <= 1'b0;
-                rgmii_tx_clk_fall <= 1'b1;
-                count_reg <= 0;
-            end
-        end else begin
-            // 1000M
-            rgmii_tx_clk_1 <= 1'b1;
-            rgmii_tx_clk_2 <= 1'b0;
-            rgmii_tx_clk_rise <= 1'b1;
-            rgmii_tx_clk_fall <= 1'b1;
-        end
     end
 end
 
@@ -175,26 +167,26 @@ always @* begin
         // 10M
         rgmii_txd_1 = mac_gmii_txd[3:0];
         rgmii_txd_2 = mac_gmii_txd[3:0];
-        if (rgmii_tx_clk_2) begin
-            rgmii_tx_ctl_1 = mac_gmii_tx_en;
-            rgmii_tx_ctl_2 = mac_gmii_tx_en;
-        end else begin
+        if (rgmii_tx_clk_1) begin
             rgmii_tx_ctl_1 = mac_gmii_tx_en ^ mac_gmii_tx_er;
             rgmii_tx_ctl_2 = mac_gmii_tx_en ^ mac_gmii_tx_er;
+        end else begin
+            rgmii_tx_ctl_1 = mac_gmii_tx_en;
+            rgmii_tx_ctl_2 = mac_gmii_tx_en;
         end
-        gmii_clk_en = rgmii_tx_clk_fall;
+        gmii_clk_en = rgmii_tx_clk_en;
     end else if (speed == 2'b01) begin
         // 100M
         rgmii_txd_1 = mac_gmii_txd[3:0];
         rgmii_txd_2 = mac_gmii_txd[3:0];
-        if (rgmii_tx_clk_2) begin
-            rgmii_tx_ctl_1 = mac_gmii_tx_en;
-            rgmii_tx_ctl_2 = mac_gmii_tx_en;
-        end else begin
+        if (rgmii_tx_clk_1) begin
             rgmii_tx_ctl_1 = mac_gmii_tx_en ^ mac_gmii_tx_er;
             rgmii_tx_ctl_2 = mac_gmii_tx_en ^ mac_gmii_tx_er;
+        end else begin
+            rgmii_tx_ctl_1 = mac_gmii_tx_en;
+            rgmii_tx_ctl_2 = mac_gmii_tx_en;
         end
-        gmii_clk_en = rgmii_tx_clk_fall;
+        gmii_clk_en = rgmii_tx_clk_en;
     end else begin
         // 1000M
         rgmii_txd_1 = mac_gmii_txd[3:0];
