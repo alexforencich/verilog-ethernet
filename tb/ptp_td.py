@@ -127,7 +127,6 @@ class PtpTdSource(Reset):
 
     def set_ts_tod_ns(self, t):
         ts_s, ts_ns = self.ctx.divmod(Decimal(t), Decimal(1000000000))
-        ts_s = ts_s.scaleb(-9).to_integral_value()
         ts_ns, ts_fns = self.ctx.divmod(ts_ns, Decimal(1))
         ts_ns = ts_ns.to_integral_value()
         ts_fns = (ts_fns * Decimal(2**32)).to_integral_value()
