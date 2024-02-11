@@ -454,13 +454,13 @@ always @(posedge clk) begin
                 adder_b_reg <= -NS_PER_S;
                 adder_cin_reg <= 0;
 
-                if (ts_tod_ns_reg[29]) begin
-                    // latter half of second; compute offset for next second
+                if (ts_tod_ns_reg[29:27] == 3'b111) begin
+                    // latter portion of second; compute offset for next second
                     adder_b_reg <= -NS_PER_S;
                     update_state_reg <= 12;
                     adder_busy_reg <= 1'b1;
                 end else begin
-                    // former half of second; compute offset for previous second
+                    // former portion of second; compute offset for previous second
                     adder_b_reg <= NS_PER_S;
                     update_state_reg <= 14;
                     adder_busy_reg <= 1'b1;
