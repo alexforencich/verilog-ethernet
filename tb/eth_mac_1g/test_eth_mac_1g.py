@@ -727,15 +727,14 @@ def test_eth_mac_1g(request, pfc_en):
     parameters['DATA_WIDTH'] = 8
     parameters['ENABLE_PADDING'] = 1
     parameters['MIN_FRAME_LENGTH'] = 64
-    parameters['TX_PTP_TS_ENABLE'] = 1
-    parameters['TX_PTP_TS_WIDTH'] = 96
-    parameters['TX_PTP_TS_CTRL_IN_TUSER'] = parameters['TX_PTP_TS_ENABLE']
-    parameters['TX_PTP_TAG_ENABLE'] = parameters['TX_PTP_TS_ENABLE']
+    parameters['PTP_TS_ENABLE'] = 1
+    parameters['PTP_TS_FMT_TOD'] = 1
+    parameters['PTP_TS_WIDTH'] = 96 if parameters['PTP_TS_FMT_TOD'] else 64
+    parameters['TX_PTP_TS_CTRL_IN_TUSER'] = parameters['PTP_TS_ENABLE']
+    parameters['TX_PTP_TAG_ENABLE'] = parameters['PTP_TS_ENABLE']
     parameters['TX_PTP_TAG_WIDTH'] = 16
-    parameters['RX_PTP_TS_ENABLE'] = parameters['TX_PTP_TS_ENABLE']
-    parameters['RX_PTP_TS_WIDTH'] = 96
-    parameters['TX_USER_WIDTH'] = ((parameters['TX_PTP_TAG_WIDTH'] if parameters['TX_PTP_TAG_ENABLE'] else 0) + (1 if parameters['TX_PTP_TS_CTRL_IN_TUSER'] else 0) if parameters['TX_PTP_TS_ENABLE'] else 0) + 1
-    parameters['RX_USER_WIDTH'] = (parameters['RX_PTP_TS_WIDTH'] if parameters['RX_PTP_TS_ENABLE'] else 0) + 1
+    parameters['TX_USER_WIDTH'] = ((parameters['TX_PTP_TAG_WIDTH'] if parameters['TX_PTP_TAG_ENABLE'] else 0) + (1 if parameters['TX_PTP_TS_CTRL_IN_TUSER'] else 0) if parameters['PTP_TS_ENABLE'] else 0) + 1
+    parameters['RX_USER_WIDTH'] = (parameters['PTP_TS_WIDTH'] if parameters['PTP_TS_ENABLE'] else 0) + 1
     parameters['PFC_ENABLE'] = pfc_en
     parameters['PAUSE_ENABLE'] = parameters['PFC_ENABLE']
 

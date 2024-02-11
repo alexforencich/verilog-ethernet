@@ -55,15 +55,15 @@ module eth_mac_10g_fifo #
     parameter RX_DROP_WHEN_FULL = RX_DROP_OVERSIZE_FRAME,
     parameter PTP_PERIOD_NS = 4'h6,
     parameter PTP_PERIOD_FNS = 16'h6666,
-    parameter TX_PTP_TS_ENABLE = 0,
-    parameter RX_PTP_TS_ENABLE = TX_PTP_TS_ENABLE,
+    parameter PTP_TS_ENABLE = 0,
+    parameter PTP_TS_FMT_TOD = 1,
+    parameter PTP_TS_WIDTH = PTP_TS_FMT_TOD ? 96 : 64,
     parameter TX_PTP_TS_CTRL_IN_TUSER = 0,
     parameter TX_PTP_TS_FIFO_DEPTH = 64,
-    parameter PTP_TS_WIDTH = 96,
-    parameter TX_PTP_TAG_ENABLE = TX_PTP_TS_ENABLE,
+    parameter TX_PTP_TAG_ENABLE = PTP_TS_ENABLE,
     parameter PTP_TAG_WIDTH = 16,
-    parameter TX_USER_WIDTH = (TX_PTP_TS_ENABLE ? (TX_PTP_TAG_ENABLE ? PTP_TAG_WIDTH : 0) + (TX_PTP_TS_CTRL_IN_TUSER ? 1 : 0) : 0) + 1,
-    parameter RX_USER_WIDTH = (RX_PTP_TS_ENABLE ? PTP_TS_WIDTH : 0) + 1
+    parameter TX_USER_WIDTH = (PTP_TS_ENABLE ? (TX_PTP_TAG_ENABLE ? PTP_TAG_WIDTH : 0) + (TX_PTP_TS_CTRL_IN_TUSER ? 1 : 0) : 0) + 1,
+    parameter RX_USER_WIDTH = (PTP_TS_ENABLE ? PTP_TS_WIDTH : 0) + 1
 )
 (
     input  wire                       rx_clk,
@@ -223,7 +223,7 @@ end
 // PTP timestamping
 generate
 
-if (TX_PTP_TS_ENABLE) begin : tx_ptp
+if (PTP_TS_ENABLE) begin : tx_ptp
     
     ptp_clock_cdc #(
         .TS_WIDTH(PTP_TS_WIDTH),
@@ -298,7 +298,7 @@ end else begin
 
 end
 
-if (RX_PTP_TS_ENABLE) begin : rx_ptp
+if (PTP_TS_ENABLE) begin : rx_ptp
 
     ptp_clock_cdc #(
         .TS_WIDTH(PTP_TS_WIDTH),
@@ -335,13 +335,12 @@ eth_mac_10g #(
     .MIN_FRAME_LENGTH(MIN_FRAME_LENGTH),
     .PTP_PERIOD_NS(PTP_PERIOD_NS),
     .PTP_PERIOD_FNS(PTP_PERIOD_FNS),
-    .TX_PTP_TS_ENABLE(TX_PTP_TS_ENABLE),
-    .TX_PTP_TS_WIDTH(PTP_TS_WIDTH),
+    .PTP_TS_ENABLE(PTP_TS_ENABLE),
+    .PTP_TS_FMT_TOD(PTP_TS_FMT_TOD),
+    .PTP_TS_WIDTH(PTP_TS_WIDTH),
     .TX_PTP_TS_CTRL_IN_TUSER(TX_PTP_TS_CTRL_IN_TUSER),
     .TX_PTP_TAG_ENABLE(TX_PTP_TAG_ENABLE),
     .TX_PTP_TAG_WIDTH(PTP_TAG_WIDTH),
-    .RX_PTP_TS_ENABLE(RX_PTP_TS_ENABLE),
-    .RX_PTP_TS_WIDTH(PTP_TS_WIDTH),
     .TX_USER_WIDTH(TX_USER_WIDTH),
     .RX_USER_WIDTH(RX_USER_WIDTH)
 )

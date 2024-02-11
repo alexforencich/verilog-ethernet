@@ -39,7 +39,8 @@ module axis_xgmii_rx_64 #
     parameter PTP_PERIOD_NS = 4'h6,
     parameter PTP_PERIOD_FNS = 16'h6666,
     parameter PTP_TS_ENABLE = 0,
-    parameter PTP_TS_WIDTH = 96,
+    parameter PTP_TS_FMT_TOD = 1,
+    parameter PTP_TS_WIDTH = PTP_TS_FMT_TOD ? 96 : 64,
     parameter USER_WIDTH = (PTP_TS_ENABLE ? PTP_TS_WIDTH : 0) + 1
 )
 (
@@ -236,7 +237,7 @@ always @* begin
             m_axis_tuser_next[0] = 1'b0;
 
             if (PTP_TS_ENABLE) begin
-                m_axis_tuser_next[1 +: PTP_TS_WIDTH] = (PTP_TS_WIDTH != 96 || ptp_ts_borrow_reg) ? ptp_ts_reg : ptp_ts_adj_reg;
+                m_axis_tuser_next[1 +: PTP_TS_WIDTH] = (!PTP_TS_FMT_TOD || ptp_ts_borrow_reg) ? ptp_ts_reg : ptp_ts_adj_reg;
             end
 
             if (framing_error_reg || framing_error_d0_reg) begin
@@ -326,7 +327,7 @@ always @(posedge clk) begin
     xgmii_start_swap <= 1'b0;
     xgmii_start_d0 <= xgmii_start_swap;
 
-    if (PTP_TS_ENABLE && PTP_TS_WIDTH == 96) begin
+    if (PTP_TS_ENABLE && PTP_TS_FMT_TOD) begin
         // ns field rollover
         ptp_ts_adj_reg[15:0] <= ptp_ts_reg[15:0];
         {ptp_ts_borrow_reg, ptp_ts_adj_reg[45:16]} <= $signed({1'b0, ptp_ts_reg[45:16]}) - $signed(31'd1000000000);
@@ -378,7 +379,7 @@ always @(posedge clk) begin
         term_present_reg <= 1'b0;
         framing_error_reg <= xgmii_rxc[7:1] != 0;
 
-        if (PTP_TS_WIDTH == 96) begin
+        if (PTP_TS_FMT_TOD) begin
             ptp_ts_reg[45:0] <= ptp_ts[45:0] + (PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS);
             ptp_ts_reg[95:48] <= ptp_ts[95:48];
         end else begin
@@ -394,7 +395,7 @@ always @(posedge clk) begin
         term_present_reg <= 1'b0;
         framing_error_reg <= xgmii_rxc[7:5] != 0;
 
-        if (PTP_TS_WIDTH == 96) begin
+        if (PTP_TS_FMT_TOD) begin
             ptp_ts_reg[45:0] <= ptp_ts[45:0] + (((PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS) * 3) >> 1);
             ptp_ts_reg[95:48] <= ptp_ts[95:48];
         end else begin

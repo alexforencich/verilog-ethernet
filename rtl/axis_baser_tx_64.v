@@ -42,7 +42,8 @@ module axis_baser_tx_64 #
     parameter PTP_PERIOD_NS = 4'h6,
     parameter PTP_PERIOD_FNS = 16'h6666,
     parameter PTP_TS_ENABLE = 0,
-    parameter PTP_TS_WIDTH = 96,
+    parameter PTP_TS_FMT_TOD = 1,
+    parameter PTP_TS_WIDTH = PTP_TS_FMT_TOD ? 96 : 64,
     parameter PTP_TS_CTRL_IN_TUSER = 0,
     parameter PTP_TAG_ENABLE = PTP_TS_ENABLE,
     parameter PTP_TAG_WIDTH = 16,
@@ -231,7 +232,7 @@ assign s_axis_tready = s_axis_tready_reg;
 assign encoded_tx_data = encoded_tx_data_reg;
 assign encoded_tx_hdr = encoded_tx_hdr_reg;
 
-assign m_axis_ptp_ts = PTP_TS_ENABLE ? ((PTP_TS_WIDTH != 96 || m_axis_ptp_ts_borrow_reg) ? m_axis_ptp_ts_reg : m_axis_ptp_ts_adj_reg) : 0;
+assign m_axis_ptp_ts = PTP_TS_ENABLE ? ((!PTP_TS_FMT_TOD || m_axis_ptp_ts_borrow_reg) ? m_axis_ptp_ts_reg : m_axis_ptp_ts_adj_reg) : 0;
 assign m_axis_ptp_ts_tag = PTP_TAG_ENABLE ? m_axis_ptp_ts_tag_reg : 0;
 assign m_axis_ptp_ts_valid = PTP_TS_ENABLE || PTP_TAG_ENABLE ? m_axis_ptp_ts_valid_reg : 1'b0;
 
@@ -384,7 +385,7 @@ always @* begin
         frame_next = !s_axis_tlast;
     end
 
-    if (PTP_TS_ENABLE && PTP_TS_WIDTH == 96) begin
+    if (PTP_TS_ENABLE && PTP_TS_FMT_TOD) begin
         m_axis_ptp_ts_valid_next = m_axis_ptp_ts_valid_int_reg;
         m_axis_ptp_ts_adj_next[15:0] = m_axis_ptp_ts_reg[15:0];
         {m_axis_ptp_ts_borrow_next, m_axis_ptp_ts_adj_next[45:16]} = $signed({1'b0, m_axis_ptp_ts_reg[45:16]}) - $signed(31'd1000000000);
@@ -411,7 +412,7 @@ always @* begin
                 if (swap_lanes_reg) begin
                     // lanes swapped
                     if (PTP_TS_ENABLE) begin
-                        if (PTP_TS_WIDTH == 96) begin
+                        if (PTP_TS_FMT_TOD) begin
                             m_axis_ptp_ts_next[45:0] = ptp_ts[45:0] + (((PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS) * 3) >> 1);
                             m_axis_ptp_ts_next[95:48] = ptp_ts[95:48];
                         end else begin
@@ -422,7 +423,7 @@ always @* begin
                 end else begin
                     // lanes not swapped
                     if (PTP_TS_ENABLE) begin
-                        if (PTP_TS_WIDTH == 96) begin
+                        if (PTP_TS_FMT_TOD) begin
                             m_axis_ptp_ts_next[45:0] = ptp_ts[45:0] + (PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS);
                             m_axis_ptp_ts_next[95:48] = ptp_ts[95:48];
                         end else begin
@@ -434,14 +435,14 @@ always @* begin
                 if (PTP_TS_ENABLE) begin
                     if (PTP_TS_CTRL_IN_TUSER) begin
                         m_axis_ptp_ts_tag_next = s_axis_tuser >> 2;
-                        if (PTP_TS_WIDTH == 96) begin
+                        if (PTP_TS_FMT_TOD) begin
                             m_axis_ptp_ts_valid_int_next = s_axis_tuser[1];
                         end else begin
                             m_axis_ptp_ts_valid_next = s_axis_tuser[1];
                         end
                     end else begin
                         m_axis_ptp_ts_tag_next = s_axis_tuser >> 1;
-                        if (PTP_TS_WIDTH == 96) begin
+                        if (PTP_TS_FMT_TOD) begin
                             m_axis_ptp_ts_valid_int_next = 1'b1;
                         end else begin
                             m_axis_ptp_ts_valid_next = 1'b1;

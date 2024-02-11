@@ -352,7 +352,8 @@ def test_axis_baser_tx_64(request, enable_dic):
     parameters['ENABLE_DIC'] = enable_dic
     parameters['MIN_FRAME_LENGTH'] = 64
     parameters['PTP_TS_ENABLE'] = 1
-    parameters['PTP_TS_WIDTH'] = 96
+    parameters['PTP_TS_FMT_TOD'] = 1
+    parameters['PTP_TS_WIDTH'] = 96 if parameters['PTP_TS_FMT_TOD'] else 64
     parameters['PTP_TS_CTRL_IN_TUSER'] = parameters['PTP_TS_ENABLE']
     parameters['PTP_TAG_ENABLE'] = parameters['PTP_TS_ENABLE']
     parameters['PTP_TAG_WIDTH'] = 16

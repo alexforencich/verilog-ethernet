@@ -167,7 +167,8 @@ def test_axis_baser_rx_64(request):
     parameters['KEEP_WIDTH'] = parameters['DATA_WIDTH'] // 8
     parameters['HDR_WIDTH'] = 2
     parameters['PTP_TS_ENABLE'] = 1
-    parameters['PTP_TS_WIDTH'] = 96
+    parameters['PTP_TS_FMT_TOD'] = 1
+    parameters['PTP_TS_WIDTH'] = 96 if parameters['PTP_TS_FMT_TOD'] else 64
     parameters['USER_WIDTH'] = (parameters['PTP_TS_WIDTH'] if parameters['PTP_TS_ENABLE'] else 0) + 1
 
     extra_env = {f'PARAM_{k}': str(v) for k, v in parameters.items()}

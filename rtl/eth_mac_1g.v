@@ -36,15 +36,14 @@ module eth_mac_1g #
     parameter DATA_WIDTH = 8,
     parameter ENABLE_PADDING = 1,
     parameter MIN_FRAME_LENGTH = 64,
-    parameter TX_PTP_TS_ENABLE = 0,
-    parameter TX_PTP_TS_WIDTH = 96,
+    parameter PTP_TS_ENABLE = 0,
+    parameter PTP_TS_FMT_TOD = 1,
+    parameter PTP_TS_WIDTH = PTP_TS_FMT_TOD ? 96 : 64,
     parameter TX_PTP_TS_CTRL_IN_TUSER = 0,
-    parameter TX_PTP_TAG_ENABLE = TX_PTP_TS_ENABLE,
+    parameter TX_PTP_TAG_ENABLE = PTP_TS_ENABLE,
     parameter TX_PTP_TAG_WIDTH = 16,
-    parameter RX_PTP_TS_ENABLE = TX_PTP_TS_ENABLE,
-    parameter RX_PTP_TS_WIDTH = 96,
-    parameter TX_USER_WIDTH = (TX_PTP_TS_ENABLE ? (TX_PTP_TAG_ENABLE ? TX_PTP_TAG_WIDTH : 0) + (TX_PTP_TS_CTRL_IN_TUSER ? 1 : 0) : 0) + 1,
-    parameter RX_USER_WIDTH = (RX_PTP_TS_ENABLE ? RX_PTP_TS_WIDTH : 0) + 1,
+    parameter TX_USER_WIDTH = (PTP_TS_ENABLE ? (TX_PTP_TAG_ENABLE ? TX_PTP_TAG_WIDTH : 0) + (TX_PTP_TS_CTRL_IN_TUSER ? 1 : 0) : 0) + 1,
+    parameter RX_USER_WIDTH = (PTP_TS_ENABLE ? PTP_TS_WIDTH : 0) + 1,
     parameter PFC_ENABLE = 0,
     parameter PAUSE_ENABLE = PFC_ENABLE
 )
@@ -84,9 +83,9 @@ module eth_mac_1g #
     /*
      * PTP
      */
-    input  wire [TX_PTP_TS_WIDTH-1:0]   tx_ptp_ts,
-    input  wire [RX_PTP_TS_WIDTH-1:0]   rx_ptp_ts,
-    output wire [TX_PTP_TS_WIDTH-1:0]   tx_axis_ptp_ts,
+    input  wire [PTP_TS_WIDTH-1:0]      tx_ptp_ts,
+    input  wire [PTP_TS_WIDTH-1:0]      rx_ptp_ts,
+    output wire [PTP_TS_WIDTH-1:0]      tx_axis_ptp_ts,
     output wire [TX_PTP_TAG_WIDTH-1:0]  tx_axis_ptp_ts_tag,
     output wire                         tx_axis_ptp_ts_valid,
 
@@ -190,7 +189,7 @@ module eth_mac_1g #
 );
 
 parameter MAC_CTRL_ENABLE = PAUSE_ENABLE || PFC_ENABLE;
-parameter TX_USER_WIDTH_INT = MAC_CTRL_ENABLE ? (TX_PTP_TS_ENABLE ? (TX_PTP_TAG_ENABLE ? TX_PTP_TAG_WIDTH : 0) + 1 : 0) + 1 : TX_USER_WIDTH;
+parameter TX_USER_WIDTH_INT = MAC_CTRL_ENABLE ? (PTP_TS_ENABLE ? (TX_PTP_TAG_ENABLE ? TX_PTP_TAG_WIDTH : 0) + 1 : 0) + 1 : TX_USER_WIDTH;
 
 wire [DATA_WIDTH-1:0]         tx_axis_tdata_int;
 wire                          tx_axis_tvalid_int;
@@ -205,8 +204,8 @@ wire [RX_USER_WIDTH-1:0]  rx_axis_tuser_int;
 
 axis_gmii_rx #(
     .DATA_WIDTH(DATA_WIDTH),
-    .PTP_TS_ENABLE(RX_PTP_TS_ENABLE),
-    .PTP_TS_WIDTH(RX_PTP_TS_WIDTH),
+    .PTP_TS_ENABLE(PTP_TS_ENABLE),
+    .PTP_TS_WIDTH(PTP_TS_WIDTH),
     .USER_WIDTH(RX_USER_WIDTH)
 )
 axis_gmii_rx_inst (
@@ -232,9 +231,9 @@ axis_gmii_tx #(
     .DATA_WIDTH(DATA_WIDTH),
     .ENABLE_PADDING(ENABLE_PADDING),
     .MIN_FRAME_LENGTH(MIN_FRAME_LENGTH),
-    .PTP_TS_ENABLE(TX_PTP_TS_ENABLE),
-    .PTP_TS_WIDTH(TX_PTP_TS_WIDTH),
-    .PTP_TS_CTRL_IN_TUSER(MAC_CTRL_ENABLE ? TX_PTP_TS_ENABLE : TX_PTP_TS_CTRL_IN_TUSER),
+    .PTP_TS_ENABLE(PTP_TS_ENABLE),
+    .PTP_TS_WIDTH(PTP_TS_WIDTH),
+    .PTP_TS_CTRL_IN_TUSER(MAC_CTRL_ENABLE ? PTP_TS_ENABLE : TX_PTP_TS_CTRL_IN_TUSER),
     .PTP_TAG_ENABLE(TX_PTP_TAG_ENABLE),
     .PTP_TAG_WIDTH(TX_PTP_TAG_WIDTH),
     .USER_WIDTH(TX_USER_WIDTH_INT)
@@ -338,7 +337,7 @@ if (MAC_CTRL_ENABLE) begin : mac_ctrl
     // handle PTP TS enable bit in tuser
     wire [TX_USER_WIDTH_INT-1:0] tx_axis_tuser_in;
 
-    if (TX_PTP_TS_ENABLE && !TX_PTP_TS_CTRL_IN_TUSER) begin
+    if (PTP_TS_ENABLE && !TX_PTP_TS_CTRL_IN_TUSER) begin
         assign tx_axis_tuser_in = {tx_axis_tuser[TX_USER_WIDTH-1:1], 1'b1, tx_axis_tuser[0]};
     end else begin
         assign tx_axis_tuser_in = tx_axis_tuser;
