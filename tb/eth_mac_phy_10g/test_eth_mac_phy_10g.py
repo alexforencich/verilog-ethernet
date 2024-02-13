@@ -478,8 +478,6 @@ def test_eth_mac_phy_10g(request, data_width, enable_dic):
     parameters['ENABLE_PADDING'] = 1
     parameters['ENABLE_DIC'] = enable_dic
     parameters['MIN_FRAME_LENGTH'] = 64
-    parameters['PTP_PERIOD_NS'] = 0x6 if parameters['DATA_WIDTH'] == 64 else 0x3
-    parameters['PTP_PERIOD_FNS'] = 0x6666 if parameters['DATA_WIDTH'] == 64 else 0x3333
     parameters['PTP_TS_ENABLE'] = 1
     parameters['PTP_TS_FMT_TOD'] = 1
     parameters['PTP_TS_WIDTH'] = 96 if parameters['PTP_TS_FMT_TOD'] else 64

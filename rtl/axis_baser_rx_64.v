@@ -36,8 +36,6 @@ module axis_baser_rx_64 #
     parameter DATA_WIDTH = 64,
     parameter KEEP_WIDTH = (DATA_WIDTH/8),
     parameter HDR_WIDTH = 2,
-    parameter PTP_PERIOD_NS = 4'h6,
-    parameter PTP_PERIOD_FNS = 16'h6666,
     parameter PTP_TS_ENABLE = 0,
     parameter PTP_TS_FMT_TOD = 1,
     parameter PTP_TS_WIDTH = PTP_TS_FMT_TOD ? 96 : 64,
@@ -215,6 +213,9 @@ assign crc_valid[2] = crc_next == ~32'he60914ae;
 assign crc_valid[1] = crc_next == ~32'he38a6876;
 assign crc_valid[0] = crc_next == ~32'h6b87b1ec;
 
+reg [4+16-1:0] last_ts_reg = 0;
+reg [4+16-1:0] ts_inc_reg = 0;
+
 assign m_axis_tdata = m_axis_tdata_reg;
 assign m_axis_tkeep = m_axis_tkeep_reg;
 assign m_axis_tvalid = m_axis_tvalid_reg;
@@ -287,10 +288,6 @@ always @* begin
             // idle state - wait for packet
             reset_crc = 1'b1;
 
-            if (PTP_TS_ENABLE) begin
-                m_axis_tuser_next[1 +: PTP_TS_WIDTH] = (!PTP_TS_FMT_TOD || ptp_ts_borrow_reg) ? ptp_ts_reg : ptp_ts_adj_reg;
-            end
-
             if (input_type_d1 == INPUT_TYPE_START_0 && cfg_rx_enable) begin
                 // start condition
                 reset_crc = 1'b0;
@@ -310,6 +307,10 @@ always @* begin
             if (input_type_d0[3]) begin
                 // INPUT_TYPE_TERM_*
                 reset_crc = 1'b1;
+            end
+
+            if (PTP_TS_ENABLE) begin
+                m_axis_tuser_next[1 +: PTP_TS_WIDTH] = (!PTP_TS_FMT_TOD || ptp_ts_borrow_reg) ? ptp_ts_reg : ptp_ts_adj_reg;
             end
 
             if (input_type_d0 == INPUT_TYPE_DATA) begin
@@ -410,19 +411,10 @@ always @(posedge clk) begin
 
     if (encoded_rx_hdr == SYNC_CTRL && encoded_rx_data[7:0] == BLOCK_TYPE_START_0) begin
         lanes_swapped <= 1'b0;
-        start_packet_reg <= 2'b01;
         input_type_d0 <= INPUT_TYPE_START_0;
         input_data_d0 <= encoded_rx_data_masked;
-
-        if (PTP_TS_FMT_TOD) begin
-            ptp_ts_reg[45:0] <= ptp_ts[45:0] + (PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS);
-            ptp_ts_reg[95:48] <= ptp_ts[95:48];
-        end else begin
-            ptp_ts_reg <= ptp_ts + (PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS);
-        end
     end else if (encoded_rx_hdr == SYNC_CTRL && (encoded_rx_data[7:0] == BLOCK_TYPE_START_4 || encoded_rx_data[7:0] == BLOCK_TYPE_OS_START)) begin
         lanes_swapped <= 1'b1;
-        start_packet_reg <= 2'b10;
         delay_type_valid <= 1'b1;
 
         if (delay_type_valid) begin
@@ -431,13 +423,6 @@ always @(posedge clk) begin
             input_type_d0 <= INPUT_TYPE_IDLE;
         end
         input_data_d0 <= {encoded_rx_data_masked[31:0], swap_data};
-
-        if (PTP_TS_FMT_TOD) begin
-            ptp_ts_reg[45:0] <= ptp_ts[45:0] + (((PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS) * 3) >> 1);
-            ptp_ts_reg[95:48] <= ptp_ts[95:48];
-        end else begin
-            ptp_ts_reg <= ptp_ts + (((PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS) * 3) >> 1);
-        end
     end else if (lanes_swapped) begin
         if (delay_type_valid) begin
             input_type_d0 <= delay_type;
@@ -519,6 +504,23 @@ always @(posedge clk) begin
         delay_type <= INPUT_TYPE_ERROR;
     end
 
+    if (delay_type == INPUT_TYPE_START_0 && delay_type_valid) begin
+        start_packet_reg <= 2'b10;
+        if (PTP_TS_FMT_TOD) begin
+            ptp_ts_reg[45:0] <= ptp_ts[45:0] + (ts_inc_reg >> 1);
+            ptp_ts_reg[95:48] <= ptp_ts[95:48];
+        end else begin
+            ptp_ts_reg <= ptp_ts + (ts_inc_reg >> 1);
+        end
+    end
+
+    if (input_type_d0 == INPUT_TYPE_START_0) begin
+        if (!lanes_swapped) begin
+            start_packet_reg <= 2'b01;
+            ptp_ts_reg <= ptp_ts;
+        end
+    end
+
     input_type_d1 <= input_type_d0;
     input_data_d1 <= input_data_d0;
 
@@ -529,6 +531,9 @@ always @(posedge clk) begin
     end
 
     crc_valid_save <= crc_valid;
+
+    last_ts_reg <= ptp_ts;
+    ts_inc_reg <= ptp_ts - last_ts_reg;
 
     if (rst) begin
         state_reg <= STATE_IDLE;

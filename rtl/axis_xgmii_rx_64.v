@@ -36,8 +36,6 @@ module axis_xgmii_rx_64 #
     parameter DATA_WIDTH = 64,
     parameter KEEP_WIDTH = (DATA_WIDTH/8),
     parameter CTRL_WIDTH = (DATA_WIDTH/8),
-    parameter PTP_PERIOD_NS = 4'h6,
-    parameter PTP_PERIOD_FNS = 16'h6666,
     parameter PTP_TS_ENABLE = 0,
     parameter PTP_TS_FMT_TOD = 1,
     parameter PTP_TS_WIDTH = PTP_TS_FMT_TOD ? 96 : 64,
@@ -162,6 +160,9 @@ assign crc_valid[3] = crc_next == ~32'h6522df69;
 assign crc_valid[2] = crc_next == ~32'he60914ae;
 assign crc_valid[1] = crc_next == ~32'he38a6876;
 assign crc_valid[0] = crc_next == ~32'h6b87b1ec;
+
+reg [4+16-1:0] last_ts_reg = 0;
+reg [4+16-1:0] ts_inc_reg = 0;
 
 assign m_axis_tdata = m_axis_tdata_reg;
 assign m_axis_tkeep = m_axis_tkeep_reg;
@@ -335,6 +336,7 @@ always @(posedge clk) begin
         ptp_ts_adj_reg[95:48] <= ptp_ts_reg[95:48] + 1;
     end
 
+    // lane swapping and termination character detection
     if (lanes_swapped) begin
         xgmii_rxd_d0 <= {xgmii_rxd_masked[31:0], swap_rxd};
         xgmii_rxc_d0 <= {xgmii_rxc[3:0], swap_rxc};
@@ -369,37 +371,40 @@ always @(posedge clk) begin
         end
     end
 
+    // start control character detection
     if (xgmii_rxc[0] && xgmii_rxd[7:0] == XGMII_START) begin
         lanes_swapped <= 1'b0;
-        start_packet_reg <= 2'b01;
 
         xgmii_start_d0 <= 1'b1;
 
         term_lane_reg <= 0;
         term_present_reg <= 1'b0;
         framing_error_reg <= xgmii_rxc[7:1] != 0;
-
-        if (PTP_TS_FMT_TOD) begin
-            ptp_ts_reg[45:0] <= ptp_ts[45:0] + (PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS);
-            ptp_ts_reg[95:48] <= ptp_ts[95:48];
-        end else begin
-            ptp_ts_reg <= ptp_ts + (PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS);
-        end
     end else if (xgmii_rxc[4] && xgmii_rxd[39:32] == XGMII_START) begin
         lanes_swapped <= 1'b1;
-        start_packet_reg <= 2'b10;
 
         xgmii_start_swap <= 1'b1;
 
         term_lane_reg <= 0;
         term_present_reg <= 1'b0;
         framing_error_reg <= xgmii_rxc[7:5] != 0;
+    end
 
+    // capture timestamps
+    if (xgmii_start_swap) begin
+        start_packet_reg <= 2'b10;
         if (PTP_TS_FMT_TOD) begin
-            ptp_ts_reg[45:0] <= ptp_ts[45:0] + (((PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS) * 3) >> 1);
+            ptp_ts_reg[45:0] <= ptp_ts[45:0] + (ts_inc_reg >> 1);
             ptp_ts_reg[95:48] <= ptp_ts[95:48];
         end else begin
-            ptp_ts_reg <= ptp_ts + (((PTP_PERIOD_NS * 2**16 + PTP_PERIOD_FNS) * 3) >> 1);
+            ptp_ts_reg <= ptp_ts + (ts_inc_reg >> 1);
+        end
+    end
+
+    if (xgmii_start_d0) begin
+        if (!lanes_swapped) begin
+            start_packet_reg <= 2'b01;
+            ptp_ts_reg <= ptp_ts;
         end
     end
 
@@ -416,6 +421,9 @@ always @(posedge clk) begin
 
     xgmii_rxd_d1 <= xgmii_rxd_d0;
     xgmii_start_d1 <= xgmii_start_d0;
+
+    last_ts_reg <= ptp_ts;
+    ts_inc_reg <= ptp_ts - last_ts_reg;
 
     if (rst) begin
         state_reg <= STATE_IDLE;

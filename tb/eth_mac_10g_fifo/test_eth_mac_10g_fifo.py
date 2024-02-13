@@ -369,8 +369,6 @@ def test_eth_mac_10g_fifo(request, data_width, enable_dic):
     parameters['RX_DROP_OVERSIZE_FRAME'] = parameters['RX_FRAME_FIFO']
     parameters['RX_DROP_BAD_FRAME'] = parameters['RX_DROP_OVERSIZE_FRAME']
     parameters['RX_DROP_WHEN_FULL'] = parameters['RX_DROP_OVERSIZE_FRAME']
-    parameters['PTP_PERIOD_NS'] = 0x6 if parameters['DATA_WIDTH'] == 64 else 0x3
-    parameters['PTP_PERIOD_FNS'] = 0x6666 if parameters['DATA_WIDTH'] == 64 else 0x3333
     parameters['PTP_TS_ENABLE'] = 1
     parameters['PTP_TS_FMT_TOD'] = 1
     parameters['PTP_TS_WIDTH'] = 96 if parameters['PTP_TS_FMT_TOD'] else 64
