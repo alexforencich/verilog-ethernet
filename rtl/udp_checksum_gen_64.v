@@ -264,6 +264,9 @@ assign m_udp_payload_axis_tuser = m_udp_payload_fifo_tuser;
 reg [HEADER_FIFO_ADDR_WIDTH:0] header_fifo_wr_ptr_reg = {HEADER_FIFO_ADDR_WIDTH+1{1'b0}}, header_fifo_wr_ptr_next;
 reg [HEADER_FIFO_ADDR_WIDTH:0] header_fifo_rd_ptr_reg = {HEADER_FIFO_ADDR_WIDTH+1{1'b0}}, header_fifo_rd_ptr_next;
 
+wire [HEADER_FIFO_ADDR_WIDTH:0] header_fifo_wr_ptr_reg_p1 ;
+assign header_fifo_wr_ptr_reg_p1 = header_fifo_wr_ptr_reg +1;
+
 reg [47:0] eth_dest_mac_mem[(2**HEADER_FIFO_ADDR_WIDTH)-1:0];
 reg [47:0] eth_src_mac_mem[(2**HEADER_FIFO_ADDR_WIDTH)-1:0];
 reg [15:0] eth_type_mem[(2**HEADER_FIFO_ADDR_WIDTH)-1:0];
@@ -307,14 +310,17 @@ reg m_udp_hdr_valid_reg = 1'b0, m_udp_hdr_valid_next;
 // full when first MSB different but rest same
 wire header_fifo_full = ((header_fifo_wr_ptr_reg[HEADER_FIFO_ADDR_WIDTH] != header_fifo_rd_ptr_reg[HEADER_FIFO_ADDR_WIDTH]) &&
                          (header_fifo_wr_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0] == header_fifo_rd_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]));
+
+wire header_fifo_full_next = ((header_fifo_wr_ptr_reg_p1[HEADER_FIFO_ADDR_WIDTH] != header_fifo_rd_ptr_reg[HEADER_FIFO_ADDR_WIDTH]) &&
+                              (header_fifo_wr_ptr_reg_p1[HEADER_FIFO_ADDR_WIDTH-1:0] == header_fifo_rd_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]));
 // empty when pointers match exactly
 wire header_fifo_empty = header_fifo_wr_ptr_reg == header_fifo_rd_ptr_reg;
-
 // control signals
 reg header_fifo_write;
 reg header_fifo_read;
 
-wire header_fifo_ready = !header_fifo_full;
+wire header_fifo_ready      = !header_fifo_full;
+wire header_fifo_ready_next = !header_fifo_full_next;
 
 assign m_udp_hdr_valid = m_udp_hdr_valid_reg;
 
@@ -363,24 +369,24 @@ always @(posedge clk) begin
     end
 
     if (header_fifo_write) begin
-        eth_dest_mac_mem[header_fifo_wr_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]] <= eth_dest_mac_reg;
-        eth_src_mac_mem[header_fifo_wr_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]] <= eth_src_mac_reg;
-        eth_type_mem[header_fifo_wr_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]] <= eth_type_reg;
-        ip_version_mem[header_fifo_wr_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]] <= ip_version_reg;
-        ip_ihl_mem[header_fifo_wr_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]] <= ip_ihl_reg;
-        ip_dscp_mem[header_fifo_wr_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]] <= ip_dscp_reg;
-        ip_ecn_mem[header_fifo_wr_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]] <= ip_ecn_reg;
-        ip_identification_mem[header_fifo_wr_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]] <= ip_identification_reg;
-        ip_flags_mem[header_fifo_wr_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]] <= ip_flags_reg;
-        ip_fragment_offset_mem[header_fifo_wr_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]] <= ip_fragment_offset_reg;
-        ip_ttl_mem[header_fifo_wr_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]] <= ip_ttl_reg;
-        ip_header_checksum_mem[header_fifo_wr_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]] <= ip_header_checksum_reg;
-        ip_source_ip_mem[header_fifo_wr_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]] <= ip_source_ip_reg;
-        ip_dest_ip_mem[header_fifo_wr_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]] <= ip_dest_ip_reg;
-        udp_source_port_mem[header_fifo_wr_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]] <= udp_source_port_reg;
-        udp_dest_port_mem[header_fifo_wr_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]] <= udp_dest_port_reg;
-        udp_length_mem[header_fifo_wr_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]] <= frame_ptr_reg;
-        udp_checksum_mem[header_fifo_wr_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]] <= checksum_reg[15:0];
+        eth_dest_mac_mem        [header_fifo_wr_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]] <= eth_dest_mac_reg;
+        eth_src_mac_mem         [header_fifo_wr_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]] <= eth_src_mac_reg;
+        eth_type_mem            [header_fifo_wr_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]] <= eth_type_reg;
+        ip_version_mem          [header_fifo_wr_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]] <= ip_version_reg;
+        ip_ihl_mem              [header_fifo_wr_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]] <= ip_ihl_reg;
+        ip_dscp_mem             [header_fifo_wr_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]] <= ip_dscp_reg;
+        ip_ecn_mem              [header_fifo_wr_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]] <= ip_ecn_reg;
+        ip_identification_mem   [header_fifo_wr_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]] <= ip_identification_reg;
+        ip_flags_mem            [header_fifo_wr_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]] <= ip_flags_reg;
+        ip_fragment_offset_mem  [header_fifo_wr_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]] <= ip_fragment_offset_reg;
+        ip_ttl_mem              [header_fifo_wr_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]] <= ip_ttl_reg;
+        ip_header_checksum_mem  [header_fifo_wr_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]] <= ip_header_checksum_reg;
+        ip_source_ip_mem        [header_fifo_wr_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]] <= ip_source_ip_reg;
+        ip_dest_ip_mem          [header_fifo_wr_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]] <= ip_dest_ip_reg;
+        udp_source_port_mem     [header_fifo_wr_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]] <= udp_source_port_reg;
+        udp_dest_port_mem       [header_fifo_wr_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]] <= udp_dest_port_reg;
+        udp_length_mem          [header_fifo_wr_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]] <= frame_ptr_reg;
+        udp_checksum_mem        [header_fifo_wr_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]] <= checksum_reg[15:0];
     end
 end
 
@@ -416,24 +422,24 @@ always @(posedge clk) begin
     end
 
     if (header_fifo_read) begin
-        m_eth_dest_mac_reg <= eth_dest_mac_mem[header_fifo_rd_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]];
-        m_eth_src_mac_reg <= eth_src_mac_mem[header_fifo_rd_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]];
-        m_eth_type_reg <= eth_type_mem[header_fifo_rd_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]];
-        m_ip_version_reg <= ip_version_mem[header_fifo_rd_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]];
-        m_ip_ihl_reg <= ip_ihl_mem[header_fifo_rd_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]];
-        m_ip_dscp_reg <= ip_dscp_mem[header_fifo_rd_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]];
-        m_ip_ecn_reg <= ip_ecn_mem[header_fifo_rd_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]];
-        m_ip_identification_reg <= ip_identification_mem[header_fifo_rd_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]];
-        m_ip_flags_reg <= ip_flags_mem[header_fifo_rd_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]];
+        m_eth_dest_mac_reg       <= eth_dest_mac_mem      [header_fifo_rd_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]];
+        m_eth_src_mac_reg        <= eth_src_mac_mem       [header_fifo_rd_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]];
+        m_eth_type_reg           <= eth_type_mem          [header_fifo_rd_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]];
+        m_ip_version_reg         <= ip_version_mem        [header_fifo_rd_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]];
+        m_ip_ihl_reg             <= ip_ihl_mem            [header_fifo_rd_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]];
+        m_ip_dscp_reg            <= ip_dscp_mem           [header_fifo_rd_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]];
+        m_ip_ecn_reg             <= ip_ecn_mem            [header_fifo_rd_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]];
+        m_ip_identification_reg  <= ip_identification_mem [header_fifo_rd_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]];
+        m_ip_flags_reg           <= ip_flags_mem          [header_fifo_rd_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]];
         m_ip_fragment_offset_reg <= ip_fragment_offset_mem[header_fifo_rd_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]];
-        m_ip_ttl_reg <= ip_ttl_mem[header_fifo_rd_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]];
+        m_ip_ttl_reg             <= ip_ttl_mem            [header_fifo_rd_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]];
         m_ip_header_checksum_reg <= ip_header_checksum_mem[header_fifo_rd_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]];
-        m_ip_source_ip_reg <= ip_source_ip_mem[header_fifo_rd_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]];
-        m_ip_dest_ip_reg <= ip_dest_ip_mem[header_fifo_rd_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]];
-        m_udp_source_port_reg <= udp_source_port_mem[header_fifo_rd_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]];
-        m_udp_dest_port_reg <= udp_dest_port_mem[header_fifo_rd_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]];
-        m_udp_length_reg <= udp_length_mem[header_fifo_rd_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]];
-        m_udp_checksum_reg <= udp_checksum_mem[header_fifo_rd_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]];
+        m_ip_source_ip_reg       <= ip_source_ip_mem      [header_fifo_rd_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]];
+        m_ip_dest_ip_reg         <= ip_dest_ip_mem        [header_fifo_rd_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]];
+        m_udp_source_port_reg    <= udp_source_port_mem   [header_fifo_rd_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]];
+        m_udp_dest_port_reg      <= udp_dest_port_mem     [header_fifo_rd_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]];
+        m_udp_length_reg         <= udp_length_mem        [header_fifo_rd_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]];
+        m_udp_checksum_reg       <= udp_checksum_mem      [header_fifo_rd_ptr_reg[HEADER_FIFO_ADDR_WIDTH-1:0]];
     end
 end
 
@@ -462,7 +468,7 @@ always @* begin
     case (state_reg)
         STATE_IDLE: begin
             // idle state
-            s_udp_hdr_ready_next = header_fifo_ready;
+            s_udp_hdr_ready_next = header_fifo_ready && !(!header_fifo_ready_next & header_fifo_write);
 
             if (s_udp_hdr_ready && s_udp_hdr_valid) begin
                 store_udp_hdr = 1'b1;
