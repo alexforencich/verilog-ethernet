@@ -88,8 +88,8 @@ module axis_xgmii_tx_64 #
     output wire                      error_underflow
 );
 
-parameter EMPTY_WIDTH = $clog2(KEEP_WIDTH);
-parameter MIN_LEN_WIDTH = $clog2(MIN_FRAME_LENGTH-4-CTRL_WIDTH+1);
+localparam EMPTY_WIDTH = $clog2(KEEP_WIDTH);
+localparam MIN_LEN_WIDTH = $clog2(MIN_FRAME_LENGTH-4-CTRL_WIDTH+1);
 
 // bus width assertions
 initial begin
@@ -171,7 +171,7 @@ reg [4+16-1:0] ts_inc_reg = 0;
 reg [DATA_WIDTH-1:0] xgmii_txd_reg = {CTRL_WIDTH{XGMII_IDLE}}, xgmii_txd_next;
 reg [CTRL_WIDTH-1:0] xgmii_txc_reg = {CTRL_WIDTH{1'b1}}, xgmii_txc_next;
 
-reg start_packet_reg = 2'b00;
+reg [1:0] start_packet_reg = 2'b00;
 reg error_underflow_reg = 1'b0, error_underflow_next;
 
 assign s_axis_tready = s_axis_tready_reg;

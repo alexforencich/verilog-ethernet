@@ -406,7 +406,7 @@ always @(posedge clk) begin
         ptp_ts_adj_reg[15:0] <= ptp_ts_reg[15:0];
         {ptp_ts_borrow_reg, ptp_ts_adj_reg[45:16]} <= $signed({1'b0, ptp_ts_reg[45:16]}) - $signed(31'd1000000000);
         ptp_ts_adj_reg[47:46] <= 0;
-        ptp_ts_adj_reg[95:48] <= ptp_ts_reg[95:48] + 1;
+        ptp_ts_adj_reg[PTP_TS_WIDTH-1:48] <= ptp_ts_reg[PTP_TS_WIDTH-1:48] + 1;
     end
 
     if (encoded_rx_hdr == SYNC_CTRL && encoded_rx_data[7:0] == BLOCK_TYPE_START_0) begin
@@ -507,8 +507,8 @@ always @(posedge clk) begin
     if (delay_type == INPUT_TYPE_START_0 && delay_type_valid) begin
         start_packet_reg <= 2'b10;
         if (PTP_TS_FMT_TOD) begin
+            ptp_ts_reg <= ptp_ts;
             ptp_ts_reg[45:0] <= ptp_ts[45:0] + (ts_inc_reg >> 1);
-            ptp_ts_reg[95:48] <= ptp_ts[95:48];
         end else begin
             ptp_ts_reg <= ptp_ts + (ts_inc_reg >> 1);
         end

@@ -123,7 +123,7 @@ module udp_mux #
     input  wire [$clog2(S_COUNT)-1:0]    select
 );
 
-parameter CL_S_COUNT = $clog2(S_COUNT);
+localparam CL_S_COUNT = $clog2(S_COUNT);
 
 reg [CL_S_COUNT-1:0] select_reg = 2'd0, select_next;
 reg frame_reg = 1'b0, frame_next;

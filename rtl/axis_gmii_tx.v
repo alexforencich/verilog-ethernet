@@ -90,7 +90,7 @@ module axis_gmii_tx #
     output wire                      error_underflow
 );
 
-parameter MIN_LEN_WIDTH = $clog2(MIN_FRAME_LENGTH-4-1+1);
+localparam MIN_LEN_WIDTH = $clog2(MIN_FRAME_LENGTH-4-1+1);
 
 // bus width assertions
 initial begin

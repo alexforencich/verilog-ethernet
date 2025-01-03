@@ -113,7 +113,7 @@ module ip_arb_mux #
     output wire [USER_WIDTH-1:0]         m_ip_payload_axis_tuser
 );
 
-parameter CL_S_COUNT = $clog2(S_COUNT);
+localparam CL_S_COUNT = $clog2(S_COUNT);
 
 reg frame_reg = 1'b0, frame_next;
 

@@ -53,8 +53,8 @@ module eth_phy_10g_rx_frame_sync #
     output wire                  rx_block_lock
 );
 
-parameter BITSLIP_MAX_CYCLES = BITSLIP_HIGH_CYCLES > BITSLIP_LOW_CYCLES ? BITSLIP_HIGH_CYCLES : BITSLIP_LOW_CYCLES;
-parameter BITSLIP_COUNT_WIDTH = $clog2(BITSLIP_MAX_CYCLES);
+localparam BITSLIP_MAX_CYCLES = BITSLIP_HIGH_CYCLES > BITSLIP_LOW_CYCLES ? BITSLIP_HIGH_CYCLES : BITSLIP_LOW_CYCLES;
+localparam BITSLIP_COUNT_WIDTH = $clog2(BITSLIP_MAX_CYCLES);
 
 // bus width assertions
 initial begin

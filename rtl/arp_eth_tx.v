@@ -82,15 +82,15 @@ module arp_eth_tx #
     output wire                   busy
 );
 
-parameter BYTE_LANES = KEEP_ENABLE ? KEEP_WIDTH : 1;
+localparam BYTE_LANES = KEEP_ENABLE ? KEEP_WIDTH : 1;
 
-parameter HDR_SIZE = 28;
+localparam HDR_SIZE = 28;
 
-parameter CYCLE_COUNT = (HDR_SIZE+BYTE_LANES-1)/BYTE_LANES;
+localparam CYCLE_COUNT = (HDR_SIZE+BYTE_LANES-1)/BYTE_LANES;
 
-parameter PTR_WIDTH = $clog2(CYCLE_COUNT);
+localparam PTR_WIDTH = $clog2(CYCLE_COUNT);
 
-parameter OFFSET = HDR_SIZE % BYTE_LANES;
+localparam OFFSET = HDR_SIZE % BYTE_LANES;
 
 // bus width assertions
 initial begin

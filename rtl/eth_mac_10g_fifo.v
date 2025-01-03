@@ -135,7 +135,7 @@ module eth_mac_10g_fifo #
     input  wire                       cfg_rx_enable
 );
 
-parameter KEEP_WIDTH = DATA_WIDTH/8;
+localparam KEEP_WIDTH = DATA_WIDTH/8;
 
 wire [DATA_WIDTH-1:0]      tx_fifo_axis_tdata;
 wire [KEEP_WIDTH-1:0]      tx_fifo_axis_tkeep;

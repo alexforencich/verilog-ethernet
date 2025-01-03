@@ -188,8 +188,8 @@ module eth_mac_1g #
     input  wire                         cfg_rx_pfc_en
 );
 
-parameter MAC_CTRL_ENABLE = PAUSE_ENABLE || PFC_ENABLE;
-parameter TX_USER_WIDTH_INT = MAC_CTRL_ENABLE ? (PTP_TS_ENABLE ? (TX_PTP_TAG_ENABLE ? TX_PTP_TAG_WIDTH : 0) + 1 : 0) + 1 : TX_USER_WIDTH;
+localparam MAC_CTRL_ENABLE = PAUSE_ENABLE || PFC_ENABLE;
+localparam TX_USER_WIDTH_INT = MAC_CTRL_ENABLE ? (PTP_TS_ENABLE ? (TX_PTP_TAG_ENABLE ? TX_PTP_TAG_WIDTH : 0) + 1 : 0) + 1 : TX_USER_WIDTH;
 
 wire [DATA_WIDTH-1:0]         tx_axis_tdata_int;
 wire                          tx_axis_tvalid_int;
