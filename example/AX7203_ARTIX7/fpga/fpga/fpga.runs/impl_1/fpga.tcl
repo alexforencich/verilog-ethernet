@@ -17,7 +17,7 @@ proc create_report { reportName command } {
   }
 }
 namespace eval ::optrace {
-  variable script "/home/kavya/Desktop/forked/verilog-ethernet/example/AX7203_ARTIX7/fpga/fpga/fpga.runs/impl_1/fpga.tcl"
+  variable script "/home/kavya/Desktop/git_kavya/verilog-ethernet/example/AX7203_ARTIX7/fpga/fpga/fpga.runs/impl_1/fpga.tcl"
   variable category "vivado_impl"
 }
 
@@ -122,6 +122,7 @@ start_step init_design
 set ACTIVE_STEP init_design
 set rc [catch {
   create_msg_db init_design.pb
+  set_param xicom.use_bs_reader 1
   set_param chipscope.maxJobs 3
   set_param runs.launchOptions { -jobs 6  }
 OPTRACE "create in-memory project" START { }
@@ -130,23 +131,21 @@ OPTRACE "create in-memory project" START { }
   set_param project.singleFileAddWarning.threshold 0
 OPTRACE "create in-memory project" END { }
 OPTRACE "set parameters" START { }
-  set_property webtalk.parent_dir /home/kavya/Desktop/forked/verilog-ethernet/example/AX7203_ARTIX7/fpga/fpga/fpga.cache/wt [current_project]
-  set_property parent.project_path /home/kavya/Desktop/forked/verilog-ethernet/example/AX7203_ARTIX7/fpga/fpga/fpga.xpr [current_project]
-  set_property ip_output_repo /home/kavya/Desktop/forked/verilog-ethernet/example/AX7203_ARTIX7/fpga/fpga/fpga.cache/ip [current_project]
+  set_property webtalk.parent_dir /home/kavya/Desktop/git_kavya/verilog-ethernet/example/AX7203_ARTIX7/fpga/fpga/fpga.cache/wt [current_project]
+  set_property parent.project_path /home/kavya/Desktop/git_kavya/verilog-ethernet/example/AX7203_ARTIX7/fpga/fpga/fpga.xpr [current_project]
+  set_property ip_output_repo /home/kavya/Desktop/git_kavya/verilog-ethernet/example/AX7203_ARTIX7/fpga/fpga/fpga.cache/ip [current_project]
   set_property ip_cache_permissions {read write} [current_project]
-  set_property XPM_LIBRARIES XPM_CDC [current_project]
 OPTRACE "set parameters" END { }
 OPTRACE "add files" START { }
-  add_files -quiet /home/kavya/Desktop/forked/verilog-ethernet/example/AX7203_ARTIX7/fpga/fpga/fpga.runs/synth_1/fpga.dcp
-  read_ip -quiet /home/kavya/Desktop/forked/verilog-ethernet/example/AX7203_ARTIX7/fpga/fpga/fpga.srcs/sources_1/ip/clk_div/clk_div.xci
+  add_files -quiet /home/kavya/Desktop/git_kavya/verilog-ethernet/example/AX7203_ARTIX7/fpga/fpga/fpga.runs/synth_1/fpga.dcp
 OPTRACE "read constraints: implementation" START { }
-  read_xdc /home/kavya/Desktop/forked/verilog-ethernet/example/AX7203_ARTIX7/fpga/fpga/fpga.srcs/constrs_1/imports/fpga/fpga.xdc
-  read_xdc /home/kavya/Desktop/forked/verilog-ethernet/example/AX7203_ARTIX7/fpga/fpga/fpga.srcs/constrs_1/imports/fpga/eth.xdc
-  read_xdc -unmanaged /home/kavya/Desktop/forked/verilog-ethernet/example/AX7203_ARTIX7/fpga/fpga/fpga.srcs/constrs_1/imports/fpga/lib/eth/syn/vivado/rgmii_phy_if.tcl
-  read_xdc -unmanaged /home/kavya/Desktop/forked/verilog-ethernet/example/AX7203_ARTIX7/fpga/fpga/fpga.srcs/constrs_1/imports/fpga/lib/eth/syn/vivado/eth_mac_1g_rgmii.tcl
-  read_xdc -unmanaged /home/kavya/Desktop/forked/verilog-ethernet/example/AX7203_ARTIX7/fpga/fpga/fpga.srcs/constrs_1/imports/fpga/lib/eth/syn/vivado/eth_mac_fifo.tcl
-  read_xdc -unmanaged /home/kavya/Desktop/forked/verilog-ethernet/example/AX7203_ARTIX7/fpga/fpga/fpga.srcs/constrs_1/imports/fpga/lib/eth/lib/axis/syn/vivado/axis_async_fifo.tcl
-  read_xdc -unmanaged /home/kavya/Desktop/forked/verilog-ethernet/example/AX7203_ARTIX7/fpga/fpga/fpga.srcs/constrs_1/imports/fpga/lib/eth/lib/axis/syn/vivado/sync_reset.tcl
+  read_xdc /home/kavya/Desktop/git_kavya/verilog-ethernet/example/AX7203_ARTIX7/fpga/fpga.xdc
+  read_xdc /home/kavya/Desktop/git_kavya/verilog-ethernet/example/AX7203_ARTIX7/fpga/eth.xdc
+  read_xdc -unmanaged /home/kavya/Desktop/git_kavya/verilog-ethernet/example/AX7203_ARTIX7/fpga/lib/eth/syn/vivado/rgmii_phy_if.tcl
+  read_xdc -unmanaged /home/kavya/Desktop/git_kavya/verilog-ethernet/example/AX7203_ARTIX7/fpga/lib/eth/syn/vivado/eth_mac_1g_rgmii.tcl
+  read_xdc -unmanaged /home/kavya/Desktop/git_kavya/verilog-ethernet/example/AX7203_ARTIX7/fpga/lib/eth/syn/vivado/eth_mac_fifo.tcl
+  read_xdc -unmanaged /home/kavya/Desktop/git_kavya/verilog-ethernet/example/AX7203_ARTIX7/fpga/lib/eth/lib/axis/syn/vivado/axis_async_fifo.tcl
+  read_xdc -unmanaged /home/kavya/Desktop/git_kavya/verilog-ethernet/example/AX7203_ARTIX7/fpga/lib/eth/lib/axis/syn/vivado/sync_reset.tcl
 OPTRACE "read constraints: implementation" END { }
 OPTRACE "add files" END { }
 OPTRACE "link_design" START { }
@@ -311,7 +310,6 @@ set rc [catch {
   create_msg_db write_bitstream.pb
 OPTRACE "read constraints: write_bitstream" START { }
 OPTRACE "read constraints: write_bitstream" END { }
-  set_property XPM_LIBRARIES XPM_CDC [current_project]
   catch { write_mem_info -force -no_partial_mmi fpga.mmi }
 OPTRACE "write_bitstream setup" END { }
 OPTRACE "write_bitstream" START { }

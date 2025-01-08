@@ -27,38 +27,108 @@ module fpga (
     output wire [3:0] phy_txd,
     output wire       phy_tx_ctl,
     output wire       phy_reset_n 
-    //inout  wire       phy_mdio,
-    //output wire       phy_mdc 
 );
 
-// Clock and reset
-
 wire clk_ibufg;
+// Clock and reset
+IBUFGDS
+clk_200mhz_ibufgds_inst(
+    .I(clk_p),
+    .IB(clk_n),
+    .O(clk_ibufg)
+);
 
 // Internal 125 MHz clock
 wire clk_mmcm_out;
 wire clk_int;
 wire rst_int;   
 
+wire mmcm_rst = ~reset_n;
 wire mmcm_locked;
+wire mmcm_clkfb;
+wire clk90_mmcm_out;
 wire clk90_int;
+
+wire clk_200_mmcm_out;
 wire clk_200_int;
 
-clk_div clk_mmcm
-   (
-    // Clock out ports
-    .clk_out1(clk_int),     // output clk_out1
-    .clk_out2(clk90_int),     // output clk_out2
-    .clk_out3(clk_200_int),     // output clk_out3
-    // Status and control signals
-    .resetn(reset_n), // input resetn
-    .locked(mmcm_locked),       // output locked
-   // Clock in ports
-    .clk_in1_p(clk_p),    // input clk_in1_p
-    .clk_in1_n(clk_n)    // input clk_in1_n
+// MMCM instance
+// 200 MHz in, 125 MHz out
+// PFD range: 10 MHz to 500 MHz
+// VCO range: 600 MHz to 1440 MHz
+// M = 5, D = 1 sets Fvco = 1000 MHz (in range)
+// Divide by 8 to get output frequency of 125 MHz
+// Need two 125 MHz outputs with 90 degree offset
+// Also need 200 MHz out for IODELAY
+// 1000 / 5 = 200 MHz
+MMCME2_BASE #(
+    .BANDWIDTH("OPTIMIZED"),
+    .CLKOUT0_DIVIDE_F(8),
+    .CLKOUT0_DUTY_CYCLE(0.5),
+    .CLKOUT0_PHASE(0),
+    .CLKOUT1_DIVIDE(8),
+    .CLKOUT1_DUTY_CYCLE(0.5),
+    .CLKOUT1_PHASE(90),
+    .CLKOUT2_DIVIDE(5),
+    .CLKOUT2_DUTY_CYCLE(0.5),
+    .CLKOUT2_PHASE(0),
+    .CLKOUT3_DIVIDE(1),
+    .CLKOUT3_DUTY_CYCLE(0.5),
+    .CLKOUT3_PHASE(0),
+    .CLKOUT4_DIVIDE(1),
+    .CLKOUT4_DUTY_CYCLE(0.5),
+    .CLKOUT4_PHASE(0),
+    .CLKOUT5_DIVIDE(1),
+    .CLKOUT5_DUTY_CYCLE(0.5),
+    .CLKOUT5_PHASE(0),
+    .CLKOUT6_DIVIDE(1),
+    .CLKOUT6_DUTY_CYCLE(0.5),
+    .CLKOUT6_PHASE(0),
+    .CLKFBOUT_MULT_F(5),
+    .CLKFBOUT_PHASE(0),
+    .DIVCLK_DIVIDE(1),
+    .REF_JITTER1(0.010),
+    .CLKIN1_PERIOD(5.0),
+    .STARTUP_WAIT("FALSE"),
+    .CLKOUT4_CASCADE("FALSE")
+)
+clk_mmcm_inst (
+    .CLKIN1(clk_ibufg),
+    .CLKFBIN(mmcm_clkfb),
+    .RST(mmcm_rst),
+    .PWRDWN(1'b0),
+    .CLKOUT0(clk_mmcm_out),
+    .CLKOUT0B(),
+    .CLKOUT1(clk90_mmcm_out),
+    .CLKOUT1B(),
+    .CLKOUT2(clk_200_mmcm_out),
+    .CLKOUT2B(),
+    .CLKOUT3(),
+    .CLKOUT3B(),
+    .CLKOUT4(),
+    .CLKOUT5(),
+    .CLKOUT6(),
+    .CLKFBOUT(mmcm_clkfb),
+    .CLKFBOUTB(),
+    .LOCKED(mmcm_locked)
+);
+BUFG
+clk_bufg_inst (
+    .I(clk_mmcm_out),
+    .O(clk_int)
 );
 
+BUFG
+clk90_bufg_inst (
+    .I(clk90_mmcm_out),
+    .O(clk90_int)
+);
 
+BUFG
+clk_200_bufg_inst (
+    .I(clk_200_mmcm_out),
+    .O(clk_200_int)
+);
 sync_reset #(
     .N(4)
 )
@@ -174,46 +244,6 @@ phy_rx_ctl_idelay
     .LDPIPEEN(1'b0),
     .REGRST(1'b0)
 );
-/*
-    reg en ;
-    reg [5:0] eth_mdc_count;
-
-    always@(posedge clk_int or negedge rst_int) begin
-        if(!rst_int) begin
-            en <= 0;
-            eth_mdc_count <= 0;
-        end else begin 
-            if(eth_mdc_count == 6'd50) begin 
-                en <= 1;
-                eth_mdc_count <= 0;
-            end else begin 
-                eth_mdc_count <= eth_mdc_count + 1;
-                en <= 0;
-            end 
-        end  
-    end
-
-    wire eth_mdio_t; 
-    wire eth_mdio_i; 
-    wire eth_mdio_o; 
-
-    
-    ethernet_mdio mdio(
-        .clk(clk_int),
-		.resetn(reset_n),
-		.en(en),
-		.mdio_o(eth_mdio_o),
-		.mdio_t(eth_mdio_t),
-		.phy_mdc_port(phy_mdc) //output 
-    );
-
-    IOBUF mdio_iobuf(
-        .I(eth_mdio_o),
-        .IO(phy_mdio),
-        .O(eth_mdio_i),
-        .T(eth_mdio_t)
-    ); 
-*/
 
 fpga_core #(
     .TARGET("XILINX")

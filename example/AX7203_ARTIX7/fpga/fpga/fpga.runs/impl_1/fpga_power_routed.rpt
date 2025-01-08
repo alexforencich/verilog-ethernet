@@ -1,7 +1,7 @@
 Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2023 Advanced Micro Devices, Inc. All Rights Reserved.
 -------------------------------------------------------------------------------------------------------------------------------------------------
 | Tool Version     : Vivado v.2023.1 (lin64) Build 3865809 Sun May  7 15:04:56 MDT 2023
-| Date             : Wed Jan  8 09:44:16 2025
+| Date             : Wed Jan  8 11:10:15 2025
 | Host             : kavya-Precision-Tower-5810 running 64-bit Ubuntu 22.04.5 LTS
 | Command          : report_power -file fpga_power_routed.rpt -pb fpga_power_summary_routed.pb -rpx fpga_power_routed.rpx
 | Design           : fpga
@@ -30,10 +30,10 @@ Table of Contents
 ----------
 
 +--------------------------+--------------+
-| Total On-Chip Power (W)  | 0.320        |
+| Total On-Chip Power (W)  | 0.319        |
 | Design Power Budget (W)  | Unspecified* |
 | Power Budget Margin (W)  | NA           |
-| Dynamic (W)              | 0.181        |
+| Dynamic (W)              | 0.180        |
 | Device Static (W)        | 0.139        |
 | Effective TJA (C/W)      | 2.5          |
 | Max Ambient (C)          | 84.2         |
@@ -52,20 +52,20 @@ Table of Contents
 +--------------------------+-----------+----------+-----------+-----------------+
 | On-Chip                  | Power (W) | Used     | Available | Utilization (%) |
 +--------------------------+-----------+----------+-----------+-----------------+
-| Clocks                   |     0.015 |        8 |       --- |             --- |
+| Clocks                   |     0.014 |        8 |       --- |             --- |
 | Slice Logic              |     0.007 |     5299 |       --- |             --- |
-|   LUT as Logic           |     0.006 |     1726 |    133800 |            1.29 |
+|   LUT as Logic           |     0.006 |     1725 |    133800 |            1.29 |
 |   CARRY4                 |    <0.001 |      200 |     33450 |            0.60 |
 |   Register               |    <0.001 |     2761 |    269200 |            1.03 |
 |   LUT as Distributed RAM |    <0.001 |       92 |     46200 |            0.20 |
 |   F7/F8 Muxes            |    <0.001 |       17 |    133800 |            0.01 |
 |   Others                 |     0.000 |       67 |       --- |             --- |
-| Signals                  |     0.008 |     4434 |       --- |             --- |
+| Signals                  |     0.008 |     4425 |       --- |             --- |
 | Block RAM                |     0.012 |        8 |       365 |            2.19 |
 | MMCM                     |     0.108 |        1 |        10 |           10.00 |
 | I/O                      |     0.031 |       16 |       285 |            5.61 |
 | Static Power             |     0.139 |          |           |                 |
-| Total                    |     0.320 |          |           |                 |
+| Total                    |     0.319 |          |           |                 |
 +--------------------------+-----------+----------+-----------+-----------------+
 
 
@@ -75,7 +75,7 @@ Table of Contents
 +-----------+-------------+-----------+-------------+------------+-------------+-------------+------------+
 | Source    | Voltage (V) | Total (A) | Dynamic (A) | Static (A) | Powerup (A) | Budget (A)  | Margin (A) |
 +-----------+-------------+-----------+-------------+------------+-------------+-------------+------------+
-| Vccint    |       1.000 |     0.075 |       0.044 |      0.031 |       NA    | Unspecified | NA         |
+| Vccint    |       1.000 |     0.074 |       0.043 |      0.031 |       NA    | Unspecified | NA         |
 | Vccaux    |       1.800 |     0.094 |       0.063 |      0.031 |       NA    | Unspecified | NA         |
 | Vcco33    |       3.300 |     0.012 |       0.007 |      0.005 |       NA    | Unspecified | NA         |
 | Vcco25    |       2.500 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
@@ -128,16 +128,16 @@ Table of Contents
 2.2 Clock Constraints
 ---------------------
 
-+------------------+--------------------------------+-----------------+
-| Clock            | Domain                         | Constraint (ns) |
-+------------------+--------------------------------+-----------------+
-| clk_out1_clk_div | clk_mmcm/inst/clk_out1_clk_div |             8.0 |
-| clk_out2_clk_div | clk_mmcm/inst/clk_out2_clk_div |             8.0 |
-| clk_out3_clk_div | clk_mmcm/inst/clk_out3_clk_div |             5.0 |
-| clk_p            | clk_p                          |             5.0 |
-| clkfbout_clk_div | clk_mmcm/inst/clkfbout_clk_div |             5.0 |
-| phy_rx_clk       | phy_rx_clk                     |             8.0 |
-+------------------+--------------------------------+-----------------+
++------------------+------------------+-----------------+
+| Clock            | Domain           | Constraint (ns) |
++------------------+------------------+-----------------+
+| clk              | clk_p            |             5.0 |
+| clk90_mmcm_out   | clk90_mmcm_out   |             8.0 |
+| clk_200_mmcm_out | clk_200_mmcm_out |             5.0 |
+| clk_mmcm_out     | clk_mmcm_out     |             8.0 |
+| mmcm_clkfb       | mmcm_clkfb       |             5.0 |
+| phy_rx_clk       | phy_rx_clk       |             8.0 |
++------------------+------------------+-----------------+
 
 
 3. Detailed Reports
@@ -149,9 +149,7 @@ Table of Contents
 +-----------------------------+-----------+
 | Name                        | Power (W) |
 +-----------------------------+-----------+
-| fpga                        |     0.181 |
-|   clk_mmcm                  |     0.110 |
-|     inst                    |     0.110 |
+| fpga                        |     0.180 |
 |   core_inst                 |     0.039 |
 |     eth_mac_inst            |     0.012 |
 |       eth_mac_1g_rgmii_inst |     0.005 |
