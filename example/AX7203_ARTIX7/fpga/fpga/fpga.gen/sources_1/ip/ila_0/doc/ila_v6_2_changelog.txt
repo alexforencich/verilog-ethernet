@@ -1,0 +1,281 @@
+2023.1:
+ * Version 6.2 (Rev. 13)
+ * Revision change in one or more subcores
+
+2022.2.2:
+ * Version 6.2 (Rev. 12)
+ * No changes
+
+2022.2.1:
+ * Version 6.2 (Rev. 12)
+ * No changes
+
+2022.2:
+ * Version 6.2 (Rev. 12)
+ * No changes
+
+2022.1.2:
+ * Version 6.2 (Rev. 12)
+ * No changes
+
+2022.1.1:
+ * Version 6.2 (Rev. 12)
+ * No changes
+
+2022.1:
+ * Version 6.2 (Rev. 12)
+ * No changes
+
+2021.2.2:
+ * Version 6.2 (Rev. 12)
+ * No changes
+
+2021.2.1:
+ * Version 6.2 (Rev. 12)
+ * No changes
+
+2021.2:
+ * Version 6.2 (Rev. 12)
+ * General: Updated the Example design XDC files for pin locs
+ * Revision change in one or more subcores
+
+2021.1.1:
+ * Version 6.2 (Rev. 11)
+ * No changes
+
+2021.1:
+ * Version 6.2 (Rev. 11)
+ * No changes
+
+2020.3:
+ * Version 6.2 (Rev. 11)
+ * No changes
+
+2020.2.2:
+ * Version 6.2 (Rev. 11)
+ * No changes
+
+2020.2.1:
+ * Version 6.2 (Rev. 11)
+ * No changes
+
+2020.2:
+ * Version 6.2 (Rev. 11)
+ * No changes
+
+2020.1.1:
+ * Version 6.2 (Rev. 11)
+ * No changes
+
+2020.1:
+ * Version 6.2 (Rev. 11)
+ * General: Added security attribute
+
+2019.2.2:
+ * Version 6.2 (Rev. 10)
+ * No changes
+
+2019.2.1:
+ * Version 6.2 (Rev. 10)
+ * No changes
+
+2019.2:
+ * Version 6.2 (Rev. 10)
+ * General: Updated the waivers for CDC
+ * Revision change in one or more subcores
+
+2019.1.3:
+ * Version 6.2 (Rev. 9)
+ * No changes
+
+2019.1.2:
+ * Version 6.2 (Rev. 9)
+ * No changes
+
+2019.1.1:
+ * Version 6.2 (Rev. 9)
+ * No changes
+
+2019.1:
+ * Version 6.2 (Rev. 9)
+ * General: Updated the waivers for CDC
+ * Revision change in one or more subcores
+
+2018.3.1:
+ * Version 6.2 (Rev. 8)
+ * No changes
+
+2018.3:
+ * Version 6.2 (Rev. 8)
+ * General: Supported devices and production status are now determined automatically, to simplify support for future devices
+
+2018.2:
+ * Version 6.2 (Rev. 7)
+ * General: Added device support for virtexuplus58gf family
+
+2018.1:
+ * Version 6.2 (Rev. 6)
+ * General: Updated ILA to handle XDC warnings
+
+2017.4:
+ * Version 6.2 (Rev. 5)
+ * General: Updated ILA to handle XDC warnings
+
+2017.3:
+ * Version 6.2 (Rev. 4)
+ * Added new virtexupluxHBM device support
+
+2017.2:
+ * Version 6.2 (Rev. 3)
+ * Added new AZYNQUPLUS device support
+
+2017.1:
+ * Version 6.2 (Rev. 2)
+ * Updated ILA and Debug Hub IPs to handle CDC warnings
+ * Revision change in one or more subcores
+
+2016.4:
+ * Version 6.2 (Rev. 1)
+ * Updated ILA and Debug Hub IPs to handle CDC warnings
+ * Revision change in one or more subcores
+
+2016.3:
+ * Version 6.2
+ * Updated DRC to set individual probe MU count value based on all_probe_same_mu_cnt parameter
+ * Source HDL files are concatenated into a single file to speed up synthesis and simulation. No changes required by the user
+ * Revision change in one or more subcores
+
+2016.2:
+ * Version 6.1 (Rev. 1)
+ * Revision change in one or more subcores
+
+2016.1:
+ * Version 6.1
+ * Updated the IP to support 2 Windows & 1 Sample count configuration
+ * Number of comparator increased from 1 to 16 in basic mode and 4 to 16 in advanced mode
+ * Updated probe data width register
+ * Revision change in one or more subcores
+
+2015.4.2:
+ * Version 6.0 (Rev. 1)
+ * No changes
+
+2015.4.1:
+ * Version 6.0 (Rev. 1)
+ * No changes
+
+2015.4:
+ * Version 6.0 (Rev. 1)
+ * No change
+ * Revision change in one or more subcores
+
+2015.3:
+ * Version 6.0
+ * Fixed Timing10 DRC violations in ILA IP.
+ * IP revision number added to HDL module, library, and include file names, to support designs with both locked and upgraded IP instances
+ * Revision change in one or more subcores
+
+2015.2.1:
+ * Version 5.1 (Rev. 1)
+ * No changes
+
+2015.2:
+ * Version 5.1 (Rev. 1)
+ * Updated IP XDC constraints to fix Partial False path scenario in ILA when operated in mulit clock domain
+ * Updated IP XDC constraints to fix critical warnings in High Speed Design Debugging mode
+
+2015.1:
+ * Version 5.1
+ * Fixed example design placer issue with pin location constraints for SVD packages
+
+2014.4.1:
+ * Version 5.0 (Rev. 2)
+ * Updated example XDC pin location constraints for new devices
+
+2014.4:
+ * Version 5.0 (Rev. 1)
+ * Encrypted source files are concatenated together to reduce the number of files and to reduce simulator compile time
+
+2014.3:
+ * Version 5.0
+ * Added AXI4 Stream monitor support. New parameter option AXI4S added to C_SLOT_0_AXI_PROTOCOL
+ * Four new user parameters added to support AXI4 Stream. These are C_SLOT_0_AXIS_TDATA_WIDTH, C_SLOT_0_AXIS_TID_WIDTH, C_SLOT_0_AXIS_TUSER_WIDTH, C_SLOT_0_AXIS_TID_WIDTH
+ * Updated ILA IP to use new helper libraries (ltlib_v1_0 & xsdbs_v1_0)
+ * Changed C_NNUM_MONITOR_SLOTS field to read only as ILA supported only interface in AXI mode
+
+2014.2:
+ * Version 4.0 (Rev. 1)
+ * Fixed TIMING DRC violations, added ASYNC_REG property on the register which has double synchronizer for CDC paths
+ * Fixed re-execution of First state when ila is used in advanced trigger mode
+ * Reduced number of unused ports visible to users for AXI mode when AXI4LITE protocol is selected
+
+2014.1:
+ * Version 4.0
+ * Updated the IP to support new DBG_HUB stitcher algorithm
+ * Updated ILA AXI monitor feature to the IP
+ * Internal device family name change, no functional changes
+
+2013.4:
+ * Version 3.0 (Rev. 1)
+ * Kintex UltraScale Pre-Production support
+
+2013.3:
+ * Version 3.0
+ * All ports changed to lower case
+ * Added ILA Advanced Trigger Features
+
+2013.2:
+ * Version 2.1
+ * Improved support for multiple instances
+ * Added C_TRIGOUT_EN  parameter to support cross trigring
+ * Added C_TRIGIN_EN  parameter to support cross trigring
+
+2013.1:
+ * Version 2.0
+ * Native Vivado Release
+
+(c) Copyright 2000 - 2023 Xilinx, Inc. All rights reserved.
+
+This file contains confidential and proprietary information
+of Xilinx, Inc. and is protected under U.S. and
+international copyright and other intellectual property
+laws.
+
+DISCLAIMER
+This disclaimer is not a license and does not grant any
+rights to the materials distributed herewith. Except as
+otherwise provided in a valid license issued to you by
+Xilinx, and to the maximum extent permitted by applicable
+law: (1) THESE MATERIALS ARE MADE AVAILABLE "AS IS" AND
+WITH ALL FAULTS, AND XILINX HEREBY DISCLAIMS ALL WARRANTIES
+AND CONDITIONS, EXPRESS, IMPLIED, OR STATUTORY, INCLUDING
+BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, NON-
+INFRINGEMENT, OR FITNESS FOR ANY PARTICULAR PURPOSE; and
+(2) Xilinx shall not be liable (whether in contract or tort,
+including negligence, or under any other theory of
+liability) for any loss or damage of any kind or nature
+related to, arising under or in connection with these
+materials, including for any direct, or any indirect,
+special, incidental, or consequential loss or damage
+(including loss of data, profits, goodwill, or any type of
+loss or damage suffered as a result of any action brought
+by a third party) even if such damage or loss was
+reasonably foreseeable or Xilinx had been advised of the
+possibility of the same.
+
+CRITICAL APPLICATIONS
+Xilinx products are not designed or intended to be fail-
+safe, or for use in any application requiring fail-safe
+performance, such as life-support or safety devices or
+systems, Class III medical devices, nuclear facilities,
+applications related to the deployment of airbags, or any
+other applications that could lead to death, personal
+injury, or severe property or environmental damage
+(individually and collectively, "Critical
+Applications"). Customer assumes the sole risk and
+liability of any use of Xilinx products in Critical
+Applications, subject only to applicable laws and
+regulations governing limitations on product liability.
+
+THIS COPYRIGHT NOTICE AND DISCLAIMER MUST BE RETAINED AS
+PART OF THIS FILE AT ALL TIMES.
