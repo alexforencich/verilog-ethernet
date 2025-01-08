@@ -1,0 +1,14 @@
+#-----------------------------------------------------------
+# Vivado v2023.1 (64-bit)
+# SW Build 3865809 on Sun May  7 15:04:56 MDT 2023
+# IP Build 3864474 on Sun May  7 20:36:21 MDT 2023
+# SharedData Build 3865790 on Sun May 07 13:33:03 MDT 2023
+# Start of session at: Tue Jan  7 14:58:38 2025
+# Process ID: 608759
+# Current directory: /home/kavya/Desktop/forked/verilog-ethernet/example/AX7203_ARTIX7/fpga/fpga/fpga.runs/impl_1
+# Command line: vivado -log fpga.vdi -applog -product Vivado -messageDb vivado.pb -mode batch -source fpga.tcl -notrace
+# Log file: /home/kavya/Desktop/forked/verilog-ethernet/example/AX7203_ARTIX7/fpga/fpga/fpga.runs/impl_1/fpga.vdi
+# Journal file: /home/kavya/Desktop/forked/verilog-ethernet/example/AX7203_ARTIX7/fpga/fpga/fpga.runs/impl_1/vivado.jou
+# Running On: kavya-Precision-Tower-5810, OS: Linux, CPU Frequency: 1892.696 MHz, CPU Physical cores: 12, Host memory: 67345 MB
+#-----------------------------------------------------------
+source fpga.tcl -notrace

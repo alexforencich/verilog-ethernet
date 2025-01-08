@@ -1,0 +1,299 @@
+2023.1:
+ * Version 6.0 (Rev. 12)
+ * Bug Fix: CR Fixes
+ * Other: CR Fixes
+
+2022.2.2:
+ * Version 6.0 (Rev. 11)
+ * No changes
+
+2022.2.1:
+ * Version 6.0 (Rev. 11)
+ * No changes
+
+2022.2:
+ * Version 6.0 (Rev. 11)
+ * Bug Fix: CR Fixes
+ * Other: CR Fixes
+
+2022.1.2:
+ * Version 6.0 (Rev. 10)
+ * No changes
+
+2022.1.1:
+ * Version 6.0 (Rev. 10)
+ * No changes
+
+2022.1:
+ * Version 6.0 (Rev. 10)
+ * Bug Fix: CR Fixes
+ * Other: CR Fixes
+
+2021.2.2:
+ * Version 6.0 (Rev. 9)
+ * No changes
+
+2021.2.1:
+ * Version 6.0 (Rev. 9)
+ * No changes
+
+2021.2:
+ * Version 6.0 (Rev. 9)
+ * Bug Fix: CR Fixes
+ * Other: CR Fixes
+
+2021.1.1:
+ * Version 6.0 (Rev. 8)
+ * No changes
+
+2021.1:
+ * Version 6.0 (Rev. 8)
+ * Bug Fix: Internal GUI fixes
+ * Other: CR Fixes
+
+2020.3:
+ * Version 6.0 (Rev. 7)
+ * Bug Fix: Internal GUI fixes
+ * Other: CR Fixes
+
+2020.2.2:
+ * Version 6.0 (Rev. 6)
+ * No changes
+
+2020.2.1:
+ * Version 6.0 (Rev. 6)
+ * No changes
+
+2020.2:
+ * Version 6.0 (Rev. 6)
+ * Bug Fix: Internal GUI fixes
+ * Other: CR Fixes
+
+2020.1.1:
+ * Version 6.0 (Rev. 5)
+ * No changes
+
+2020.1:
+ * Version 6.0 (Rev. 5)
+ * Bug Fix: Internal GUI fixes
+ * Other: CR Fixes
+
+2019.2.2:
+ * Version 6.0 (Rev. 4)
+ * No changes
+
+2019.2.1:
+ * Version 6.0 (Rev. 4)
+ * No changes
+
+2019.2:
+ * Version 6.0 (Rev. 4)
+ * Bug Fix: Internal GUI fixes
+ * Other: CR Fixes
+
+2019.1.3:
+ * Version 6.0 (Rev. 3)
+ * No changes
+
+2019.1.2:
+ * Version 6.0 (Rev. 3)
+ * No changes
+
+2019.1.1:
+ * Version 6.0 (Rev. 3)
+ * No changes
+
+2019.1:
+ * Version 6.0 (Rev. 3)
+ * Bug Fix: Internal GUI fixes
+ * Other: New family support added
+
+2018.3.1:
+ * Version 6.0 (Rev. 2)
+ * No changes
+
+2018.3:
+ * Version 6.0 (Rev. 2)
+ * Bug Fix: Made input source independent for primary and secondary clock
+ * Other: New family support added
+
+2018.2:
+ * Version 6.0 (Rev. 1)
+ * Bug Fix: Removed vco freq check when Primitive is None
+ * Other: New family support added
+
+2018.1:
+ * Version 6.0
+ * Bug Fix: Bug fixes in Dynamic Reconfiguration feature and Write DRP feature
+ * Bug Fix: Bug fixes for connection issue for s_axi_aresetn pin in IPI
+ * Feature Enhancement: The default value of USE_PHASE_ALIGMENT is updated to false for UltraScale and UltraScale+ devices. Phase Alignment feature uses extra clock routes in UltraScale and UltraScale+ designs when MMCMs are used. These routing resources are wasted when user do not understand when phase alignment is really needed. Now, implementation tools can use these extra clock routing resources for high fanout signals.
+ * Feature Enhancement: A column "Max. freq of buffer" is added in the Output Clock table which shows the maximum frequency that the selected output buffer can support
+ * Other: DRCs added for invalid input values in Override mode
+
+2017.4:
+ * Version 5.4 (Rev. 3)
+ * Bug Fix: Internal GUI issues are fixed for COMPENSATION mode as INTERNAL
+ * Bug Fix: Fixed issue in dynamic reconfiguration of fractional values of M in MMCME3, MMCME4
+
+2017.3:
+ * Version 5.4 (Rev. 2)
+ * General: Internal GUI changes. No effect on the customer design. Added support for aspartan7 devices
+
+2017.2:
+ * Version 5.4 (Rev. 1)
+ * General: Internal GUI changes. No effect on the customer design.
+
+2017.1:
+ * Version 5.4
+ * Port Change: Minor version upgrade. CLR pins are added to the pin list when selected buffer is BUFGCEDIV for ultrascale and ultrascale plus devices.
+ * Other: Added support for new zynq ultrascale plus devices.
+
+2016.4:
+ * Version 5.3 (Rev. 3)
+ * Bug Fix: Internal GUI issues are fixed.
+
+2016.3:
+ * Version 5.3 (Rev. 2)
+ * Feature Enhancement: Added new option "Auto" under PRIMITIVE selection for ultrascale and above devices. This option allows the Wizard to instantiate appropriate primitive for the user inputs.
+ * Feature Enhancement: Added Matched Routing Option for better timing solutions.
+ * Feature Enhancement: Options 'Buffer' and 'Buffer_with_CE' are added to the buffer selection list.
+ * Other: Source HDL files are concatenated into a single file to speed up synthesis and simulation. No changes required by the user
+ * Other: Added support for Spartan7 devices.
+
+2016.2:
+ * Version 5.3 (Rev. 1)
+ * Internal register bit update, no effect on customer designs.
+
+2016.1:
+ * Version 5.3
+ * Added Clock Monitor Feature as part of clocking wizard
+ * DRP registers can be directly written through AXI without resource utilization
+ * Changes to HDL library management to support Vivado IP simulation library
+
+2015.4.2:
+ * Version 5.2 (Rev. 1)
+ * No changes
+
+2015.4.1:
+ * Version 5.2 (Rev. 1)
+ * No changes
+
+2015.4:
+ * Version 5.2 (Rev. 1)
+ * Internal device family change, no functional changes
+
+2015.3:
+ * Version 5.2
+ * IP revision number added to HDL module, library, and include file names, to support designs with both locked and upgraded IP instances
+ * Port Renaming tab is hidden in the GUI in IP Integrator as this feature is not supported
+ * Phase alignment feature is removed for ultrascale PLL as primitve has limited capabilities of supporting this feature
+ * When clocking wizard is targetted on a board part, the frequency values that gets propagated to primary and secondary clocks are displayed in floating number format
+ * Example design and simulation files are delivered in verilog only
+
+2015.2.1:
+ * Version 5.1 (Rev. 6)
+ * No changes
+
+2015.2:
+ * Version 5.1 (Rev. 6)
+ * No changes
+
+2015.1:
+ * Version 5.1 (Rev. 6)
+ * Updated mmcm_pll_filter_lookup and mmcm_pll_lock_lookup functions in the header file for 7-Series and UltraScale devices
+ * Supported devices and production status are now determined automatically, to simplify support for future devices
+
+2014.4.1:
+ * Version 5.1 (Rev. 5)
+ * No changes
+
+2014.4:
+ * Version 5.1 (Rev. 5)
+ * Internal device family change, no functional changes
+ * updates related to the source selection based on board interface for zed board
+
+2014.3:
+ * Version 5.1 (Rev. 4)
+ * Option added to enable dynamic phase and duty cycle for resource optimization in AXI4-Lite interface
+
+2014.2:
+ * Version 5.1 (Rev. 3)
+ * Updated for AXI4-Lite interface locked status register address and bit mapping to align with the pg065
+
+2014.1:
+ * Version 5.1 (Rev. 2)
+ * Updated to use inverted output CLKOUTB 0-3 of Clocking Primitive based on requested 180 phase w.r.t. previous clock
+ * Internal device family name change, no functional changes
+
+2013.4:
+ * Version 5.1 (Rev. 1)
+ * Added support for Ultrascale devices
+ * Updated Board Flow GUI to select the clock interfaces
+ * Fixed issue with Stub file parameter error for BUFR output driver
+
+2013.3:
+ * Version 5.1
+ * Added AXI4-Lite interface to dynamically reconfigure MMCM/PLL
+ * Improved safe clock logic to remove glitches on clock outputs for odd multiples of input clock frequencies
+ * Fixed precision issues between displayed and actual frequencies
+ * Added tool tips to GUI
+ * Added Jitter and Phase error values to IP properties
+ * Added support for Cadence IES and Synopsys VCS simulators
+ * Reduced warnings in synthesis and simulation
+ * Enhanced support for IP Integrator
+
+2013.2:
+ * Version 5.0 (Rev. 1)
+ * Fixed issue with clock constraints for multiple instances of clocking wizard
+ * Updated Life-Cycle status of devices
+
+2013.1:
+ * Version 5.0
+ * Lower case ports for Verilog
+ * Added Safe Clock Startup and Clock Sequencing
+
+(c) Copyright 2008 - 2023 Xilinx, Inc. All rights reserved.
+
+This file contains confidential and proprietary information
+of Xilinx, Inc. and is protected under U.S. and
+international copyright and other intellectual property
+laws.
+
+DISCLAIMER
+This disclaimer is not a license and does not grant any
+rights to the materials distributed herewith. Except as
+otherwise provided in a valid license issued to you by
+Xilinx, and to the maximum extent permitted by applicable
+law: (1) THESE MATERIALS ARE MADE AVAILABLE "AS IS" AND
+WITH ALL FAULTS, AND XILINX HEREBY DISCLAIMS ALL WARRANTIES
+AND CONDITIONS, EXPRESS, IMPLIED, OR STATUTORY, INCLUDING
+BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, NON-
+INFRINGEMENT, OR FITNESS FOR ANY PARTICULAR PURPOSE; and
+(2) Xilinx shall not be liable (whether in contract or tort,
+including negligence, or under any other theory of
+liability) for any loss or damage of any kind or nature
+related to, arising under or in connection with these
+materials, including for any direct, or any indirect,
+special, incidental, or consequential loss or damage
+(including loss of data, profits, goodwill, or any type of
+loss or damage suffered as a result of any action brought
+by a third party) even if such damage or loss was
+reasonably foreseeable or Xilinx had been advised of the
+possibility of the same.
+
+CRITICAL APPLICATIONS
+Xilinx products are not designed or intended to be fail-
+safe, or for use in any application requiring fail-safe
+performance, such as life-support or safety devices or
+systems, Class III medical devices, nuclear facilities,
+applications related to the deployment of airbags, or any
+other applications that could lead to death, personal
+injury, or severe property or environmental damage
+(individually and collectively, "Critical
+Applications"). Customer assumes the sole risk and
+liability of any use of Xilinx products in Critical
+Applications, subject only to applicable laws and
+regulations governing limitations on product liability.
+
+THIS COPYRIGHT NOTICE AND DISCLAIMER MUST BE RETAINED AS
+PART OF THIS FILE AT ALL TIMES.
