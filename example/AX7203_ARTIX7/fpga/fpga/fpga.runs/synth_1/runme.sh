@@ -21,7 +21,7 @@ else
 fi
 export LD_LIBRARY_PATH
 
-HD_PWD='/home/kavya/Desktop/forked/verilog-ethernet/example/AX7203_ARTIX7/fpga/fpga/fpga.runs/synth_1'
+HD_PWD='/home/kavya/Desktop/git_kavya/verilog-ethernet/example/AX7203_ARTIX7/fpga/fpga/fpga.runs/synth_1'
 cd "$HD_PWD"
 
 HD_LOG=runme.log

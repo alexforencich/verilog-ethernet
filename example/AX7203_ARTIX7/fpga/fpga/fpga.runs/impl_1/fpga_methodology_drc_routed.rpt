@@ -1,7 +1,7 @@
 Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2023 Advanced Micro Devices, Inc. All Rights Reserved.
 --------------------------------------------------------------------------------------------------------------------------------------------------
 | Tool Version : Vivado v.2023.1 (lin64) Build 3865809 Sun May  7 15:04:56 MDT 2023
-| Date         : Wed Jan  8 09:44:14 2025
+| Date         : Wed Jan  8 11:10:13 2025
 | Host         : kavya-Precision-Tower-5810 running 64-bit Ubuntu 22.04.5 LTS
 | Command      : report_methodology -file fpga_methodology_drc_routed.rpt -pb fpga_methodology_drc_routed.pb -rpx fpga_methodology_drc_routed.rpx
 | Design       : fpga
@@ -100,14 +100,14 @@ XDCH-2#1 Warning
 Same min and max delay values on IO port  
 The same input delay of 0.000 ns has been defined on port 'reset_n' for both max and min. Make sure this reflects the design intent.
 set_input_delay 0.000 [get_ports reset_n]
-/home/kavya/Desktop/forked/verilog-ethernet/example/AX7203_ARTIX7/fpga/fpga/fpga.srcs/constrs_1/imports/fpga/fpga.xdc (Line: 18)
+/home/kavya/Desktop/git_kavya/verilog-ethernet/example/AX7203_ARTIX7/fpga/fpga.xdc (Line: 18)
 Related violations: <none>
 
 XDCH-2#2 Warning
 Same min and max delay values on IO port  
 The same output delay of 0.000 ns has been defined on port 'phy_reset_n' for both max and min. Make sure this reflects the design intent.
 set_output_delay 0.000 [get_ports phy_reset_n]
-/home/kavya/Desktop/forked/verilog-ethernet/example/AX7203_ARTIX7/fpga/fpga/fpga.srcs/constrs_1/imports/fpga/fpga.xdc (Line: 50)
+/home/kavya/Desktop/git_kavya/verilog-ethernet/example/AX7203_ARTIX7/fpga/fpga.xdc (Line: 50)
 Related violations: <none>
 
 

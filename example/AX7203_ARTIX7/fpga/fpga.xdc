@@ -9,7 +9,7 @@ set_property BITSTREAM.GENERAL.COMPRESS true [current_design]
 # differential clock
 set_property -dict {PACKAGE_PIN R4 IOSTANDARD DIFF_SSTL15} [get_ports clk_p]
 set_property -dict {PACKAGE_PIN T4 IOSTANDARD DIFF_SSTL15} [get_ports clk_n]
-
+create_clock -period 5.000 -name clk [get_ports clk_p]
 
 # Reset button
 set_property -dict {PACKAGE_PIN T6 IOSTANDARD LVCMOS15} [get_ports reset_n]
@@ -33,10 +33,10 @@ set_property -dict {PACKAGE_PIN A19 IOSTANDARD LVCMOS33 SLEW FAST DRIVE 16} [get
 set_property -dict {PACKAGE_PIN A18 IOSTANDARD LVCMOS33 SLEW FAST DRIVE 16} [get_ports {phy_txd[3]}]
 set_property -dict {PACKAGE_PIN F18 IOSTANDARD LVCMOS33 SLEW FAST DRIVE 16} [get_ports phy_tx_ctl]
 set_property -dict {PACKAGE_PIN D16 IOSTANDARD LVCMOS33 SLEW SLOW DRIVE 12} [get_ports phy_reset_n]
+create_clock -period 8.000 -name phy_rx_clk [get_ports phy_rx_clk]
 
 #set_property -dict {PACKAGE_PIN B15 IOSTANDARD LVCMOS33 SLEW SLOW DRIVE 12} [get_ports phy_mdio]
 #set_property -dict {PACKAGE_PIN B16 IOSTANDARD LVCMOS33 SLEW SLOW DRIVE 12} [get_ports phy_mdc]
-#create_clock -period 8.000 -name phy_rx_clk [get_ports phy_rx_clk]
 #set_false_path -to [get_ports {phy_mdio phy_mdc}]
 #set_output_delay 0.000 [get_ports {phy_mdio phy_mdc}]
 #set_false_path -from [get_ports phy_mdio]

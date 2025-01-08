@@ -1,4 +1,4 @@
-set_property SRC_FILE_INFO {cfile:/home/kavya/Desktop/forked/verilog-ethernet/example/AX7203_ARTIX7/fpga/fpga/fpga.srcs/constrs_1/imports/fpga/fpga.xdc rfile:../../../fpga.srcs/constrs_1/imports/fpga/fpga.xdc id:1} [current_design]
+set_property SRC_FILE_INFO {cfile:/home/kavya/Desktop/git_kavya/verilog-ethernet/example/AX7203_ARTIX7/fpga/fpga.xdc rfile:../../../../fpga.xdc id:1} [current_design]
 set_property src_info {type:XDC file:1 line:10 export:INPUT save:INPUT read:READ} [current_design]
 set_property -dict {PACKAGE_PIN R4 IOSTANDARD DIFF_SSTL15} [get_ports clk_p]
 set_property src_info {type:XDC file:1 line:11 export:INPUT save:INPUT read:READ} [current_design]

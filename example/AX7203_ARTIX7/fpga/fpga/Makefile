@@ -7,7 +7,6 @@ FPGA_ARCH = artix7
 # Files for synthesis
 SYN_FILES = rtl/fpga.v
 SYN_FILES += rtl/fpga_core.v
-SYN_FILES += rtl/ethernet_mdio.v
 SYN_FILES += rtl/sync_signal.v
 SYN_FILES += lib/eth/rtl/iddr.v
 SYN_FILES += lib/eth/rtl/oddr.v

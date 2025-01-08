@@ -1,7 +1,7 @@
 Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2023 Advanced Micro Devices, Inc. All Rights Reserved.
 ---------------------------------------------------------------------------------------------------------------------------------------------
 | Tool Version : Vivado v.2023.1 (lin64) Build 3865809 Sun May  7 15:04:56 MDT 2023
-| Date         : Wed Jan  8 09:41:35 2025
+| Date         : Wed Jan  8 11:07:32 2025
 | Host         : kavya-Precision-Tower-5810 running 64-bit Ubuntu 22.04.5 LTS
 | Command      : report_utilization -file fpga_utilization_synth.rpt -pb fpga_utilization_synth.pb
 | Design       : fpga
@@ -31,8 +31,8 @@ Table of Contents
 +----------------------------+------+-------+------------+-----------+-------+
 |          Site Type         | Used | Fixed | Prohibited | Available | Util% |
 +----------------------------+------+-------+------------+-----------+-------+
-| Slice LUTs*                | 1857 |     0 |          0 |    134600 |  1.38 |
-|   LUT as Logic             | 1765 |     0 |          0 |    134600 |  1.31 |
+| Slice LUTs*                | 1858 |     0 |          0 |    134600 |  1.38 |
+|   LUT as Logic             | 1766 |     0 |          0 |    134600 |  1.31 |
 |   LUT as Memory            |   92 |     0 |          0 |     46200 |  0.20 |
 |     LUT as Distributed RAM |   92 |     0 |            |           |       |
 |     LUT as Shift Register  |    0 |     0 |            |           |       |
@@ -96,7 +96,7 @@ Warning! LUT value is adjusted to account for LUT combining.
 +-----------------------------+------+-------+------------+-----------+-------+
 |          Site Type          | Used | Fixed | Prohibited | Available | Util% |
 +-----------------------------+------+-------+------------+-----------+-------+
-| Bonded IOB                  |   14 |     0 |          0 |       285 |  4.91 |
+| Bonded IOB                  |   16 |     0 |          0 |       285 |  5.61 |
 | Bonded IPADs                |    0 |     0 |          0 |        14 |  0.00 |
 | Bonded OPADs                |    0 |     0 |          0 |         8 |  0.00 |
 | PHY_CONTROL                 |    0 |     0 |          0 |        10 |  0.00 |
@@ -104,7 +104,7 @@ Warning! LUT value is adjusted to account for LUT combining.
 | OUT_FIFO                    |    0 |     0 |          0 |        40 |  0.00 |
 | IN_FIFO                     |    0 |     0 |          0 |        40 |  0.00 |
 | IDELAYCTRL                  |    1 |     0 |          0 |        10 | 10.00 |
-| IBUFDS                      |    0 |     0 |          0 |       274 |  0.00 |
+| IBUFDS                      |    1 |     0 |          0 |       274 |  0.36 |
 | GTPE2_CHANNEL               |    0 |     0 |          0 |         4 |  0.00 |
 | PHASER_OUT/PHASER_OUT_PHY   |    0 |     0 |          0 |        40 |  0.00 |
 | PHASER_IN/PHASER_IN_PHY     |    0 |     0 |          0 |        40 |  0.00 |
@@ -124,10 +124,10 @@ Warning! LUT value is adjusted to account for LUT combining.
 +--------------+------+-------+------------+-----------+-------+
 |   Site Type  | Used | Fixed | Prohibited | Available | Util% |
 +--------------+------+-------+------------+-----------+-------+
-| BUFGCTRL     |    0 |     0 |          0 |        32 |  0.00 |
+| BUFGCTRL     |    3 |     0 |          0 |        32 |  9.38 |
 | BUFIO        |    1 |     0 |          0 |        40 |  2.50 |
 |   BUFIO only |    1 |     0 |            |           |       |
-| MMCME2_ADV   |    0 |     0 |          0 |        10 |  0.00 |
+| MMCME2_ADV   |    1 |     0 |          0 |        10 | 10.00 |
 | PLLE2_ADV    |    0 |     0 |          0 |        10 |  0.00 |
 | BUFMRCE      |    0 |     0 |          0 |        20 |  0.00 |
 | BUFHCE       |    0 |     0 |          0 |       120 |  0.00 |
@@ -166,7 +166,7 @@ Warning! LUT value is adjusted to account for LUT combining.
 | LUT2       |  265 |                 LUT |
 | LUT4       |  241 |                 LUT |
 | CARRY4     |  200 |          CarryLogic |
-| LUT1       |  172 |                 LUT |
+| LUT1       |  173 |                 LUT |
 | FDSE       |  166 |        Flop & Latch |
 | RAMD32     |  114 |  Distributed Memory |
 | RAMS32     |   38 |  Distributed Memory |
@@ -180,7 +180,10 @@ Warning! LUT value is adjusted to account for LUT combining.
 | IDELAYE2   |    5 |                  IO |
 | IDDR       |    5 |                  IO |
 | RAMB18E1   |    4 |        Block Memory |
+| BUFG       |    3 |               Clock |
+| MMCME2_ADV |    1 |               Clock |
 | IDELAYCTRL |    1 |                  IO |
+| IBUFDS     |    1 |                  IO |
 | BUFR       |    1 |               Clock |
 | BUFIO      |    1 |               Clock |
 +------------+------+---------------------+
@@ -191,8 +194,6 @@ Warning! LUT value is adjusted to account for LUT combining.
 
 +----------+------+
 | Ref Name | Used |
-+----------+------+
-| clk_div  |    1 |
 +----------+------+
 
 
