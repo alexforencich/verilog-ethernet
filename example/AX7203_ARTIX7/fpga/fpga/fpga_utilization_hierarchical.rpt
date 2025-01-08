@@ -1,0 +1,82 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2023 Advanced Micro Devices, Inc. All Rights Reserved.
+---------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2023.1 (lin64) Build 3865809 Sun May  7 15:04:56 MDT 2023
+| Date         : Wed Jan  8 11:28:09 2025
+| Host         : kavya-Precision-Tower-5810 running 64-bit Ubuntu 22.04.5 LTS
+| Command      : report_utilization -hierarchical -file fpga_utilization_hierarchical.rpt
+| Design       : fpga
+| Device       : xc7a200tfbg484-2
+| Speed File   : -2
+| Design State : Routed
+---------------------------------------------------------------------------------------------------------------------------------------------
+
+Utilization Design Information
+
+Table of Contents
+-----------------
+1. Utilization by Hierarchy
+
+1. Utilization by Hierarchy
+---------------------------
+
++-----------------------------------+-----------------------------------------+------------+------------+---------+------+------+--------+--------+------------+
+|              Instance             |                  Module                 | Total LUTs | Logic LUTs | LUTRAMs | SRLs |  FFs | RAMB36 | RAMB18 | DSP Blocks |
++-----------------------------------+-----------------------------------------+------------+------------+---------+------+------+--------+--------+------------+
+| fpga                              |                                   (top) |       1817 |       1725 |      92 |    0 | 2761 |      6 |      4 |          0 |
+|   (fpga)                          |                                   (top) |          0 |          0 |       0 |    0 |    9 |      0 |      0 |          0 |
+|   core_inst                       |                               fpga_core |       1814 |       1722 |      92 |    0 | 2748 |      6 |      4 |          0 |
+|     (core_inst)                   |                               fpga_core |          2 |          2 |       0 |    0 |    2 |      0 |      0 |          0 |
+|     eth_axis_rx_inst              |                             eth_axis_rx |         39 |         39 |       0 |    0 |   95 |      0 |      0 |          0 |
+|     eth_axis_tx_inst              |                             eth_axis_tx |         51 |         51 |       0 |    0 |   81 |      0 |      0 |          0 |
+|     eth_mac_inst                  |                   eth_mac_1g_rgmii_fifo |        366 |        366 |       0 |    0 |  506 |      2 |      2 |          0 |
+|       eth_mac_1g_rgmii_inst       |                        eth_mac_1g_rgmii |        212 |        212 |       0 |    0 |  212 |      0 |      0 |          0 |
+|         (eth_mac_1g_rgmii_inst)   |                        eth_mac_1g_rgmii |         13 |         13 |       0 |    0 |   22 |      0 |      0 |          0 |
+|         eth_mac_1g_inst           |                              eth_mac_1g |        177 |        177 |       0 |    0 |  173 |      0 |      0 |          0 |
+|           axis_gmii_rx_inst       |                            axis_gmii_rx |         75 |         75 |       0 |    0 |   98 |      0 |      0 |          0 |
+|             (axis_gmii_rx_inst)   |                            axis_gmii_rx |         42 |         42 |       0 |    0 |   98 |      0 |      0 |          0 |
+|             eth_crc_8             |                                  lfsr_1 |         33 |         33 |       0 |    0 |    0 |      0 |      0 |          0 |
+|           axis_gmii_tx_inst       |                            axis_gmii_tx |        102 |        102 |       0 |    0 |   75 |      0 |      0 |          0 |
+|             (axis_gmii_tx_inst)   |                            axis_gmii_tx |         69 |         69 |       0 |    0 |   75 |      0 |      0 |          0 |
+|             eth_crc_8             |                                    lfsr |         33 |         33 |       0 |    0 |    0 |      0 |      0 |          0 |
+|         rgmii_phy_if_inst         |                            rgmii_phy_if |         23 |         23 |       0 |    0 |   17 |      0 |      0 |          0 |
+|           (rgmii_phy_if_inst)     |                            rgmii_phy_if |         17 |         17 |       0 |    0 |   17 |      0 |      0 |          0 |
+|           clk_oddr_inst           |                                    oddr |          0 |          0 |       0 |    0 |    0 |      0 |      0 |          0 |
+|           data_oddr_inst          |                    oddr__parameterized0 |          0 |          0 |       0 |    0 |    0 |      0 |      0 |          0 |
+|           rx_ssio_ddr_inst        |                             ssio_ddr_in |          6 |          6 |       0 |    0 |    0 |      0 |      0 |          0 |
+|             (rx_ssio_ddr_inst)    |                             ssio_ddr_in |          0 |          0 |       0 |    0 |    0 |      0 |      0 |          0 |
+|             data_iddr_inst        |                                    iddr |          6 |          6 |       0 |    0 |    0 |      0 |      0 |          0 |
+|       rx_fifo                     | axis_async_fifo_adapter__parameterized0 |         68 |         68 |       0 |    0 |  147 |      1 |      1 |          0 |
+|         fifo_inst                 |         axis_async_fifo__parameterized0 |         68 |         68 |       0 |    0 |  147 |      1 |      1 |          0 |
+|       tx_fifo                     |                 axis_async_fifo_adapter |         88 |         88 |       0 |    0 |  147 |      1 |      1 |          0 |
+|         fifo_inst                 |                         axis_async_fifo |         88 |         88 |       0 |    0 |  147 |      1 |      1 |          0 |
+|     udp_complete_inst             |                            udp_complete |       1337 |       1245 |      92 |    0 | 2021 |      2 |      1 |          0 |
+|       (udp_complete_inst)         |                            udp_complete |          0 |          0 |       0 |    0 |    2 |      0 |      0 |          0 |
+|       ip_arb_mux_inst             |                              ip_arb_mux |         34 |         34 |       0 |    0 |   90 |      0 |      0 |          0 |
+|         (ip_arb_mux_inst)         |                              ip_arb_mux |         27 |         27 |       0 |    0 |   89 |      0 |      0 |          0 |
+|         arb_inst                  |                               arbiter_0 |          7 |          7 |       0 |    0 |    1 |      0 |      0 |          0 |
+|       ip_complete_inst            |                             ip_complete |        839 |        823 |      16 |    0 | 1339 |      1 |      1 |          0 |
+|         (ip_complete_inst)        |                             ip_complete |          0 |          0 |       0 |    0 |    3 |      0 |      0 |          0 |
+|         arp_inst                  |                                     arp |        385 |        369 |      16 |    0 |  874 |      1 |      1 |          0 |
+|           (arp_inst)              |                                     arp |         71 |         71 |       0 |    0 |  317 |      0 |      0 |          0 |
+|           arp_cache_inst          |                               arp_cache |        159 |        143 |      16 |    0 |  113 |      1 |      1 |          0 |
+|           arp_eth_rx_inst         |                              arp_eth_rx |         98 |         98 |       0 |    0 |  283 |      0 |      0 |          0 |
+|           arp_eth_tx_inst         |                              arp_eth_tx |         58 |         58 |       0 |    0 |  161 |      0 |      0 |          0 |
+|         eth_arb_mux_inst          |                             eth_arb_mux |         31 |         31 |       0 |    0 |   80 |      0 |      0 |          0 |
+|           (eth_arb_mux_inst)      |                             eth_arb_mux |          4 |          4 |       0 |    0 |   77 |      0 |      0 |          0 |
+|           arb_inst                |                                 arbiter |         27 |         27 |       0 |    0 |    3 |      0 |      0 |          0 |
+|         ip_inst                   |                                      ip |        423 |        423 |       0 |    0 |  382 |      0 |      0 |          0 |
+|           (ip_inst)               |                                      ip |          4 |          4 |       0 |    0 |   55 |      0 |      0 |          0 |
+|           ip_eth_rx_inst          |                               ip_eth_rx |        148 |        148 |       0 |    0 |  139 |      0 |      0 |          0 |
+|           ip_eth_tx_inst          |                               ip_eth_tx |        271 |        271 |       0 |    0 |  188 |      0 |      0 |          0 |
+|       udp_inst                    |                                     udp |        465 |        389 |      76 |    0 |  590 |      1 |      0 |          0 |
+|         udp_checksum_gen_inst     |                        udp_checksum_gen |        255 |        179 |      76 |    0 |  274 |      1 |      0 |          0 |
+|           (udp_checksum_gen_inst) |                        udp_checksum_gen |        233 |        157 |      76 |    0 |  237 |      0 |      0 |          0 |
+|           payload_fifo            |                               axis_fifo |         22 |         22 |       0 |    0 |   37 |      1 |      0 |          0 |
+|         udp_ip_rx_inst            |                               udp_ip_rx |         95 |         95 |       0 |    0 |  135 |      0 |      0 |          0 |
+|         udp_ip_tx_inst            |                               udp_ip_tx |        116 |        116 |       0 |    0 |  181 |      0 |      0 |          0 |
+|     udp_payload_fifo              |               axis_fifo__parameterized0 |         27 |         27 |       0 |    0 |   43 |      2 |      1 |          0 |
+|   sync_reset_inst                 |                              sync_reset |          3 |          3 |       0 |    0 |    4 |      0 |      0 |          0 |
++-----------------------------------+-----------------------------------------+------------+------------+---------+------+------+--------+--------+------------+
+* Note: The sum of lower-level cells may be larger than their parent cells total, due to cross-hierarchy LUT combining
+
+

@@ -1,0 +1,6 @@
+<testsuites name="results">
+  <testsuite name="all" package="all">
+    <property name="random_seed" value="1735972827" />
+    <testcase name="run_test" classname="test_fpga_core" file="/home/kavya/Desktop/open_src_mac/verilog-ethernet-baac5f8d811d43853d59d69957975ead8bbed088/example/AX7203_ARTIX7/fpga/tb/fpga_core/test_fpga_core.py" lineno="84" time="1.9256463050842285" sim_time_ns="12440.001" ratio_time="6460.169225862" />
+  </testsuite>
+</testsuites>
