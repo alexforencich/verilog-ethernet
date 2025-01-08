@@ -28,4 +28,4 @@ echoed back after pressing enter.
 
 It is also possible to use hping to test the design by running
 
-    hping 192.168.1.128 -2 -p 1234 -d 1024
+    sudo hping3 192.168.1.128 -2 -p 1234 -d 1024
