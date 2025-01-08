@@ -1,13 +1,13 @@
 Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2023 Advanced Micro Devices, Inc. All Rights Reserved.
 ---------------------------------------------------------------------------------------------------------------------------------------------
 | Tool Version : Vivado v.2023.1 (lin64) Build 3865809 Sun May  7 15:04:56 MDT 2023
-| Date         : Wed Jan  8 11:26:11 2025
+| Date         : Wed Jan  8 11:28:09 2025
 | Host         : kavya-Precision-Tower-5810 running 64-bit Ubuntu 22.04.5 LTS
-| Command      : report_utilization -file fpga_utilization_placed.rpt -pb fpga_utilization_placed.pb
+| Command      : report_utilization -file fpga_utilization.rpt
 | Design       : fpga
 | Device       : xc7a200tfbg484-2
 | Speed File   : -2
-| Design State : Fully Placed
+| Design State : Routed
 ---------------------------------------------------------------------------------------------------------------------------------------------
 
 Utilization Design Information
@@ -32,16 +32,16 @@ Table of Contents
 +----------------------------+------+-------+------------+-----------+-------+
 |          Site Type         | Used | Fixed | Prohibited | Available | Util% |
 +----------------------------+------+-------+------------+-----------+-------+
-| Slice LUTs                 | 1817 |     0 |        800 |    133800 |  1.36 |
-|   LUT as Logic             | 1725 |     0 |        800 |    133800 |  1.29 |
+| Slice LUTs                 | 1817 |     0 |          0 |    134600 |  1.35 |
+|   LUT as Logic             | 1725 |     0 |          0 |    134600 |  1.28 |
 |   LUT as Memory            |   92 |     0 |          0 |     46200 |  0.20 |
 |     LUT as Distributed RAM |   92 |     0 |            |           |       |
 |     LUT as Shift Register  |    0 |     0 |            |           |       |
 | Slice Registers            | 2761 |     0 |          0 |    269200 |  1.03 |
 |   Register as Flip Flop    | 2761 |     0 |          0 |    269200 |  1.03 |
 |   Register as Latch        |    0 |     0 |          0 |    269200 |  0.00 |
-| F7 Muxes                   |   17 |     0 |        400 |     66900 |  0.03 |
-| F8 Muxes                   |    0 |     0 |        200 |     33450 |  0.00 |
+| F7 Muxes                   |   17 |     0 |          0 |     67300 |  0.03 |
+| F8 Muxes                   |    0 |     0 |          0 |     33650 |  0.00 |
 +----------------------------+------+-------+------------+-----------+-------+
 * Warning! LUT value is adjusted to account for LUT combining.
 
@@ -71,10 +71,10 @@ Table of Contents
 +--------------------------------------------+------+-------+------------+-----------+-------+
 |                  Site Type                 | Used | Fixed | Prohibited | Available | Util% |
 +--------------------------------------------+------+-------+------------+-----------+-------+
-| Slice                                      |  955 |     0 |        200 |     33450 |  2.86 |
+| Slice                                      |  955 |     0 |          0 |     33650 |  2.84 |
 |   SLICEL                                   |  582 |     0 |            |           |       |
 |   SLICEM                                   |  373 |     0 |            |           |       |
-| LUT as Logic                               | 1725 |     0 |        800 |    133800 |  1.29 |
+| LUT as Logic                               | 1725 |     0 |          0 |    134600 |  1.28 |
 |   using O5 output only                     |    0 |       |            |           |       |
 |   using O6 output only                     | 1364 |       |            |           |       |
 |   using O5 and O6                          |  361 |       |            |           |       |
@@ -89,7 +89,7 @@ Table of Contents
 |   Register driven from outside the Slice   | 1636 |       |            |           |       |
 |     LUT in front of the register is unused | 1237 |       |            |           |       |
 |     LUT in front of the register is used   |  399 |       |            |           |       |
-| Unique Control Sets                        |  151 |       |        200 |     33450 |  0.45 |
+| Unique Control Sets                        |  151 |       |          0 |     33650 |  0.45 |
 +--------------------------------------------+------+-------+------------+-----------+-------+
 * * Note: Available Control Sets calculated as Slice * 1, Review the Control Sets Report for more information regarding control sets.
 

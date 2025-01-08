@@ -70,8 +70,6 @@ proc create_report { reportName command } {
   }
 }
 OPTRACE "synth_1" START { ROLLUP_AUTO }
-set_param xicom.use_bs_reader 1
-set_param chipscope.maxJobs 3
 OPTRACE "Creating in-memory project" START { }
 create_project -in_memory -part xc7a200tfbg484-2
 
@@ -82,7 +80,6 @@ set_property webtalk.parent_dir /home/kavya/Desktop/git_kavya/verilog-ethernet/e
 set_property parent.project_path /home/kavya/Desktop/git_kavya/verilog-ethernet/example/AX7203_ARTIX7/fpga/fpga/fpga.xpr [current_project]
 set_property default_lib xil_defaultlib [current_project]
 set_property target_language Verilog [current_project]
-set_property ip_output_repo /home/kavya/Desktop/git_kavya/verilog-ethernet/example/AX7203_ARTIX7/fpga/fpga/fpga.cache/ip [current_project]
 set_property ip_cache_permissions {read write} [current_project]
 OPTRACE "Creating in-memory project" END { }
 OPTRACE "Adding files" START { }
@@ -154,8 +151,6 @@ read_xdc -unmanaged /home/kavya/Desktop/git_kavya/verilog-ethernet/example/AX720
 set_property used_in_implementation false [get_files /home/kavya/Desktop/git_kavya/verilog-ethernet/example/AX7203_ARTIX7/fpga/lib/eth/lib/axis/syn/vivado/sync_reset.tcl]
 
 set_param ips.enableIPCacheLiteLoad 1
-
-read_checkpoint -auto_incremental -incremental /home/kavya/Desktop/git_kavya/verilog-ethernet/example/AX7203_ARTIX7/fpga/fpga/fpga.srcs/utils_1/imports/synth_1/fpga.dcp
 close [open __synthesis_is_running__ w]
 
 OPTRACE "synth_design" START { }

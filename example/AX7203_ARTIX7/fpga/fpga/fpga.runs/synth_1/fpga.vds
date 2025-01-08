@@ -3,29 +3,24 @@
 # SW Build 3865809 on Sun May  7 15:04:56 MDT 2023
 # IP Build 3864474 on Sun May  7 20:36:21 MDT 2023
 # SharedData Build 3865790 on Sun May 07 13:33:03 MDT 2023
-# Start of session at: Wed Jan  8 11:05:43 2025
-# Process ID: 215449
+# Start of session at: Wed Jan  8 11:22:41 2025
+# Process ID: 256309
 # Current directory: /home/kavya/Desktop/git_kavya/verilog-ethernet/example/AX7203_ARTIX7/fpga/fpga/fpga.runs/synth_1
 # Command line: vivado -log fpga.vds -product Vivado -mode batch -messageDb vivado.pb -notrace -source fpga.tcl
 # Log file: /home/kavya/Desktop/git_kavya/verilog-ethernet/example/AX7203_ARTIX7/fpga/fpga/fpga.runs/synth_1/fpga.vds
 # Journal file: /home/kavya/Desktop/git_kavya/verilog-ethernet/example/AX7203_ARTIX7/fpga/fpga/fpga.runs/synth_1/vivado.jou
-# Running On: kavya-Precision-Tower-5810, OS: Linux, CPU Frequency: 1197.369 MHz, CPU Physical cores: 12, Host memory: 67345 MB
+# Running On: kavya-Precision-Tower-5810, OS: Linux, CPU Frequency: 2249.015 MHz, CPU Physical cores: 12, Host memory: 67345 MB
 #-----------------------------------------------------------
 source fpga.tcl -notrace
-create_project: Time (s): cpu = 00:00:13 ; elapsed = 00:00:13 . Memory (MB): peak = 1297.668 ; gain = 18.023 ; free physical = 51851 ; free virtual = 56802
-Command: read_checkpoint -auto_incremental -incremental /home/kavya/Desktop/git_kavya/verilog-ethernet/example/AX7203_ARTIX7/fpga/fpga/fpga.srcs/utils_1/imports/synth_1/fpga.dcp
-INFO: [Vivado 12-5825] Read reference checkpoint from /home/kavya/Desktop/git_kavya/verilog-ethernet/example/AX7203_ARTIX7/fpga/fpga/fpga.srcs/utils_1/imports/synth_1/fpga.dcp for incremental synthesis
-INFO: [Vivado 12-7989] Please ensure there are no constraint changes
+create_project: Time (s): cpu = 00:00:13 ; elapsed = 00:00:13 . Memory (MB): peak = 1335.785 ; gain = 0.023 ; free physical = 51138 ; free virtual = 56143
 Command: synth_design -top fpga -part xc7a200tfbg484-2
 Starting synth_design
 Attempting to get a license for feature 'Synthesis' and/or device 'xc7a200t'
 INFO: [Common 17-349] Got license for feature 'Synthesis' and/or device 'xc7a200t'
 INFO: [Device 21-403] Loading part xc7a200tfbg484-2
-INFO: [Designutils 20-5440] No compile time benefit to using incremental synthesis; A full resynthesis will be run
-INFO: [Designutils 20-4379] Flow is switching to default flow due to incremental criteria not met. If you would like to alter this behaviour and have the flow terminate instead, please set the following parameter config_implementation {autoIncr.Synth.RejectBehavior Terminate}
 INFO: [Synth 8-7079] Multithreading enabled for synth_design using a maximum of 4 processes.
 INFO: [Synth 8-7078] Launching helper process for spawning children vivado processes
-INFO: [Synth 8-7075] Helper process launched with PID 215505
+INFO: [Synth 8-7075] Helper process launched with PID 256359
 WARNING: [Synth 8-11065] parameter 'BYTE_LANES' becomes localparam in 'arp_eth_rx' with formal parameter declaration list [/home/kavya/Desktop/git_kavya/verilog-ethernet/example/AX7203_ARTIX7/fpga/lib/eth/rtl/arp_eth_rx.v:89]
 WARNING: [Synth 8-11065] parameter 'HDR_SIZE' becomes localparam in 'arp_eth_rx' with formal parameter declaration list [/home/kavya/Desktop/git_kavya/verilog-ethernet/example/AX7203_ARTIX7/fpga/lib/eth/rtl/arp_eth_rx.v:91]
 WARNING: [Synth 8-11065] parameter 'CYCLE_COUNT' becomes localparam in 'arp_eth_rx' with formal parameter declaration list [/home/kavya/Desktop/git_kavya/verilog-ethernet/example/AX7203_ARTIX7/fpga/lib/eth/rtl/arp_eth_rx.v:93]
@@ -60,7 +55,7 @@ WARNING: [Synth 8-11065] parameter 'LEVELS' becomes localparam in 'priority_enco
 WARNING: [Synth 8-11065] parameter 'W' becomes localparam in 'priority_encoder' with formal parameter declaration list [/home/kavya/Desktop/git_kavya/verilog-ethernet/example/AX7203_ARTIX7/fpga/lib/eth/lib/axis/rtl/priority_encoder.v:48]
 WARNING: [Synth 8-11065] parameter 'HEADER_FIFO_ADDR_WIDTH' becomes localparam in 'udp_checksum_gen' with formal parameter declaration list [/home/kavya/Desktop/git_kavya/verilog-ethernet/example/AX7203_ARTIX7/fpga/lib/eth/rtl/udp_checksum_gen.v:143]
 ---------------------------------------------------------------------------------
-Starting RTL Elaboration : Time (s): cpu = 00:00:05 ; elapsed = 00:00:06 . Memory (MB): peak = 2075.852 ; gain = 380.738 ; free physical = 50844 ; free virtual = 55795
+Starting RTL Elaboration : Time (s): cpu = 00:00:05 ; elapsed = 00:00:06 . Memory (MB): peak = 2071.398 ; gain = 377.801 ; free physical = 50143 ; free virtual = 55148
 ---------------------------------------------------------------------------------
 INFO: [Synth 8-6157] synthesizing module 'fpga' [/home/kavya/Desktop/git_kavya/verilog-ethernet/example/AX7203_ARTIX7/fpga/rtl/fpga.v:10]
 INFO: [Synth 8-6157] synthesizing module 'IBUFGDS' [/home/kavya/Downloads/Downloads/Vivado/2023.1/scripts/rt/data/unisim_comp.v:72266]
@@ -673,18 +668,18 @@ WARNING: [Synth 8-7129] Port local_ip[2] in module ip is either unconnected or h
 WARNING: [Synth 8-7129] Port local_ip[1] in module ip is either unconnected or has no load
 INFO: [Common 17-14] Message 'Synth 8-7129' appears 100 times and further instances of the messages will be disabled. Use the Tcl command set_msg_config to change the current settings.
 ---------------------------------------------------------------------------------
-Finished RTL Elaboration : Time (s): cpu = 00:00:28 ; elapsed = 00:00:29 . Memory (MB): peak = 2378.500 ; gain = 683.387 ; free physical = 50533 ; free virtual = 55486
+Finished RTL Elaboration : Time (s): cpu = 00:00:28 ; elapsed = 00:00:28 . Memory (MB): peak = 2375.047 ; gain = 681.449 ; free physical = 49829 ; free virtual = 54836
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Handling Custom Attributes
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Handling Custom Attributes : Time (s): cpu = 00:00:28 ; elapsed = 00:00:29 . Memory (MB): peak = 2390.375 ; gain = 695.262 ; free physical = 50533 ; free virtual = 55486
+Finished Handling Custom Attributes : Time (s): cpu = 00:00:28 ; elapsed = 00:00:29 . Memory (MB): peak = 2380.984 ; gain = 687.387 ; free physical = 49829 ; free virtual = 54836
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished RTL Optimization Phase 1 : Time (s): cpu = 00:00:28 ; elapsed = 00:00:29 . Memory (MB): peak = 2390.375 ; gain = 695.262 ; free physical = 50533 ; free virtual = 55486
+Finished RTL Optimization Phase 1 : Time (s): cpu = 00:00:28 ; elapsed = 00:00:29 . Memory (MB): peak = 2380.984 ; gain = 687.387 ; free physical = 49829 ; free virtual = 54836
 ---------------------------------------------------------------------------------
-Netlist sorting complete. Time (s): cpu = 00:00:00.13 ; elapsed = 00:00:00.13 . Memory (MB): peak = 2393.344 ; gain = 0.000 ; free physical = 50533 ; free virtual = 55486
+Netlist sorting complete. Time (s): cpu = 00:00:00.12 ; elapsed = 00:00:00.13 . Memory (MB): peak = 2383.953 ; gain = 0.000 ; free physical = 49829 ; free virtual = 54836
 INFO: [Netlist 29-17] Analyzing 19 Unisim elements for replacement
 INFO: [Netlist 29-28] Unisim Transformation completed in 0 CPU seconds
 INFO: [Project 1-570] Preparing netlist for logic optimization
@@ -728,24 +723,22 @@ INFO: [Project 1-236] Implementation specific constraints were found while readi
 Resolution: To avoid this warning, move constraints listed in [.Xil/fpga_propImpl.xdc] to another XDC file and exclude this new file from synthesis with the used_in_synthesis property (File Properties dialog in GUI) and re-run elaboration/synthesis.
 Completed Processing XDC Constraints
 
-Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.01 . Memory (MB): peak = 2525.125 ; gain = 0.000 ; free physical = 50533 ; free virtual = 55486
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2525.734 ; gain = 0.000 ; free physical = 49827 ; free virtual = 54834
 INFO: [Project 1-111] Unisim Transformation Summary:
   A total of 2 instances were transformed.
   IBUFGDS => IBUFDS: 1 instance 
   MMCME2_BASE => MMCME2_ADV: 1 instance 
 
-Constraint Validation Runtime : Time (s): cpu = 00:00:00.04 ; elapsed = 00:00:00.04 . Memory (MB): peak = 2525.125 ; gain = 0.000 ; free physical = 50533 ; free virtual = 55486
-INFO: [Designutils 20-5440] No compile time benefit to using incremental synthesis; A full resynthesis will be run
-INFO: [Designutils 20-4379] Flow is switching to default flow due to incremental criteria not met. If you would like to alter this behaviour and have the flow terminate instead, please set the following parameter config_implementation {autoIncr.Synth.RejectBehavior Terminate}
+Constraint Validation Runtime : Time (s): cpu = 00:00:00.03 ; elapsed = 00:00:00.04 . Memory (MB): peak = 2525.734 ; gain = 0.000 ; free physical = 49827 ; free virtual = 54834
 ---------------------------------------------------------------------------------
-Finished Constraint Validation : Time (s): cpu = 00:00:41 ; elapsed = 00:00:42 . Memory (MB): peak = 2525.125 ; gain = 830.012 ; free physical = 50510 ; free virtual = 55463
+Finished Constraint Validation : Time (s): cpu = 00:00:41 ; elapsed = 00:00:42 . Memory (MB): peak = 2525.734 ; gain = 832.137 ; free physical = 49804 ; free virtual = 54811
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Loading Part and Timing Information
 ---------------------------------------------------------------------------------
 Loading part: xc7a200tfbg484-2
 ---------------------------------------------------------------------------------
-Finished Loading Part and Timing Information : Time (s): cpu = 00:00:41 ; elapsed = 00:00:42 . Memory (MB): peak = 2525.125 ; gain = 830.012 ; free physical = 50510 ; free virtual = 55463
+Finished Loading Part and Timing Information : Time (s): cpu = 00:00:41 ; elapsed = 00:00:42 . Memory (MB): peak = 2525.734 ; gain = 832.137 ; free physical = 49804 ; free virtual = 54811
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Applying 'set_property' XDC Constraints
@@ -949,7 +942,7 @@ Applied set_property ASYNC_REG = true for sync_reset_inst/sync_reg_reg. (constra
 Applied set_property ASYNC_REG = true for sync_reset_inst/sync_reg_reg. (constraint file  /home/kavya/Desktop/git_kavya/verilog-ethernet/example/AX7203_ARTIX7/fpga/lib/eth/lib/axis/syn/vivado/sync_reset.tcl, line 23).
 Applied set_property ASYNC_REG = true for sync_reset_inst/sync_reg_reg. (constraint file  /home/kavya/Desktop/git_kavya/verilog-ethernet/example/AX7203_ARTIX7/fpga/lib/eth/lib/axis/syn/vivado/sync_reset.tcl, line 23).
 ---------------------------------------------------------------------------------
-Finished applying 'set_property' XDC Constraints : Time (s): cpu = 00:00:42 ; elapsed = 00:00:42 . Memory (MB): peak = 2525.125 ; gain = 830.012 ; free physical = 50512 ; free virtual = 55465
+Finished applying 'set_property' XDC Constraints : Time (s): cpu = 00:00:42 ; elapsed = 00:00:42 . Memory (MB): peak = 2525.734 ; gain = 832.137 ; free physical = 49804 ; free virtual = 54811
 ---------------------------------------------------------------------------------
 INFO: [Synth 8-802] inferred FSM for state register 'state_reg_reg' in module 'axis_gmii_rx'
 INFO: [Synth 8-802] inferred FSM for state register 'state_reg_reg' in module 'axis_gmii_tx'
@@ -1025,7 +1018,7 @@ STATE_WRITE_PAYLOAD_LAST |                               11 |                   
 ---------------------------------------------------------------------------------------------------
 INFO: [Synth 8-3354] encoded FSM with state register 'state_reg_reg' using encoding 'sequential' in module 'udp_ip_tx'
 ---------------------------------------------------------------------------------
-Finished RTL Optimization Phase 2 : Time (s): cpu = 00:00:46 ; elapsed = 00:00:47 . Memory (MB): peak = 2525.125 ; gain = 830.012 ; free physical = 50524 ; free virtual = 55480
+Finished RTL Optimization Phase 2 : Time (s): cpu = 00:00:46 ; elapsed = 00:00:47 . Memory (MB): peak = 2525.734 ; gain = 832.137 ; free physical = 49818 ; free virtual = 54827
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start RTL Component Statistics 
@@ -1187,7 +1180,7 @@ RAM Pipeline Warning: Read Address Register Found For RAM ip_addr_mem_reg. We wi
 WARNING: [Synth 8-6430] The Block RAM "\core_inst/udp_complete_inst /ip_complete_inst/\arp_inst/arp_cache_inst/ip_addr_mem_reg " may get memory collision error if read and write address collide. Use attribute (* rw_addr_collision= "yes" *) to avoid collision 
 RAM Pipeline Warning: Read Address Register Found For RAM ip_addr_mem_reg. We will not be able to pipeline it. This may degrade performance. 
 ---------------------------------------------------------------------------------
-Finished Cross Boundary and Area Optimization : Time (s): cpu = 00:01:03 ; elapsed = 00:01:03 . Memory (MB): peak = 2525.125 ; gain = 830.012 ; free physical = 50481 ; free virtual = 55448
+Finished Cross Boundary and Area Optimization : Time (s): cpu = 00:01:02 ; elapsed = 00:01:03 . Memory (MB): peak = 2525.734 ; gain = 832.137 ; free physical = 49776 ; free virtual = 54797
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start ROM, RAM, DSP, Shift Register and Retiming Reporting
@@ -1239,13 +1232,13 @@ Start Applying XDC Timing Constraints
 WARNING: [Synth 8-3321] set_false_path : Empty to list for constraint at line 23 of /home/kavya/Desktop/git_kavya/verilog-ethernet/example/AX7203_ARTIX7/fpga/lib/eth/lib/axis/syn/vivado/axis_async_fifo.tcl. [/home/kavya/Desktop/git_kavya/verilog-ethernet/example/AX7203_ARTIX7/fpga/lib/eth/lib/axis/syn/vivado/axis_async_fifo.tcl:23]
 WARNING: [Synth 8-3321] set_false_path : Empty to list for constraint at line 23 of /home/kavya/Desktop/git_kavya/verilog-ethernet/example/AX7203_ARTIX7/fpga/lib/eth/lib/axis/syn/vivado/axis_async_fifo.tcl. [/home/kavya/Desktop/git_kavya/verilog-ethernet/example/AX7203_ARTIX7/fpga/lib/eth/lib/axis/syn/vivado/axis_async_fifo.tcl:23]
 ---------------------------------------------------------------------------------
-Finished Applying XDC Timing Constraints : Time (s): cpu = 00:01:10 ; elapsed = 00:01:11 . Memory (MB): peak = 2525.125 ; gain = 830.012 ; free physical = 50482 ; free virtual = 55449
+Finished Applying XDC Timing Constraints : Time (s): cpu = 00:01:10 ; elapsed = 00:01:11 . Memory (MB): peak = 2525.734 ; gain = 832.137 ; free physical = 49746 ; free virtual = 54767
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Timing Optimization
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Timing Optimization : Time (s): cpu = 00:01:14 ; elapsed = 00:01:15 . Memory (MB): peak = 2525.125 ; gain = 830.012 ; free physical = 50482 ; free virtual = 55449
+Finished Timing Optimization : Time (s): cpu = 00:01:14 ; elapsed = 00:01:15 . Memory (MB): peak = 2525.734 ; gain = 832.137 ; free physical = 49703 ; free virtual = 54724
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start ROM, RAM, DSP, Shift Register and Retiming Reporting
@@ -1287,7 +1280,7 @@ Start Technology Mapping
 INFO: [Synth 8-7052] The timing for the instance core_inst/udp_complete_inst/ip_complete_inst/arp_inst/arp_cache_inst/ip_addr_mem_reg (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
 INFO: [Synth 8-7052] The timing for the instance core_inst/udp_complete_inst/ip_complete_inst/arp_inst/arp_cache_inst/mac_addr_mem_reg (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
 ---------------------------------------------------------------------------------
-Finished Technology Mapping : Time (s): cpu = 00:01:17 ; elapsed = 00:01:18 . Memory (MB): peak = 2525.125 ; gain = 830.012 ; free physical = 50482 ; free virtual = 55449
+Finished Technology Mapping : Time (s): cpu = 00:01:17 ; elapsed = 00:01:18 . Memory (MB): peak = 2525.734 ; gain = 832.137 ; free physical = 49717 ; free virtual = 54738
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start IO Insertion
@@ -1305,37 +1298,37 @@ Start Final Netlist Cleanup
 Finished Final Netlist Cleanup
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished IO Insertion : Time (s): cpu = 00:01:22 ; elapsed = 00:01:23 . Memory (MB): peak = 2525.125 ; gain = 830.012 ; free physical = 50482 ; free virtual = 55449
+Finished IO Insertion : Time (s): cpu = 00:01:22 ; elapsed = 00:01:23 . Memory (MB): peak = 2525.734 ; gain = 832.137 ; free physical = 49754 ; free virtual = 54775
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Renaming Generated Instances
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Renaming Generated Instances : Time (s): cpu = 00:01:22 ; elapsed = 00:01:23 . Memory (MB): peak = 2525.125 ; gain = 830.012 ; free physical = 50482 ; free virtual = 55449
+Finished Renaming Generated Instances : Time (s): cpu = 00:01:22 ; elapsed = 00:01:23 . Memory (MB): peak = 2525.734 ; gain = 832.137 ; free physical = 49754 ; free virtual = 54775
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Rebuilding User Hierarchy
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Rebuilding User Hierarchy : Time (s): cpu = 00:01:23 ; elapsed = 00:01:24 . Memory (MB): peak = 2525.125 ; gain = 830.012 ; free physical = 50482 ; free virtual = 55449
+Finished Rebuilding User Hierarchy : Time (s): cpu = 00:01:23 ; elapsed = 00:01:24 . Memory (MB): peak = 2525.734 ; gain = 832.137 ; free physical = 49754 ; free virtual = 54775
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Renaming Generated Ports
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Renaming Generated Ports : Time (s): cpu = 00:01:23 ; elapsed = 00:01:24 . Memory (MB): peak = 2525.125 ; gain = 830.012 ; free physical = 50482 ; free virtual = 55449
+Finished Renaming Generated Ports : Time (s): cpu = 00:01:23 ; elapsed = 00:01:24 . Memory (MB): peak = 2525.734 ; gain = 832.137 ; free physical = 49754 ; free virtual = 54775
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Handling Custom Attributes
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Handling Custom Attributes : Time (s): cpu = 00:01:23 ; elapsed = 00:01:24 . Memory (MB): peak = 2525.125 ; gain = 830.012 ; free physical = 50482 ; free virtual = 55449
+Finished Handling Custom Attributes : Time (s): cpu = 00:01:23 ; elapsed = 00:01:24 . Memory (MB): peak = 2525.734 ; gain = 832.137 ; free physical = 49754 ; free virtual = 54775
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Renaming Generated Nets
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Renaming Generated Nets : Time (s): cpu = 00:01:23 ; elapsed = 00:01:24 . Memory (MB): peak = 2525.125 ; gain = 830.012 ; free physical = 50482 ; free virtual = 55449
+Finished Renaming Generated Nets : Time (s): cpu = 00:01:23 ; elapsed = 00:01:24 . Memory (MB): peak = 2525.734 ; gain = 832.137 ; free physical = 49754 ; free virtual = 54775
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Writing Synthesis Report
@@ -1379,18 +1372,18 @@ Report Cell Usage:
 |33    |OBUF        |     7|
 +------+------------+------+
 ---------------------------------------------------------------------------------
-Finished Writing Synthesis Report : Time (s): cpu = 00:01:23 ; elapsed = 00:01:24 . Memory (MB): peak = 2525.125 ; gain = 830.012 ; free physical = 50482 ; free virtual = 55449
+Finished Writing Synthesis Report : Time (s): cpu = 00:01:23 ; elapsed = 00:01:24 . Memory (MB): peak = 2525.734 ; gain = 832.137 ; free physical = 49754 ; free virtual = 54775
 ---------------------------------------------------------------------------------
 Synthesis finished with 0 errors, 0 critical warnings and 110 warnings.
-Synthesis Optimization Runtime : Time (s): cpu = 00:01:17 ; elapsed = 00:01:18 . Memory (MB): peak = 2525.125 ; gain = 695.262 ; free physical = 50482 ; free virtual = 55449
-Synthesis Optimization Complete : Time (s): cpu = 00:01:23 ; elapsed = 00:01:24 . Memory (MB): peak = 2525.125 ; gain = 830.012 ; free physical = 50482 ; free virtual = 55449
+Synthesis Optimization Runtime : Time (s): cpu = 00:01:17 ; elapsed = 00:01:18 . Memory (MB): peak = 2525.734 ; gain = 687.387 ; free physical = 49754 ; free virtual = 54775
+Synthesis Optimization Complete : Time (s): cpu = 00:01:23 ; elapsed = 00:01:24 . Memory (MB): peak = 2525.734 ; gain = 832.137 ; free physical = 49754 ; free virtual = 54775
 INFO: [Project 1-571] Translating synthesized netlist
-Netlist sorting complete. Time (s): cpu = 00:00:00.06 ; elapsed = 00:00:00.07 . Memory (MB): peak = 2525.125 ; gain = 0.000 ; free physical = 50764 ; free virtual = 55731
+Netlist sorting complete. Time (s): cpu = 00:00:00.07 ; elapsed = 00:00:00.06 . Memory (MB): peak = 2525.734 ; gain = 0.000 ; free physical = 50047 ; free virtual = 55068
 INFO: [Netlist 29-17] Analyzing 261 Unisim elements for replacement
 INFO: [Netlist 29-28] Unisim Transformation completed in 0 CPU seconds
 INFO: [Project 1-570] Preparing netlist for logic optimization
 INFO: [Opt 31-138] Pushed 0 inverter(s) to 0 load pin(s).
-Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2525.125 ; gain = 0.000 ; free physical = 50764 ; free virtual = 55731
+Netlist sorting complete. Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00 . Memory (MB): peak = 2525.734 ; gain = 0.000 ; free physical = 50051 ; free virtual = 55072
 INFO: [Project 1-111] Unisim Transformation Summary:
   A total of 25 instances were transformed.
   IBUFGDS => IBUFDS: 1 instance 
@@ -1400,11 +1393,11 @@ INFO: [Project 1-111] Unisim Transformation Summary:
 
 Synth Design complete | Checksum: e689d0a8
 INFO: [Common 17-83] Releasing license: Synthesis
-158 Infos, 298 Warnings, 0 Critical Warnings and 0 Errors encountered.
+152 Infos, 298 Warnings, 0 Critical Warnings and 0 Errors encountered.
 synth_design completed successfully
-synth_design: Time (s): cpu = 00:01:34 ; elapsed = 00:01:31 . Memory (MB): peak = 2525.125 ; gain = 1203.645 ; free physical = 50764 ; free virtual = 55731
-INFO: [Common 17-2834] synth_design peak Physical Memory [PSS] (MB): overall = 2097.386; main = 1770.347; forked = 376.610
-INFO: [Common 17-2834] synth_design peak Virtual Memory [VSS] (MB): overall = 3471.215; main = 2525.129; forked = 978.102
+synth_design: Time (s): cpu = 00:01:34 ; elapsed = 00:01:31 . Memory (MB): peak = 2525.734 ; gain = 1189.949 ; free physical = 50051 ; free virtual = 55072
+INFO: [Common 17-2834] synth_design peak Physical Memory [PSS] (MB): overall = 2021.381; main = 1692.642; forked = 352.937
+INFO: [Common 17-2834] synth_design peak Virtual Memory [VSS] (MB): overall = 3471.828; main = 2525.738; forked = 978.105
 INFO: [Common 17-1381] The checkpoint '/home/kavya/Desktop/git_kavya/verilog-ethernet/example/AX7203_ARTIX7/fpga/fpga/fpga.runs/synth_1/fpga.dcp' has been generated.
 INFO: [runtcl-4] Executing : report_utilization -file fpga_utilization_synth.rpt -pb fpga_utilization_synth.pb
-INFO: [Common 17-206] Exiting Vivado at Wed Jan  8 11:07:32 2025...
+INFO: [Common 17-206] Exiting Vivado at Wed Jan  8 11:24:30 2025...

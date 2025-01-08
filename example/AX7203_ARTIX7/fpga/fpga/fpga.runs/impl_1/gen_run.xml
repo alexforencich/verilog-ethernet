@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<GenRun Id="impl_1" LaunchPart="xc7a200tfbg484-2" LaunchTime="1736314539">
+<GenRun Id="impl_1" LaunchPart="xc7a200tfbg484-2" LaunchTime="1736315699">
   <File Type="ROUTE-RQS-RPT" Name="route_report_qor_suggestions_0.rpt"/>
   <File Type="POSTROUTE-PHYSOPT-RQS" Name="fpga_postroute_physopted.rqs"/>
   <File Type="ROUTE-RQS" Name="fpga_routed.rqs"/>
@@ -38,52 +38,52 @@
   <File Type="ROUTE-BUS-SKEW-RPX" Name="fpga_bus_skew_routed.rpx"/>
   <File Type="ROUTE-BUS-SKEW-PB" Name="fpga_bus_skew_routed.pb"/>
   <File Type="ROUTE-BUS-SKEW" Name="fpga_bus_skew_routed.rpt"/>
-  <File Type="ROUTE-CLK" Name="fpga_clock_utilization_routed.rpt"/>
-  <File Type="ROUTE-SIMILARITY" Name="fpga_incremental_reuse_routed.rpt"/>
-  <File Type="ROUTE-TIMING-RPX" Name="fpga_timing_summary_routed.rpx"/>
-  <File Type="ROUTE-TIMING-PB" Name="fpga_timing_summary_routed.pb"/>
-  <File Type="ROUTE-TIMINGSUMMARY" Name="fpga_timing_summary_routed.rpt"/>
-  <File Type="ROUTE-STATUS-PB" Name="fpga_route_status.pb"/>
-  <File Type="ROUTE-STATUS" Name="fpga_route_status.rpt"/>
-  <File Type="ROUTE-PWR-RPX" Name="fpga_power_routed.rpx"/>
-  <File Type="ROUTE-PWR-SUM" Name="fpga_power_summary_routed.pb"/>
-  <File Type="ROUTE-PWR" Name="fpga_power_routed.rpt"/>
-  <File Type="ROUTE-METHODOLOGY-DRC-PB" Name="fpga_methodology_drc_routed.pb"/>
-  <File Type="ROUTE-METHODOLOGY-DRC-RPX" Name="fpga_methodology_drc_routed.rpx"/>
-  <File Type="ROUTE-METHODOLOGY-DRC" Name="fpga_methodology_drc_routed.rpt"/>
-  <File Type="ROUTE-DRC-RPX" Name="fpga_drc_routed.rpx"/>
-  <File Type="ROUTE-DRC-PB" Name="fpga_drc_routed.pb"/>
-  <File Type="ROUTE-DRC" Name="fpga_drc_routed.rpt"/>
-  <File Type="ROUTE-BLACKBOX-DCP" Name="fpga_routed_bb.dcp"/>
-  <File Type="ROUTE-DCP" Name="fpga_routed.dcp"/>
-  <File Type="ROUTE-ERROR-DCP" Name="fpga_routed_error.dcp"/>
-  <File Type="PHYSOPT-TIMING" Name="fpga_timing_summary_physopted.rpt"/>
-  <File Type="PHYSOPT-DRC" Name="fpga_drc_physopted.rpt"/>
-  <File Type="PHYSOPT-DCP" Name="fpga_physopt.dcp"/>
-  <File Type="POSTPLACE-PWROPT-TIMING" Name="fpga_timing_summary_postplace_pwropted.rpt"/>
-  <File Type="POSTPLACE-PWROPT-DCP" Name="fpga_postplace_pwropt.dcp"/>
-  <File Type="PLACE-RQA-PB" Name="fpga_rqa_placed.pb"/>
-  <File Type="PLACE-TIMING" Name="fpga_timing_summary_placed.rpt"/>
-  <File Type="PLACE-PRE-SIMILARITY" Name="fpga_incremental_reuse_pre_placed.rpt"/>
-  <File Type="PLACE-SIMILARITY" Name="fpga_incremental_reuse_placed.rpt"/>
-  <File Type="PLACE-CTRL" Name="fpga_control_sets_placed.rpt"/>
-  <File Type="PLACE-UTIL-PB" Name="fpga_utilization_placed.pb"/>
-  <File Type="PLACE-UTIL" Name="fpga_utilization_placed.rpt"/>
-  <File Type="PLACE-CLK" Name="fpga_clock_utilization_placed.rpt"/>
-  <File Type="PLACE-IO" Name="fpga_io_placed.rpt"/>
-  <File Type="PLACE-DCP" Name="fpga_placed.dcp"/>
-  <File Type="PWROPT-TIMING" Name="fpga_timing_summary_pwropted.rpt"/>
-  <File Type="PWROPT-DRC" Name="fpga_drc_pwropted.rpt"/>
-  <File Type="PWROPT-DCP" Name="fpga_pwropt.dcp"/>
-  <File Type="OPT-RQA-PB" Name="fpga_rqa_opted.pb"/>
-  <File Type="OPT-HWDEF" Name="fpga.hwdef"/>
-  <File Type="OPT-METHODOLOGY-DRC" Name="fpga_methodology_drc_opted.rpt"/>
-  <File Type="OPT-DRC" Name="fpga_drc_opted.rpt"/>
-  <File Type="OPT-DCP" Name="fpga_opt.dcp"/>
-  <File Type="OPT-TIMING" Name="fpga_timing_summary_opted.rpt"/>
-  <File Type="REPORTS-TCL" Name="fpga_reports.tcl"/>
-  <File Type="INIT-TIMING" Name="fpga_timing_summary_init.rpt"/>
   <File Type="PA-TCL" Name="fpga.tcl"/>
+  <File Type="INIT-TIMING" Name="fpga_timing_summary_init.rpt"/>
+  <File Type="OPT-DCP" Name="fpga_opt.dcp"/>
+  <File Type="OPT-RQA-PB" Name="fpga_rqa_opted.pb"/>
+  <File Type="OPT-DRC" Name="fpga_drc_opted.rpt"/>
+  <File Type="PLACE-TIMING" Name="fpga_timing_summary_placed.rpt"/>
+  <File Type="OPT-METHODOLOGY-DRC" Name="fpga_methodology_drc_opted.rpt"/>
+  <File Type="PLACE-UTIL-PB" Name="fpga_utilization_placed.pb"/>
+  <File Type="OPT-HWDEF" Name="fpga.hwdef"/>
+  <File Type="POSTPLACE-PWROPT-TIMING" Name="fpga_timing_summary_postplace_pwropted.rpt"/>
+  <File Type="REPORTS-TCL" Name="fpga_reports.tcl"/>
+  <File Type="OPT-TIMING" Name="fpga_timing_summary_opted.rpt"/>
+  <File Type="PWROPT-DCP" Name="fpga_pwropt.dcp"/>
+  <File Type="PWROPT-DRC" Name="fpga_drc_pwropted.rpt"/>
+  <File Type="PWROPT-TIMING" Name="fpga_timing_summary_pwropted.rpt"/>
+  <File Type="PLACE-DCP" Name="fpga_placed.dcp"/>
+  <File Type="PLACE-RQA-PB" Name="fpga_rqa_placed.pb"/>
+  <File Type="PLACE-IO" Name="fpga_io_placed.rpt"/>
+  <File Type="PHYSOPT-TIMING" Name="fpga_timing_summary_physopted.rpt"/>
+  <File Type="PLACE-CLK" Name="fpga_clock_utilization_placed.rpt"/>
+  <File Type="PLACE-UTIL" Name="fpga_utilization_placed.rpt"/>
+  <File Type="PLACE-CTRL" Name="fpga_control_sets_placed.rpt"/>
+  <File Type="ROUTE-METHODOLOGY-DRC" Name="fpga_methodology_drc_routed.rpt"/>
+  <File Type="PLACE-SIMILARITY" Name="fpga_incremental_reuse_placed.rpt"/>
+  <File Type="ROUTE-METHODOLOGY-DRC-PB" Name="fpga_methodology_drc_routed.pb"/>
+  <File Type="PLACE-PRE-SIMILARITY" Name="fpga_incremental_reuse_pre_placed.rpt"/>
+  <File Type="ROUTE-DRC-RPX" Name="fpga_drc_routed.rpx"/>
+  <File Type="POSTPLACE-PWROPT-DCP" Name="fpga_postplace_pwropt.dcp"/>
+  <File Type="PHYSOPT-DCP" Name="fpga_physopt.dcp"/>
+  <File Type="PHYSOPT-DRC" Name="fpga_drc_physopted.rpt"/>
+  <File Type="ROUTE-ERROR-DCP" Name="fpga_routed_error.dcp"/>
+  <File Type="ROUTE-DCP" Name="fpga_routed.dcp"/>
+  <File Type="ROUTE-BLACKBOX-DCP" Name="fpga_routed_bb.dcp"/>
+  <File Type="ROUTE-DRC" Name="fpga_drc_routed.rpt"/>
+  <File Type="ROUTE-METHODOLOGY-DRC-RPX" Name="fpga_methodology_drc_routed.rpx"/>
+  <File Type="ROUTE-DRC-PB" Name="fpga_drc_routed.pb"/>
+  <File Type="ROUTE-PWR" Name="fpga_power_routed.rpt"/>
+  <File Type="ROUTE-PWR-SUM" Name="fpga_power_summary_routed.pb"/>
+  <File Type="ROUTE-PWR-RPX" Name="fpga_power_routed.rpx"/>
+  <File Type="ROUTE-STATUS" Name="fpga_route_status.rpt"/>
+  <File Type="ROUTE-STATUS-PB" Name="fpga_route_status.pb"/>
+  <File Type="ROUTE-TIMINGSUMMARY" Name="fpga_timing_summary_routed.rpt"/>
+  <File Type="ROUTE-TIMING-PB" Name="fpga_timing_summary_routed.pb"/>
+  <File Type="ROUTE-TIMING-RPX" Name="fpga_timing_summary_routed.rpx"/>
+  <File Type="ROUTE-SIMILARITY" Name="fpga_incremental_reuse_routed.rpt"/>
+  <File Type="ROUTE-CLK" Name="fpga_clock_utilization_routed.rpt"/>
   <FileSet Name="sources" Type="DesignSrcs" RelSrcDir="$PSRCDIR/sources_1" RelGenDir="$PGENDIR/sources_1">
     <Filter Type="Srcs"/>
     <File Path="$PPRDIR/../lib/eth/lib/axis/rtl/arbiter.v">
@@ -349,7 +349,7 @@
     </File>
     <File Path="$PPRDIR/../lib/eth/rtl/ssio_ddr_out.v">
       <FileInfo>
-        <Attr Name="UserDisabled" Val="1"/>
+        <Attr Name="AutoDisabled" Val="1"/>
         <Attr Name="UsedIn" Val="synthesis"/>
         <Attr Name="UsedIn" Val="implementation"/>
         <Attr Name="UsedIn" Val="simulation"/>
@@ -415,14 +415,6 @@
   </FileSet>
   <FileSet Name="utils" Type="Utils" RelSrcDir="$PSRCDIR/utils_1" RelGenDir="$PGENDIR/utils_1">
     <Filter Type="Utils"/>
-    <File Path="$PSRCDIR/utils_1/imports/synth_1/fpga.dcp">
-      <FileInfo>
-        <Attr Name="UsedIn" Val="synthesis"/>
-        <Attr Name="UsedIn" Val="implementation"/>
-        <Attr Name="UsedInSteps" Val="synth_1"/>
-        <Attr Name="AutoDcp" Val="1"/>
-      </FileInfo>
-    </File>
     <Config>
       <Option Name="TopAutoSet" Val="TRUE"/>
     </Config>
