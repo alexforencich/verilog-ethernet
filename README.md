@@ -53,6 +53,7 @@ following boards:
 *  HiTech Global HTG-640 (HTG-V6HXT-100GIG-565) (Xilinx Virtex 6 XC6VHX565T)
 *  Silicom fb2CG@KU15P (Xilinx Kintex UltraScale+ XCKU15P)
 *  Xilinx KC705 (Xilinx Kintex 7 XC7K325T)
+*  Digilent Genesys2 (Xilinx Kintex 7 XC7K325T)
 *  Xilinx ML605 (Xilinx Virtex 6 XC6VLX240T)
 *  NetFPGA SUME (Xilinx Virtex 7 XC7V690T)
 *  Digilent Nexys Video (Xilinx Artix 7 XC7A200T)
