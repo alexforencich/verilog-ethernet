@@ -34,8 +34,8 @@ THE SOFTWARE.
 module ip_complete #(
     parameter ARP_CACHE_ADDR_WIDTH = 9,
     parameter ARP_REQUEST_RETRY_COUNT = 4,
-    parameter ARP_REQUEST_RETRY_INTERVAL = 125000000*2,
-    parameter ARP_REQUEST_TIMEOUT = 125000000*30
+    parameter [35:0] ARP_REQUEST_RETRY_INTERVAL = 36'd125000000*2,
+    parameter [35:0] ARP_REQUEST_TIMEOUT = 36'd125000000*30
 )
 (
     input  wire        clk,
