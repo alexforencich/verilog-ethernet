@@ -489,6 +489,55 @@ def bench():
                 assert sink.empty()
 
                 yield delay(100)
+            
+        yield clk.posedge
+        payload_len = 8
+        print("test 4: header fifo overflow with back-to-back packets, length %d" % payload_len)
+        current_test.next = 4
+
+        test_frame1 = udp_ep.UDPFrame()
+        test_frame1.eth_dest_mac = 0xDAD1D2D3D4D5
+        test_frame1.eth_src_mac = 0x5A5152535455
+        test_frame1.eth_type = 0x0800
+        test_frame1.ip_version = 4
+        test_frame1.ip_ihl = 5
+        test_frame1.ip_length = None
+        test_frame1.ip_identification = 0
+        test_frame1.ip_flags = 2
+        test_frame1.ip_fragment_offset = 0
+        test_frame1.ip_ttl = 64
+        test_frame1.ip_protocol = 0x11
+        test_frame1.ip_header_checksum = None
+        test_frame1.ip_source_ip = 0xc0a80164
+        test_frame1.ip_dest_ip = 0xc0a80165
+        test_frame1.udp_source_port = 1
+        test_frame1.udp_dest_port = 2
+        test_frame1.udp_length = None
+        test_frame1.udp_checksum = None
+        test_frame1.payload = bytearray(range(payload_len))
+        test_frame1.build()
+
+        cnt = 16
+        sink_pause.next = True
+        yield clk.posedge
+
+        for i in range(cnt):
+            source.send(test_frame1)
+
+        i = 8*cnt
+        while i > 0:
+            i = max(0, i-1)
+            yield clk.posedge
+
+        sink_pause.next = False
+        yield clk.posedge
+
+        for i in range(cnt):
+            yield sink.wait()
+            rx_frame = sink.recv()
+        
+        yield delay(100)
+
 
         raise StopSimulation
 
