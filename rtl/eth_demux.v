@@ -162,8 +162,6 @@ always @* begin
         drop_next = drop_ctl;
         frame_next = frame_ctl;
 
-        s_eth_hdr_ready_next = 1'b0;
-
         m_eth_hdr_valid_next = (!drop_ctl) << select_ctl;
         m_eth_dest_mac_next = s_eth_dest_mac;
         m_eth_src_mac_next = s_eth_src_mac;
