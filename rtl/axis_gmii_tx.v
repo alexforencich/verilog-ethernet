@@ -450,6 +450,15 @@ always @(posedge clk) begin
         start_packet_int_reg <= 1'b0;
         start_packet_reg <= 1'b0;
         error_underflow_reg <= 1'b0;
+
+        frame_error_reg <= 1'b0;
+        frame_ptr_reg <= 0;
+        frame_min_count_reg <= 0;
+        mii_odd_reg <= 1'b0;
+        mii_msn_reg <= 4'd0;
+        s_tdata_reg <= 8'd0;
+        gmii_txd_reg <= 8'd0;
+        crc_state <= 32'hFFFFFFFF;
     end
 end
 
