@@ -1,0 +1,113 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2023 Advanced Micro Devices, Inc. All Rights Reserved.
+--------------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2023.1 (lin64) Build 3865809 Sun May  7 15:04:56 MDT 2023
+| Date         : Wed Jan  8 11:27:37 2025
+| Host         : kavya-Precision-Tower-5810 running 64-bit Ubuntu 22.04.5 LTS
+| Command      : report_methodology -file fpga_methodology_drc_routed.rpt -pb fpga_methodology_drc_routed.pb -rpx fpga_methodology_drc_routed.rpx
+| Design       : fpga
+| Device       : xc7a200tfbg484-2
+| Speed File   : -2
+| Design State : Fully Routed
+--------------------------------------------------------------------------------------------------------------------------------------------------
+
+Report Methodology
+
+Table of Contents
+-----------------
+1. REPORT SUMMARY
+2. REPORT DETAILS
+
+1. REPORT SUMMARY
+-----------------
+            Netlist: netlist
+          Floorplan: design_1
+      Design limits: <entire design considered>
+             Max violations: <unlimited>
+             Violations found: 14
++-----------+----------+-----------------------------------------------------------+------------+
+| Rule      | Severity | Description                                               | Violations |
++-----------+----------+-----------------------------------------------------------+------------+
+| SYNTH-5   | Warning  | Mapped onto distributed RAM because of timing constraints | 4          |
+| SYNTH-16  | Warning  | Address collision                                         | 1          |
+| TIMING-11 | Warning  | Inappropriate max delay with datapath only option         | 2          |
+| TIMING-18 | Warning  | Missing input or output delay                             | 5          |
+| XDCH-2    | Warning  | Same min and max delay values on IO port                  | 2          |
++-----------+----------+-----------------------------------------------------------+------------+
+
+2. REPORT DETAILS
+-----------------
+SYNTH-5#1 Warning
+Mapped onto distributed RAM because of timing constraints  
+The instance core_inst/udp_complete_inst/ip_complete_inst/arp_inst/arp_cache_inst/valid_mem_reg_0_127_0_0 is implemented as distributed LUT RAM for the following reason: The timing constraints suggest that the chosen mapping will yield a better timing.
+Related violations: <none>
+
+SYNTH-5#2 Warning
+Mapped onto distributed RAM because of timing constraints  
+The instance core_inst/udp_complete_inst/ip_complete_inst/arp_inst/arp_cache_inst/valid_mem_reg_128_255_0_0 is implemented as distributed LUT RAM for the following reason: The timing constraints suggest that the chosen mapping will yield a better timing.
+Related violations: <none>
+
+SYNTH-5#3 Warning
+Mapped onto distributed RAM because of timing constraints  
+The instance core_inst/udp_complete_inst/ip_complete_inst/arp_inst/arp_cache_inst/valid_mem_reg_256_383_0_0 is implemented as distributed LUT RAM for the following reason: The timing constraints suggest that the chosen mapping will yield a better timing.
+Related violations: <none>
+
+SYNTH-5#4 Warning
+Mapped onto distributed RAM because of timing constraints  
+The instance core_inst/udp_complete_inst/ip_complete_inst/arp_inst/arp_cache_inst/valid_mem_reg_384_511_0_0 is implemented as distributed LUT RAM for the following reason: The timing constraints suggest that the chosen mapping will yield a better timing.
+Related violations: <none>
+
+SYNTH-16#1 Warning
+Address collision  
+Block RAM core_inst/udp_complete_inst/ip_complete_inst/arp_inst/arp_cache_inst/ip_addr_mem_reg may get memory collision error if read and write address collide. Use of address collision resolution circuitry is recommended.
+Related violations: <none>
+
+TIMING-11#1 Warning
+Inappropriate max delay with datapath only option  
+A max delay constraint with -datapath_only has been applied between core_inst/eth_mac_inst/eth_mac_1g_rgmii_inst/rgmii_phy_if_inst/rgmii_tx_clk_1_reg/C and core_inst/eth_mac_inst/eth_mac_1g_rgmii_inst/rgmii_phy_if_inst/clk_oddr_inst/oddr[0].oddr_inst/D1. The startpoint(s) and endpoint(s) either belong to the same clock domain or belong to two clock domains that can safely be timed together (without valid synchronizer). It is only recommended to use the -datapath_only option on paths between clocks that do not have a known phase relationship. This DRC is waived when a synchronizer is found on the path endpoint
+Related violations: <none>
+
+TIMING-11#2 Warning
+Inappropriate max delay with datapath only option  
+A max delay constraint with -datapath_only has been applied between core_inst/eth_mac_inst/eth_mac_1g_rgmii_inst/rgmii_phy_if_inst/rgmii_tx_clk_2_reg/C and core_inst/eth_mac_inst/eth_mac_1g_rgmii_inst/rgmii_phy_if_inst/clk_oddr_inst/oddr[0].oddr_inst/D2. The startpoint(s) and endpoint(s) either belong to the same clock domain or belong to two clock domains that can safely be timed together (without valid synchronizer). It is only recommended to use the -datapath_only option on paths between clocks that do not have a known phase relationship. This DRC is waived when a synchronizer is found on the path endpoint
+Related violations: <none>
+
+TIMING-18#1 Warning
+Missing input or output delay  
+An input delay is missing on phy_rx_ctl relative to the rising and/or falling clock edge(s) of phy_rx_clk.
+Related violations: <none>
+
+TIMING-18#2 Warning
+Missing input or output delay  
+An input delay is missing on phy_rxd[0] relative to the rising and/or falling clock edge(s) of phy_rx_clk.
+Related violations: <none>
+
+TIMING-18#3 Warning
+Missing input or output delay  
+An input delay is missing on phy_rxd[1] relative to the rising and/or falling clock edge(s) of phy_rx_clk.
+Related violations: <none>
+
+TIMING-18#4 Warning
+Missing input or output delay  
+An input delay is missing on phy_rxd[2] relative to the rising and/or falling clock edge(s) of phy_rx_clk.
+Related violations: <none>
+
+TIMING-18#5 Warning
+Missing input or output delay  
+An input delay is missing on phy_rxd[3] relative to the rising and/or falling clock edge(s) of phy_rx_clk.
+Related violations: <none>
+
+XDCH-2#1 Warning
+Same min and max delay values on IO port  
+The same input delay of 0.000 ns has been defined on port 'reset_n' for both max and min. Make sure this reflects the design intent.
+set_input_delay 0.000 [get_ports reset_n]
+/home/kavya/Desktop/git_kavya/verilog-ethernet/example/AX7203_ARTIX7/fpga/fpga.xdc (Line: 18)
+Related violations: <none>
+
+XDCH-2#2 Warning
+Same min and max delay values on IO port  
+The same output delay of 0.000 ns has been defined on port 'phy_reset_n' for both max and min. Make sure this reflects the design intent.
+set_output_delay 0.000 [get_ports phy_reset_n]
+/home/kavya/Desktop/git_kavya/verilog-ethernet/example/AX7203_ARTIX7/fpga/fpga.xdc (Line: 50)
+Related violations: <none>
+
+
