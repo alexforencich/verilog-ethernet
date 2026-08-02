@@ -437,7 +437,7 @@ always @* begin
 
                 hdr_sum_temp = hdr_sum_reg[15:0] + hdr_sum_reg[19:16] + hdr_sum_low_reg;
 
-                if (hdr_sum_temp != 19'h0ffff && hdr_sum_temp != 19'h1fffe) begin
+                if (hdr_sum_temp[15:0] + hdr_sum_temp[19:16] != 17'h0ffff) begin
                     // bad checksum
                     error_invalid_checksum_next = 1'b1;
                     m_ip_payload_axis_tvalid_int = 1'b0;
