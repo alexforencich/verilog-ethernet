@@ -3,4 +3,6 @@
 *.pyc
 *.vvp
 *.kate-swp
-
+.vscode/*
+*dump.vcd
+sim_out
